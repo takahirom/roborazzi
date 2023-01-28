@@ -135,6 +135,18 @@ internal sealed interface RoboComponent {
     }
   val children: List<RoboComponent>
   val text: String
+
+  fun depth(): Int {
+    return (children.maxOfOrNull {
+      it.depth()
+    } ?: 0) + 1
+  }
+
+  fun countOfComponent(): Int {
+    return children.sumOf {
+      it.countOfComponent()
+    } + 1
+  }
 }
 
 private class ImageCaptureViewAction(val file: File) : ViewAction {
@@ -152,21 +164,10 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
     val depthSlide = 30
     var depth = 0
     var index = 0
-    fun depth(component: RoboComponent): Int {
-      return (component.children.maxOfOrNull {
-        depth(it)
-      } ?: 0) + 1
-    }
-
-    fun countOfComponent(component: RoboComponent): Int {
-      return component.children.sumOf {
-        countOfComponent(it)
-      } + 1
-    }
 
     val rootComponent = RoboComponent.View(view)
-    val deepestDepth = depth(rootComponent)
-    val componentCount = countOfComponent(rootComponent)
+    val deepestDepth = rootComponent.depth()
+    val componentCount = rootComponent.countOfComponent()
 
     val canvas = RoboCanvas(
       view.width * 2 + basicSize + deepestDepth * depthSlide + componentCount * 10,
@@ -243,7 +244,7 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
       }
     }
     dfs(rootComponent)
-    drawTexts.forEach { it() }
+    drawTexts.forEach{ it() }
     canvas.save(file)
   }
 
