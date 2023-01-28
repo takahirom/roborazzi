@@ -1,6 +1,6 @@
 # Roborazzi
 
-**Make Android JUnit integration test visible**
+**Make JVM Android integration test visible**
 
 ## Example
 
@@ -36,6 +36,10 @@ fun roboExample() {
 
 Whenever you test with Robolectric, you feel like you are writing tests blindfolded because you cannot see the layout.  
 This tool makes the layout visible and provides the necessary information for debugging.
+
+## Why test with JVM instead of testing on Android?
+
+Because when testing on a device, it is easy for the test to fail due to the device environment, animations, etc., and ultimately, if the test fails, it will not be fixed.
 
 ## Why not Paparazzi?
 
