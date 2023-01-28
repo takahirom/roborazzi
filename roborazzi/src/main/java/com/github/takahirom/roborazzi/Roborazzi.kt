@@ -24,6 +24,7 @@ import org.hamcrest.Matchers
 import org.junit.Assert.*
 import java.io.File
 import java.util.Locale
+import kotlin.math.abs
 
 fun ViewInteraction.roboCapture(filePath: String) {
   roboCapture(File(filePath))
@@ -69,7 +70,7 @@ internal sealed interface RoboComponent {
         }
       }
 
-    val id: String
+    private val id: String
       get() = "id:" + try {
         view.resources.getResourceName(view.id)
       } catch (e: Exception) {
@@ -103,7 +104,7 @@ internal sealed interface RoboComponent {
     }
   }
 
-  class Compose(val node: SemanticsNode) : RoboComponent {
+  class Compose(private val node: SemanticsNode) : RoboComponent {
     override val children: List<RoboComponent>
       get() = node.children.map {
         Compose(it)
@@ -252,7 +253,7 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
         0 < x + centerX && x + centerX + width < canvas.width &&
           0 < y + centerY && y + centerY + height < canvas.height
       }
-      .sortedBy { (x, y) -> Math.abs(x + width / 2) + Math.abs(y + height / 2) }
+      .sortedBy { (x, y) -> abs(x + width / 2) + abs(y + height / 2) }
       .map { (x, y) -> (x + centerX) to (y + centerY) }
     for ((x, y) in searchPlaces) {
       if (
