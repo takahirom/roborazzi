@@ -90,14 +90,12 @@ internal sealed interface RoboComponent {
             else -> "GONE"
           }
         )
-        append("\ntext:")
-        append(
-          if (view is TextView) {
+        if (view is TextView) {
+          append("\ntext:")
+          append(
             view.text
-          } else {
-            ""
-          }
-        )
+          )
+        }
       }
 
     override fun getGlobalVisibleRect(rect: Rect) {
