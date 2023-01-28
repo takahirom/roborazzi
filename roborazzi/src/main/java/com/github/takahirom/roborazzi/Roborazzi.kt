@@ -148,7 +148,7 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
 
   @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
   override fun perform(uiController: UiController, view: View) {
-    val basicSize = 100
+    val basicSize = 300
     val depthSlide = 30
     var depth = 0
     var index = 0
@@ -158,13 +158,21 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
       } ?: 0) + 1
     }
 
-    val deepestDepth = depth(RoboComponent.View(view))
+    fun countOfComponent(component: RoboComponent): Int {
+      return component.children.sumOf {
+        countOfComponent(it)
+      } + 1
+    }
+
+    val rootComponent = RoboComponent.View(view)
+    val deepestDepth = depth(rootComponent)
+    val componentCount = countOfComponent(rootComponent)
 
     val canvas = RoboCanvas(
-      view.width * 4 + basicSize + deepestDepth * depthSlide,
-      view.height * 2 + basicSize + deepestDepth * depthSlide
+      view.width * 2 + basicSize + deepestDepth * depthSlide + componentCount * 10,
+      view.height * 2 + basicSize + deepestDepth * depthSlide + componentCount * 10
     )
-    val paddingRect = Rect(view.width, view.height / 2, view.width, view.height / 2)
+    val paddingRect = Rect(view.width / 2, view.height / 2, view.width / 2, view.height / 2)
 
     val paint = Paint().apply {
       color = Color.RED
@@ -234,7 +242,7 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
         depth--
       }
     }
-    dfs(RoboComponent.View(view))
+    dfs(rootComponent)
     drawTexts.forEach { it() }
     canvas.save(file)
   }
