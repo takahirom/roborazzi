@@ -28,6 +28,10 @@ fun roboExample() {
 }
 ```
 
+<img width="427" alt="image" src="https://user-images.githubusercontent.com/1386930/215248852-ef6455af-e3b6-4a3f-b440-158ee77b75d8.png">
+<img width="486" alt="image" src="https://user-images.githubusercontent.com/1386930/215248859-03a4f66e-3c42-42d8-863a-4cfbc3090b3f.png">
+
+
 ## Why
 
 Whenever you test with Robolectric, you feel like you are writing tests blindfolded because you cannot see the layout.  
