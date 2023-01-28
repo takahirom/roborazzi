@@ -1,6 +1,6 @@
 # Roborazzi
 
-**Make JUnit integration test visible**
+**Make Android JUnit integration test visible**
 
 ## Example
 
