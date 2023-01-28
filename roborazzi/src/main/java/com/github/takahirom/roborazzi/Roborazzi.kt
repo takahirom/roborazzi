@@ -147,10 +147,23 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
 
   @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
   override fun perform(uiController: UiController, view: View) {
+    val basicSize = 100
+    val depthSlide = 30
     var depth = 0
     var index = 0
-    val canvas = RoboCanvas(view.width * 5, view.height * 3)
-    val paddingRect = Rect(view.width * 2, view.height, view.width * 2, view.height)
+    fun depth(component: RoboComponent): Int {
+      return (component.children.maxOfOrNull {
+        depth(it)
+      } ?: 0) + 1
+    }
+
+    val deepestDepth = depth(RoboComponent.View(view))
+
+    val canvas = RoboCanvas(
+      view.width * 4 + basicSize + deepestDepth * depthSlide,
+      view.height * 2 + basicSize + deepestDepth * depthSlide
+    )
+    val paddingRect = Rect(view.width, view.height / 2, view.width, view.height / 2)
 
     val paint = Paint().apply {
       color = Color.RED
@@ -166,7 +179,7 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
       index++
       val rect = Rect()
       component.getGlobalVisibleRect(rect)
-      val canvasRect = rect.plus(Point(paddingRect.left, paddingRect.top)).plus(depth * 30)
+      val canvasRect = rect.plus(Point(paddingRect.left, paddingRect.top)).plus(depth * depthSlide)
 
       canvas.drawRect(canvasRect, paint.apply {
         color = colors[index % colors.size]
