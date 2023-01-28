@@ -1,0 +1,14 @@
+plugins {
+  id 'java-library'
+  id 'org.jetbrains.kotlin.jvm'
+}
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(11))
+  }
+}
+
+dependencies {
+  compileOnly "org.robolectric:android-all:Q-robolectric-5415296"
+}

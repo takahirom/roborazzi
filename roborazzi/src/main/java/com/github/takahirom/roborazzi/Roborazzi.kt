@@ -1,0 +1,259 @@
+package com.github.takahirom.roborazzi
+
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Point
+import android.graphics.Rect
+import android.os.Build
+import android.text.TextPaint
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.compose.ui.graphics.toAndroidRect
+import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.core.graphics.plus
+import androidx.core.view.children
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.ViewInteraction
+import org.hamcrest.Matcher
+import org.hamcrest.Matchers
+import org.junit.Assert.*
+import java.io.File
+import java.util.Locale
+
+fun ViewInteraction.roboCapture(filePath: String) {
+  roboCapture(File(filePath))
+}
+
+fun ViewInteraction.roboCapture(file: File) {
+  perform(ImageCaptureViewAction(file))
+}
+
+internal val colors = listOf(
+  0x3F9101,
+  0x0E4A8E,
+  0xBCBF01,
+  0xBC0BA2,
+  0x61AA0D,
+  0x3D017A,
+  0xD6A60A,
+  0x7710A3,
+  0xA502CE,
+  0xeb5a00
+)
+
+internal sealed interface RoboComponent {
+
+  class View(private val view: android.view.View) : RoboComponent {
+    override val children: List<RoboComponent>
+      get() = when (view) {
+        is AbstractComposeView -> {
+          (view.getChildAt(0) as? ViewRootForTest)
+            ?.semanticsOwner
+            ?.rootSemanticsNode
+            ?.let {
+              listOf(Compose(it))
+            } ?: listOf()
+        }
+        is ViewGroup -> {
+          view.children.map {
+            View(it)
+          }.toList()
+        }
+        else -> {
+          listOf()
+        }
+      }
+
+    val id: String
+      get() = "id:" + try {
+        view.resources.getResourceName(view.id)
+      } catch (e: Exception) {
+        ""
+      }
+    override val text: String
+      get() = buildString {
+        append(id)
+        append("\nclassName:")
+        append(view.javaClass.name)
+        append("\nrect:")
+        append(rect)
+        append("\nvisibility:")
+        append(
+          when (view.visibility) {
+            android.view.View.VISIBLE -> "VISIBLE"
+            android.view.View.GONE -> "GONE"
+            else -> "GONE"
+          }
+        )
+        append("\ntext:")
+        append(
+          if (view is TextView) {
+            view.text
+          } else {
+            ""
+          }
+        )
+      }
+
+    override fun getGlobalVisibleRect(rect: Rect) {
+      view.getGlobalVisibleRect(rect)
+    }
+  }
+
+  class Compose(val node: SemanticsNode) : RoboComponent {
+    override val children: List<RoboComponent>
+      get() = node.children.map {
+        Compose(it)
+      }
+    override val text: String
+      get() = buildString {
+        append("ComposeNode\nrect:")
+        append(rect)
+        append("\n")
+        append(node.config)
+        append("\n")
+        append(node.layoutInfo)
+      }
+
+    override fun getGlobalVisibleRect(rect: Rect) {
+      val boundsInWindow = node.boundsInWindow
+      rect.set(boundsInWindow.toAndroidRect())
+    }
+  }
+
+  fun getGlobalVisibleRect(rect: Rect)
+
+  val rect: Rect
+    get() {
+      val rect = Rect()
+      getGlobalVisibleRect(rect)
+      return rect
+    }
+  val children: List<RoboComponent>
+  val text: String
+}
+
+private class ImageCaptureViewAction(val file: File) : ViewAction {
+  override fun getConstraints(): Matcher<View> {
+    return Matchers.any(View::class.java)
+  }
+
+  override fun getDescription(): String {
+    return String.format(Locale.ROOT, "capture view to image")
+  }
+
+  @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
+  override fun perform(uiController: UiController, view: View) {
+    var depth = 0
+    var index = 0
+    val canvas = RoboCanvas(view.width * 5, view.height * 3)
+    val paddingRect = Rect(view.width * 2, view.height, view.width * 2, view.height)
+
+    val paint = Paint().apply {
+      color = Color.RED
+      style = Paint.Style.FILL
+      textSize = 30F
+    }
+    val textPaint = TextPaint()
+    textPaint.isAntiAlias = true
+    textPaint.textSize = 16F
+    val drawTexts = mutableListOf<() -> Unit>()
+
+    fun dfs(component: RoboComponent) {
+      index++
+      val rect = Rect()
+      component.getGlobalVisibleRect(rect)
+      val canvasRect = rect.plus(Point(paddingRect.left, paddingRect.top)).plus(depth * 30)
+
+      canvas.drawRect(canvasRect, paint.apply {
+        color = colors[index % colors.size]
+      })
+      val localIndex = index
+
+      drawTexts.add {
+        val text =
+          component.text.lines().flatMap {
+            if (it.length > 30) it.chunked(30) else listOf(it)
+          }.joinToString("\n")
+        val (boxWidth, boxHeight) = canvas.textCalc(text)
+
+        val (textPointX, textPointY) = findTextPoint(
+          canvas,
+          canvasRect.centerX(),
+          canvasRect.centerY(),
+          boxWidth,
+          boxHeight
+        )
+
+        val textBoxRect = Rect(
+          textPointX,
+          textPointY,
+          textPointX + boxWidth + 5,
+          textPointY + boxHeight + 5
+        )
+        canvas.drawLine(
+          Rect(
+            canvasRect.centerX(), canvasRect.centerY(),
+            textBoxRect.centerX(), textBoxRect.centerY()
+          ), paint.apply {
+            color = colors[localIndex % colors.size]
+          }
+        )
+        canvas.drawRect(
+          textBoxRect, paint.apply {
+            color = colors[localIndex % colors.size]
+          })
+        canvas.drawText(
+          textPointX.toFloat(),
+          textPointY.toFloat() + boxHeight / text.split("\n").size,
+          text,
+          textPaint
+        )
+      }
+
+      component.children.forEach { child ->
+        depth++
+        dfs(child)
+        depth--
+      }
+    }
+    dfs(RoboComponent.View(view))
+    drawTexts.forEach { it() }
+    canvas.save(file)
+  }
+
+  fun findTextPoint(
+    canvas: RoboCanvas,
+    centerX: Int,
+    centerY: Int,
+    width: Int,
+    height: Int
+  ): Pair<Int, Int> {
+
+    val searchPlaces = (-10000..10000 step 50)
+      .flatMap { x -> (-10000..10000 step 50).map { y -> x to y } }
+      .filter { (x, y) ->
+        0 < x + centerX && x + centerX + width < canvas.width &&
+          0 < y + centerY && y + centerY + height < canvas.height
+      }
+      .sortedBy { (x, y) -> Math.abs(x + width / 2) + Math.abs(y + height / 2) }
+      .map { (x, y) -> (x + centerX) to (y + centerY) }
+    for ((x, y) in searchPlaces) {
+      if (
+        (0..5).all { xDiv ->
+          (0..5).all { yDiv ->
+            canvas.getPixel(x + xDiv * width / 5, y + yDiv * height / 5) == 0
+          }
+        }
+      ) {
+        return x to y
+      }
+    }
+    return 0 to 0
+  }
+}
