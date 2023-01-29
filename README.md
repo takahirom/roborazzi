@@ -11,19 +11,19 @@ fun roboExample() {
     launch(MainActivity::class.java)
 
     // Take a screenshot of root view
-    onView(ViewMatchers.isRoot())
+    onView(isRoot())
       .roboCapture("build/first_screen.png")
 
     // Take a screenshot of compose
-    onView(ViewMatchers.withId(R.id.compose))
+    onView(withId(R.id.compose))
       .roboCapture("build/compose.png")
 
     // move to next page
-    onView(ViewMatchers.withId(R.id.button_first))
+    onView(withId(R.id.button_first))
       .perform(click())
 
     // Take a screenshot of root view
-    onView(ViewMatchers.isRoot())
+    onView(isRoot())
       .roboCapture("build/second_screen.png")
 }
 ```
