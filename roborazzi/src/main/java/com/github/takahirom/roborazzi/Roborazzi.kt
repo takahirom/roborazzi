@@ -212,8 +212,8 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
         )
 
         val textBoxRect = Rect(
-          textPointX,
-          textPointY,
+          textPointX - 5,
+          textPointY - 5,
           textPointX + boxWidth + 5,
           textPointY + boxHeight + 5
         )
