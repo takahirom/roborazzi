@@ -54,7 +54,7 @@ class RoboCanvas(width: Int, height: Int) {
     val longestLayout = TextLayout(longestLine, graphics2D.font, frc)
     val highteestLayout = TextLayout(highestLine, graphics2D.font, frc)
     graphics2D.dispose()
-    return longestLayout.bounds.width.toInt() to (highteestLayout.bounds.height * texts.size + 0.5).toInt()
+    return longestLayout.bounds.width.toInt() to (highteestLayout.getPixelBounds(frc,0F,0F).height * texts.size + 1).toInt()
   }
 
   fun drawText(textPointX: Float, textPointY: Float, text: String, paint: Paint) {
