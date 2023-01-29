@@ -194,8 +194,8 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
       canvas.drawRect(canvasRect, paint.apply {
         color = colors[index % colors.size]
       })
-      val localIndex = index
 
+      val boxColor = colors[index % colors.size]
       drawTexts.add {
         val text =
           component.text.lines().flatMap {
@@ -222,18 +222,24 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
             canvasRect.centerX(), canvasRect.centerY(),
             textBoxRect.centerX(), textBoxRect.centerY()
           ), paint.apply {
-            color = colors[localIndex % colors.size]
+            color = boxColor
           }
         )
         canvas.drawRect(
           textBoxRect, paint.apply {
-            color = colors[localIndex % colors.size]
+            color = boxColor
           })
         canvas.drawText(
           textPointX.toFloat(),
           textPointY.toFloat() + boxHeight / text.split("\n").size,
           text,
-          textPaint
+          textPaint.apply {
+            color = if (isColorBright(boxColor)) {
+              Color.BLACK
+            } else {
+              Color.WHITE
+            }
+          }
         )
       }
 
@@ -244,8 +250,17 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
       }
     }
     dfs(rootComponent)
-    drawTexts.forEach{ it() }
+    drawTexts.forEach { it() }
     canvas.save(file)
+  }
+
+  fun isColorBright(color: Int): Boolean {
+    val red = Color.red(color)
+    val green = Color.green(color)
+    val blue = Color.blue(color)
+    val luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+    return luminance > 0.5
+    return luminance > 0.5
   }
 
   fun findTextPoint(
