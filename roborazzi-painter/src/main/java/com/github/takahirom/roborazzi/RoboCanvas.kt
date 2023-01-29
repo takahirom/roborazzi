@@ -4,8 +4,10 @@ package com.github.takahirom.roborazzi
 
 import android.graphics.Paint
 import android.graphics.Rect
+import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.image.BufferedImage
@@ -32,7 +34,7 @@ class RoboCanvas(width: Int, height: Int) {
   fun drawRect(r: Rect, paint: Paint) {
     val graphics2D: Graphics2D = bufferedImage.createGraphics()
 
-    graphics2D.color = Color(paint.getColor())
+    graphics2D.color = Color(paint.getColor(), true)
     graphics2D.fillRect(
       r.left, r.top,
       (r.right - r.left), (r.bottom - r.top)
@@ -42,7 +44,12 @@ class RoboCanvas(width: Int, height: Int) {
 
   fun drawLine(r: Rect, paint: Paint) {
     val graphics2D: Graphics2D = bufferedImage.createGraphics()
-    graphics2D.color = Color(paint.getColor())
+    graphics2D.stroke = BasicStroke(paint.strokeWidth)
+    graphics2D.paint = Color(paint.getColor(), true)
+    graphics2D.setRenderingHint(
+      RenderingHints.KEY_ANTIALIASING,
+      RenderingHints.VALUE_ANTIALIAS_ON
+    )
     graphics2D.drawLine(
       r.left, r.top,
       r.right, r.bottom

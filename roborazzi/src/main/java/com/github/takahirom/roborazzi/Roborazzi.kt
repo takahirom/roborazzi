@@ -47,6 +47,12 @@ internal val colors = listOf(
   0xeb5a00
 )
 
+internal enum class Visibility {
+  Visible,
+  Gone,
+  Invisible;
+}
+
 internal sealed interface RoboComponent {
 
   class View(private val view: android.view.View) : RoboComponent {
@@ -71,15 +77,22 @@ internal sealed interface RoboComponent {
       }
 
     private val id: String
-      get() = "id:" + try {
-        view.resources.getResourceName(view.id)
-      } catch (e: Exception) {
-        ""
-      }
+      get() =
+        if (0xFFFFFFFF.toInt() == view.id) {
+          ""
+        } else {
+          try {
+            view.resources.getResourceName(view.id)
+          } catch (e: Exception) {
+            ""
+          }
+        }
     override val text: String
       get() = buildString {
-        append(id)
-        append("\nclassName:")
+        if (id.isNotBlank()) {
+          appendLine("id:$id")
+        }
+        append("className:")
         append(view.javaClass.name)
         append("\nrect:")
         append(rect)
@@ -97,6 +110,12 @@ internal sealed interface RoboComponent {
             view.text
           )
         }
+      }
+    override val visibility: Visibility
+      get() = when (view.visibility) {
+        android.view.View.VISIBLE -> Visibility.Visible
+        android.view.View.GONE -> Visibility.Gone
+        else -> Visibility.Invisible
       }
 
     override fun getGlobalVisibleRect(rect: Rect) {
@@ -118,6 +137,8 @@ internal sealed interface RoboComponent {
         append("\n")
         append(node.layoutInfo)
       }
+    override val visibility: Visibility
+      get() = Visibility.Visible
 
     override fun getGlobalVisibleRect(rect: Rect) {
       val boundsInWindow = node.boundsInWindow
@@ -135,6 +156,7 @@ internal sealed interface RoboComponent {
     }
   val children: List<RoboComponent>
   val text: String
+  val visibility: Visibility
 
   fun depth(): Int {
     return (children.maxOfOrNull {
@@ -160,7 +182,7 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
 
   @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
   override fun perform(uiController: UiController, view: View) {
-    val basicSize = 300
+    val basicSize = 500
     val depthSlide = 30
     var depth = 0
     var index = 0
@@ -170,10 +192,10 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
     val componentCount = rootComponent.countOfComponent()
 
     val canvas = RoboCanvas(
-      view.width * 2 + basicSize + deepestDepth * depthSlide + componentCount * 10,
-      view.height * 2 + basicSize + deepestDepth * depthSlide + componentCount * 10
+      view.width + basicSize + deepestDepth * depthSlide + componentCount * 10,
+      view.height + basicSize + deepestDepth * depthSlide + componentCount * 10
     )
-    val paddingRect = Rect(view.width / 2, view.height / 2, view.width / 2, view.height / 2)
+    val paddingRect = Rect(basicSize / 2, basicSize / 2, basicSize / 2, basicSize / 2)
 
     val paint = Paint().apply {
       color = Color.RED
@@ -191,11 +213,18 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
       component.getGlobalVisibleRect(rect)
       val canvasRect = rect.plus(Point(paddingRect.left, paddingRect.top)).plus(depth * depthSlide)
 
+      val boxColor = colors[index % colors.size] + (0xfF shl 56)
+      val alphaBoxColor = when (component.visibility) {
+        Visibility.Visible -> colors[index % colors.size] + (0xEE shl 56) // alpha EE / FF
+        Visibility.Gone -> colors[index % colors.size] + (0x66 shl 56) // alpha 88 / FF
+        Visibility.Invisible -> colors[index % colors.size] + (0x88 shl 56) // alpha BB / FF
+      }
+//
+
       canvas.drawRect(canvasRect, paint.apply {
-        color = colors[index % colors.size]
+        color = alphaBoxColor
       })
 
-      val boxColor = colors[index % colors.size]
       drawTexts.add {
         val text =
           component.text.lines().flatMap {
@@ -225,7 +254,8 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
             canvasRect.centerX(), canvasRect.centerY(),
             textBoxRect.centerX(), textBoxRect.centerY()
           ), paint.apply {
-            color = boxColor
+            color = alphaBoxColor - (0x22 shl 56) // alpha DD / FF
+            strokeWidth = 2F
           }
         )
         canvas.drawRect(
@@ -262,7 +292,6 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
     val green = Color.green(color)
     val blue = Color.blue(color)
     val luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
-    return luminance > 0.5
     return luminance > 0.5
   }
 
