@@ -28,11 +28,12 @@ fun roboExample() {
 }
 ```
 
-<img width="643" alt="image" src="https://user-images.githubusercontent.com/1386930/215308765-e6325dec-6d69-4e34-90c5-7d3a6d69749a.png">
+<img width="443" alt="image" src="https://user-images.githubusercontent.com/1386930/215308765-e6325dec-6d69-4e34-90c5-7d3a6d69749a.png">
 <img width="486" alt="image" src="https://user-images.githubusercontent.com/1386930/215248859-03a4f66e-3c42-42d8-863a-4cfbc3090b3f.png">
 
 [From DroidKaigi 2022 app](https://github.com/DroidKaigi/conference-app-2022)
-![](https://user-images.githubusercontent.com/1386930/215308824-decf2875-ff40-4927-aceb-e6965fef3c8d.png)
+
+<img src=https://user-images.githubusercontent.com/1386930/215308824-decf2875-ff40-4927-aceb-e6965fef3c8d.png width=400 />
 
 ## Why
 
