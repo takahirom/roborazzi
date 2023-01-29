@@ -201,7 +201,10 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
           component.text.lines().flatMap {
             if (it.length > 30) it.chunked(30) else listOf(it)
           }.joinToString("\n")
-        val (boxWidth, boxHeight) = canvas.textCalc(text)
+        val (rawBoxWidth, rawBoxHeight) = canvas.textCalc(text)
+        val textPadding = 5
+        val boxWidth = rawBoxWidth + textPadding * 2
+        val boxHeight = rawBoxHeight + textPadding * 2
 
         val (textPointX, textPointY) = findTextPoint(
           canvas,
@@ -212,10 +215,10 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
         )
 
         val textBoxRect = Rect(
-          textPointX - 5,
-          textPointY - 5,
-          textPointX + boxWidth + 5,
-          textPointY + boxHeight + 5
+          textPointX,
+          textPointY,
+          textPointX + boxWidth,
+          textPointY + boxHeight
         )
         canvas.drawLine(
           Rect(
@@ -230,8 +233,8 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
             color = boxColor
           })
         canvas.drawText(
-          textPointX.toFloat(),
-          textPointY.toFloat() + boxHeight / text.split("\n").size,
+          textPointX.toFloat() + textPadding,
+          textPointY.toFloat() + textPadding + rawBoxHeight / text.split("\n").size,
           text,
           textPaint.apply {
             color = if (isColorBright(boxColor)) {
