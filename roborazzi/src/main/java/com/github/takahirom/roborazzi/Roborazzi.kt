@@ -192,8 +192,8 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
     val componentCount = rootComponent.countOfComponent()
 
     val canvas = RoboCanvas(
-      view.width + basicSize + deepestDepth * depthSlide + componentCount * 30,
-      view.height + basicSize + deepestDepth * depthSlide + componentCount * 30
+      view.width + basicSize + deepestDepth * depthSlide + componentCount * 20,
+      view.height + basicSize + deepestDepth * depthSlide + componentCount * 20
     )
     val paddingRect = Rect(basicSize / 2, basicSize / 2, basicSize / 2, basicSize / 2)
 

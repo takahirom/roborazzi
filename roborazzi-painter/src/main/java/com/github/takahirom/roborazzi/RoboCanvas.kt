@@ -19,18 +19,6 @@ class RoboCanvas(width: Int, height: Int) {
   val width get() = bufferedImage.width
   val height get() = bufferedImage.height
 
-  fun textCalc(text: String): Pair<Int, Int> {
-    val texts = text.split("\n")
-    val graphics2D: Graphics2D = bufferedImage.createGraphics()
-    val frc: FontRenderContext = graphics2D.getFontRenderContext()
-    val longestLine = texts.maxBy { TextLayout(it, graphics2D.font, frc).bounds.width.toInt() }
-    val highestLine = texts.maxBy { TextLayout(it, graphics2D.font, frc).bounds.height.toInt() }
-    val longestLayout = TextLayout(longestLine, graphics2D.font, frc)
-    val highteestLayout = TextLayout(highestLine, graphics2D.font, frc)
-    graphics2D.dispose()
-    return longestLayout.bounds.width.toInt() to (highteestLayout.bounds.height * texts.size + 0.5).toInt()
-  }
-
   fun drawRect(r: Rect, paint: Paint) {
     val graphics2D: Graphics2D = bufferedImage.createGraphics()
 
@@ -55,6 +43,18 @@ class RoboCanvas(width: Int, height: Int) {
       r.right, r.bottom
     )
     graphics2D.dispose()
+  }
+
+  fun textCalc(text: String): Pair<Int, Int> {
+    val texts = text.split("\n")
+    val graphics2D: Graphics2D = bufferedImage.createGraphics()
+    val frc: FontRenderContext = graphics2D.getFontRenderContext()
+    val longestLine = texts.maxBy { TextLayout(it, graphics2D.font, frc).bounds.width.toInt() }
+    val highestLine = texts.maxBy { TextLayout(it, graphics2D.font, frc).bounds.height.toInt() }
+    val longestLayout = TextLayout(longestLine, graphics2D.font, frc)
+    val highteestLayout = TextLayout(highestLine, graphics2D.font, frc)
+    graphics2D.dispose()
+    return longestLayout.bounds.width.toInt() to (highteestLayout.bounds.height * texts.size + 0.5).toInt()
   }
 
   fun drawText(textPointX: Float, textPointY: Float, text: String, paint: Paint) {
