@@ -2,7 +2,6 @@ package com.github.takahirom.roborazzi
 
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
 import android.text.TextPaint
@@ -14,8 +13,6 @@ import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.SemanticsNode
-import androidx.core.graphics.plus
-import androidx.core.view.children
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
@@ -67,9 +64,8 @@ internal sealed interface RoboComponent {
             } ?: listOf()
         }
         is ViewGroup -> {
-          view.children.map {
-            View(it)
-          }.toList()
+          (0 until view.childCount)
+            .map { View(view.getChildAt(it)) }
         }
         else -> {
           listOf()
@@ -211,7 +207,12 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
       index++
       val rect = Rect()
       component.getGlobalVisibleRect(rect)
-      val canvasRect = rect.plus(Point(paddingRect.left, paddingRect.top)).plus(depth * depthSlide)
+      val canvasRect = Rect(
+        rect.left + paddingRect.left,
+        rect.top + paddingRect.top,
+        rect.right + paddingRect.left + depth * depthSlide,
+        rect.bottom + paddingRect.top + depth * depthSlide
+      )
 
       val boxColor = colors[index % colors.size] + (0xfF shl 56)
       val alphaBoxColor = when (component.visibility) {
