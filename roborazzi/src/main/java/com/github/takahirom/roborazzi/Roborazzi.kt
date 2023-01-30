@@ -208,8 +208,8 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
       val rect = Rect()
       component.getGlobalVisibleRect(rect)
       val canvasRect = Rect(
-        rect.left + paddingRect.left,
-        rect.top + paddingRect.top,
+        rect.left + paddingRect.left + depth * depthSlide,
+        rect.top + paddingRect.top + depth * depthSlide,
         rect.right + paddingRect.left + depth * depthSlide,
         rect.bottom + paddingRect.top + depth * depthSlide
       )
