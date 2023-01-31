@@ -18,6 +18,10 @@ class RoboCanvas(width: Int, height: Int) {
   private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
   val width get() = bufferedImage.width
   val height get() = bufferedImage.height
+  var rightBottomPoint = 0 to 0
+  fun updateRightBottom(x: Int, y: Int) {
+    rightBottomPoint = maxOf(x, rightBottomPoint.first) to maxOf(y, rightBottomPoint.second)
+  }
 
   fun drawRect(r: Rect, paint: Paint) {
     val graphics2D: Graphics2D = bufferedImage.createGraphics()
@@ -28,6 +32,7 @@ class RoboCanvas(width: Int, height: Int) {
       (r.right - r.left), (r.bottom - r.top)
     )
     graphics2D.dispose()
+    updateRightBottom(r.right, r.bottom)
   }
 
   fun drawLine(r: Rect, paint: Paint) {
@@ -54,7 +59,11 @@ class RoboCanvas(width: Int, height: Int) {
     val longestLayout = TextLayout(longestLine, graphics2D.font, frc)
     val highteestLayout = TextLayout(highestLine, graphics2D.font, frc)
     graphics2D.dispose()
-    return longestLayout.bounds.width.toInt() to (highteestLayout.getPixelBounds(frc,0F,0F).height * texts.size + 1).toInt()
+    return longestLayout.bounds.width.toInt() to (highteestLayout.getPixelBounds(
+      frc,
+      0F,
+      0F
+    ).height * texts.size + 1).toInt()
   }
 
   fun drawText(textPointX: Float, textPointY: Float, text: String, paint: Paint) {
@@ -79,6 +88,10 @@ class RoboCanvas(width: Int, height: Int) {
   }
 
   fun save(file: File) {
-    ImageIO.write(bufferedImage, "png", file)
+    ImageIO.write(
+      bufferedImage.getSubimage(0, 0, rightBottomPoint.first, rightBottomPoint.second),
+      "png",
+      file
+    )
   }
 }
