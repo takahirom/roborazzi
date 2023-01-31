@@ -55,15 +55,11 @@ class RoboCanvas(width: Int, height: Int) {
     val graphics2D: Graphics2D = bufferedImage.createGraphics()
     val frc: FontRenderContext = graphics2D.getFontRenderContext()
     val longestLine = texts.maxBy { TextLayout(it, graphics2D.font, frc).bounds.width.toInt() }
-    val highestLine = texts.maxBy { TextLayout(it, graphics2D.font, frc).bounds.height.toInt() }
     val longestLayout = TextLayout(longestLine, graphics2D.font, frc)
-    val highteestLayout = TextLayout(highestLine, graphics2D.font, frc)
     graphics2D.dispose()
-    return longestLayout.bounds.width.toInt() to (highteestLayout.getPixelBounds(
-      frc,
-      0F,
-      0F
-    ).height * texts.size + 1).toInt()
+    return longestLayout.bounds.width.toInt() to (texts.sumOf {
+      calcHeight(it, graphics2D, frc) + 1
+    }).toInt()
   }
 
   fun drawText(textPointX: Float, textPointY: Float, text: String, paint: Paint) {
@@ -71,17 +67,26 @@ class RoboCanvas(width: Int, height: Int) {
     graphics2D.color = Color(paint.getColor())
 
     val frc: FontRenderContext = graphics2D.getFontRenderContext()
-    val layout = TextLayout(text, graphics2D.font, frc)
     val outputs: List<String> = text.split("\n")
+    var nextY = textPointY
     for (i in outputs.indices) {
+      val text = outputs[i]
+      val height = calcHeight(text, graphics2D, frc)
       graphics2D.drawString(
-        outputs[i],
+        text,
         textPointX.toInt(),
-        (textPointY + i * layout.bounds.height + 0.5).toInt()
+        nextY.toInt()
       )
+      nextY += (height + 1).toInt()
     }
     graphics2D.dispose()
   }
+
+  private fun calcHeight(
+    text: String,
+    graphics2D: Graphics2D,
+    frc: FontRenderContext
+  ) = TextLayout(text, graphics2D.font, frc).bounds.height
 
   fun getPixel(x: Int, y: Int): Int {
     return bufferedImage.getRGB(x, y)
