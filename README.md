@@ -2,26 +2,26 @@
 
 **Make JVM Android integration test visible**
 
-## Example
+## How to use
 
 ### Generate gif automatically
 
 ```kotlin
 @Test
-fun roboAutoCaptureSample() {
-onView(ViewMatchers.isRoot())
-  .roboAutoCapture("build/test.gif") {
-    // launch
-    launch(MainActivity::class.java)
-    // move to next page
-    onView(withId(R.id.button_first))
-      .perform(click())
-    // back
-    pressBack()
-    // move to next page
-    onView(withId(R.id.button_first))
-      .perform(click())
-  }
+fun captureRoboGifSample() {
+  onView(ViewMatchers.isRoot())
+    .captureRoboGif("build/test.gif") {
+      // launch
+      launch(MainActivity::class.java)
+      // move to next page
+      onView(withId(R.id.button_first))
+        .perform(click())
+      // back
+      pressBack()
+      // move to next page
+      onView(withId(R.id.button_first))
+        .perform(click())
+    }
 }
 ```
 
@@ -31,25 +31,22 @@ onView(ViewMatchers.isRoot())
 
 ```kotlin
 @Test
-fun roboExample() {
-    // launch
-    launch(MainActivity::class.java)
+fun captureRoboImageSample() {
+  // launch
+  launch(MainActivity::class.java)
 
-    // Take a screenshot of root view
-    onView(isRoot())
-      .roboCapture("build/first_screen.png")
+  onView(ViewMatchers.isRoot())
+    .captureRoboImage("build/first_screen.png")
 
-    // Take a screenshot of compose
-    onView(withId(R.id.compose))
-      .roboCapture("build/compose.png")
+  onView(withId(R.id.compose))
+    .captureRoboImage("build/compose.png")
 
-    // move to next page
-    onView(withId(R.id.button_first))
-      .perform(click())
+  // move to next page
+  onView(withId(R.id.button_first))
+    .perform(click())
 
-    // Take a screenshot of root view
-    onView(isRoot())
-      .roboCapture("build/second_screen.png")
+  onView(ViewMatchers.isRoot())
+    .captureRoboImage("build/second_screen.png")
 }
 ```
 

@@ -7,8 +7,8 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.roboAutoCapture
-import com.github.takahirom.roborazzi.roboCapture
+import com.github.takahirom.roborazzi.captureRoboGif
+import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,28 +17,28 @@ import org.junit.runner.RunWith
 class ExampleUnitTest {
 
   @Test
-  fun roboExample() {
+  fun captureRoboImageSample() {
     // launch
     launch(MainActivity::class.java)
 
     onView(ViewMatchers.isRoot())
-      .roboCapture("build/first_screen.png")
+      .captureRoboImage("build/first_screen.png")
 
     onView(withId(R.id.compose))
-      .roboCapture("build/compose.png")
+      .captureRoboImage("build/compose.png")
 
     // move to next page
     onView(withId(R.id.button_first))
       .perform(click())
 
     onView(ViewMatchers.isRoot())
-      .roboCapture("build/second_screen.png")
+      .captureRoboImage("build/second_screen.png")
   }
 
   @Test
-  fun roboAutoCaptureSample() {
+  fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
-      .roboAutoCapture("build/test.gif") {
+      .captureRoboGif("build/test.gif") {
         // launch
         launch(MainActivity::class.java)
         // move to next page

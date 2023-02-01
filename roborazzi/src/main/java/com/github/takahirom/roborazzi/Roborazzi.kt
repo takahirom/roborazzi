@@ -30,23 +30,23 @@ import java.io.File
 import java.util.Locale
 import kotlin.math.abs
 
-fun ViewInteraction.roboCapture(filePath: String) {
-  roboCapture(File(filePath))
+fun ViewInteraction.captureRoboImage(filePath: String) {
+  captureRoboImage(File(filePath))
 }
 
-fun ViewInteraction.roboCapture(file: File) {
+fun ViewInteraction.captureRoboImage(file: File) {
   perform(ImageCaptureViewAction { canvas ->
     canvas.save(file)
   })
 }
 
-fun ViewInteraction.roboAutoCapture(filePath: String, block: () -> Unit) {
+fun ViewInteraction.captureRoboGif(filePath: String, block: () -> Unit) {
   var removeListener = {}
 
   val canvases = mutableListOf<RoboCanvas>()
 
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
-    this@roboAutoCapture.perform(
+    this@captureRoboGif.perform(
       ImageCaptureViewAction { canvas ->
         canvases.add(canvas)
       }
@@ -103,22 +103,25 @@ fun ViewInteraction.roboAutoCapture(filePath: String, block: () -> Unit) {
     val application = instrumentation.targetContext.applicationContext as Application
     application.registerActivityLifecycleCallbacks(activityCallbacks)
   }
-  block()
-  removeListener()
-  val application = instrumentation.targetContext.applicationContext as Application
-  application.unregisterActivityLifecycleCallbacks(activityCallbacks)
-  val e = AnimatedGifEncoder()
-  e.setRepeat(0)
-  e.start(filePath)
-  e.setDelay(1000)   // 1 frame per sec
-  e.setSize(
-    canvases.maxOf { it.croppedWidth },
-    canvases.maxOf { it.croppedHeight }
-  )
-  canvases.forEach { canvas ->
-    e.addFrame(canvas)
+  try {
+    block()
+  } finally {
+    removeListener()
+    val application = instrumentation.targetContext.applicationContext as Application
+    application.unregisterActivityLifecycleCallbacks(activityCallbacks)
+    val e = AnimatedGifEncoder()
+    e.setRepeat(0)
+    e.start(filePath)
+    e.setDelay(1000)   // 1 frame per sec
+    e.setSize(
+      canvases.maxOf { it.croppedWidth },
+      canvases.maxOf { it.croppedHeight }
+    )
+    canvases.forEach { canvas ->
+      e.addFrame(canvas)
+    }
+    e.finish()
   }
-  e.finish()
 }
 
 internal val colors = listOf(
