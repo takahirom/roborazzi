@@ -4,6 +4,31 @@
 
 ## Example
 
+### Generate gif automatically
+
+```kotlin
+@Test
+fun roboAutoCaptureSample() {
+onView(ViewMatchers.isRoot())
+  .roboAutoCapture("build/test.gif") {
+    // launch
+    launch(MainActivity::class.java)
+    // move to next page
+    onView(withId(R.id.button_first))
+      .perform(click())
+    // back
+    pressBack()
+    // move to next page
+    onView(withId(R.id.button_first))
+      .perform(click())
+  }
+}
+```
+
+<img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/215935187-0b4579cb-dffa-4fcd-a633-a2b665e6910c.gif >
+
+### Manually take a screenshot
+
 ```kotlin
 @Test
 fun roboExample() {
@@ -30,6 +55,10 @@ fun roboExample() {
 
 <img width="443" alt="image" src="https://user-images.githubusercontent.com/1386930/215309972-8a2098be-91b7-45a5-82a2-647b89e1f6f8.png">
 <img width="486" alt="image" src="https://user-images.githubusercontent.com/1386930/215248859-03a4f66e-3c42-42d8-863a-4cfbc3090b3f.png">
+
+
+### Large project example
+
 
 [From DroidKaigi 2022 app](https://github.com/DroidKaigi/conference-app-2022)
 
