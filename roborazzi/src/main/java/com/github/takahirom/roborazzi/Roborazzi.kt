@@ -1,12 +1,18 @@
 package com.github.takahirom.roborazzi
 
+import android.app.Activity
+import android.app.Application
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.TextPaint
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.toAndroidRect
@@ -16,6 +22,7 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
+import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.junit.Assert.*
@@ -28,7 +35,90 @@ fun ViewInteraction.roboCapture(filePath: String) {
 }
 
 fun ViewInteraction.roboCapture(file: File) {
-  perform(ImageCaptureViewAction(file))
+  perform(ImageCaptureViewAction { canvas ->
+    canvas.save(file)
+  })
+}
+
+fun ViewInteraction.roboAutoCapture(filePath: String, block: () -> Unit) {
+  var removeListener = {}
+
+  val canvases = mutableListOf<RoboCanvas>()
+
+  val listener = ViewTreeObserver.OnGlobalLayoutListener {
+    this@roboAutoCapture.perform(
+      ImageCaptureViewAction { canvas ->
+        canvases.add(canvas)
+      }
+    )
+  }
+  val viewTreeListenerAction = object : ViewAction {
+    override fun getConstraints(): Matcher<View> {
+      return Matchers.any(View::class.java)
+    }
+
+    override fun getDescription(): String {
+      return String.format(Locale.ROOT, "capture view to image")
+    }
+
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
+    override fun perform(uiController: UiController, view: View) {
+      val viewTreeObserver = view.viewTreeObserver
+      viewTreeObserver.addOnGlobalLayoutListener(listener)
+      removeListener = {
+        viewTreeObserver.removeOnGlobalLayoutListener(listener)
+      }
+    }
+  }
+
+  val instrumentation = InstrumentationRegistry.getInstrumentation()
+  val activityCallbacks = object : Application.ActivityLifecycleCallbacks {
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+    }
+
+    override fun onActivityStarted(activity: Activity) {
+    }
+
+    override fun onActivityResumed(activity: Activity) {
+      Handler(Looper.getMainLooper()).post {
+        perform(viewTreeListenerAction)
+      }
+    }
+
+    override fun onActivityPaused(activity: Activity) {
+    }
+
+    override fun onActivityStopped(activity: Activity) {
+    }
+
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
+    }
+
+    override fun onActivityDestroyed(activity: Activity) {
+    }
+  }
+  try {
+    perform(viewTreeListenerAction)
+  } catch (e: Exception) {
+    val application = instrumentation.targetContext.applicationContext as Application
+    application.registerActivityLifecycleCallbacks(activityCallbacks)
+  }
+  block()
+  removeListener()
+  val application = instrumentation.targetContext.applicationContext as Application
+  application.unregisterActivityLifecycleCallbacks(activityCallbacks)
+  val e = AnimatedGifEncoder()
+  e.setRepeat(0)
+  e.start(filePath)
+  e.setDelay(1000)   // 1 frame per sec
+  e.setSize(
+    canvases.maxOf { it.croppedWidth },
+    canvases.maxOf { it.croppedHeight }
+  )
+  canvases.forEach { canvas ->
+    e.addFrame(canvas)
+  }
+  e.finish()
 }
 
 internal val colors = listOf(
@@ -167,7 +257,7 @@ internal sealed interface RoboComponent {
   }
 }
 
-private class ImageCaptureViewAction(val file: File) : ViewAction {
+private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAction {
   override fun getConstraints(): Matcher<View> {
     return Matchers.any(View::class.java)
   }
@@ -214,13 +304,12 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
         rect.bottom + paddingRect.top + depth * depthSlide
       )
 
-      val boxColor = colors[index % colors.size] + (0xfF shl 56)
+      val boxColor = colors[depth % colors.size] + (0xfF shl 56)
       val alphaBoxColor = when (component.visibility) {
-        Visibility.Visible -> colors[index % colors.size] + (0xEE shl 56) // alpha EE / FF
-        Visibility.Gone -> colors[index % colors.size] + (0x66 shl 56) // alpha 88 / FF
-        Visibility.Invisible -> colors[index % colors.size] + (0x88 shl 56) // alpha BB / FF
+        Visibility.Visible -> colors[depth % colors.size] + (0xEE shl 56) // alpha EE / FF
+        Visibility.Gone -> colors[depth % colors.size] + (0x66 shl 56) // alpha 88 / FF
+        Visibility.Invisible -> colors[depth % colors.size] + (0x88 shl 56) // alpha BB / FF
       }
-//
 
       canvas.drawRect(canvasRect, paint.apply {
         color = alphaBoxColor
@@ -285,7 +374,7 @@ private class ImageCaptureViewAction(val file: File) : ViewAction {
     }
     dfs(rootComponent)
     drawTexts.forEach { it() }
-    canvas.save(file)
+    action(canvas)
   }
 
   fun isColorBright(color: Int): Boolean {

@@ -18,8 +18,10 @@ class RoboCanvas(width: Int, height: Int) {
   private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
   val width get() = bufferedImage.width
   val height get() = bufferedImage.height
-  var rightBottomPoint = 0 to 0
-  fun updateRightBottom(x: Int, y: Int) {
+  val croppedWidth get() = croppedImage().width
+  val croppedHeight get() = croppedImage().height
+  private var rightBottomPoint = 0 to 0
+  private fun updateRightBottom(x: Int, y: Int) {
     rightBottomPoint = maxOf(x, rightBottomPoint.first) to maxOf(y, rightBottomPoint.second)
   }
 
@@ -92,9 +94,13 @@ class RoboCanvas(width: Int, height: Int) {
     return bufferedImage.getRGB(x, y)
   }
 
+  fun croppedImage(): BufferedImage {
+    return bufferedImage.getSubimage(0, 0, rightBottomPoint.first, rightBottomPoint.second)
+  }
+
   fun save(file: File) {
     ImageIO.write(
-      bufferedImage.getSubimage(0, 0, rightBottomPoint.first, rightBottomPoint.second),
+      croppedImage(),
       "png",
       file
     )
