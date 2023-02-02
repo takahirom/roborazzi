@@ -27,6 +27,37 @@ fun captureRoboGifSample() {
 
 <img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/215935187-0b4579cb-dffa-4fcd-a633-a2b665e6910c.gif >
 
+### Generate gif automatically with Test Rule
+
+With the JUnit Test rule, you do not need to name the gif image, and if you prefer, you can output the gif image only when the test fails.
+
+This test outputs this file.
+
+`build/outputs/roborazzi/com.github.takahirom.roborazzi.sample.RuleTestWithOnlyFail_captureRoboGifSampleFail.gif`
+
+```kotlin
+@RunWith(AndroidJUnit4::class)
+class RuleTestWithOnlyFail {
+  @get:Rule val roborazziRule = RoborazziRule(
+    captureRoot = onView(isRoot()),
+    captureOnlyFail = true
+  )
+  
+  @Test
+  fun captureRoboGifSampleFail() {
+    // launch
+    launch(MainActivity::class.java)
+    // move to next page
+    onView(withId(R.id.button_first))
+      .perform(click())
+    // should fail because the button does not exist
+    onView(withId(R.id.button_first))
+      .perform(click())
+  }
+}
+```
+
+
 ### Manually take a screenshot
 
 ```kotlin
