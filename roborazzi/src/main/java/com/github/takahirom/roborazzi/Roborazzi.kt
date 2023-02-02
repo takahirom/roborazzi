@@ -5,7 +5,6 @@ import android.app.Application
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -14,7 +13,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewRootForTest
@@ -25,7 +23,6 @@ import androidx.test.espresso.ViewInteraction
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
-import org.junit.Assert.*
 import java.io.File
 import java.util.Locale
 import kotlin.math.abs
@@ -41,12 +38,25 @@ fun ViewInteraction.captureRoboImage(file: File) {
 }
 
 fun ViewInteraction.captureRoboGif(filePath: String, block: () -> Unit) {
+  justCaptureRoboGif(File(filePath), block).save()
+}
+
+fun ViewInteraction.captureRoboGif(file: File, block: () -> Unit) {
+  justCaptureRoboGif(file, block).save()
+}
+
+class CaptureRoboGifResult(
+  val result: Result<Unit>,
+  val save: () -> Boolean
+)
+
+fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRoboGifResult {
   var removeListener = {}
 
   val canvases = mutableListOf<RoboCanvas>()
 
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
-    this@captureRoboGif.perform(
+    this@justCaptureRoboGif.perform(
       ImageCaptureViewAction { canvas ->
         canvases.add(canvas)
       }
@@ -61,7 +71,6 @@ fun ViewInteraction.captureRoboGif(filePath: String, block: () -> Unit) {
       return String.format(Locale.ROOT, "capture view to image")
     }
 
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     override fun perform(uiController: UiController, view: View) {
       val viewTreeObserver = view.viewTreeObserver
       viewTreeObserver.addOnGlobalLayoutListener(listener)
@@ -103,22 +112,31 @@ fun ViewInteraction.captureRoboGif(filePath: String, block: () -> Unit) {
     val application = instrumentation.targetContext.applicationContext as Application
     application.registerActivityLifecycleCallbacks(activityCallbacks)
   }
-  try {
-    block()
-  } finally {
-    removeListener()
-    val application = instrumentation.targetContext.applicationContext as Application
-    application.unregisterActivityLifecycleCallbacks(activityCallbacks)
+  return CaptureRoboGifResult(
+    result = runCatching {
+      try {
+        block()
+      } catch (e: Exception) {
+        throw e
+      } finally {
+        removeListener()
+        val application = instrumentation.targetContext.applicationContext as Application
+        application.unregisterActivityLifecycleCallbacks(activityCallbacks)
+      }
+    }
+  ) {
     val e = AnimatedGifEncoder()
     e.setRepeat(0)
-    e.start(filePath)
+    e.start(file.outputStream())
     e.setDelay(1000)   // 1 frame per sec
-    e.setSize(
-      canvases.maxOf { it.croppedWidth },
-      canvases.maxOf { it.croppedHeight }
-    )
-    canvases.forEach { canvas ->
-      e.addFrame(canvas)
+    if (canvases.isNotEmpty()) {
+      e.setSize(
+        canvases.maxOf { it.croppedWidth },
+        canvases.maxOf { it.croppedHeight }
+      )
+      canvases.forEach { canvas ->
+        e.addFrame(canvas)
+      }
     }
     e.finish()
   }
@@ -269,7 +287,6 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
     return String.format(Locale.ROOT, "capture view to image")
   }
 
-  @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
   override fun perform(uiController: UiController, view: View) {
     val basicSize = 500
     val depthSlide = 30

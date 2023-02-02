@@ -42,10 +42,6 @@ android {
 }
 
 dependencies {
-  implementation project(':roborazzi-painter')
-  def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
-  implementation composeBom
-  compileOnly "androidx.compose.ui:ui"
-
-  api 'androidx.test.espresso:espresso-core:3.5.1'
+  implementation project(':roborazzi')
+  implementation 'androidx.test.ext:junit-ktx:1.1.5'
 }

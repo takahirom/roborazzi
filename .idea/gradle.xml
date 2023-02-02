@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/roborazzi" />
+            <option value="$PROJECT_DIR$/roborazzi-junit-rule" />
             <option value="$PROJECT_DIR$/roborazzi-painter" />
           </set>
         </option>
