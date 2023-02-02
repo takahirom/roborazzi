@@ -16,8 +16,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class RuleTestWithOnlyFail {
   @get:Rule val roborazziRule = RoborazziRule(
-    viewInteraction = onView(isRoot()),
-    onlyFail = true
+    captureRoot = onView(isRoot()),
+    captureOnlyFail = true
   )
 
   @Test

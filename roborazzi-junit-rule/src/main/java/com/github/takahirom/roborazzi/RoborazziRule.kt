@@ -7,8 +7,8 @@ import org.junit.runners.model.Statement
 import java.io.File
 
 class RoborazziRule(
-  val viewInteraction: ViewInteraction,
-  val onlyFail: Boolean = false
+  val captureRoot: ViewInteraction,
+  val captureOnlyFail: Boolean = false
 ) : TestWatcher() {
   override fun failed(e: Throwable?, description: Description?) {
     super.failed(e, description)
@@ -22,7 +22,7 @@ class RoborazziRule(
           folder.mkdirs()
         }
         var isFail = false
-        val result = viewInteraction.justCaptureRoboGif(
+        val result = captureRoot.justCaptureRoboGif(
           File(
             folder.absolutePath,
             description.className + "_" + description.methodName + ".gif"
@@ -35,7 +35,7 @@ class RoborazziRule(
             throw e
           }
         }
-        if (!onlyFail || isFail) {
+        if (!captureOnlyFail || isFail) {
           result.save()
         }
         result.result.exceptionOrNull()?.let {
