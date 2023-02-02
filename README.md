@@ -51,6 +51,7 @@ class RuleTestWithOnlyFail {
     onView(withId(R.id.button_first))
       .perform(click())
     // should fail because the button does not exist
+    // Due to failure, the gif image will be saved in the outputs folder.
     onView(withId(R.id.button_first))
       .perform(click())
   }
