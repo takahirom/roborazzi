@@ -5,6 +5,7 @@ import android.app.Application
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewRootForTest
@@ -23,6 +25,7 @@ import androidx.test.espresso.ViewInteraction
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
+import org.junit.Assert.*
 import java.io.File
 import java.util.Locale
 import kotlin.math.abs
@@ -56,11 +59,13 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
   val canvases = mutableListOf<RoboCanvas>()
 
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
-    this@justCaptureRoboGif.perform(
-      ImageCaptureViewAction { canvas ->
-        canvases.add(canvas)
-      }
-    )
+    Handler(Looper.getMainLooper()).post {
+      this@justCaptureRoboGif.perform(
+        ImageCaptureViewAction { canvas ->
+          canvases.add(canvas)
+        }
+      )
+    }
   }
   val viewTreeListenerAction = object : ViewAction {
     override fun getConstraints(): Matcher<View> {
