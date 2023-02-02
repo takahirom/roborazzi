@@ -1,7 +1,6 @@
 package com.github.takahirom.roborazzi.sample
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,8 +9,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.github.takahirom.roborazzi.sample.R
 import com.github.takahirom.roborazzi.sample.databinding.FragmentFirstBinding
 
 /**
@@ -37,7 +36,12 @@ class FirstFragment : Fragment() {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     binding.compose.setContent {
-      Box(Modifier.testTag("test").size(100.dp)) {
+      repeat(100) {
+        Box(
+          Modifier
+            .testTag("test")
+            .size(100.dp)) {
+        }
       }
     }
 

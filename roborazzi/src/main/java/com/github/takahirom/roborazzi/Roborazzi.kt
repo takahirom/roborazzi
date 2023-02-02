@@ -339,11 +339,11 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
       })
 
       drawTexts.add {
-        val text =
+        val texts =
           component.text.lines().flatMap {
             if (it.length > 30) it.chunked(30) else listOf(it)
-          }.joinToString("\n")
-        val (rawBoxWidth, rawBoxHeight) = canvas.textCalc(text)
+          }
+        val (rawBoxWidth, rawBoxHeight) = canvas.textCalc(texts)
         val textPadding = 5
         val boxWidth = rawBoxWidth + textPadding * 2
         val boxHeight = rawBoxHeight + textPadding * 2
@@ -377,8 +377,8 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
           })
         canvas.drawText(
           textPointX.toFloat() + textPadding,
-          textPointY.toFloat() + textPadding + rawBoxHeight / text.split("\n").size,
-          text,
+          textPointY.toFloat() + textPadding + rawBoxHeight / texts.size,
+          texts,
           textPaint.apply {
             color = if (isColorBright(boxColor)) {
               Color.BLACK
@@ -396,10 +396,11 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
       }
     }
     dfs(rootComponent)
+    val drawLayout = System.currentTimeMillis()
     drawTexts.forEach { it() }
     action(canvas)
     val end = System.currentTimeMillis()
-    println("roborazzi takes " + (end - start) + "ms")
+    println("roborazzi takes " + (end - start) + "ms drawLayout:${drawLayout - start}ms drawText:${end - drawLayout}ms")
   }
 
   fun isColorBright(color: Int): Boolean {
@@ -410,9 +411,6 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
     return luminance > 0.5
   }
 
-  val defaultSearchPoints = (-10000..10000 step 50)
-    .flatMap { x -> (-10000..10000 step 50).map { y -> x to y } }
-
   fun findTextPoint(
     canvas: RoboCanvas,
     centerX: Int,
@@ -420,24 +418,26 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
     width: Int,
     height: Int
   ): Pair<Int, Int> {
-    var searchPlaces = defaultSearchPoints
+    var searchPlaces = canvas.emptyPoints
       .filter { (x, y) ->
-        0 < x + centerX && x + centerX + width < canvas.width &&
-          0 < y + centerY && y + centerY + height < canvas.height
+        x + width < canvas.width &&
+          y + height < canvas.height
       }
-      .sortedBy { (x, y) -> abs(x + width / 2) + abs(y + height / 2) }
-      .map { (x, y) -> (x + centerX) to (y + centerY) }
+      .sortedBy { (x, y) ->
+        val xDiff = abs(x - centerX + width / 2)
+        val yDiff = abs(y - centerY + height / 2)
+        xDiff * xDiff + yDiff * yDiff
+      }
     val binarySearch = listOf(3, 0, 5, 2, 4, 1)
     while (searchPlaces.isNotEmpty()) {
-//      println(searchPlaces.size)
       val (x, y) = searchPlaces.first()
-//      println("x:$x y:$y")
       var failPlace = -1 to -1
       if (binarySearch.all { xDiv ->
           binarySearch.all { yDiv ->
             val checkX = x + xDiv * width / 5
             val checkY = y + yDiv * height / 5
-            val result = canvas.getPixel(checkX, checkY) == 0
+            val result =
+              canvas.emptyPoints.contains(checkX - (checkX % 50) to checkY - (checkY % 50))
             if (!result) {
               failPlace = checkX to checkY
             }

@@ -35,6 +35,10 @@ class RoboCanvas(width: Int, height: Int) {
     )
     graphics2D.dispose()
     updateRightBottom(r.right, r.bottom)
+
+    emptyPoints -= ((r.left - r.left % 50)..r.right step 50).flatMap { x ->
+      ((r.top - r.top % 50)..r.bottom step 50).map { y -> x to y }
+    }.toSet()
   }
 
   fun drawLine(r: Rect, paint: Paint) {
@@ -52,27 +56,35 @@ class RoboCanvas(width: Int, height: Int) {
     graphics2D.dispose()
   }
 
-  fun textCalc(text: String): Pair<Int, Int> {
-    val texts = text.split("\n")
+  private val textCache = hashMapOf<String, TextLayout>()
+
+  fun textCalc(texts: List<String>): Pair<Int, Int> {
     val graphics2D: Graphics2D = bufferedImage.createGraphics()
     val frc: FontRenderContext = graphics2D.getFontRenderContext()
-    val longestLine = texts.maxBy { TextLayout(it, graphics2D.font, frc).bounds.width.toInt() }
-    val longestLayout = TextLayout(longestLine, graphics2D.font, frc)
+    val longestLine = texts.maxBy {
+      textCache.getOrPut(it) {
+        TextLayout(
+          it,
+          graphics2D.font,
+          frc
+        )
+      }.bounds.width.toInt()
+    }
+    val longestLayout =
+      textCache.getOrPut(longestLine) { TextLayout(longestLine, graphics2D.font, frc) }
     graphics2D.dispose()
     return longestLayout.bounds.width.toInt() to (texts.sumOf {
       calcHeight(it, graphics2D, frc) + 1
     }).toInt()
   }
 
-  fun drawText(textPointX: Float, textPointY: Float, text: String, paint: Paint) {
+  fun drawText(textPointX: Float, textPointY: Float, texts: List<String>, paint: Paint) {
     val graphics2D = bufferedImage.createGraphics()
     graphics2D.color = Color(paint.getColor())
 
     val frc: FontRenderContext = graphics2D.getFontRenderContext()
-    val outputs: List<String> = text.split("\n")
     var nextY = textPointY
-    for (i in outputs.indices) {
-      val text = outputs[i]
+    for (text in texts) {
       val height = calcHeight(text, graphics2D, frc)
       graphics2D.drawString(
         text,
@@ -88,7 +100,9 @@ class RoboCanvas(width: Int, height: Int) {
     text: String,
     graphics2D: Graphics2D,
     frc: FontRenderContext
-  ) = TextLayout(text, graphics2D.font, frc).bounds.height
+  ) = textCache.getOrPut(text) {
+    TextLayout(text, graphics2D.font, frc)
+  }.bounds.height
 
   fun getPixel(x: Int, y: Int): Int {
     return bufferedImage.getRGB(x, y)
@@ -105,4 +119,9 @@ class RoboCanvas(width: Int, height: Int) {
       file
     )
   }
+
+  var emptyPoints = (0..width step 50)
+    .flatMap { x -> (0..height step 50).map { y -> x to y } }
+    .toMutableSet()
+    private set
 }
