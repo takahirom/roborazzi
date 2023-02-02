@@ -5,7 +5,6 @@ import android.app.Application
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -14,7 +13,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewRootForTest
@@ -25,7 +23,6 @@ import androidx.test.espresso.ViewInteraction
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
-import org.junit.Assert.*
 import java.io.File
 import java.util.Locale
 import kotlin.math.abs
@@ -293,6 +290,7 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
   }
 
   override fun perform(uiController: UiController, view: View) {
+    val start = System.currentTimeMillis()
     val basicSize = 500
     val depthSlide = 30
     var depth = 0
@@ -400,6 +398,8 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
     dfs(rootComponent)
     drawTexts.forEach { it() }
     action(canvas)
+    val end = System.currentTimeMillis()
+    println("roborazzi takes " + (end - start) + "ms")
   }
 
   fun isColorBright(color: Int): Boolean {
@@ -410,6 +410,9 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
     return luminance > 0.5
   }
 
+  val defaultSearchPoints = (-10000..10000 step 50)
+    .flatMap { x -> (-10000..10000 step 50).map { y -> x to y } }
+
   fun findTextPoint(
     canvas: RoboCanvas,
     centerX: Int,
@@ -417,24 +420,36 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
     width: Int,
     height: Int
   ): Pair<Int, Int> {
-
-    val searchPlaces = (-10000..10000 step 50)
-      .flatMap { x -> (-10000..10000 step 50).map { y -> x to y } }
+    var searchPlaces = defaultSearchPoints
       .filter { (x, y) ->
         0 < x + centerX && x + centerX + width < canvas.width &&
           0 < y + centerY && y + centerY + height < canvas.height
       }
       .sortedBy { (x, y) -> abs(x + width / 2) + abs(y + height / 2) }
       .map { (x, y) -> (x + centerX) to (y + centerY) }
-    for ((x, y) in searchPlaces) {
-      if (
-        (0..5).all { xDiv ->
-          (0..5).all { yDiv ->
-            canvas.getPixel(x + xDiv * width / 5, y + yDiv * height / 5) == 0
+    val binarySearch = listOf(3, 0, 5, 2, 4, 1)
+    while (searchPlaces.isNotEmpty()) {
+//      println(searchPlaces.size)
+      val (x, y) = searchPlaces.first()
+//      println("x:$x y:$y")
+      var failPlace = -1 to -1
+      if (binarySearch.all { xDiv ->
+          binarySearch.all { yDiv ->
+            val checkX = x + xDiv * width / 5
+            val checkY = y + yDiv * height / 5
+            val result = canvas.getPixel(checkX, checkY) == 0
+            if (!result) {
+              failPlace = checkX to checkY
+            }
+            result
           }
         }
       ) {
         return x to y
+      }
+      searchPlaces = searchPlaces.filter { (x, y) ->
+        !((x <= failPlace.first && failPlace.first <= x + width) &&
+          (y <= failPlace.second && failPlace.second <= y + height))
       }
     }
     return 0 to 0
