@@ -72,7 +72,7 @@ fun SampleComposableFunction() {
   ) {
     Box(
       Modifier
-        .testTag("MyComposeRoot")
+        .testTag("MyComposeButton")
         .size(50.dp)
         .clickable {
           count++
@@ -106,7 +106,7 @@ class ComposeTest {
     }
     (0 until 5).forEach { _ ->
       composeTestRule
-        .onNodeWithTag("MyComposeRoot")
+        .onNodeWithTag("MyComposeButton")
         .performClick()
     }
   }
@@ -132,7 +132,7 @@ fun captureRoboImageSample() {
     .captureRoboImage("build/first_screen.png")
 
   // compose image
-  composeTestRule.onNodeWithTag("MyComposeRoot")
+  composeTestRule.onNodeWithTag("MyComposeButton")
     .onParent()
     .captureRoboImage("build/compose.png")
 

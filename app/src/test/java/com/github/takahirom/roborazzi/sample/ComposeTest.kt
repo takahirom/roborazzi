@@ -25,9 +25,9 @@ class ComposeTest {
     composeTestRule.setContent {
       SampleComposableFunction()
     }
-    (0 until 5).forEach { _ ->
+    (0 until 3).forEach { _ ->
       composeTestRule
-        .onNodeWithTag("MyComposeRoot")
+        .onNodeWithTag("MyComposeButton")
         .performClick()
     }
   }

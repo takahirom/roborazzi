@@ -3,6 +3,8 @@ package com.github.takahirom.roborazzi.sample
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onParent
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -28,7 +30,7 @@ class ManualTest {
       .captureRoboImage("build/first_screen.png")
 
     // compose image
-    composeTestRule.onNodeWithTag("MyComposeRoot")
+    composeTestRule.onNodeWithTag("MyComposeButton")
       .onParent()
       .captureRoboImage("build/compose.png")
 
@@ -47,7 +49,7 @@ class ManualTest {
   @Test
   fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
-      .captureRoboGif("build/test.gif") {
+      .captureRoboGif("build/view.gif") {
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
@@ -56,6 +58,19 @@ class ManualTest {
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
+      }
+  }
+
+  @Test
+  fun captureRoboGifSampleCompose() {
+    composeTestRule.onRoot(false)
+      .captureRoboGif(composeTestRule, "build/compose.gif") {
+        composeTestRule.onNodeWithTag("MyComposeButton")
+          .performClick()
+        composeTestRule.onNodeWithTag("MyComposeButton")
+          .performClick()
+        composeTestRule.onNodeWithTag("MyComposeButton")
+          .performClick()
       }
   }
 }

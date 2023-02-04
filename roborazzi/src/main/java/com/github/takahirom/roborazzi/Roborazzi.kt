@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.core.view.doOnNextLayout
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
@@ -83,7 +84,7 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
 
   val canvases = mutableListOf<RoboCanvas>()
 
-  val listener = ViewTreeObserver.OnPreDrawListener {
+  val listener = ViewTreeObserver.OnGlobalLayoutListener {
     Handler(Looper.getMainLooper()).post {
       this@justCaptureRoboGif.perform(
         ImageCaptureViewAction { canvas ->
@@ -91,7 +92,6 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
         }
       )
     }
-    true
   }
   val viewTreeListenerAction = object : ViewAction {
     override fun getConstraints(): Matcher<View> {
@@ -104,9 +104,9 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
 
     override fun perform(uiController: UiController, view: View) {
       val viewTreeObserver = view.viewTreeObserver
-      viewTreeObserver.addOnPreDrawListener(listener)
+      viewTreeObserver.addOnGlobalLayoutListener(listener)
       removeListener = {
-        viewTreeObserver.removeOnPreDrawListener(listener)
+        viewTreeObserver.removeOnGlobalLayoutListener(listener)
       }
     }
   }
@@ -138,8 +138,15 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
     }
   }
   try {
+    // If there is already a screen, we should take the screenshot first not to miss the frame.
+    perform(
+      ImageCaptureViewAction { canvas ->
+        canvases.add(canvas)
+      }
+    )
     perform(viewTreeListenerAction)
   } catch (e: Exception) {
+    // It seems there is no screen, so wait
     val application = instrumentation.targetContext.applicationContext as Application
     application.registerActivityLifecycleCallbacks(activityCallbacks)
   }
@@ -182,17 +189,34 @@ fun SemanticsNodeInteraction.justCaptureRoboGif(
 
   val canvases = mutableListOf<RoboCanvas>()
 
-  val listener = ViewTreeObserver.OnPreDrawListener {
+  val listener = ViewTreeObserver.OnGlobalLayoutListener {
     capture(RoboComponent.Compose(this@justCaptureRoboGif.fetchSemanticsNode(""))) {
       canvases.add(it)
     }
-    true
   }
-  composeRule.runOnIdle {
+  try {
+    // If there is already a screen, we should take the screenshot first not to miss the frame.
+    capture(RoboComponent.Compose(this@justCaptureRoboGif.fetchSemanticsNode(""))) {
+      canvases.add(it)
+    }
     val viewTreeObserver = composeRule.activity.window.decorView.viewTreeObserver
-    viewTreeObserver.addOnPreDrawListener(listener)
+    viewTreeObserver.addOnGlobalLayoutListener(listener)
     removeListener = {
-      viewTreeObserver.removeOnPreDrawListener(listener)
+      viewTreeObserver.removeOnGlobalLayoutListener(listener)
+    }
+  } catch (e: Exception) {
+    // It seems there is no screen, so wait
+    composeRule.runOnIdle {
+      val viewTreeObserver = composeRule.activity.window.decorView.viewTreeObserver
+      composeRule.activity.window.decorView.doOnNextLayout {
+        capture(RoboComponent.Compose(this@justCaptureRoboGif.fetchSemanticsNode(""))) {
+          canvases.add(it)
+        }
+      }
+      viewTreeObserver.addOnGlobalLayoutListener(listener)
+      removeListener = {
+        viewTreeObserver.removeOnGlobalLayoutListener(listener)
+      }
     }
   }
   return CaptureRoboGifResult(
@@ -202,6 +226,7 @@ fun SemanticsNodeInteraction.justCaptureRoboGif(
       } catch (e: Exception) {
         throw e
       } finally {
+        composeRule.waitForIdle()
         removeListener()
       }
     }

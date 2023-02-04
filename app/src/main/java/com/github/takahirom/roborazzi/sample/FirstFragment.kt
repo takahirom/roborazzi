@@ -59,20 +59,20 @@ class FirstFragment : Fragment() {
 
 @Composable
 fun SampleComposableFunction() {
-  var count by remember { mutableStateOf(3) }
+  var count by remember { mutableStateOf(0) }
   Column(
     Modifier
       .size(300.dp)
   ) {
     Box(
       Modifier
-        .testTag("MyComposeRoot")
+        .testTag("MyComposeButton")
         .size(50.dp)
         .clickable {
           count++
         }
     )
-    (0..count).forEach {
+    (0 until count).forEach {
       Box(
         Modifier
           .testTag("child:$it")
