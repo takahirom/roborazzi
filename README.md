@@ -126,12 +126,19 @@ Result
 fun captureRoboImageSample() {
   // launch
   launch(MainActivity::class.java)
-
+  
+  // screen level image
   onView(ViewMatchers.isRoot())
     .captureRoboImage("build/first_screen.png")
 
-  onView(withId(R.id.compose))
+  // compose image
+  composeTestRule.onNodeWithTag("MyComposeRoot")
+    .onParent()
     .captureRoboImage("build/compose.png")
+
+  // small component image
+  onView(withId(R.id.button_first))
+    .captureRoboImage("build/button.png")
 
   // move to next page
   onView(withId(R.id.button_first))
