@@ -115,7 +115,7 @@ class ComposeTest {
 
 Result
 
-![com github takahirom roborazzi sample ComposeTest_composable](https://user-images.githubusercontent.com/1386930/216755124-08f7e443-e98e-4b65-b41f-baeb999dc6c1.gif)
+<img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/216755124-08f7e443-e98e-4b65-b41f-baeb999dc6c1.gif >
 
 
 
