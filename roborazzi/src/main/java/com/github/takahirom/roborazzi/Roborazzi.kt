@@ -12,7 +12,6 @@ import android.text.TextPaint
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.widget.TextView
 import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewRootForTest
@@ -22,6 +21,7 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
+import androidx.test.espresso.util.HumanReadables
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
@@ -280,29 +280,7 @@ internal sealed interface RoboComponent {
           }
         }
     override val text: String
-      get() = buildString {
-        if (id.isNotBlank()) {
-          appendLine("id:$id")
-        }
-        append("className:")
-        append(view.javaClass.name)
-        append("\nrect:")
-        append(rect)
-        append("\nvisibility:")
-        append(
-          when (view.visibility) {
-            android.view.View.VISIBLE -> "VISIBLE"
-            android.view.View.GONE -> "GONE"
-            else -> "GONE"
-          }
-        )
-        if (view is TextView) {
-          append("\ntext:")
-          append(
-            view.text
-          )
-        }
-      }
+      get() = HumanReadables.describe(view)
     override val visibility: Visibility
       get() = when (view.visibility) {
         android.view.View.VISIBLE -> Visibility.Visible
@@ -325,14 +303,7 @@ internal sealed interface RoboComponent {
         Compose(it)
       }
     override val text: String
-      get() = buildString {
-        append("ComposeNode\nrect:")
-        append(rect)
-        append("\n")
-        append(node.config)
-        append("\n")
-        append(node.layoutInfo)
-      }
+      get() = node.printToString()
     override val visibility: Visibility
       get() = Visibility.Visible
 
