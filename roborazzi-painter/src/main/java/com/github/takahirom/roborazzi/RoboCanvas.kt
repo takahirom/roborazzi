@@ -137,7 +137,7 @@ class RoboCanvas(width: Int, height: Int) {
     pendingDrawList.forEach { it() }
     val end = System.currentTimeMillis()
     if (pendingDrawList.isNotEmpty()) {
-      println("roborazzi pending drawing takes ${end - start} ms")
+//      println("roborazzi pending drawing takes ${end - start} ms")
       pendingDrawList.clear()
     }
   }

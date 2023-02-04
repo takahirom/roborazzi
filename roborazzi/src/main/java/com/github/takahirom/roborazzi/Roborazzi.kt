@@ -490,7 +490,7 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
   dfs(rootComponent)
   saveAction(canvas)
   val end = System.currentTimeMillis()
-  println("roborazzi takes " + (end - start) + "ms")
+//  println("roborazzi takes " + (end - start) + "ms")
 }
 
 fun isColorBright(color: Int): Boolean {
