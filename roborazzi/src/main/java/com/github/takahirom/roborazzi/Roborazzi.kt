@@ -385,7 +385,7 @@ private class ImageCaptureViewAction(val saveAction: (RoboCanvas) -> Unit) : Vie
 
 internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> Unit) {
   val start = System.currentTimeMillis()
-  val basicSize = 500
+  val basicSize = 600
   val depthSlide = 30
   var depth = 0
   var index = 0

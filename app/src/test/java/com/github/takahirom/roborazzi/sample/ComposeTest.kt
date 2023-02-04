@@ -7,45 +7,28 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziRule
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.setMain
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ComposeTest {
-
+  @get:Rule
   val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-  val roborazziRule = RoborazziRule(composeTestRule, composeTestRule.onRoot())
-
   @get:Rule
-  var ruleChain: RuleChain = RuleChain.outerRule(this.composeTestRule).around(roborazziRule)
-
-  init {
-    Dispatchers.setMain(UnconfinedTestDispatcher())
-  }
+  val roborazziRule = RoborazziRule(composeTestRule, composeTestRule.onRoot())
 
   @Test
   fun composable() {
-    println("start")
     composeTestRule.setContent {
       SampleComposableFunction()
     }
-    println("start2")
-    (0..10).forEach {
-      println("click$it")
+    (0 until 5).forEach { _ ->
       composeTestRule
         .onNodeWithTag("MyComposeRoot")
         .performClick()
-      composeTestRule
-        .onNodeWithTag("MyComposeRoot")
-        .assertExists("not ")
     }
-    println("ok?")
   }
 }

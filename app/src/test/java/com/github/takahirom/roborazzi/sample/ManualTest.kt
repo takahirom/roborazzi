@@ -1,5 +1,8 @@
 package com.github.takahirom.roborazzi.sample
 
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onParent
 import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
@@ -10,22 +13,29 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class ExampleUnitTest {
+class ManualTest {
+  @get:Rule
+  val composeTestRule = createAndroidComposeRule<MainActivity>()
 
   @Test
   fun captureRoboImageSample() {
-    // launch
-    launch(MainActivity::class.java)
-
+    // screen level image
     onView(ViewMatchers.isRoot())
       .captureRoboImage("build/first_screen.png")
 
-    onView(withId(R.id.compose))
+    // compose image
+    composeTestRule.onNodeWithTag("MyComposeRoot")
+      .onParent()
       .captureRoboImage("build/compose.png")
+
+    // small component image
+    onView(withId(R.id.button_first))
+      .captureRoboImage("build/button.png")
 
     // move to next page
     onView(withId(R.id.button_first))
