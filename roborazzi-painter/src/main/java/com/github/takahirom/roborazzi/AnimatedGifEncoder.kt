@@ -128,7 +128,7 @@ class AnimatedGifEncoder {
    * @return true if successful.
    */
   fun addFrame(canvas: RoboCanvas): Boolean {
-    val im = canvas.croppedImage()
+    val im = canvas.outputImage()
     if (im == null || !started) {
       return false
     }

@@ -407,7 +407,6 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
   val textPaint = TextPaint()
   textPaint.isAntiAlias = true
   textPaint.textSize = 16F
-  val drawTexts = mutableListOf<() -> Unit>()
 
   fun dfs(component: RoboComponent) {
     index++
@@ -431,7 +430,7 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
       color = alphaBoxColor
     })
 
-    drawTexts.add {
+    canvas.addPendingDraw {
       val texts =
         component.text.lines().flatMap {
           if (it.length > 30) it.chunked(30) else listOf(it)
@@ -489,11 +488,9 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
     }
   }
   dfs(rootComponent)
-  val drawLayout = System.currentTimeMillis()
-  drawTexts.forEach { it() }
   saveAction(canvas)
   val end = System.currentTimeMillis()
-  println("roborazzi takes " + (end - start) + "ms drawLayout:${drawLayout - start}ms drawText:${end - drawLayout}ms")
+  println("roborazzi takes " + (end - start) + "ms")
 }
 
 fun isColorBright(color: Int): Boolean {

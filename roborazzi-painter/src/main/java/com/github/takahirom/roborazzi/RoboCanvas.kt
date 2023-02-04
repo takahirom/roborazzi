@@ -108,16 +108,38 @@ class RoboCanvas(width: Int, height: Int) {
     return bufferedImage.getRGB(x, y)
   }
 
-  fun croppedImage(): BufferedImage {
+  fun outputImage(): BufferedImage {
+    return croppedImage()
+  }
+
+  private fun croppedImage(): BufferedImage {
+    drawPendingDraw()
     return bufferedImage.getSubimage(0, 0, rightBottomPoint.first, rightBottomPoint.second)
   }
 
+  var pendingDrawList = mutableListOf<() -> Unit>()
+
+  fun addPendingDraw(pendingDraw: () -> Unit) {
+    pendingDrawList.add(pendingDraw)
+  }
+
   fun save(file: File) {
+    drawPendingDraw()
     ImageIO.write(
       croppedImage(),
       "png",
       file
     )
+  }
+
+  private fun drawPendingDraw() {
+    val start = System.currentTimeMillis()
+    pendingDrawList.forEach { it() }
+    val end = System.currentTimeMillis()
+    if (pendingDrawList.isNotEmpty()) {
+      println("roborazzi pending drawing takes ${end - start} ms")
+      pendingDrawList.clear()
+    }
   }
 
   var emptyPoints = (0..width step 50)
