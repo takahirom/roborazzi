@@ -58,6 +58,66 @@ class RuleTestWithOnlyFail {
 }
 ```
 
+### Compose Support
+
+Test target
+
+```kotlin
+@Composable
+fun SampleComposableFunction() {
+  var count by remember { mutableStateOf(0) }
+  Column(
+    Modifier
+      .size(300.dp)
+  ) {
+    Box(
+      Modifier
+        .testTag("MyComposeRoot")
+        .size(50.dp)
+        .clickable {
+          count++
+        }
+    )
+    (0..count).forEach {
+      Box(
+        Modifier
+          .size(30.dp)
+      )
+    }
+  }
+}
+```
+
+Test (Just add RoborazziRule)
+
+```kotlin
+@RunWith(AndroidJUnit4::class)
+class ComposeTest {
+  @get:Rule
+  val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+  @get:Rule
+  val roborazziRule = RoborazziRule(composeTestRule, composeTestRule.onRoot())
+
+  @Test
+  fun composable() {
+    composeTestRule.setContent {
+      SampleComposableFunction()
+    }
+    (0 until 5).forEach { _ ->
+      composeTestRule
+        .onNodeWithTag("MyComposeRoot")
+        .performClick()
+    }
+  }
+}
+```
+
+Result
+
+![com github takahirom roborazzi sample ComposeTest_composable](https://user-images.githubusercontent.com/1386930/216755124-08f7e443-e98e-4b65-b41f-baeb999dc6c1.gif)
+
+
 
 ### Manually take a screenshot
 
