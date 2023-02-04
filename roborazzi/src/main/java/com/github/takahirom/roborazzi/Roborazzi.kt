@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
@@ -43,6 +45,32 @@ fun ViewInteraction.captureRoboGif(filePath: String, block: () -> Unit) {
 
 fun ViewInteraction.captureRoboGif(file: File, block: () -> Unit) {
   justCaptureRoboGif(file, block).save()
+}
+
+fun SemanticsNodeInteraction.captureRoboImage(filePath: String) {
+  captureRoboImage(File(filePath))
+}
+
+fun SemanticsNodeInteraction.captureRoboImage(file: File) {
+  capture(RoboComponent.Compose(this.fetchSemanticsNode("fail to captureRoboImage"))) { canvas ->
+    canvas.save(file)
+  }
+}
+
+fun SemanticsNodeInteraction.captureRoboGif(
+  composeRule: AndroidComposeTestRule<*, *>,
+  filePath: String,
+  block: () -> Unit
+) {
+  justCaptureRoboGif(composeRule, File(filePath), block).save()
+}
+
+fun SemanticsNodeInteraction.captureRoboGif(
+  composeRule: AndroidComposeTestRule<*, *>,
+  file: File,
+  block: () -> Unit
+) {
+  justCaptureRoboGif(composeRule, file, block).save()
 }
 
 class CaptureRoboGifResult(
@@ -144,6 +172,56 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
   }
 }
 
+fun SemanticsNodeInteraction.justCaptureRoboGif(
+  composeRule: AndroidComposeTestRule<*, *>,
+  file: File,
+  block: () -> Unit
+): CaptureRoboGifResult {
+  var removeListener = {}
+
+  val canvases = mutableListOf<RoboCanvas>()
+
+  val listener = ViewTreeObserver.OnPreDrawListener {
+    capture(RoboComponent.Compose(this@justCaptureRoboGif.fetchSemanticsNode(""))) {
+      canvases.add(it)
+    }
+    true
+  }
+  composeRule.runOnIdle {
+    val viewTreeObserver = composeRule.activity.window.decorView.viewTreeObserver
+    viewTreeObserver.addOnPreDrawListener(listener)
+    removeListener = {
+      viewTreeObserver.removeOnPreDrawListener(listener)
+    }
+  }
+  return CaptureRoboGifResult(
+    result = runCatching {
+      try {
+        block()
+      } catch (e: Exception) {
+        throw e
+      } finally {
+        removeListener()
+      }
+    }
+  ) {
+    val e = AnimatedGifEncoder()
+    e.setRepeat(0)
+    e.start(file.outputStream())
+    e.setDelay(1000)   // 1 frame per sec
+    if (canvases.isNotEmpty()) {
+      e.setSize(
+        canvases.maxOf { it.croppedWidth },
+        canvases.maxOf { it.croppedHeight }
+      )
+      canvases.forEach { canvas ->
+        e.addFrame(canvas)
+      }
+    }
+    e.finish()
+  }
+}
+
 internal val colors = listOf(
   0x3F9101,
   0x0E4A8E,
@@ -166,6 +244,10 @@ internal enum class Visibility {
 internal sealed interface RoboComponent {
 
   class View(private val view: android.view.View) : RoboComponent {
+    override val width: Int
+      get() = view.width
+    override val height: Int
+      get() = view.height
     override val children: List<RoboComponent>
       get() = when (view) {
         is AbstractComposeView -> {
@@ -233,6 +315,10 @@ internal sealed interface RoboComponent {
   }
 
   class Compose(private val node: SemanticsNode) : RoboComponent {
+    override val width: Int
+      get() = node.layoutInfo.width
+    override val height: Int
+      get() = node.layoutInfo.height
     override val children: List<RoboComponent>
       get() = node.children.map {
         Compose(it)
@@ -266,6 +352,8 @@ internal sealed interface RoboComponent {
   val children: List<RoboComponent>
   val text: String
   val visibility: Visibility
+  val width: Int
+  val height: Int
 
   fun depth(): Int {
     return (children.maxOfOrNull {
@@ -280,7 +368,7 @@ internal sealed interface RoboComponent {
   }
 }
 
-private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAction {
+private class ImageCaptureViewAction(val saveAction: (RoboCanvas) -> Unit) : ViewAction {
   override fun getConstraints(): Matcher<View> {
     return Matchers.any(View::class.java)
   }
@@ -290,168 +378,171 @@ private class ImageCaptureViewAction(val action: (RoboCanvas) -> Unit) : ViewAct
   }
 
   override fun perform(uiController: UiController, view: View) {
-    val start = System.currentTimeMillis()
-    val basicSize = 500
-    val depthSlide = 30
-    var depth = 0
-    var index = 0
+    capture(RoboComponent.View(view), saveAction)
+  }
+}
 
-    val rootComponent = RoboComponent.View(view)
-    val deepestDepth = rootComponent.depth()
-    val componentCount = rootComponent.countOfComponent()
+internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> Unit) {
+  val start = System.currentTimeMillis()
+  val basicSize = 500
+  val depthSlide = 30
+  var depth = 0
+  var index = 0
 
-    val canvas = RoboCanvas(
-      view.width + basicSize + deepestDepth * depthSlide + componentCount * 20,
-      view.height + basicSize + deepestDepth * depthSlide + componentCount * 20
+  val deepestDepth = rootComponent.depth()
+  val componentCount = rootComponent.countOfComponent()
+
+  val canvas = RoboCanvas(
+    rootComponent.width + basicSize + deepestDepth * depthSlide + componentCount * 20,
+    rootComponent.height + basicSize + deepestDepth * depthSlide + componentCount * 20
+  )
+  val paddingRect = Rect(basicSize / 2, basicSize / 2, basicSize / 2, basicSize / 2)
+
+  val paint = Paint().apply {
+    color = Color.RED
+    style = Paint.Style.FILL
+    textSize = 30F
+  }
+  val textPaint = TextPaint()
+  textPaint.isAntiAlias = true
+  textPaint.textSize = 16F
+  val drawTexts = mutableListOf<() -> Unit>()
+
+  fun dfs(component: RoboComponent) {
+    index++
+    val rect = Rect()
+    component.getGlobalVisibleRect(rect)
+    val canvasRect = Rect(
+      rect.left + paddingRect.left + depth * depthSlide,
+      rect.top + paddingRect.top + depth * depthSlide,
+      rect.right + paddingRect.left + depth * depthSlide,
+      rect.bottom + paddingRect.top + depth * depthSlide
     )
-    val paddingRect = Rect(basicSize / 2, basicSize / 2, basicSize / 2, basicSize / 2)
 
-    val paint = Paint().apply {
-      color = Color.RED
-      style = Paint.Style.FILL
-      textSize = 30F
+    val boxColor = colors[depth % colors.size] + (0xfF shl 56)
+    val alphaBoxColor = when (component.visibility) {
+      Visibility.Visible -> colors[depth % colors.size] + (0xEE shl 56) // alpha EE / FF
+      Visibility.Gone -> colors[depth % colors.size] + (0x66 shl 56) // alpha 88 / FF
+      Visibility.Invisible -> colors[depth % colors.size] + (0x88 shl 56) // alpha BB / FF
     }
-    val textPaint = TextPaint()
-    textPaint.isAntiAlias = true
-    textPaint.textSize = 16F
-    val drawTexts = mutableListOf<() -> Unit>()
 
-    fun dfs(component: RoboComponent) {
-      index++
-      val rect = Rect()
-      component.getGlobalVisibleRect(rect)
-      val canvasRect = Rect(
-        rect.left + paddingRect.left + depth * depthSlide,
-        rect.top + paddingRect.top + depth * depthSlide,
-        rect.right + paddingRect.left + depth * depthSlide,
-        rect.bottom + paddingRect.top + depth * depthSlide
+    canvas.drawRect(canvasRect, paint.apply {
+      color = alphaBoxColor
+    })
+
+    drawTexts.add {
+      val texts =
+        component.text.lines().flatMap {
+          if (it.length > 30) it.chunked(30) else listOf(it)
+        }
+      val (rawBoxWidth, rawBoxHeight) = canvas.textCalc(texts)
+      val textPadding = 5
+      val boxWidth = rawBoxWidth + textPadding * 2
+      val boxHeight = rawBoxHeight + textPadding * 2
+
+      val (textPointX, textPointY) = findTextPoint(
+        canvas,
+        canvasRect.centerX(),
+        canvasRect.centerY(),
+        boxWidth,
+        boxHeight
       )
 
-      val boxColor = colors[depth % colors.size] + (0xfF shl 56)
-      val alphaBoxColor = when (component.visibility) {
-        Visibility.Visible -> colors[depth % colors.size] + (0xEE shl 56) // alpha EE / FF
-        Visibility.Gone -> colors[depth % colors.size] + (0x66 shl 56) // alpha 88 / FF
-        Visibility.Invisible -> colors[depth % colors.size] + (0x88 shl 56) // alpha BB / FF
-      }
-
-      canvas.drawRect(canvasRect, paint.apply {
-        color = alphaBoxColor
-      })
-
-      drawTexts.add {
-        val texts =
-          component.text.lines().flatMap {
-            if (it.length > 30) it.chunked(30) else listOf(it)
-          }
-        val (rawBoxWidth, rawBoxHeight) = canvas.textCalc(texts)
-        val textPadding = 5
-        val boxWidth = rawBoxWidth + textPadding * 2
-        val boxHeight = rawBoxHeight + textPadding * 2
-
-        val (textPointX, textPointY) = findTextPoint(
-          canvas,
-          canvasRect.centerX(),
-          canvasRect.centerY(),
-          boxWidth,
-          boxHeight
-        )
-
-        val textBoxRect = Rect(
-          textPointX,
-          textPointY,
-          textPointX + boxWidth,
-          textPointY + boxHeight
-        )
-        canvas.drawLine(
-          Rect(
-            canvasRect.centerX(), canvasRect.centerY(),
-            textBoxRect.centerX(), textBoxRect.centerY()
-          ), paint.apply {
-            color = alphaBoxColor - (0x22 shl 56) // alpha DD / FF
-            strokeWidth = 2F
-          }
-        )
-        canvas.drawRect(
-          textBoxRect, paint.apply {
-            color = boxColor
-          })
-        canvas.drawText(
-          textPointX.toFloat() + textPadding,
-          textPointY.toFloat() + textPadding + rawBoxHeight / texts.size,
-          texts,
-          textPaint.apply {
-            color = if (isColorBright(boxColor)) {
-              Color.BLACK
-            } else {
-              Color.WHITE
-            }
-          }
-        )
-      }
-
-      component.children.forEach { child ->
-        depth++
-        dfs(child)
-        depth--
-      }
-    }
-    dfs(rootComponent)
-    val drawLayout = System.currentTimeMillis()
-    drawTexts.forEach { it() }
-    action(canvas)
-    val end = System.currentTimeMillis()
-    println("roborazzi takes " + (end - start) + "ms drawLayout:${drawLayout - start}ms drawText:${end - drawLayout}ms")
-  }
-
-  fun isColorBright(color: Int): Boolean {
-    val red = Color.red(color)
-    val green = Color.green(color)
-    val blue = Color.blue(color)
-    val luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
-    return luminance > 0.5
-  }
-
-  fun findTextPoint(
-    canvas: RoboCanvas,
-    centerX: Int,
-    centerY: Int,
-    width: Int,
-    height: Int
-  ): Pair<Int, Int> {
-    var searchPlaces = canvas.emptyPoints
-      .filter { (x, y) ->
-        x + width < canvas.width &&
-          y + height < canvas.height
-      }
-      .sortedBy { (x, y) ->
-        val xDiff = abs(x - centerX + width / 2)
-        val yDiff = abs(y - centerY + height / 2)
-        xDiff * xDiff + yDiff * yDiff
-      }
-    val binarySearch = listOf(3, 0, 5, 2, 4, 1)
-    while (searchPlaces.isNotEmpty()) {
-      val (x, y) = searchPlaces.first()
-      var failPlace = -1 to -1
-      if (binarySearch.all { xDiv ->
-          binarySearch.all { yDiv ->
-            val checkX = x + xDiv * width / 5
-            val checkY = y + yDiv * height / 5
-            val result =
-              canvas.emptyPoints.contains(checkX - (checkX % 50) to checkY - (checkY % 50))
-            if (!result) {
-              failPlace = checkX to checkY
-            }
-            result
+      val textBoxRect = Rect(
+        textPointX,
+        textPointY,
+        textPointX + boxWidth,
+        textPointY + boxHeight
+      )
+      canvas.drawLine(
+        Rect(
+          canvasRect.centerX(), canvasRect.centerY(),
+          textBoxRect.centerX(), textBoxRect.centerY()
+        ), paint.apply {
+          color = alphaBoxColor - (0x22 shl 56) // alpha DD / FF
+          strokeWidth = 2F
+        }
+      )
+      canvas.drawRect(
+        textBoxRect, paint.apply {
+          color = boxColor
+        })
+      canvas.drawText(
+        textPointX.toFloat() + textPadding,
+        textPointY.toFloat() + textPadding + rawBoxHeight / texts.size,
+        texts,
+        textPaint.apply {
+          color = if (isColorBright(boxColor)) {
+            Color.BLACK
+          } else {
+            Color.WHITE
           }
         }
-      ) {
-        return x to y
-      }
-      searchPlaces = searchPlaces.filter { (x, y) ->
-        !((x <= failPlace.first && failPlace.first <= x + width) &&
-          (y <= failPlace.second && failPlace.second <= y + height))
-      }
+      )
     }
-    return 0 to 0
+
+    component.children.forEach { child ->
+      depth++
+      dfs(child)
+      depth--
+    }
   }
+  dfs(rootComponent)
+  val drawLayout = System.currentTimeMillis()
+  drawTexts.forEach { it() }
+  saveAction(canvas)
+  val end = System.currentTimeMillis()
+  println("roborazzi takes " + (end - start) + "ms drawLayout:${drawLayout - start}ms drawText:${end - drawLayout}ms")
+}
+
+fun isColorBright(color: Int): Boolean {
+  val red = Color.red(color)
+  val green = Color.green(color)
+  val blue = Color.blue(color)
+  val luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+  return luminance > 0.5
+}
+
+fun findTextPoint(
+  canvas: RoboCanvas,
+  centerX: Int,
+  centerY: Int,
+  width: Int,
+  height: Int
+): Pair<Int, Int> {
+  var searchPlaces = canvas.emptyPoints
+    .filter { (x, y) ->
+      x + width < canvas.width &&
+        y + height < canvas.height
+    }
+    .sortedBy { (x, y) ->
+      val xDiff = abs(x - centerX + width / 2)
+      val yDiff = abs(y - centerY + height / 2)
+      xDiff * xDiff + yDiff * yDiff
+    }
+  val binarySearch = listOf(3, 0, 5, 2, 4, 1)
+  while (searchPlaces.isNotEmpty()) {
+    val (x, y) = searchPlaces.first()
+    var failPlace = -1 to -1
+    if (binarySearch.all { xDiv ->
+        binarySearch.all { yDiv ->
+          val checkX = x + xDiv * width / 5
+          val checkY = y + yDiv * height / 5
+          val result =
+            canvas.emptyPoints.contains(checkX - (checkX % 50) to checkY - (checkY % 50))
+          if (!result) {
+            failPlace = checkX to checkY
+          }
+          result
+        }
+      }
+    ) {
+      return x to y
+    }
+    searchPlaces = searchPlaces.filter { (x, y) ->
+      !((x <= failPlace.first && failPlace.first <= x + width) &&
+        (y <= failPlace.second && failPlace.second <= y + height))
+    }
+  }
+  return 0 to 0
 }

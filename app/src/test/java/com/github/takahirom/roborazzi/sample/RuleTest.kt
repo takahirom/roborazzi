@@ -16,7 +16,6 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class RuleTest {
   @get:Rule val roborazziRule = RoborazziRule(onView(isRoot()))
-
   @Test
   fun captureRoboGifSample() {
     // launch
