@@ -3,7 +3,6 @@ package com.github.takahirom.roborazzi.sample
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onParent
-import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -49,8 +48,6 @@ class ManualTest {
   fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
       .captureRoboGif("build/test.gif") {
-        // launch
-        launch(MainActivity::class.java)
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
