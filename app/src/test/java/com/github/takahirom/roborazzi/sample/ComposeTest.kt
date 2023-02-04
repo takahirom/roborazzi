@@ -37,7 +37,7 @@ class ComposeTest {
       SampleComposableFunction()
     }
     println("start2")
-    (0..50).forEach {
+    (0..10).forEach {
       println("click$it")
       composeTestRule
         .onNodeWithTag("MyComposeRoot")

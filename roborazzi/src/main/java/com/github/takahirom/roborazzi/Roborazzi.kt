@@ -83,7 +83,7 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
 
   val canvases = mutableListOf<RoboCanvas>()
 
-  val listener = ViewTreeObserver.OnGlobalLayoutListener {
+  val listener = ViewTreeObserver.OnPreDrawListener {
     Handler(Looper.getMainLooper()).post {
       this@justCaptureRoboGif.perform(
         ImageCaptureViewAction { canvas ->
@@ -91,6 +91,7 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
         }
       )
     }
+    true
   }
   val viewTreeListenerAction = object : ViewAction {
     override fun getConstraints(): Matcher<View> {
@@ -103,9 +104,9 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
 
     override fun perform(uiController: UiController, view: View) {
       val viewTreeObserver = view.viewTreeObserver
-      viewTreeObserver.addOnGlobalLayoutListener(listener)
+      viewTreeObserver.addOnPreDrawListener(listener)
       removeListener = {
-        viewTreeObserver.removeOnGlobalLayoutListener(listener)
+        viewTreeObserver.removeOnPreDrawListener(listener)
       }
     }
   }
