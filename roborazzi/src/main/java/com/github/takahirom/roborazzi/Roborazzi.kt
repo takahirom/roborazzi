@@ -384,7 +384,6 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
   val basicSize = 600
   val depthSlide = 30
   var depth = 0
-  var index = 0
 
   val deepestDepth = rootComponent.depth()
   val componentCount = rootComponent.countOfComponent()
@@ -404,86 +403,89 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
   textPaint.isAntiAlias = true
   textPaint.textSize = 16F
 
-  fun dfs(component: RoboComponent) {
-    index++
-    val rect = Rect()
-    component.getGlobalVisibleRect(rect)
-    val canvasRect = Rect(
-      rect.left + paddingRect.left + depth * depthSlide,
-      rect.top + paddingRect.top + depth * depthSlide,
-      rect.right + paddingRect.left + depth * depthSlide,
-      rect.bottom + paddingRect.top + depth * depthSlide
-    )
+  val queue = ArrayDeque<Pair<Int, RoboComponent>>()
+  queue.add(0 to rootComponent)
 
-    val boxColor = colors[depth % colors.size] + (0xfF shl 56)
-    val alphaBoxColor = when (component.visibility) {
-      Visibility.Visible -> colors[depth % colors.size] + (0xEE shl 56) // alpha EE / FF
-      Visibility.Gone -> colors[depth % colors.size] + (0x66 shl 56) // alpha 88 / FF
-      Visibility.Invisible -> colors[depth % colors.size] + (0x88 shl 56) // alpha BB / FF
-    }
-
-    canvas.drawRect(canvasRect, paint.apply {
-      color = alphaBoxColor
-    })
-
-    canvas.addPendingDraw {
-      val texts =
-        component.text.lines().flatMap {
-          if (it.length > 30) it.chunked(30) else listOf(it)
-        }
-      val (rawBoxWidth, rawBoxHeight) = canvas.textCalc(texts)
-      val textPadding = 5
-      val boxWidth = rawBoxWidth + textPadding * 2
-      val boxHeight = rawBoxHeight + textPadding * 2
-
-      val (textPointX, textPointY) = findTextPoint(
-        canvas,
-        canvasRect.centerX(),
-        canvasRect.centerY(),
-        boxWidth,
-        boxHeight
+  fun bfs() {
+    while(queue.isNotEmpty()) {
+      val (depth, component) = queue.removeFirst()
+      val rect = Rect()
+      component.getGlobalVisibleRect(rect)
+      val canvasRect = Rect(
+        rect.left + paddingRect.left + depth * depthSlide,
+        rect.top + paddingRect.top + depth * depthSlide,
+        rect.right + paddingRect.left + depth * depthSlide,
+        rect.bottom + paddingRect.top + depth * depthSlide
       )
 
-      val textBoxRect = Rect(
-        textPointX,
-        textPointY,
-        textPointX + boxWidth,
-        textPointY + boxHeight
-      )
-      canvas.drawLine(
-        Rect(
-          canvasRect.centerX(), canvasRect.centerY(),
-          textBoxRect.centerX(), textBoxRect.centerY()
-        ), paint.apply {
-          color = alphaBoxColor - (0x22 shl 56) // alpha DD / FF
-          strokeWidth = 2F
-        }
-      )
-      canvas.drawRect(
-        textBoxRect, paint.apply {
-          color = boxColor
-        })
-      canvas.drawText(
-        textPointX.toFloat() + textPadding,
-        textPointY.toFloat() + textPadding + rawBoxHeight / texts.size,
-        texts,
-        textPaint.apply {
-          color = if (isColorBright(boxColor)) {
-            Color.BLACK
-          } else {
-            Color.WHITE
+      val boxColor = colors[depth % colors.size] + (0xfF shl 56)
+      val alphaBoxColor = when (component.visibility) {
+        Visibility.Visible -> colors[depth % colors.size] + (0xEE shl 56) // alpha EE / FF
+        Visibility.Gone -> colors[depth % colors.size] + (0x66 shl 56) // alpha 88 / FF
+        Visibility.Invisible -> colors[depth % colors.size] + (0x88 shl 56) // alpha BB / FF
+      }
+
+      canvas.drawRect(canvasRect, paint.apply {
+        color = alphaBoxColor
+      })
+
+      canvas.addPendingDraw {
+        val texts =
+          component.text.lines().flatMap {
+            if (it.length > 30) it.chunked(30) else listOf(it)
           }
-        }
-      )
-    }
+        val (rawBoxWidth, rawBoxHeight) = canvas.textCalc(texts)
+        val textPadding = 5
+        val boxWidth = rawBoxWidth + textPadding * 2
+        val boxHeight = rawBoxHeight + textPadding * 2
 
-    component.children.forEach { child ->
-      depth++
-      dfs(child)
-      depth--
+        val (textPointX, textPointY) = findTextPoint(
+          canvas,
+          canvasRect.centerX(),
+          canvasRect.centerY(),
+          boxWidth,
+          boxHeight
+        )
+
+        val textBoxRect = Rect(
+          textPointX,
+          textPointY,
+          textPointX + boxWidth,
+          textPointY + boxHeight
+        )
+        canvas.drawLine(
+          Rect(
+            canvasRect.centerX(), canvasRect.centerY(),
+            textBoxRect.centerX(), textBoxRect.centerY()
+          ), paint.apply {
+            color = alphaBoxColor - (0x22 shl 56) // alpha DD / FF
+            strokeWidth = 2F
+          }
+        )
+        canvas.drawRect(
+          textBoxRect, paint.apply {
+            color = boxColor
+          })
+        canvas.drawText(
+          textPointX.toFloat() + textPadding,
+          textPointY.toFloat() + textPadding + rawBoxHeight / texts.size,
+          texts,
+          textPaint.apply {
+            color = if (isColorBright(boxColor)) {
+              Color.BLACK
+            } else {
+              Color.WHITE
+            }
+          }
+        )
+      }
+
+      component.children.forEach { child ->
+        queue.addLast(depth + 1 to child)
+      }
     }
   }
-  dfs(rootComponent)
+  bfs()
   saveAction(canvas)
   val end = System.currentTimeMillis()
 //  println("roborazzi takes " + (end - start) + "ms")
