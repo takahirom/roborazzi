@@ -175,6 +175,7 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
       canvases.forEach { canvas ->
         e.addFrame(canvas)
       }
+      canvases.clear()
     }
     e.finish()
   }
@@ -243,6 +244,7 @@ fun SemanticsNodeInteraction.justCaptureRoboGif(
       canvases.forEach { canvas ->
         e.addFrame(canvas)
       }
+      canvases.clear()
     }
     e.finish()
   }
@@ -383,7 +385,6 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
   val start = System.currentTimeMillis()
   val basicSize = 600
   val depthSlide = 30
-  var depth = 0
 
   val deepestDepth = rootComponent.depth()
   val componentCount = rootComponent.countOfComponent()
