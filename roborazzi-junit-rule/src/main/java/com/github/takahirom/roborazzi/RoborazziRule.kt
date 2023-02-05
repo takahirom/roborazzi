@@ -49,7 +49,6 @@ class RoborazziRule private constructor(
         if (!folder.exists()) {
           folder.mkdirs()
         }
-        var isFail = false
         val file = File(
           folder.absolutePath,
           description.className + "_" + description.methodName + ".gif"
@@ -58,7 +57,6 @@ class RoborazziRule private constructor(
           try {
             base.evaluate()
           } catch (e: Exception) {
-            isFail = true
             throw e
           }
         }
@@ -71,7 +69,7 @@ class RoborazziRule private constructor(
             file, evaluate
           )
         }
-        if (!captureOnlyFail || isFail) {
+        if (!captureOnlyFail || result.result.isFailure) {
           result.save()
         }
         result.clear()
