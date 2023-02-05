@@ -18,8 +18,8 @@ class RoboCanvas(width: Int, height: Int) {
   private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
   val width get() = bufferedImage.width
   val height get() = bufferedImage.height
-  val croppedWidth get() = croppedImage().width
-  val croppedHeight get() = croppedImage().height
+  val croppedWidth get() = croppedImage.width
+  val croppedHeight get() = croppedImage.height
   private var rightBottomPoint = 0 to 0
   private fun updateRightBottom(x: Int, y: Int) {
     rightBottomPoint = maxOf(x, rightBottomPoint.first) to maxOf(y, rightBottomPoint.second)
@@ -109,12 +109,12 @@ class RoboCanvas(width: Int, height: Int) {
   }
 
   fun outputImage(): BufferedImage {
-    return croppedImage()
+    return croppedImage
   }
 
-  private fun croppedImage(): BufferedImage {
+  private val croppedImage by lazy {
     drawPendingDraw()
-    return bufferedImage.getSubimage(0, 0, rightBottomPoint.first, rightBottomPoint.second)
+    bufferedImage.getSubimage(0, 0, rightBottomPoint.first, rightBottomPoint.second)
   }
 
   var pendingDrawList = mutableListOf<() -> Unit>()
@@ -126,7 +126,7 @@ class RoboCanvas(width: Int, height: Int) {
   fun save(file: File) {
     drawPendingDraw()
     ImageIO.write(
-      croppedImage(),
+      croppedImage,
       "png",
       file
     )
@@ -140,6 +140,11 @@ class RoboCanvas(width: Int, height: Int) {
 //      println("roborazzi pending drawing takes ${end - start} ms")
       pendingDrawList.clear()
     }
+  }
+
+  fun release() {
+    bufferedImage.flush()
+    croppedImage.flush()
   }
 
   var emptyPoints = (0..width step 50)

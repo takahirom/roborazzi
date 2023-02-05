@@ -76,7 +76,8 @@ fun SemanticsNodeInteraction.captureRoboGif(
 
 class CaptureRoboGifResult(
   val result: Result<Unit>,
-  val save: () -> Boolean
+  val save: () -> Boolean,
+  val clear: () -> Unit
 )
 
 fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRoboGifResult {
@@ -161,24 +162,27 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
         val application = instrumentation.targetContext.applicationContext as Application
         application.unregisterActivityLifecycleCallbacks(activityCallbacks)
       }
-    }
-  ) {
-    val e = AnimatedGifEncoder()
-    e.setRepeat(0)
-    e.start(file.outputStream())
-    e.setDelay(1000)   // 1 frame per sec
-    if (canvases.isNotEmpty()) {
-      e.setSize(
-        canvases.maxOf { it.croppedWidth },
-        canvases.maxOf { it.croppedHeight }
-      )
-      canvases.forEach { canvas ->
-        e.addFrame(canvas)
+    }, save = {
+      val e = AnimatedGifEncoder()
+      e.setRepeat(0)
+      e.start(file.outputStream())
+      e.setDelay(1000)   // 1 frame per sec
+      if (canvases.isNotEmpty()) {
+        e.setSize(
+          canvases.maxOf { it.croppedWidth },
+          canvases.maxOf { it.croppedHeight }
+        )
+        canvases.forEach { canvas ->
+          e.addFrame(canvas)
+        }
       }
+      e.finish()
+    },
+    clear = {
+      canvases.forEach { it.release() }
       canvases.clear()
     }
-    e.finish()
-  }
+  )
 }
 
 fun SemanticsNodeInteraction.justCaptureRoboGif(
@@ -230,24 +234,26 @@ fun SemanticsNodeInteraction.justCaptureRoboGif(
         composeRule.waitForIdle()
         removeListener()
       }
-    }
-  ) {
-    val e = AnimatedGifEncoder()
-    e.setRepeat(0)
-    e.start(file.outputStream())
-    e.setDelay(1000)   // 1 frame per sec
-    if (canvases.isNotEmpty()) {
-      e.setSize(
-        canvases.maxOf { it.croppedWidth },
-        canvases.maxOf { it.croppedHeight }
-      )
-      canvases.forEach { canvas ->
-        e.addFrame(canvas)
+    }, save = {
+      val e = AnimatedGifEncoder()
+      e.setRepeat(0)
+      e.start(file.outputStream())
+      e.setDelay(1000)   // 1 frame per sec
+      if (canvases.isNotEmpty()) {
+        e.setSize(
+          canvases.maxOf { it.croppedWidth },
+          canvases.maxOf { it.croppedHeight }
+        )
+        canvases.forEach { canvas ->
+          e.addFrame(canvas)
+        }
       }
+      e.finish()
+    },
+    clear = {
+      canvases.forEach { it.release() }
       canvases.clear()
-    }
-    e.finish()
-  }
+    })
 }
 
 internal val colors = listOf(
@@ -408,7 +414,7 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
   queue.add(0 to rootComponent)
 
   fun bfs() {
-    while(queue.isNotEmpty()) {
+    while (queue.isNotEmpty()) {
       val (depth, component) = queue.removeFirst()
       val rect = Rect()
       component.getGlobalVisibleRect(rect)

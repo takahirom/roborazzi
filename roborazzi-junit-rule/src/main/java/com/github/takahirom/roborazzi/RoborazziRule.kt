@@ -74,6 +74,7 @@ class RoborazziRule private constructor(
         if (!captureOnlyFail || isFail) {
           result.save()
         }
+        result.clear()
         result.result.exceptionOrNull()?.let {
           throw it
         }
