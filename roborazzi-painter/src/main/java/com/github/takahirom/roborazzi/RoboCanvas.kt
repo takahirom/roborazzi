@@ -15,7 +15,7 @@ import java.io.File
 import javax.imageio.ImageIO
 
 class RoboCanvas(width: Int, height: Int) {
-  private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+  private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_USHORT_565_RGB)
   val width get() = bufferedImage.width
   val height get() = bufferedImage.height
   val croppedWidth get() = croppedImage.width
