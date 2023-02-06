@@ -13,7 +13,7 @@ allprojects {
     project.group = "io.github.takahirom"
     project.version = "0.1.0"
     mavenPublishing {
-      publishToMavenCentral(SonatypeHost.DEFAULT)
+      publishToMavenCentral(SonatypeHost.S01)
       signAllPublications()
     }
 
