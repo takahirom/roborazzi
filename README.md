@@ -176,5 +176,12 @@ Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is in
 Without Robolectric, you can't write tests that actually click on components and run them with Hilt tests.
 
 ## Download
-Stay tuned.  
-I would appreciate a star as I am really trying to find out if this tool has enough impact to be released.
+
+It is available on maven central.
+
+```kotlin
+// Core functions
+testImplementation("io.github.takahirom.roborazzi:roborazzi:0.1.0")
+// JUnit rules
+testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:0.1.0")
+```
