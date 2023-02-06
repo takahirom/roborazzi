@@ -8,6 +8,7 @@ plugins {
 
 allprojects {
   if(project.path.startsWith(":roborazzi")) {
+    apply plugin: 'com.vanniktech.maven.publish'
     group = "io.github.takahirom.roborazzi"
     version = "0.1.0"
     plugins.withId('com.vanniktech.maven.publish') {
