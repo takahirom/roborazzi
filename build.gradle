@@ -11,7 +11,6 @@ allprojects {
   if (project.path.startsWith(":roborazzi")) {
     apply plugin: 'com.vanniktech.maven.publish'
     project.group = "io.github.takahirom.roborazzi"
-    project.version = "0.1.0"
     mavenPublishing {
       publishToMavenCentral(SonatypeHost.S01)
       signAllPublications()
