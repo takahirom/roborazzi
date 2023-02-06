@@ -3,4 +3,48 @@ plugins {
   id 'com.android.application' version '7.3.1' apply false
   id 'com.android.library' version '7.3.1' apply false
   id 'org.jetbrains.kotlin.android' version '1.7.20' apply false
+  id "com.vanniktech.maven.publish" version "0.24.0"
+}
+
+allprojects {
+  if(project.path.startsWith(":roborazzi")) {
+    group = "io.github.takahirom.roborazzi"
+    version = "0.1.0"
+    plugins.withId('com.vanniktech.maven.publish') {
+      mavenPublishing {
+        publishToMavenCentral(SonatypeHost.DEFAULT)
+        signAllPublications()
+      }
+    }
+
+    plugins.withId('maven-publish') {
+      publishing {
+        repositories {
+          maven {
+            name = "LocalMaven"
+            url = file("${rootProject.buildDir}/localMaven").toURI().toString()
+          }
+          def internalUrl = providers.gradleProperty("internalUrl")
+          if (internalUrl.isPresent()) {
+            maven {
+              name = "internal"
+              url = internalUrl
+              credentials {
+                username = providers.gradleProperty("internalUsername").get()
+                password = providers.gradleProperty("internalPassword").get()
+              }
+            }
+          }
+        }
+      }
+    }
+
+    plugins.withId('signing') {
+      signing {
+        def signingKey = findProperty('signingKey')
+        def signingPassword = ''
+        useInMemoryPgpKeys(signingKey, signingPassword)
+      }
+    }
+  }
 }
