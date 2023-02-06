@@ -49,7 +49,7 @@ fun captureRoboImageSample() {
 }
 ```
 
-<img width="443" alt="image" src="https://user-images.githubusercontent.com/1386930/215309972-8a2098be-91b7-45a5-82a2-647b89e1f6f8.png">
+<img width="443" alt="image" src="https://user-images.githubusercontent.com/1386930/217111960-328ebaf9-51af-4489-b118-5ea8ba4a67e5.png">
 <img width="486" alt="image" src="https://user-images.githubusercontent.com/1386930/215248859-03a4f66e-3c42-42d8-863a-4cfbc3090b3f.png">
 
 
@@ -75,7 +75,7 @@ fun captureRoboGifSample() {
 }
 ```
 
-<img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/215935187-0b4579cb-dffa-4fcd-a633-a2b665e6910c.gif >
+<img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/217112049-b94b21b9-c405-400e-b6ee-e46af88d1fca.gif >
 
 ### Automatically generate gif with test rule
 
