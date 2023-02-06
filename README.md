@@ -1,8 +1,58 @@
 # Roborazzi
 
-**Make JVM Android integration test visible**
+**Make JVM Android Integration Test Visible**
+
+
+## Try it out
+
+It is available on maven central.
+
+```kotlin
+// Core functions
+testImplementation("io.github.takahirom.roborazzi:roborazzi:0.1.0")
+// JUnit rules
+testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:0.1.0")
+```
+
 
 ## How to use
+
+### Take a screenshot manually
+
+You can take a screenshot by calling captureRoboImage().
+
+```kotlin
+@Test
+fun captureRoboImageSample() {
+  // launch
+  launch(MainActivity::class.java)
+  
+  // screen level image
+  onView(ViewMatchers.isRoot())
+    .captureRoboImage("build/first_screen.png")
+
+  // compose image
+  composeTestRule.onNodeWithTag("MyComposeButton")
+    .onParent()
+    .captureRoboImage("build/compose.png")
+
+  // small component image
+  onView(withId(R.id.button_first))
+    .captureRoboImage("build/button.png")
+
+  // move to next page
+  onView(withId(R.id.button_first))
+    .perform(click())
+
+  onView(ViewMatchers.isRoot())
+    .captureRoboImage("build/second_screen.png")
+}
+```
+
+<img width="443" alt="image" src="https://user-images.githubusercontent.com/1386930/215309972-8a2098be-91b7-45a5-82a2-647b89e1f6f8.png">
+<img width="486" alt="image" src="https://user-images.githubusercontent.com/1386930/215248859-03a4f66e-3c42-42d8-863a-4cfbc3090b3f.png">
+
+
 
 ### Generate gif automatically
 
@@ -27,11 +77,11 @@ fun captureRoboGifSample() {
 
 <img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/215935187-0b4579cb-dffa-4fcd-a633-a2b665e6910c.gif >
 
-### Generate gif automatically with Test Rule
+### Automatically generate gif with test rule
 
-With the JUnit Test rule, you do not need to name the gif image, and if you prefer, you can output the gif image only when the test fails.
+With the JUnit test rule, you do not need to name the gif image, and if you prefer, you can output the gif image only if the test fails.
 
-This test outputs this file.
+This test will output this file.
 
 `build/outputs/roborazzi/com.github.takahirom.roborazzi.sample.RuleTestWithOnlyFail_captureRoboGifSampleFail.gif`
 
@@ -118,41 +168,6 @@ Result
 <img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/216755124-08f7e443-e98e-4b65-b41f-baeb999dc6c1.gif >
 
 
-
-### Manually take a screenshot
-
-```kotlin
-@Test
-fun captureRoboImageSample() {
-  // launch
-  launch(MainActivity::class.java)
-  
-  // screen level image
-  onView(ViewMatchers.isRoot())
-    .captureRoboImage("build/first_screen.png")
-
-  // compose image
-  composeTestRule.onNodeWithTag("MyComposeButton")
-    .onParent()
-    .captureRoboImage("build/compose.png")
-
-  // small component image
-  onView(withId(R.id.button_first))
-    .captureRoboImage("build/button.png")
-
-  // move to next page
-  onView(withId(R.id.button_first))
-    .perform(click())
-
-  onView(ViewMatchers.isRoot())
-    .captureRoboImage("build/second_screen.png")
-}
-```
-
-<img width="443" alt="image" src="https://user-images.githubusercontent.com/1386930/215309972-8a2098be-91b7-45a5-82a2-647b89e1f6f8.png">
-<img width="486" alt="image" src="https://user-images.githubusercontent.com/1386930/215248859-03a4f66e-3c42-42d8-863a-4cfbc3090b3f.png">
-
-
 ### Large project example
 
 
@@ -174,14 +189,3 @@ Because when testing on a device, it is easy for the test to fail due to the dev
 Paparazzi is a great tool to see the actual display in the JVM.  
 Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with Robolectric. This is because they both mock the Android framework.  
 Without Robolectric, you can't write tests that actually click on components and run them with Hilt tests.
-
-## Download
-
-It is available on maven central.
-
-```kotlin
-// Core functions
-testImplementation("io.github.takahirom.roborazzi:roborazzi:0.1.0")
-// JUnit rules
-testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:0.1.0")
-```
