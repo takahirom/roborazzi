@@ -25,6 +25,11 @@ class RoboCanvas(width: Int, height: Int) {
     rightBottomPoint = maxOf(x, rightBottomPoint.first) to maxOf(y, rightBottomPoint.second)
   }
 
+  var emptyPoints = (0..width step 50)
+    .flatMap { x -> (0..height step 50).map { y -> x to y } }
+    .toMutableSet()
+    private set
+
   fun drawRect(r: Rect, paint: Paint) {
     val graphics2D: Graphics2D = bufferedImage.createGraphics()
 
@@ -146,9 +151,4 @@ class RoboCanvas(width: Int, height: Int) {
     bufferedImage.flush()
     croppedImage.flush()
   }
-
-  var emptyPoints = (0..width step 50)
-    .flatMap { x -> (0..height step 50).map { y -> x to y } }
-    .toMutableSet()
-    private set
 }

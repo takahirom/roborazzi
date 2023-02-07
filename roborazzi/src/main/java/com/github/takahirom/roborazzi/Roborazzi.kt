@@ -37,15 +37,19 @@ fun ViewInteraction.captureRoboImage(filePath: String) {
 fun ViewInteraction.captureRoboImage(file: File) {
   perform(ImageCaptureViewAction { canvas ->
     canvas.save(file)
+    canvas.release()
   })
 }
 
 fun ViewInteraction.captureRoboGif(filePath: String, block: () -> Unit) {
-  justCaptureRoboGif(File(filePath), block).save()
+  captureRoboGif(File(filePath), block)
 }
 
 fun ViewInteraction.captureRoboGif(file: File, block: () -> Unit) {
-  justCaptureRoboGif(file, block).save()
+  justCaptureRoboGif(file, block).apply {
+    save()
+    clear()
+  }
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(filePath: String) {
@@ -55,6 +59,7 @@ fun SemanticsNodeInteraction.captureRoboImage(filePath: String) {
 fun SemanticsNodeInteraction.captureRoboImage(file: File) {
   capture(RoboComponent.Compose(this.fetchSemanticsNode("fail to captureRoboImage"))) { canvas ->
     canvas.save(file)
+    canvas.release()
   }
 }
 
@@ -162,7 +167,8 @@ fun ViewInteraction.justCaptureRoboGif(file: File, block: () -> Unit): CaptureRo
         val application = instrumentation.targetContext.applicationContext as Application
         application.unregisterActivityLifecycleCallbacks(activityCallbacks)
       }
-    }, save = {
+    },
+    save = {
       val e = AnimatedGifEncoder()
       e.setRepeat(0)
       e.start(file.outputStream())
@@ -234,7 +240,8 @@ fun SemanticsNodeInteraction.justCaptureRoboGif(
         composeRule.waitForIdle()
         removeListener()
       }
-    }, save = {
+    },
+    save = {
       val e = AnimatedGifEncoder()
       e.setRepeat(0)
       e.start(file.outputStream())
