@@ -180,9 +180,11 @@ Result
 Whenever you test with Robolectric, you feel like you are writing tests blindfolded because you cannot see the layout.  
 This tool makes the layout visible and provides the necessary information for debugging.
 
+I believe this tool will create a culture of testing by eliminating the anxiety factor in writing tests.
+
 ## Why test with JVM instead of testing on Android?
 
-Because when testing on a device, it is easy for the test to fail due to the device environment, animations, etc., and ultimately, if the test fails, it will not be fixed.
+Because when testing on a device, it is easy for the test to fail due to the device environment, animations, etc. This affects the reliability of the test and ultimately, if the test fails, it will not be fixed.
 
 ## Why not Paparazzi?
 
