@@ -154,7 +154,7 @@ class ComposeTest {
     composeTestRule.setContent {
       SampleComposableFunction()
     }
-    (0 until 5).forEach { _ ->
+    (0 until 3).forEach { _ ->
       composeTestRule
         .onNodeWithTag("MyComposeButton")
         .performClick()
@@ -165,7 +165,7 @@ class ComposeTest {
 
 Result
 
-<img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/216755124-08f7e443-e98e-4b65-b41f-baeb999dc6c1.gif >
+<img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/217128255-05a0c656-28de-4a8c-8dd9-e87787a84557.gif >
 
 
 ### Large project example
