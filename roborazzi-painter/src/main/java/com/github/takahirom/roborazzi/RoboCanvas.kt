@@ -85,7 +85,7 @@ class RoboCanvas(width: Int, height: Int) {
 
   fun drawText(textPointX: Float, textPointY: Float, texts: List<String>, paint: Paint) {
     val graphics2D = bufferedImage.createGraphics()
-    graphics2D.color = Color(paint.getColor())
+    graphics2D.color = Color(paint.getColor(), true)
 
     val frc: FontRenderContext = graphics2D.getFontRenderContext()
     var nextY = textPointY
@@ -150,5 +150,12 @@ class RoboCanvas(width: Int, height: Int) {
   fun release() {
     bufferedImage.flush()
     croppedImage.flush()
+  }
+
+  companion object {
+    const val TRANSPARENT_NONE = 0xFF shl 56
+    const val TRANSPARENT_BIT = 0xEE shl 56
+    const val TRANSPARENT_MEDIUM = 0x88 shl 56
+    const val TRANSPARENT_STRONG = 0x66 shl 56
   }
 }

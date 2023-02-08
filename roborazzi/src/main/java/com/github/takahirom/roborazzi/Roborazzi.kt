@@ -431,13 +431,14 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
         rect.right + paddingRect.left + depth * depthSlide,
         rect.bottom + paddingRect.top + depth * depthSlide
       )
-
-      val boxColor = colors[depth % colors.size] + (0xfF shl 56)
-      val alphaBoxColor = when (component.visibility) {
-        Visibility.Visible -> colors[depth % colors.size] + (0xEE shl 56) // alpha EE / FF
-        Visibility.Gone -> colors[depth % colors.size] + (0x66 shl 56) // alpha 88 / FF
-        Visibility.Invisible -> colors[depth % colors.size] + (0x88 shl 56) // alpha BB / FF
+      val boxColor = colors[depth % colors.size]
+      val boxAlpha = when (component.visibility) {
+        Visibility.Visible -> RoboCanvas.TRANSPARENT_BIT // alpha EE / FF
+        Visibility.Gone -> RoboCanvas.TRANSPARENT_MEDIUM // alpha 88 / FF
+        Visibility.Invisible -> RoboCanvas.TRANSPARENT_STRONG // alpha BB / FF
       }
+
+      val alphaBoxColor = boxColor + boxAlpha
 
       canvas.drawRect(canvasRect, paint.apply {
         color = alphaBoxColor
@@ -478,17 +479,17 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
         )
         canvas.drawRect(
           textBoxRect, paint.apply {
-            color = boxColor
+            color = alphaBoxColor
           })
         canvas.drawText(
           textPointX.toFloat() + textPadding,
           textPointY.toFloat() + textPadding + rawBoxHeight / texts.size,
           texts,
           textPaint.apply {
-            color = if (isColorBright(boxColor)) {
-              Color.BLACK
+            color = if (isColorBright(alphaBoxColor)) {
+              Color.BLACK - RoboCanvas.TRANSPARENT_NONE + boxAlpha
             } else {
-              Color.WHITE
+              Color.WHITE - RoboCanvas.TRANSPARENT_NONE + boxAlpha
             }
           }
         )
@@ -506,10 +507,11 @@ internal fun capture(rootComponent: RoboComponent, saveAction: (RoboCanvas) -> U
 }
 
 fun isColorBright(color: Int): Boolean {
+  val alpha = Color.alpha(color)
   val red = Color.red(color)
   val green = Color.green(color)
   val blue = Color.blue(color)
-  val luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+  val luminance = ((0.299 * red + 0.587 * green + 0.114 * blue) / 255) * alpha / 255
   return luminance > 0.5
 }
 
