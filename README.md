@@ -9,9 +9,9 @@ It is available on maven central.
 
 ```kotlin
 // Core functions
-testImplementation("io.github.takahirom.roborazzi:roborazzi:0.1.0")
+testImplementation("io.github.takahirom.roborazzi:roborazzi:[write the latest vesrion]")
 // JUnit rules
-testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:0.1.0")
+testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:[write the latest vesrion]")
 ```
 
 
