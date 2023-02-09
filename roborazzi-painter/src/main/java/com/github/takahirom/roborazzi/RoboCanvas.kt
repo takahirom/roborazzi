@@ -122,8 +122,13 @@ class RoboCanvas(width: Int, height: Int) {
     bufferedImage.getSubimage(0, 0, rightBottomPoint.first, rightBottomPoint.second)
   }
 
-  var pendingDrawList = mutableListOf<() -> Unit>()
+  var baseDrawList = mutableListOf<() -> Unit>()
 
+  fun addBaseDraw(baseDraw: () -> Unit) {
+    baseDrawList.add(baseDraw)
+  }
+
+  var pendingDrawList = mutableListOf<() -> Unit>()
   fun addPendingDraw(pendingDraw: () -> Unit) {
     pendingDrawList.add(pendingDraw)
   }
@@ -138,9 +143,13 @@ class RoboCanvas(width: Int, height: Int) {
   }
 
   private fun drawPendingDraw() {
-    val start = System.currentTimeMillis()
+//    val start = System.currentTimeMillis()
+    baseDrawList.forEach { it() }
+    if (baseDrawList.isNotEmpty()) {
+      baseDrawList.clear()
+    }
     pendingDrawList.forEach { it() }
-    val end = System.currentTimeMillis()
+//    val end = System.currentTimeMillis()
     if (pendingDrawList.isNotEmpty()) {
 //      println("roborazzi pending drawing takes ${end - start} ms")
       pendingDrawList.clear()
