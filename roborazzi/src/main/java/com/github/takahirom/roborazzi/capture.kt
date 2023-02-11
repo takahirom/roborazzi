@@ -137,12 +137,12 @@ internal fun capture(rootComponent: RoboComponent, onCanvas: (RoboCanvas) -> Uni
   textPaint.isAntiAlias = true
   textPaint.textSize = 16F
 
-  val queue = ArrayDeque<Pair<Int, RoboComponent>>()
-  queue.add(0 to rootComponent)
+  val depthAndComponentQueue = ArrayDeque<Pair<Int, RoboComponent>>()
+  depthAndComponentQueue.add(0 to rootComponent)
 
   fun bfs() {
-    while (queue.isNotEmpty()) {
-      val (depth, component) = queue.removeFirst()
+    while (depthAndComponentQueue.isNotEmpty()) {
+      val (depth, component) = depthAndComponentQueue.removeFirst()
       canvas.addBaseDraw {
         val rect = component.rect
         val canvasRect = Rect(
@@ -217,7 +217,7 @@ internal fun capture(rootComponent: RoboComponent, onCanvas: (RoboCanvas) -> Uni
       }
 
       component.children.forEach { child ->
-        queue.addLast(depth + 1 to child)
+        depthAndComponentQueue.addLast(depth + 1 to child)
       }
     }
   }
