@@ -9,19 +9,21 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziRule
 import org.junit.Assert.*
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class RuleTestWithOnlyFail {
+class RuleTestWithOnlyFailWithFail {
   @get:Rule val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
     captureOnlyFail = true
   )
 
+  @Ignore
   @Test
-  fun captureRoboGifSample() {
+  fun captureRoboGifSampleFail() {
     // launch
     launch(MainActivity::class.java)
     // move to next page
@@ -30,6 +32,9 @@ class RuleTestWithOnlyFail {
     // back
     pressBack()
     // move to next page
+    onView(withId(R.id.button_first))
+      .perform(click())
+    // should fail
     onView(withId(R.id.button_first))
       .perform(click())
   }
