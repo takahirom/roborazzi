@@ -16,10 +16,10 @@ import javax.imageio.ImageIO
 
 class RoboCanvas(width: Int, height: Int) {
   private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_USHORT_565_RGB)
-  val width get() = bufferedImage.width
-  val height get() = bufferedImage.height
-  val croppedWidth get() = croppedImage.width
-  val croppedHeight get() = croppedImage.height
+  val width: Int get() = bufferedImage.width
+  val height: Int get() = bufferedImage.height
+  val croppedWidth: Int get() = croppedImage.width
+  val croppedHeight: Int get() = croppedImage.height
   private var rightBottomPoint = 0 to 0
   private fun updateRightBottom(x: Int, y: Int) {
     rightBottomPoint = maxOf(x, rightBottomPoint.first) to maxOf(y, rightBottomPoint.second)

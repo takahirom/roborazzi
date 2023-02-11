@@ -33,83 +33,68 @@ internal enum class Visibility {
 
 internal sealed interface RoboComponent {
 
-  class View(private val view: android.view.View) : RoboComponent {
-    override val width: Int
-      get() = view.width
-    override val height: Int
-      get() = view.height
-    override val children: List<RoboComponent>
-      get() = when (view) {
-        is AbstractComposeView -> {
-          (view.getChildAt(0) as? ViewRootForTest)
-            ?.semanticsOwner
-            ?.rootSemanticsNode
-            ?.let {
-              listOf(Compose(it))
-            } ?: listOf()
-        }
-        is ViewGroup -> {
-          (0 until view.childCount)
-            .map { View(view.getChildAt(it)) }
-        }
-        else -> {
-          listOf()
-        }
-      }
-
-    private val id: String
-      get() =
-        if (0xFFFFFFFF.toInt() == view.id) {
-          ""
-        } else {
-          try {
-            view.resources.getResourceName(view.id)
-          } catch (e: Exception) {
-            ""
-          }
-        }
-    override val text: String
-      get() = HumanReadables.describe(view)
-    override val visibility: Visibility
-      get() = when (view.visibility) {
-        android.view.View.VISIBLE -> Visibility.Visible
-        android.view.View.GONE -> Visibility.Gone
-        else -> Visibility.Invisible
-      }
-
-    override fun getGlobalVisibleRect(rect: Rect) {
+  class View(view: android.view.View) : RoboComponent {
+    override val width: Int = view.width
+    override val height: Int = view.height
+    override val rect: Rect = run {
+      val rect = Rect()
       view.getGlobalVisibleRect(rect)
+      rect
+    }
+    override val children: List<RoboComponent> = when (view) {
+      is AbstractComposeView -> {
+        (view.getChildAt(0) as? ViewRootForTest)
+          ?.semanticsOwner
+          ?.rootSemanticsNode
+          ?.let {
+            listOf(Compose(it))
+          } ?: listOf()
+      }
+      is ViewGroup -> {
+        (0 until view.childCount)
+          .map { View(view.getChildAt(it)) }
+      }
+      else -> {
+        listOf()
+      }
+    }
+
+    private val id: String =
+      if (0xFFFFFFFF.toInt() == view.id) {
+        ""
+      } else {
+        try {
+          view.resources.getResourceName(view.id)
+        } catch (e: Exception) {
+          ""
+        }
+      }
+    override val text: String = HumanReadables.describe(view)
+    override val visibility: Visibility = when (view.visibility) {
+      android.view.View.VISIBLE -> Visibility.Visible
+      android.view.View.GONE -> Visibility.Gone
+      else -> Visibility.Invisible
     }
   }
 
-  class Compose(private val node: SemanticsNode) : RoboComponent {
-    override val width: Int
-      get() = node.layoutInfo.width
-    override val height: Int
-      get() = node.layoutInfo.height
-    override val children: List<RoboComponent>
-      get() = node.children.map {
-        Compose(it)
-      }
-    override val text: String
-      get() = node.printToString()
-    override val visibility: Visibility
-      get() = Visibility.Visible
+  class Compose(node: SemanticsNode) : RoboComponent {
+    override val width: Int = node.layoutInfo.width
+    override val height: Int = node.layoutInfo.height
+    override val children: List<RoboComponent> = node.children.map {
+      Compose(it)
+    }
+    override val text: String = node.printToString()
+    override val visibility: Visibility = Visibility.Visible
 
-    override fun getGlobalVisibleRect(rect: Rect) {
+    override val rect: Rect = run {
+      val rect = Rect()
       val boundsInWindow = node.boundsInWindow
       rect.set(boundsInWindow.toAndroidRect())
+      rect
     }
   }
 
-  fun getGlobalVisibleRect(rect: Rect)
-
   val rect: Rect
-    get() {
-      val rect = Rect()
-      getGlobalVisibleRect(rect)
-      return rect
-    }
   val children: List<RoboComponent>
   val text: String
   val visibility: Visibility
@@ -158,9 +143,8 @@ internal fun capture(rootComponent: RoboComponent, onCanvas: (RoboCanvas) -> Uni
   fun bfs() {
     while (queue.isNotEmpty()) {
       val (depth, component) = queue.removeFirst()
-      val rect = Rect()
       canvas.addBaseDraw {
-        component.getGlobalVisibleRect(rect)
+        val rect = component.rect
         val canvasRect = Rect(
           rect.left + paddingRect.left + depth * depthSlide,
           rect.top + paddingRect.top + depth * depthSlide,
