@@ -19,23 +19,23 @@ internal sealed interface CaptureRoot {
 
 class RoborazziRule private constructor(
   private val captureRoot: CaptureRoot,
-  private val captureOnlyFail: Boolean
+  private val captureMode: CaptureMode = CaptureMode()
 ) : TestWatcher() {
   constructor(
     captureRoot: ViewInteraction,
-    captureOnlyFail: Boolean = false
+    captureMode: CaptureMode = CaptureMode()
   ) : this(
-    CaptureRoot.View(captureRoot),
-    captureOnlyFail
+    captureRoot = CaptureRoot.View(captureRoot),
+    captureMode = captureMode
   )
 
   constructor(
     composeRule: AndroidComposeTestRule<*, *>,
     captureRoot: SemanticsNodeInteraction,
-    captureOnlyFail: Boolean = false
+    captureMode: CaptureMode = CaptureMode()
   ) : this(
-    CaptureRoot.Compose(composeRule, captureRoot),
-    captureOnlyFail
+    captureRoot = CaptureRoot.Compose(composeRule, captureRoot),
+    captureMode = captureMode
   )
 
   override fun failed(e: Throwable?, description: Description?) {
@@ -49,10 +49,6 @@ class RoborazziRule private constructor(
         if (!folder.exists()) {
           folder.mkdirs()
         }
-        val file = File(
-          folder.absolutePath,
-          description.className + "_" + description.methodName + ".gif"
-        )
         val evaluate = {
           try {
             base.evaluate()
@@ -61,16 +57,39 @@ class RoborazziRule private constructor(
           }
         }
         val result = when (captureRoot) {
-          is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.justCaptureRoboGif(
+          is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureComposeNode(
             captureRoot.composeRule,
-            file, evaluate
+            evaluate
           )
-          is CaptureRoot.View -> captureRoot.viewInteraction.justCaptureRoboGif(
-            file, evaluate
+          is CaptureRoot.View -> captureRoot.viewInteraction.captureAndroidView(
+            evaluate
           )
         }
-        if (!captureOnlyFail || result.result.isFailure) {
-          result.save()
+        if (!captureMode.onlyFail || result.result.isFailure) {
+          when (captureMode.captureType) {
+            CaptureType.LastImage -> {
+              val file = File(
+                folder.absolutePath,
+                description.className + "_" + description.methodName + ".png"
+              )
+              result.saveLastImage(file)
+            }
+            CaptureType.AllImage -> {
+              result.saveAllImage { suffix ->
+                File(
+                  folder.absolutePath,
+                  description.className + "_" + description.methodName + "_" + suffix + ".png"
+                )
+              }
+            }
+            CaptureType.Gif -> {
+              val file = File(
+                folder.absolutePath,
+                description.className + "_" + description.methodName + ".gif"
+              )
+              result.saveGif(file)
+            }
+          }
         }
         result.clear()
         result.result.exceptionOrNull()?.let {

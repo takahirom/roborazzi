@@ -11,12 +11,15 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureRoboLastImage
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class ManualTest {
@@ -49,7 +52,34 @@ class ManualTest {
   @Test
   fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
-      .captureRoboGif("build/view.gif") {
+      .captureRoboGif("build/manual_gif.gif") {
+        // move to next page
+        onView(withId(R.id.button_first))
+          .perform(click())
+        // back
+        pressBack()
+        // move to next page
+        onView(withId(R.id.button_first))
+          .perform(click())
+      }
+    onView(ViewMatchers.isRoot())
+      .captureRoboLastImage("build/manual_last.png") {
+        // back
+        pressBack()
+        // move to next page
+        onView(withId(R.id.button_first))
+          .perform(click())
+        // back
+        pressBack()
+        // move to next page
+        onView(withId(R.id.button_first))
+          .perform(click())
+      }
+
+    onView(ViewMatchers.isRoot())
+      .captureRoboAllImage({ File("build/manual_all_$it.png") }) {
+        // back
+        pressBack()
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())

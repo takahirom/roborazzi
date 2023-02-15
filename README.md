@@ -90,7 +90,9 @@ This test will output this file.
 class RuleTestWithOnlyFail {
   @get:Rule val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
-    captureOnlyFail = true
+    captureMode = CaptureMode(
+      onlyFail = true
+    )
   )
   
   @Test

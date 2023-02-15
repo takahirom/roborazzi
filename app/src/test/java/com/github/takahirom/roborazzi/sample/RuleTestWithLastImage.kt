@@ -8,25 +8,21 @@ import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.CaptureMode
+import com.github.takahirom.roborazzi.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule
 import org.junit.Assert.*
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class RuleTestWithOnlyFailWithFail {
+class RuleTestWithLastImage {
   @get:Rule val roborazziRule = RoborazziRule(
-    captureRoot = onView(isRoot()),
-    captureMode = CaptureMode(
-      onlyFail = true
-    )
+    onView(isRoot()),
+    CaptureMode(CaptureType.LastImage)
   )
-
-  @Ignore
   @Test
-  fun captureRoboGifSampleFail() {
+  fun captureRoboGifSample() {
     // launch
     launch(MainActivity::class.java)
     // move to next page
@@ -35,9 +31,6 @@ class RuleTestWithOnlyFailWithFail {
     // back
     pressBack()
     // move to next page
-    onView(withId(R.id.button_first))
-      .perform(click())
-    // should fail
     onView(withId(R.id.button_first))
       .perform(click())
   }
