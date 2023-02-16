@@ -19,3 +19,8 @@ jobs:
 
       - name: test
         run: ./gradlew app:testDebugUnitTest --stacktrace
+      - uses: actions/upload-artifact@v3
+        with:
+          name: screenshots
+          path: app/build/outputs/roborazzi
+          retention-days: 30
