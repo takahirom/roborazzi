@@ -11,6 +11,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -21,6 +22,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 
+private const val PATH_AND_PREFIX_FOR_FILE: String = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual"
+
 @RunWith(AndroidJUnit4::class)
 class ManualTest {
   @get:Rule
@@ -30,29 +33,29 @@ class ManualTest {
   fun captureRoboImageSample() {
     // screen level image
     onView(ViewMatchers.isRoot())
-      .captureRoboImage("build/first_screen.png")
+      .captureRoboImage("${PATH_AND_PREFIX_FOR_FILE}_view_first_screen.png")
 
     // compose image
     composeTestRule.onNodeWithTag("MyComposeButton")
       .onParent()
-      .captureRoboImage("build/compose.png")
+      .captureRoboImage("${PATH_AND_PREFIX_FOR_FILE}_small_compose.png")
 
     // small component image
     onView(withId(R.id.button_first))
-      .captureRoboImage("build/button.png")
+      .captureRoboImage("${PATH_AND_PREFIX_FOR_FILE}_small_view_button.png")
 
     // move to next page
     onView(withId(R.id.button_first))
       .perform(click())
 
     onView(ViewMatchers.isRoot())
-      .captureRoboImage("build/second_screen.png")
+      .captureRoboImage("${PATH_AND_PREFIX_FOR_FILE}_second_screen.png")
   }
 
   @Test
   fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
-      .captureRoboGif("build/manual_gif.gif") {
+      .captureRoboGif("${PATH_AND_PREFIX_FOR_FILE}_gif.gif") {
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
@@ -63,7 +66,7 @@ class ManualTest {
           .perform(click())
       }
     onView(ViewMatchers.isRoot())
-      .captureRoboLastImage("build/manual_last.png") {
+      .captureRoboLastImage("${PATH_AND_PREFIX_FOR_FILE}_last.png") {
         // back
         pressBack()
         // move to next page
@@ -77,7 +80,7 @@ class ManualTest {
       }
 
     onView(ViewMatchers.isRoot())
-      .captureRoboAllImage({ File("build/manual_all_$it.png") }) {
+      .captureRoboAllImage({ File("${PATH_AND_PREFIX_FOR_FILE}_all_$it.png") }) {
         // back
         pressBack()
         // move to next page
@@ -94,7 +97,10 @@ class ManualTest {
   @Test
   fun captureRoboGifSampleCompose() {
     composeTestRule.onRoot(false)
-      .captureRoboGif(composeTestRule, "build/compose.gif") {
+      .captureRoboGif(
+        composeTestRule,
+        "${PATH_AND_PREFIX_FOR_FILE}_captureRoboGifSampleCompose.gif"
+      ) {
         composeTestRule.onNodeWithTag("MyComposeButton")
           .performClick()
         composeTestRule.onNodeWithTag("MyComposeButton")

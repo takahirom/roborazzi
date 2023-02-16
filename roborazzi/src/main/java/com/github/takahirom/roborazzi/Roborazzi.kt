@@ -19,6 +19,7 @@ import org.hamcrest.Matchers
 import java.io.File
 import java.util.Locale
 
+const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 fun ViewInteraction.captureRoboImage(filePath: String) {
   captureRoboImage(File(filePath))
 }

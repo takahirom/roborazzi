@@ -45,7 +45,7 @@ class RoborazziRule private constructor(
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        val folder = File("build/outputs/roborazzi")
+        val folder = File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH)
         if (!folder.exists()) {
           folder.mkdirs()
         }
