@@ -4,6 +4,12 @@ rm -R app/build/outputs/roborazzi
 ./gradlew app:testDebugUnitTest --stacktrace --rerun
 cd app/build/outputs/roborazzi
 mkdir diff
-find . -name "*.png" -or -name "*.gif" | xargs -IIMG compare ../../../../original/IMG IMG diff/IMG
+find . -name "*.png" | xargs -IIMG compare ../../../../original/IMG IMG diff/IMG
+for IMG in `find . -name "*.gif"`; do
+  magick \( ../../../../original/$IMG -coalesce -append \) \
+            \( $IMG -coalesce -append \) miff:- | \
+      magick compare - miff:- |\
+        magick - +repage diff/$IMG.png
+done
 open diff
 
