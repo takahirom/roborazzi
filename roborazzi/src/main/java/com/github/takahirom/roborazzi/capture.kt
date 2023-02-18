@@ -50,10 +50,12 @@ internal sealed interface RoboComponent {
             listOf(Compose(it))
           } ?: listOf()
       }
+
       is ViewGroup -> {
         (0 until view.childCount)
           .map { View(view.getChildAt(it)) }
       }
+
       else -> {
         listOf()
       }
@@ -140,6 +142,7 @@ internal fun capture(rootComponent: RoboComponent, onCanvas: (RoboCanvas) -> Uni
   val depthAndComponentQueue = ArrayDeque<Pair<Int, RoboComponent>>()
   depthAndComponentQueue.add(0 to rootComponent)
 
+
   fun bfs() {
     while (depthAndComponentQueue.isNotEmpty()) {
       val (depth, component) = depthAndComponentQueue.removeFirst()
@@ -165,10 +168,8 @@ internal fun capture(rootComponent: RoboComponent, onCanvas: (RoboCanvas) -> Uni
         })
 
         canvas.addPendingDraw {
-          val texts =
-            component.text.lines().flatMap {
-              if (it.length > 30) it.chunked(30) else listOf(it)
-            }
+          val componentRawText = component.text
+          val texts = componentRawText.formattedTextList()
           val (rawBoxWidth, rawBoxHeight) = canvas.textCalc(texts)
           val textPadding = 5
           val boxWidth = rawBoxWidth + textPadding * 2
@@ -278,4 +279,27 @@ fun findTextPoint(
     }
   }
   return 0 to 0
+}
+
+
+fun String.formattedTextList() = lines().flatMap { line ->
+  // abc=d, e=f, g
+  // ↓
+  // abc=d,
+  // e=f, g
+  var index = 0
+  val lineLength = 30
+  buildList {
+    while (index < line.length) {
+      val takenString = line.drop(index).take(lineLength)
+      val lastIndex = takenString.lastIndexOf(",")
+      if (takenString.length == 30 && lastIndex in 20..28) {
+        this.add(takenString.substring(0, lastIndex + 2))
+        index += lastIndex + 2
+      } else {
+        this.add(takenString)
+        index += lineLength
+      }
+    }
+  }
 }

@@ -4,10 +4,7 @@ package com.github.takahirom.roborazzi
 
 import android.graphics.Paint
 import android.graphics.Rect
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Graphics2D
-import java.awt.RenderingHints
+import java.awt.*
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.image.BufferedImage
@@ -31,83 +28,84 @@ class RoboCanvas(width: Int, height: Int) {
     private set
 
   fun drawRect(r: Rect, paint: Paint) {
-    val graphics2D: Graphics2D = bufferedImage.createGraphics()
+    bufferedImage.graphics { graphics2D ->
+      graphics2D.color = Color(paint.getColor(), true)
+      graphics2D.fillRect(
+        r.left, r.top,
+        (r.right - r.left), (r.bottom - r.top)
+      )
+      graphics2D.dispose()
+      updateRightBottom(r.right, r.bottom)
 
-    graphics2D.color = Color(paint.getColor(), true)
-    graphics2D.fillRect(
-      r.left, r.top,
-      (r.right - r.left), (r.bottom - r.top)
-    )
-    graphics2D.dispose()
-    updateRightBottom(r.right, r.bottom)
-
-    emptyPoints -= ((r.left - r.left % 50)..r.right step 50).flatMap { x ->
-      ((r.top - r.top % 50)..r.bottom step 50).map { y -> x to y }
-    }.toSet()
+      emptyPoints -= ((r.left - r.left % 50)..r.right step 50).flatMap { x ->
+        ((r.top - r.top % 50)..r.bottom step 50).map { y -> x to y }
+      }.toSet()
+    }
   }
 
   fun drawLine(r: Rect, paint: Paint) {
-    val graphics2D: Graphics2D = bufferedImage.createGraphics()
-    graphics2D.stroke = BasicStroke(paint.strokeWidth)
-    graphics2D.paint = Color(paint.getColor(), true)
-    graphics2D.setRenderingHint(
-      RenderingHints.KEY_ANTIALIASING,
-      RenderingHints.VALUE_ANTIALIAS_ON
-    )
-    graphics2D.drawLine(
-      r.left, r.top,
-      r.right, r.bottom
-    )
-    graphics2D.dispose()
+    bufferedImage.graphics { graphics2D ->
+      graphics2D.stroke = BasicStroke(paint.strokeWidth)
+      graphics2D.paint = Color(paint.getColor(), true)
+      graphics2D.setRenderingHint(
+        RenderingHints.KEY_ANTIALIASING,
+        RenderingHints.VALUE_ANTIALIAS_ON
+      )
+      graphics2D.drawLine(
+        r.left, r.top,
+        r.right, r.bottom
+      )
+    }
   }
 
   private val textCache = hashMapOf<String, TextLayout>()
 
   fun textCalc(texts: List<String>): Pair<Int, Int> {
-    val graphics2D: Graphics2D = bufferedImage.createGraphics()
-    val frc: FontRenderContext = graphics2D.getFontRenderContext()
-    val longestLine = texts.maxBy {
-      textCache.getOrPut(it) {
-        TextLayout(
+    return bufferedImage.graphics { graphics2D ->
+      val frc: FontRenderContext = graphics2D.getFontRenderContext()
+      val longestLineWidth = texts.map {
+        calcTextLayout(
           it,
-          graphics2D.font,
+          graphics2D,
           frc
-        )
-      }.bounds.width.toInt()
+        ).getPixelBounds(frc, 0F, 0F).width
+      }.maxBy {
+        it
+      }
+      longestLineWidth to (texts.sumOf {
+        calcTextLayout(it, graphics2D, frc).bounds.height + 1
+      }).toInt()
     }
-    val longestLayout =
-      textCache.getOrPut(longestLine) { TextLayout(longestLine, graphics2D.font, frc) }
-    graphics2D.dispose()
-    return longestLayout.bounds.width.toInt() to (texts.sumOf {
-      calcHeight(it, graphics2D, frc) + 1
-    }).toInt()
   }
 
   fun drawText(textPointX: Float, textPointY: Float, texts: List<String>, paint: Paint) {
-    val graphics2D = bufferedImage.createGraphics()
-    graphics2D.color = Color(paint.getColor(), true)
+    bufferedImage.graphics { graphics: Graphics2D ->
+      val graphics2D = bufferedImage.createGraphics()
+      graphics2D.color = Color(paint.getColor(), true)
 
-    val frc: FontRenderContext = graphics2D.getFontRenderContext()
-    var nextY = textPointY
-    for (text in texts) {
-      val height = calcHeight(text, graphics2D, frc)
-      graphics2D.drawString(
-        text,
-        textPointX.toInt(),
-        nextY.toInt()
-      )
-      nextY += (height + 1).toInt()
+      val frc: FontRenderContext = graphics2D.getFontRenderContext()
+
+      var nextY = textPointY
+      for (text in texts) {
+        val layout = calcTextLayout(text, graphics2D, frc)
+        val height = layout.bounds.height
+        layout.draw(
+          graphics2D,
+          textPointX,
+          nextY
+        )
+        nextY += (height + 1).toInt()
+      }
     }
-    graphics2D.dispose()
   }
 
-  private fun calcHeight(
+  private fun calcTextLayout(
     text: String,
     graphics2D: Graphics2D,
     frc: FontRenderContext
   ) = textCache.getOrPut(text) {
     TextLayout(text, graphics2D.font, frc)
-  }.bounds.height
+  }
 
   fun getPixel(x: Int, y: Int): Int {
     return bufferedImage.getRGB(x, y)
@@ -159,6 +157,7 @@ class RoboCanvas(width: Int, height: Int) {
   fun release() {
     bufferedImage.flush()
     croppedImage.flush()
+    textCache.clear()
   }
 
   companion object {
@@ -167,4 +166,12 @@ class RoboCanvas(width: Int, height: Int) {
     const val TRANSPARENT_MEDIUM = 0x88 shl 56
     const val TRANSPARENT_STRONG = 0x66 shl 56
   }
+}
+
+private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {
+  val graphics = createGraphics()
+  graphics.font = Font("Courier New", Font.BOLD, 12)
+  val result = block(graphics)
+  graphics.dispose()
+  return result
 }
