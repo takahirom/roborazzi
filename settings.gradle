@@ -14,6 +14,7 @@ dependencyResolutionManagement {
 }
 rootProject.name = "roborazzi"
 include ':app'
+include ':app-without-compose'
 include ':roborazzi-junit-rule'
 include ':roborazzi'
 include ':roborazzi-painter'

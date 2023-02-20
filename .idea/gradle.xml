@@ -7,11 +7,12 @@
         <option name="testRunner" value="GRADLE" />
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleJvm" value="Android Studio java home" />
+        <option name="gradleJvm" value="17" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/app-without-compose" />
             <option value="$PROJECT_DIR$/roborazzi" />
             <option value="$PROJECT_DIR$/roborazzi-junit-rule" />
             <option value="$PROJECT_DIR$/roborazzi-painter" />

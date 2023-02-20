@@ -41,8 +41,9 @@ internal sealed interface RoboComponent {
       view.getGlobalVisibleRect(rect)
       rect
     }
-    override val children: List<RoboComponent> = when (view) {
-      is AbstractComposeView -> {
+    override val children: List<RoboComponent> = when {
+      view::class.java.name == "androidx.compose.ui.platform.AbstractComposeView" -> {
+        view as AbstractComposeView
         (view.getChildAt(0) as? ViewRootForTest)
           ?.semanticsOwner
           ?.rootSemanticsNode
@@ -51,7 +52,7 @@ internal sealed interface RoboComponent {
           } ?: listOf()
       }
 
-      is ViewGroup -> {
+      view is ViewGroup -> {
         (0 until view.childCount)
           .map { View(view.getChildAt(it)) }
       }
