@@ -83,7 +83,10 @@ fun SemanticsNodeInteraction.captureRoboGif(
   filePath: String,
   block: () -> Unit
 ) {
-  captureComposeNode(composeRule, block).saveGif(File(filePath))
+  captureComposeNode(composeRule, block).apply {
+    saveGif(File(filePath))
+    clear()
+  }
 }
 
 fun SemanticsNodeInteraction.captureRoboGif(
@@ -91,30 +94,11 @@ fun SemanticsNodeInteraction.captureRoboGif(
   file: File,
   block: () -> Unit
 ) {
-  captureComposeNode(composeRule, block).saveGif(file)
+  captureComposeNode(composeRule, block).apply{
+    saveGif(file)
+    clear()
+  }
 }
-
-enum class CaptureType {
-  /**
-   * Generate test last image
-   */
-  LastImage,
-
-  /**
-   * Generate Each layout change images like TestClass_method_0.png
-   */
-  AllImage,
-
-  /**
-   * Generate gif image
-   */
-  Gif
-}
-
-data class CaptureMode(
-  val captureType: CaptureType = CaptureType.Gif,
-  val onlyFail: Boolean = false
-)
 
 class CaptureResult(
   val result: Result<Unit>,
@@ -124,6 +108,7 @@ class CaptureResult(
   val clear: () -> Unit
 )
 
+// Only for library, please don't use this directly
 fun ViewInteraction.captureAndroidView(block: () -> Unit): CaptureResult {
   var removeListener = {}
 
@@ -234,6 +219,7 @@ private fun saveLastImage(
   roboCanvas?.save(file)
 }
 
+// Only for library, please don't use this directly
 fun SemanticsNodeInteraction.captureComposeNode(
   composeRule: AndroidComposeTestRule<*, *>,
   block: () -> Unit

@@ -2,7 +2,6 @@
 
 **Make JVM Android Integration Test Visible**
 
-
 ## Try it out
 
 It is available on maven central.
@@ -13,7 +12,6 @@ testImplementation("io.github.takahirom.roborazzi:roborazzi:[write the latest ve
 // JUnit rules
 testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:[write the latest vesrion]")
 ```
-
 
 ## How to use
 
@@ -26,7 +24,7 @@ You can take a screenshot by calling captureRoboImage().
 fun captureRoboImageSample() {
   // launch
   launch(MainActivity::class.java)
-  
+
   // screen level image
   onView(ViewMatchers.isRoot())
     .captureRoboImage("build/first_screen.png")
@@ -51,8 +49,6 @@ fun captureRoboImageSample() {
 
 <img width="443" alt="image" src="https://user-images.githubusercontent.com/1386930/217111960-328ebaf9-51af-4489-b118-5ea8ba4a67e5.png">
 <img width="486" alt="image" src="https://user-images.githubusercontent.com/1386930/215248859-03a4f66e-3c42-42d8-863a-4cfbc3090b3f.png">
-
-
 
 ### Generate gif automatically
 
@@ -79,7 +75,8 @@ fun captureRoboGifSample() {
 
 ### Automatically generate gif with test rule
 
-With the JUnit test rule, you do not need to name the gif image, and if you prefer, you can output the gif image only if the test fails.
+With the JUnit test rule, you do not need to name the gif image, 
+and if you prefer, you can output the gif image **only if the test fails**.
 
 This test will output this file.
 
@@ -88,13 +85,14 @@ This test will output this file.
 ```kotlin
 @RunWith(AndroidJUnit4::class)
 class RuleTestWithOnlyFail {
-  @get:Rule val roborazziRule = RoborazziRule(
+  @get:Rule
+  val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
-    captureMode = CaptureMode(
+    options = Options(
       onlyFail = true
     )
   )
-  
+
   @Test
   fun captureRoboGifSampleFail() {
     // launch
@@ -169,9 +167,48 @@ Result
 
 <img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/217128255-05a0c656-28de-4a8c-8dd9-e87787a84557.gif >
 
+### RoborazziRule options
+
+You can use some RoborazziRule options
+
+```kotlin
+/**
+ * If you add this annotation to the test, the test will be ignored by roborazzi
+ */
+annotation class Ignore
+
+data class Options(
+  val captureType: CaptureType = CaptureType.Gif,
+  /**
+   * capture only when the test fail
+   */
+  val onlyFail: Boolean = false,
+  /**
+   * output directory path
+   */
+  val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
+)
+
+enum class CaptureType {
+  /**
+   * Generate last images for each test
+   */
+  LastImage,
+
+  /**
+   * Generate images for each layout change such as TestClass_method_0.png for each test.
+   */
+  AllImage,
+
+  /**
+   * Generate gif images for each test
+   */
+  Gif
+}
+
+```
 
 ### Large project example
-
 
 [From DroidKaigi 2022 app](https://github.com/DroidKaigi/conference-app-2022)
 
@@ -186,10 +223,12 @@ I believe this tool will create a culture of testing by eliminating the anxiety 
 
 ## Why test with JVM instead of testing on Android?
 
-Because when testing on a device, it is easy for the test to fail due to the device environment, animations, etc. This affects the reliability of the test and ultimately, if the test fails, it will not be fixed.
+Because when testing on a device, it is easy for the test to fail due to the device environment, animations, etc. 
+This affects the reliability of the test and ultimately, if the test fails, it will not be fixed.
 
 ## Why not Paparazzi?
 
 Paparazzi is a great tool to see the actual display in the JVM.  
-Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with Robolectric. This is because they both mock the Android framework.  
+Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with Robolectric. 
+This is because they both mock the Android framework.  
 Without Robolectric, you can't write tests that actually click on components and run them with Hilt tests.

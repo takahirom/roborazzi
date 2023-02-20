@@ -7,9 +7,8 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.CaptureMode
 import com.github.takahirom.roborazzi.RoborazziRule
-import org.junit.Assert.*
+import com.github.takahirom.roborazzi.RoborazziRule.Options
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -19,7 +18,7 @@ import org.junit.runner.RunWith
 class RuleTestWithOnlyFailWithFail {
   @get:Rule val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
-    captureMode = CaptureMode(
+    options = Options(
       onlyFail = true
     )
   )

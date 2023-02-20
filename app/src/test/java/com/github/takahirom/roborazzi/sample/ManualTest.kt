@@ -16,11 +16,10 @@ import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureRoboLastImage
-import org.junit.Assert.*
+import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
 
 private const val PATH_AND_PREFIX_FOR_FILE: String = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual"
 
@@ -61,14 +60,9 @@ class ManualTest {
           .perform(click())
         // back
         pressBack()
-        // move to next page
-        onView(withId(R.id.button_first))
-          .perform(click())
       }
     onView(ViewMatchers.isRoot())
       .captureRoboLastImage("${PATH_AND_PREFIX_FOR_FILE}_last.png") {
-        // back
-        pressBack()
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())

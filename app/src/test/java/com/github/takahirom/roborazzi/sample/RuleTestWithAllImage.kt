@@ -7,10 +7,9 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.CaptureMode
-import com.github.takahirom.roborazzi.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule
-import org.junit.Assert.*
+import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
+import com.github.takahirom.roborazzi.RoborazziRule.Options
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,7 +18,7 @@ import org.junit.runner.RunWith
 class RuleTestWithAllImage {
   @get:Rule val roborazziRule = RoborazziRule(
     onView(isRoot()),
-    CaptureMode(CaptureType.AllImage)
+    Options(CaptureType.AllImage)
   )
   @Test
   fun captureRoboGifSample() {
