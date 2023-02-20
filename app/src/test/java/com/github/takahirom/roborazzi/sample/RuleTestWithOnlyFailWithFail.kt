@@ -16,7 +16,8 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class RuleTestWithOnlyFailWithFail {
-  @get:Rule val roborazziRule = RoborazziRule(
+  @get:Rule
+  val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
     options = Options(
       onlyFail = true
@@ -39,5 +40,10 @@ class RuleTestWithOnlyFailWithFail {
     // should fail
     onView(withId(R.id.button_first))
       .perform(click())
+  }
+
+  @RoborazziRule.Ignore
+  fun test() {
+    assert(1 + 1 == 2)
   }
 }
