@@ -117,7 +117,12 @@ class RoboCanvas(width: Int, height: Int) {
 
   private val croppedImage by lazy {
     drawPendingDraw()
-    bufferedImage.getSubimage(0, 0, rightBottomPoint.first, rightBottomPoint.second)
+    bufferedImage.getSubimage(
+      /* x = */ 0,
+      /* y = */ 0,
+      /* w = */ minOf(bufferedImage.height, rightBottomPoint.first),
+      /* h = */ minOf(bufferedImage.width, rightBottomPoint.second)
+    )
   }
 
   var baseDrawList = mutableListOf<() -> Unit>()
