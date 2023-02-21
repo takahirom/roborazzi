@@ -20,9 +20,11 @@ import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
 private const val PATH_AND_PREFIX_FOR_FILE: String = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual"
 
+@Config(qualifiers = "xlarge-land")
 @RunWith(AndroidJUnit4::class)
 class ManualTest {
   @get:Rule

@@ -117,17 +117,26 @@ internal sealed interface RoboComponent {
   }
 }
 
-internal fun capture(rootComponent: RoboComponent, onCanvas: (RoboCanvas) -> Unit) {
+class CaptureOptions(
+  val basicSize: Int = 600,
+  val depthSlideSize: Int = 30
+)
+
+internal fun capture(
+  rootComponent: RoboComponent,
+  captureOptions: CaptureOptions,
+  onCanvas: (RoboCanvas) -> Unit
+) {
   val start = System.currentTimeMillis()
-  val basicSize = 600
-  val depthSlide = 30
+  val basicSize = captureOptions.basicSize
+  val depthSlide = captureOptions.depthSlideSize
 
   val deepestDepth = rootComponent.depth()
   val componentCount = rootComponent.countOfComponent()
 
   val canvas = RoboCanvas(
-    rootComponent.width + basicSize + deepestDepth * depthSlide + componentCount * 20,
-    rootComponent.height + basicSize + deepestDepth * depthSlide + componentCount * 20
+    rootComponent.rect.right + basicSize + deepestDepth * depthSlide + componentCount * 20,
+    rootComponent.rect.bottom + basicSize + deepestDepth * depthSlide + componentCount * 20
   )
   val paddingRect = Rect(basicSize / 2, basicSize / 2, basicSize / 2, basicSize / 2)
 

@@ -20,35 +20,57 @@ import java.io.File
 import java.util.Locale
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
-fun ViewInteraction.captureRoboImage(filePath: String) {
+fun ViewInteraction.captureRoboImage(
+  filePath: String,
+  captureOptions: CaptureOptions = CaptureOptions(),
+) {
   captureRoboImage(File(filePath))
 }
 
-fun ViewInteraction.captureRoboImage(file: File) {
-  perform(ImageCaptureViewAction { canvas ->
+fun ViewInteraction.captureRoboImage(
+  file: File,
+  captureOptions: CaptureOptions = CaptureOptions(),
+) {
+  perform(ImageCaptureViewAction(captureOptions) { canvas ->
     canvas.save(file)
     canvas.release()
   })
 }
 
-fun ViewInteraction.captureRoboGif(filePath: String, block: () -> Unit) {
-  captureRoboGif(File(filePath), block)
+fun ViewInteraction.captureRoboGif(
+  filePath: String,
+  captureOptions: CaptureOptions = CaptureOptions(),
+  block: () -> Unit
+) {
+  captureRoboGif(File(filePath), captureOptions, block)
 }
 
-fun ViewInteraction.captureRoboGif(file: File, block: () -> Unit) {
-  captureAndroidView(block).apply {
+fun ViewInteraction.captureRoboGif(
+  file: File,
+  captureOptions: CaptureOptions = CaptureOptions(),
+  block: () -> Unit
+) {
+  captureAndroidView(captureOptions, block).apply {
     saveGif(file)
     clear()
     result.getOrThrow()
   }
 }
 
-fun ViewInteraction.captureRoboLastImage(filePath: String, block: () -> Unit) {
-  captureRoboGif(File(filePath), block)
+fun ViewInteraction.captureRoboLastImage(
+  filePath: String,
+  captureOptions: CaptureOptions = CaptureOptions(),
+  block: () -> Unit
+) {
+  captureRoboGif(File(filePath), captureOptions, block)
 }
 
-fun ViewInteraction.captureRoboLastImage(file: File, block: () -> Unit) {
-  captureAndroidView(block).apply {
+fun ViewInteraction.captureRoboLastImage(
+  file: File,
+  captureOptions: CaptureOptions = CaptureOptions(),
+  block: () -> Unit
+) {
+  captureAndroidView(captureOptions, block).apply {
     saveLastImage(file)
     clear()
     result.getOrThrow()
@@ -57,9 +79,10 @@ fun ViewInteraction.captureRoboLastImage(file: File, block: () -> Unit) {
 
 fun ViewInteraction.captureRoboAllImage(
   fileNameCreator: (prefix: String) -> File,
+  captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ) {
-  captureAndroidView(block).apply {
+  captureAndroidView(captureOptions, block).apply {
     saveAllImage(fileNameCreator)
     clear()
     result.getOrThrow()
@@ -67,12 +90,21 @@ fun ViewInteraction.captureRoboAllImage(
 
 }
 
-fun SemanticsNodeInteraction.captureRoboImage(filePath: String) {
-  captureRoboImage(File(filePath))
+fun SemanticsNodeInteraction.captureRoboImage(
+  filePath: String,
+  captureOptions: CaptureOptions = CaptureOptions(),
+) {
+  captureRoboImage(File(filePath), captureOptions)
 }
 
-fun SemanticsNodeInteraction.captureRoboImage(file: File) {
-  capture(RoboComponent.Compose(this.fetchSemanticsNode("fail to captureRoboImage"))) { canvas ->
+fun SemanticsNodeInteraction.captureRoboImage(
+  file: File,
+  captureOptions: CaptureOptions = CaptureOptions(),
+) {
+  capture(
+    rootComponent = RoboComponent.Compose(this.fetchSemanticsNode("fail to captureRoboImage")),
+    captureOptions = captureOptions,
+  ) { canvas ->
     canvas.save(file)
     canvas.release()
   }
@@ -81,9 +113,14 @@ fun SemanticsNodeInteraction.captureRoboImage(file: File) {
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
   filePath: String,
+  captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ) {
-  captureComposeNode(composeRule, block).apply {
+  captureComposeNode(
+    composeRule = composeRule,
+    captureOptions = captureOptions,
+    block = block
+  ).apply {
     saveGif(File(filePath))
     clear()
   }
@@ -92,9 +129,10 @@ fun SemanticsNodeInteraction.captureRoboGif(
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
   file: File,
+  captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ) {
-  captureComposeNode(composeRule, block).apply{
+  captureComposeNode(composeRule, captureOptions, block).apply {
     saveGif(file)
     clear()
   }
@@ -109,7 +147,7 @@ class CaptureResult(
 )
 
 // Only for library, please don't use this directly
-fun ViewInteraction.captureAndroidView(block: () -> Unit): CaptureResult {
+fun ViewInteraction.captureAndroidView(captureOptions: CaptureOptions, block: () -> Unit): CaptureResult {
   var removeListener = {}
 
   val canvases = mutableListOf<RoboCanvas>()
@@ -117,7 +155,7 @@ fun ViewInteraction.captureAndroidView(block: () -> Unit): CaptureResult {
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
     Handler(Looper.getMainLooper()).post {
       this@captureAndroidView.perform(
-        ImageCaptureViewAction { canvas ->
+        ImageCaptureViewAction(captureOptions) { canvas ->
           canvases.add(canvas)
         }
       )
@@ -170,7 +208,7 @@ fun ViewInteraction.captureAndroidView(block: () -> Unit): CaptureResult {
   try {
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     perform(
-      ImageCaptureViewAction { canvas ->
+      ImageCaptureViewAction(captureOptions) { canvas ->
         canvases.add(canvas)
       }
     )
@@ -222,22 +260,25 @@ private fun saveLastImage(
 // Only for library, please don't use this directly
 fun SemanticsNodeInteraction.captureComposeNode(
   composeRule: AndroidComposeTestRule<*, *>,
+  captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ): CaptureResult {
   var removeListener = {}
 
   val canvases = mutableListOf<RoboCanvas>()
 
-  val listener = ViewTreeObserver.OnGlobalLayoutListener {
-    capture(RoboComponent.Compose(this@captureComposeNode.fetchSemanticsNode(""))) {
+  val capture = {
+    capture(
+      rootComponent = RoboComponent.Compose(this@captureComposeNode.fetchSemanticsNode("roborazzi can't find component")),
+      captureOptions = captureOptions
+    ) {
       canvases.add(it)
     }
   }
+  val listener = ViewTreeObserver.OnGlobalLayoutListener(capture)
   try {
     // If there is already a screen, we should take the screenshot first not to miss the frame.
-    capture(RoboComponent.Compose(this@captureComposeNode.fetchSemanticsNode(""))) {
-      canvases.add(it)
-    }
+    capture()
     val viewTreeObserver = composeRule.activity.window.decorView.viewTreeObserver
     viewTreeObserver.addOnGlobalLayoutListener(listener)
     removeListener = {
@@ -248,9 +289,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
     composeRule.runOnIdle {
       val viewTreeObserver = composeRule.activity.window.decorView.viewTreeObserver
       composeRule.activity.window.decorView.doOnNextLayout {
-        capture(RoboComponent.Compose(this@captureComposeNode.fetchSemanticsNode(""))) {
-          canvases.add(it)
-        }
+        capture()
       }
       viewTreeObserver.addOnGlobalLayoutListener(listener)
       removeListener = {
@@ -313,7 +352,8 @@ private fun saveAllImage(
   }
 }
 
-private class ImageCaptureViewAction(val saveAction: (RoboCanvas) -> Unit) : ViewAction {
+private class ImageCaptureViewAction(val captureOptions: CaptureOptions, val saveAction: (RoboCanvas) -> Unit) :
+  ViewAction {
   override fun getConstraints(): Matcher<View> {
     return Matchers.any(View::class.java)
   }
@@ -323,6 +363,6 @@ private class ImageCaptureViewAction(val saveAction: (RoboCanvas) -> Unit) : Vie
   }
 
   override fun perform(uiController: UiController, view: View) {
-    capture(RoboComponent.View(view), saveAction)
+    capture(RoboComponent.View(view), captureOptions, saveAction)
   }
 }
