@@ -120,8 +120,8 @@ class RoboCanvas(width: Int, height: Int) {
     bufferedImage.getSubimage(
       /* x = */ 0,
       /* y = */ 0,
-      /* w = */ minOf(bufferedImage.height, rightBottomPoint.first),
-      /* h = */ minOf(bufferedImage.width, rightBottomPoint.second)
+      /* w = */ minOf(bufferedImage.width, rightBottomPoint.first),
+      /* h = */ minOf(bufferedImage.height, rightBottomPoint.second)
     )
   }
 
