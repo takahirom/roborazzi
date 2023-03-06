@@ -24,7 +24,10 @@ fun ViewInteraction.captureRoboImage(
   filePath: String,
   captureOptions: CaptureOptions = CaptureOptions(),
 ) {
-  captureRoboImage(File(filePath))
+  captureRoboImage(
+    file = File(filePath),
+    captureOptions = captureOptions
+  )
 }
 
 fun ViewInteraction.captureRoboImage(
@@ -147,7 +150,10 @@ class CaptureResult(
 )
 
 // Only for library, please don't use this directly
-fun ViewInteraction.captureAndroidView(captureOptions: CaptureOptions, block: () -> Unit): CaptureResult {
+fun ViewInteraction.captureAndroidView(
+  captureOptions: CaptureOptions,
+  block: () -> Unit
+): CaptureResult {
   var removeListener = {}
 
   val canvases = mutableListOf<RoboCanvas>()
@@ -352,7 +358,10 @@ private fun saveAllImage(
   }
 }
 
-private class ImageCaptureViewAction(val captureOptions: CaptureOptions, val saveAction: (RoboCanvas) -> Unit) :
+private class ImageCaptureViewAction(
+  val captureOptions: CaptureOptions,
+  val saveAction: (RoboCanvas) -> Unit
+) :
   ViewAction {
   override fun getConstraints(): Matcher<View> {
     return Matchers.any(View::class.java)

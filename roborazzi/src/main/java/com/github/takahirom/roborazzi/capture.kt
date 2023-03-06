@@ -5,10 +5,12 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.text.TextPaint
 import android.view.ViewGroup
+import androidx.annotation.IdRes
 import androidx.compose.ui.graphics.toAndroidRect
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.test.espresso.util.HumanReadables
 import kotlin.math.abs
 
@@ -25,13 +27,20 @@ internal val colors = listOf(
   0xeb5a00
 )
 
-internal enum class Visibility {
+enum class Visibility {
   Visible,
   Gone,
   Invisible;
 }
 
-internal sealed interface RoboComponent {
+val hasCompose = try{
+  Class.forName("androidx.compose.ui.platform.AbstractComposeView")
+  true
+} catch (e:Exception) {
+  false
+}
+
+sealed interface RoboComponent {
 
   class View(view: android.view.View) : RoboComponent {
     override val width: Int = view.width
@@ -42,8 +51,7 @@ internal sealed interface RoboComponent {
       rect
     }
     override val children: List<RoboComponent> = when {
-      view::class.java.name == "androidx.compose.ui.platform.AbstractComposeView" -> {
-        view as AbstractComposeView
+      hasCompose && view is androidx.compose.ui.platform.AbstractComposeView -> {
         (view.getChildAt(0) as? ViewRootForTest)
           ?.semanticsOwner
           ?.rootSemanticsNode
@@ -62,14 +70,16 @@ internal sealed interface RoboComponent {
       }
     }
 
-    private val id: String =
+    val id: Int = view.id
+
+    val idResourceName: String? =
       if (0xFFFFFFFF.toInt() == view.id) {
-        ""
+        null
       } else {
         try {
           view.resources.getResourceName(view.id)
         } catch (e: Exception) {
-          ""
+          null
         }
       }
     override val text: String = HumanReadables.describe(view)
@@ -88,6 +98,7 @@ internal sealed interface RoboComponent {
     }
     override val text: String = node.printToString()
     override val visibility: Visibility = Visibility.Visible
+    val testTag: String? = node.config.getOrNull(SemanticsProperties.TestTag)
 
     override val rect: Rect = run {
       val rect = Rect()
@@ -117,10 +128,41 @@ internal sealed interface RoboComponent {
   }
 }
 
+fun withViewId(@IdRes id: Int): (RoboComponent) -> Boolean {
+  return { roboComponent ->
+    when (roboComponent) {
+      is RoboComponent.Compose -> false
+      is RoboComponent.View -> roboComponent.id == id
+    }
+  }
+}
+
+fun withComposeTestTag(testTag: String): (RoboComponent) -> Boolean {
+  return { roboComponent ->
+    when (roboComponent) {
+      is RoboComponent.Compose -> testTag == roboComponent.testTag
+      is RoboComponent.View -> false
+    }
+  }
+}
+
 class CaptureOptions(
   val basicSize: Int = 600,
-  val depthSlideSize: Int = 30
+  val depthSlideSize: Int = 30,
+  val query: ((RoboComponent) -> Boolean)? = null,
 )
+
+internal sealed interface QueryResult {
+  object Disabled : QueryResult
+  data class Enabled(val matched: Boolean) : QueryResult
+
+  companion object {
+    fun of(component: RoboComponent, query: ((RoboComponent) -> Boolean)?): QueryResult {
+      if (query == null) return Disabled
+      return Enabled(query(component))
+    }
+  }
+}
 
 internal fun capture(
   rootComponent: RoboComponent,
@@ -152,10 +194,18 @@ internal fun capture(
   val depthAndComponentQueue = ArrayDeque<Pair<Int, RoboComponent>>()
   depthAndComponentQueue.add(0 to rootComponent)
 
-
   fun bfs() {
     while (depthAndComponentQueue.isNotEmpty()) {
       val (depth, component) = depthAndComponentQueue.removeFirst()
+      val queryResult = QueryResult.of(component, captureOptions.query)
+      fun Int.overrideByQuery(queryResult: QueryResult): Int = when (queryResult) {
+        QueryResult.Disabled -> this
+        is QueryResult.Enabled -> if (queryResult.matched) {
+          RoboCanvas.TRANSPARENT_BIT
+        } else {
+          RoboCanvas.TRANSPARENT_STRONG
+        }
+      }
       canvas.addBaseDraw {
         val rect = component.rect
         val canvasRect = Rect(
@@ -166,9 +216,9 @@ internal fun capture(
         )
         val boxColor = colors[depth % colors.size]
         val boxAlpha = when (component.visibility) {
-          Visibility.Visible -> RoboCanvas.TRANSPARENT_BIT // alpha EE / FF
-          Visibility.Gone -> RoboCanvas.TRANSPARENT_MEDIUM // alpha 88 / FF
-          Visibility.Invisible -> RoboCanvas.TRANSPARENT_STRONG // alpha BB / FF
+          Visibility.Visible -> RoboCanvas.TRANSPARENT_BIT.overrideByQuery(queryResult) // alpha EE / FF
+          Visibility.Invisible -> RoboCanvas.TRANSPARENT_MEDIUM.overrideByQuery(queryResult)  // alpha BB / FF
+          Visibility.Gone -> RoboCanvas.TRANSPARENT_STRONG.overrideByQuery(queryResult) // alpha 88 / FF
         }
 
         val alphaBoxColor = boxColor + boxAlpha
