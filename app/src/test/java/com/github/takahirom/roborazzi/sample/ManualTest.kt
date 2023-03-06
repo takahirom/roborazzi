@@ -13,6 +13,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.CaptureOptions
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
+import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -64,7 +65,6 @@ class ManualTest {
         captureOptions = CaptureOptions(query = withViewId(R.id.textview_first))
       )
 
-
     composeTestRule.onNodeWithTag("MyComposeButton")
       .performClick()
 
@@ -72,11 +72,21 @@ class ManualTest {
       .performClick()
     composeTestRule.waitForIdle()
 
-
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = "${PATH_AND_PREFIX_FOR_FILE}_view_first_screen_with_query_compose.png",
         captureOptions = CaptureOptions(query = withComposeTestTag("child:0"))
+      )
+
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        filePath = "${PATH_AND_PREFIX_FOR_FILE}_view_first_screen_with_query_compose_custom.png",
+        captureOptions = CaptureOptions(query = { roboComponent ->
+          when (roboComponent) {
+            is RoboComponent.Compose -> roboComponent.testTag?.startsWith("child") == true
+            is RoboComponent.View -> false
+          }
+        })
       )
   }
 
