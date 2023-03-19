@@ -125,7 +125,7 @@ sealed interface RoboComponent {
   }
 
   companion object {
-    val defaultChildVisitor: (Any, CaptureOptions) -> List<RoboComponent> =
+    internal val defaultChildVisitor: (Any, CaptureOptions) -> List<RoboComponent> =
       { platformNode: Any, captureOptions: CaptureOptions ->
         when {
           hasCompose && platformNode is androidx.compose.ui.platform.AbstractComposeView -> {
@@ -197,7 +197,7 @@ class CaptureOptions(
     ) : CaptureType
   }
 
-  val shouldTakeBitmap: Boolean = when (captureType) {
+  internal val shouldTakeBitmap: Boolean = when (captureType) {
     is CaptureType.Dump -> {
       if (captureType.takeScreenShot && !isNativeGraphicsEnabled()) {
         throw IllegalArgumentException("Please update Robolectric Robolectric 4.10 Alpha 1 and Add @GraphicsMode(GraphicsMode.Mode.NATIVE) or use takeScreenShot = false")
@@ -218,7 +218,6 @@ internal val CaptureOptions.CaptureType.roboComponentChildVisitor: (Any, Capture
   get() {
     return when (this) {
       is CaptureOptions.CaptureType.Dump -> RoboComponent.defaultChildVisitor
-
       is CaptureOptions.CaptureType.Screenshot -> { _, _ -> listOf() }
     }
   }
