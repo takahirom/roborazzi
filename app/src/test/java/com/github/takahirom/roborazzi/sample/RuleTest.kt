@@ -1,6 +1,6 @@
 package com.github.takahirom.roborazzi.sample
 
-import androidx.test.core.app.ActivityScenario.launch
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -22,7 +22,7 @@ class RuleTest {
   @Test
   fun captureRoboGifSample() {
     // launch
-    launch(MainActivity::class.java)
+    ActivityScenario.launch(MainActivity::class.java)
     // move to next page
     onView(withId(R.id.button_first))
       .perform(click())

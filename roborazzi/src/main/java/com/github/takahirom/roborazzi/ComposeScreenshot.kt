@@ -39,6 +39,7 @@ fun Bitmap.crop(rect: Rect): Bitmap? {
   return croppedBitmap
 }
 
+// From AOSP: https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/ui/ui-test/src/androidMain/kotlin/androidx/compose/ui/test/AndroidImageHelpers.android.kt;drc=d25dbd013c9d8fffee1264f98f8d201cdc45fa34
 @OptIn(InternalTestApi::class)
 private fun findNodePosition(
   node: SemanticsNode

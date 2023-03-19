@@ -24,6 +24,7 @@ fun View.fetchImage(): Bitmap? {
   return bitmap
 }
 
+// From AOSP: https://cs.android.com/androidx/android-test/+/master:core/java/androidx/test/core/view/WindowCapture.kt;drc=25e2f2b042b283eea3b7ced82fb3c6504b6cca63
 private fun View.generateBitmap(bitmapFuture: ResolvableFuture<Bitmap>) {
   if (bitmapFuture.isCancelled) {
     return

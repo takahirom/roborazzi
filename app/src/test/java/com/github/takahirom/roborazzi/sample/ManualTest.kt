@@ -27,8 +27,6 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-private const val PATH_AND_PREFIX_FOR_FILE: String = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual"
-
 @Config(qualifiers = "xlarge-land")
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -40,28 +38,28 @@ class ManualTest {
   fun captureRoboImageSample() {
     // screen level image
     onView(ViewMatchers.isRoot())
-      .captureRoboImage("${PATH_AND_PREFIX_FOR_FILE}_view_first_screen.png")
+      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen.png")
 
     // compose image
     composeTestRule.onNodeWithTag("MyComposeButton")
       .onParent()
-      .captureRoboImage("${PATH_AND_PREFIX_FOR_FILE}_small_compose.png")
+      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_compose.png")
 
     // small component image
     onView(withId(R.id.button_first))
-      .captureRoboImage("${PATH_AND_PREFIX_FOR_FILE}_small_view_button.png")
+      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_view_button.png")
 
     // move to next page
     onView(withId(R.id.button_first))
       .perform(click())
 
     onView(ViewMatchers.isRoot())
-      .captureRoboImage("${PATH_AND_PREFIX_FOR_FILE}_second_screen.png")
+      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_second_screen.png")
   }
 
   @Test
   fun captureRoboImageSampleWithQuery() {
-    val filePath = "${PATH_AND_PREFIX_FOR_FILE}_view_first_screen_with_query_view.png"
+    val filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_view.png"
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = filePath,
@@ -79,7 +77,7 @@ class ManualTest {
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
-        filePath = "${PATH_AND_PREFIX_FOR_FILE}_view_first_screen_with_query_compose.png",
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose.png",
         captureOptions = CaptureOptions(
           captureType = CaptureOptions.CaptureType.Dump(
             query = withComposeTestTag("child:0")
@@ -89,7 +87,7 @@ class ManualTest {
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
-        filePath = "${PATH_AND_PREFIX_FOR_FILE}_view_first_screen_with_query_compose_custom.png",
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose_custom.png",
         captureOptions = CaptureOptions(
           captureType = CaptureOptions.CaptureType.Dump(
             query = { roboComponent ->
@@ -106,7 +104,7 @@ class ManualTest {
   @Test
   fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
-      .captureRoboGif("${PATH_AND_PREFIX_FOR_FILE}_gif.gif") {
+      .captureRoboGif("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_gif.gif") {
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
@@ -114,7 +112,7 @@ class ManualTest {
         pressBack()
       }
     onView(ViewMatchers.isRoot())
-      .captureRoboLastImage("${PATH_AND_PREFIX_FOR_FILE}_last.png") {
+      .captureRoboLastImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_last.png") {
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
@@ -126,7 +124,7 @@ class ManualTest {
       }
 
     onView(ViewMatchers.isRoot())
-      .captureRoboAllImage({ File("${PATH_AND_PREFIX_FOR_FILE}_all_$it.png") }) {
+      .captureRoboAllImage({ File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_all_$it.png") }) {
         // back
         pressBack()
         // move to next page
@@ -145,7 +143,7 @@ class ManualTest {
     composeTestRule.onRoot(false)
       .captureRoboGif(
         composeTestRule,
-        "${PATH_AND_PREFIX_FOR_FILE}_captureRoboGifSampleCompose.gif"
+        "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_captureRoboGifSampleCompose.gif"
       ) {
         composeTestRule.onNodeWithTag("MyComposeButton")
           .performClick()
