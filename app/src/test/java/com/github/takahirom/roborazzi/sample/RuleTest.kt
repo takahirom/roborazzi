@@ -12,10 +12,13 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTest {
-  @get:Rule val roborazziRule = RoborazziRule(onView(isRoot()))
+    @get:Rule
+    val roborazziRule = RoborazziRule(onView(isRoot()))
   @Test
   fun captureRoboGifSample() {
     // launch
@@ -30,3 +33,4 @@ class RuleTest {
       .perform(click())
   }
 }
+

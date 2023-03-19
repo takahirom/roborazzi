@@ -13,8 +13,10 @@ import com.github.takahirom.roborazzi.RoborazziRule.Options
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTestWithAllImage {
   @get:Rule val roborazziRule = RoborazziRule(
     onView(isRoot()),

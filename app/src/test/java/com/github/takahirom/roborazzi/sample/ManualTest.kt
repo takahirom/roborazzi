@@ -25,11 +25,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 private const val PATH_AND_PREFIX_FOR_FILE: String = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual"
 
 @Config(qualifiers = "xlarge-land")
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ManualTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
@@ -59,10 +61,13 @@ class ManualTest {
 
   @Test
   fun captureRoboImageSampleWithQuery() {
+    val filePath = "${PATH_AND_PREFIX_FOR_FILE}_view_first_screen_with_query_view.png"
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
-        filePath = "${PATH_AND_PREFIX_FOR_FILE}_view_first_screen_with_query_view.png",
-        captureOptions = CaptureOptions(query = withViewId(R.id.textview_first))
+        filePath = filePath,
+        captureOptions = CaptureOptions(
+          captureType = CaptureOptions.CaptureType.Dump(query = withViewId(R.id.textview_first))
+        )
       )
 
     composeTestRule.onNodeWithTag("MyComposeButton")
@@ -75,18 +80,25 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = "${PATH_AND_PREFIX_FOR_FILE}_view_first_screen_with_query_compose.png",
-        captureOptions = CaptureOptions(query = withComposeTestTag("child:0"))
+        captureOptions = CaptureOptions(
+          captureType = CaptureOptions.CaptureType.Dump(
+            query = withComposeTestTag("child:0")
+          )
+        )
       )
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = "${PATH_AND_PREFIX_FOR_FILE}_view_first_screen_with_query_compose_custom.png",
-        captureOptions = CaptureOptions(query = { roboComponent ->
-          when (roboComponent) {
-            is RoboComponent.Compose -> roboComponent.testTag?.startsWith("child") == true
-            is RoboComponent.View -> false
-          }
-        })
+        captureOptions = CaptureOptions(
+          captureType = CaptureOptions.CaptureType.Dump(
+            query = { roboComponent ->
+              when (roboComponent) {
+                is RoboComponent.Compose -> roboComponent.testTag?.startsWith("child") == true
+                is RoboComponent.View -> false
+              }
+            })
+        )
       )
   }
 

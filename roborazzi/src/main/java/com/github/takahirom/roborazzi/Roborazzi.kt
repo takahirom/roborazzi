@@ -2,6 +2,7 @@ package com.github.takahirom.roborazzi
 
 import android.app.Activity
 import android.app.Application
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -14,10 +15,10 @@ import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
 import androidx.test.platform.app.InstrumentationRegistry
-import org.hamcrest.Matcher
-import org.hamcrest.Matchers
 import java.io.File
 import java.util.Locale
+import org.hamcrest.Matcher
+import org.hamcrest.Matchers
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 fun ViewInteraction.captureRoboImage(
@@ -105,7 +106,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
   captureOptions: CaptureOptions = CaptureOptions(),
 ) {
   capture(
-    rootComponent = RoboComponent.Compose(this.fetchSemanticsNode("fail to captureRoboImage")),
+    rootComponent = RoboComponent.Compose(
+      node = this.fetchSemanticsNode("fail to captureRoboImage"),
+      captureOptions = captureOptions
+    ),
     captureOptions = captureOptions,
   ) { canvas ->
     canvas.save(file)
@@ -275,7 +279,10 @@ fun SemanticsNodeInteraction.captureComposeNode(
 
   val capture = {
     capture(
-      rootComponent = RoboComponent.Compose(this@captureComposeNode.fetchSemanticsNode("roborazzi can't find component")),
+      rootComponent = RoboComponent.Compose(
+        this@captureComposeNode.fetchSemanticsNode("roborazzi can't find component"),
+        captureOptions
+      ),
       captureOptions = captureOptions
     ) {
       canvases.add(it)
@@ -372,6 +379,36 @@ private class ImageCaptureViewAction(
   }
 
   override fun perform(uiController: UiController, view: View) {
-    capture(RoboComponent.View(view), captureOptions, saveAction)
+    capture(
+      rootComponent = RoboComponent.View(
+        view = view,
+        captureOptions,
+      ),
+      captureOptions = captureOptions,
+      onCanvas = saveAction
+    )
+  }
+}
+
+internal fun capture(
+  rootComponent: RoboComponent,
+  captureOptions: CaptureOptions,
+  onCanvas: (RoboCanvas) -> Unit
+) {
+  when (captureOptions.captureType) {
+    is CaptureOptions.CaptureType.Dump -> captureDump(
+      rootComponent = rootComponent,
+      captureOptions = captureOptions.captureType,
+      onCanvas = onCanvas
+    )
+
+    is CaptureOptions.CaptureType.Screenshot -> {
+      val image = rootComponent.image!!
+      onCanvas(
+        RoboCanvas(width = image.width, height = image.height).apply {
+          drawImage(Rect(0, 0, image.width, image.height), image)
+        }
+      )
+    }
   }
 }

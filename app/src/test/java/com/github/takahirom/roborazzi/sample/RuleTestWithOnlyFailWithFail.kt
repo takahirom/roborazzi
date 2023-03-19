@@ -13,8 +13,10 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTestWithOnlyFailWithFail {
   @get:Rule
   val roborazziRule = RoborazziRule(

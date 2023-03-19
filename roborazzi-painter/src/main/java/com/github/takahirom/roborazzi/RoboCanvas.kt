@@ -2,6 +2,7 @@
 
 package com.github.takahirom.roborazzi
 
+import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import java.awt.*
@@ -10,6 +11,7 @@ import java.awt.font.TextLayout
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
+
 
 class RoboCanvas(width: Int, height: Int) {
   private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_USHORT_565_RGB)
@@ -27,6 +29,36 @@ class RoboCanvas(width: Int, height: Int) {
     .toMutableSet()
     private set
 
+  fun drawImage(r: Rect, bitmap: Bitmap) {
+    bufferedImage.graphics { graphics2D ->
+      graphics2D.drawImage(
+        BitmapToBufferedImageConverter.convert(bitmap),
+        r.left,
+        r.top,
+        r.width(),
+        r.height(),
+        null
+      )
+    }
+    updateRightBottom(r.right, r.bottom)
+    consumeEmptyPoints(r)
+  }
+
+  fun drawRectOutline(r: Rect, paint: Paint) {
+    bufferedImage.graphics { graphics2D ->
+      graphics2D.color = Color(paint.getColor(), true)
+      val stroke = BasicStroke(minOf(r.width().toFloat(), r.height().toFloat()) / 20)
+      graphics2D.setStroke(stroke)
+      graphics2D.drawRect(
+        r.left, r.top,
+        (r.right - r.left), (r.bottom - r.top)
+      )
+      updateRightBottom(r.right, r.bottom)
+
+      consumeEmptyPoints(r)
+    }
+  }
+
   fun drawRect(r: Rect, paint: Paint) {
     bufferedImage.graphics { graphics2D ->
       graphics2D.color = Color(paint.getColor(), true)
@@ -37,10 +69,14 @@ class RoboCanvas(width: Int, height: Int) {
       graphics2D.dispose()
       updateRightBottom(r.right, r.bottom)
 
-      emptyPoints -= ((r.left - r.left % 50)..r.right step 50).flatMap { x ->
-        ((r.top - r.top % 50)..r.bottom step 50).map { y -> x to y }
-      }.toSet()
+      consumeEmptyPoints(r)
     }
+  }
+
+  private fun consumeEmptyPoints(r: Rect) {
+    emptyPoints -= ((r.left - r.left % 50)..r.right step 50).flatMap { x ->
+      ((r.top - r.top % 50)..r.bottom step 50).map { y -> x to y }
+    }.toSet()
   }
 
   fun drawLine(r: Rect, paint: Paint) {

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
@@ -67,6 +69,7 @@ fun SampleComposableFunction() {
     Box(
       Modifier
         .testTag("MyComposeButton")
+        .background(Color.Gray)
         .size(50.dp)
         .clickable {
           count++
@@ -75,6 +78,7 @@ fun SampleComposableFunction() {
     (0 until count).forEach {
       Box(
         Modifier
+          .background(Color.Red)
           .testTag("child:$it")
           .size(30.dp)
       )
