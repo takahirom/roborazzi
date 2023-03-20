@@ -36,9 +36,8 @@ root build.gradle
 
 ```
 plugins {
-  id 'com.android.application' version '7.3.1' apply false
 ...
-  id "io.github.takahirom.roborazzi" version "1.0.0-beta-1" apply false
+  id "io.github.takahirom.roborazzi" version "[write the latest vesrion]" apply false
 }
 ```
 
@@ -46,6 +45,7 @@ module build.gradle
 
 ```
 plugins {
+...
   id 'io.github.takahirom.roborazzi'
 }
 ```
@@ -57,6 +57,7 @@ root build.gradle
 ```kotlin
 buildscript {
   dependencies {
+  ...
     classpath 'io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[write the latest vesrion]'
   }
 }
