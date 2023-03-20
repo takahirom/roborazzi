@@ -2,9 +2,28 @@
 
 **Make JVM Android Integration Test Visible**
 
-## Roborazzi 1.0.0-alpha-1 now supports Robolectric Native Graphics (RNG) and enables screenshot testing.📣📣 
+## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10-alpha-1) and enables screenshot testing.📣
 
-![image](https://user-images.githubusercontent.com/1386930/226312533-1f64af63-4d07-4613-9acc-459b6a972672.png)
+From this version, please use Roborazzi Gradle Plugin to use Roborazzi.
+
+```
+apply plugin: 'io.github.takahirom.roborazzi'
+```
+
+To save the image as you did in previous releases, do the following.
+
+```
+ ./gradlew  recordRoborazziDebug
+```
+
+To view the changes in the image, do the following This way, the changes between the image and the one you are saving now will be saved as [original]_compare.png.
+
+```
+ ./gradlew  verifyRoborazziDebug
+```
+
+![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
+
 
 
 ## Try it out
@@ -52,9 +71,6 @@ fun captureRoboImageSample() {
 }
 ```
 
-<img width="443" alt="image" src="https://user-images.githubusercontent.com/1386930/217111960-328ebaf9-51af-4489-b118-5ea8ba4a67e5.png">
-<img width="486" alt="image" src="https://user-images.githubusercontent.com/1386930/215248859-03a4f66e-3c42-42d8-863a-4cfbc3090b3f.png">
-
 ### Generate gif automatically
 
 ```kotlin
@@ -63,7 +79,7 @@ fun captureRoboGifSample() {
   onView(ViewMatchers.isRoot())
     .captureRoboGif("build/test.gif") {
       // launch
-      launch(MainActivity::class.java)
+      ActivityScenario.launch(MainActivity::class.java)
       // move to next page
       onView(withId(R.id.button_first))
         .perform(click())
@@ -76,7 +92,8 @@ fun captureRoboGifSample() {
 }
 ```
 
-<img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/217112049-b94b21b9-c405-400e-b6ee-e46af88d1fca.gif >
+<img width="350" src="https://user-images.githubusercontent.com/1386930/226362212-35d34c9e-6df1-4671-8949-10fad7ad98c9.gif" />
+
 
 ### Automatically generate gif with test rule
 
@@ -101,7 +118,7 @@ class RuleTestWithOnlyFail {
   @Test
   fun captureRoboGifSampleFail() {
     // launch
-    launch(MainActivity::class.java)
+    ActivityScenario.launch(MainActivity::class.java)
     // move to next page
     onView(withId(R.id.button_first))
       .perform(click())
@@ -168,9 +185,6 @@ class ComposeTest {
 }
 ```
 
-Result
-
-<img width="443" alt="image" src=https://user-images.githubusercontent.com/1386930/217128255-05a0c656-28de-4a8c-8dd9-e87787a84557.gif >
 
 ### RoborazziRule options
 
@@ -210,14 +224,14 @@ enum class CaptureType {
    */
   Gif
 }
-
 ```
 
-### Large project example
+### Dump mode
 
-[From DroidKaigi 2022 app](https://github.com/DroidKaigi/conference-app-2022)
+If you are having trouble debugging your test, try Dump mode as follows.
 
-<img src=https://user-images.githubusercontent.com/1386930/215334118-ae1de2e0-0748-44f3-a735-4cf03b856767.png width=400 />
+![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
+
 
 ## Why
 
