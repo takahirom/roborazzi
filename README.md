@@ -15,16 +15,16 @@ To take screenshots, please use Robolectric 4.10 alpha 1 and please add `@Graphi
 apply plugin: 'io.github.takahirom.roborazzi'
 ```
 
-To save the image, do the following.
+To save the image, run `recordRoborazziDebug` task.
 
 ```
- ./gradlew  recordRoborazziDebug
+ ./gradlew recordRoborazziDebug
 ```
 
-To view the changes in the image, do the following This way, the changes between the image and the one you are saving now will be saved as [original]_compare.png.
+To view the changes in the image, run `verifyRoborazziDebug` task. This way, the changes between the image and the one you are saving now will be saved as [original]_compare.png.
 
 ```
- ./gradlew  verifyRoborazziDebug
+ ./gradlew verifyRoborazziDebug
 ```
 
 ![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
