@@ -1,6 +1,15 @@
+buildscript {
+  dependencies {
+    classpath files('../roborazzi-gradle-plugin/build/libs/roborazzi-gradle-plugin.jar')
+  }
+}
 plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
+}
+if (file('../roborazzi-gradle-plugin/build/libs/roborazzi-gradle-plugin.jar').exists()) {
+  // for sync
+  apply plugin: 'io.github.takahirom.roborazzi.gradle'
 }
 
 android {

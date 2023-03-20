@@ -1,0 +1,20 @@
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'java-gradle-plugin'
+
+gradlePlugin {
+  plugins {
+    roborazzi {
+      id = 'io.github.takahirom.roborazzi.gradle'
+      implementationClass = 'io.github.takahirom.roborazzi.RoborazziPlugin'
+    }
+  }
+}
+
+dependencies {
+  compileOnly gradleApi()
+  compileOnly "com.android.tools.build:gradle:7.3.1"
+}
+
+sourceSets {
+  main.java.srcDir 'src/generated/kotlin'
+}

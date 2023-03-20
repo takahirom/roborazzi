@@ -4,4 +4,5 @@ plugins {
 
 dependencies {
   compileOnly "org.robolectric:android-all:Q-robolectric-5415296"
+  api "com.dropbox.differ:differ:0.0.1-alpha1"
 }
