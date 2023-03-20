@@ -18,7 +18,9 @@ jobs:
           java-version: 19
 
       - name: test
-        run: ./gradlew app:testDebugUnitTest --stacktrace
+        run: |
+          ./gradlew roborazzi-gradle-plugin:build --stacktrace
+          ./gradlew app:testDebugUnitTest --stacktrace
       - uses: actions/upload-artifact@v3
         with:
           name: screenshots
