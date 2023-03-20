@@ -2,7 +2,6 @@ package com.github.takahirom.roborazzi
 
 import android.app.Activity
 import android.app.Application
-import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
@@ -402,12 +401,7 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File) {
     val goldenRoboCanvas = if (file.exists()) {
       RoboCanvas.load(file)
     } else {
-      RoboCanvas(canvas.width, canvas.height).apply {
-        val backPaint = Paint().apply { color = android.graphics.Color.WHITE }
-        val paint = Paint().apply { color = android.graphics.Color.RED }
-        drawRect(Rect(0, 0, canvas.width, canvas.height), backPaint)
-        drawText(0F, 0F, listOf("no image"), paint)
-      }
+      RoboCanvas(canvas.width, canvas.height, true)
     }
     val changed = if (canvas.height == goldenRoboCanvas.height && canvas.width == goldenRoboCanvas.width) {
       val comparisonResult = canvas.differ(goldenRoboCanvas)
