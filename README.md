@@ -111,10 +111,14 @@ app/src/test/java/../ManualTest.kt
 
 ```kotlin
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onView
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.GraphicsMode
+...
 
+// Tips: You can use Robolectric while using AndroidJUnit4
 @RunWith(AndroidJUnit4::class)
 // Enable Robolectric Native Graphics (RNG) 
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
