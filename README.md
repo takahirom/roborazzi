@@ -10,11 +10,6 @@ To take screenshots, please use Robolectric 4.10 alpha 1 and please add `@Graphi
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 ```
 
-
-```
-apply plugin: 'io.github.takahirom.roborazzi'
-```
-
 To save the image, run `recordRoborazziDebug` task.
 
 ```
@@ -36,6 +31,13 @@ To view the changes in the image, run `verifyRoborazziDebug` task. This way, the
 It is available on maven central.
 
 ```kotlin
+buildscript {
+  dependencies {
+    classpath 'io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[write the latest vesrion]'
+  }
+}
+apply plugin: 'io.github.takahirom.roborazzi'
+
 // Core functions
 testImplementation("io.github.takahirom.roborazzi:roborazzi:[write the latest vesrion]")
 // JUnit rules
