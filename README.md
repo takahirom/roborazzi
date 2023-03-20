@@ -21,7 +21,7 @@ To view the changes in the image, run `verifyRoborazziDebug` task. This way, the
 ## Why test with JVM instead of testing on Android?
 
 Because when testing on a device, it is easy for the test to fail due to the device environment, animations, etc. 
-This affects the reliability of the test and ultimately, if the test fails, it will not be fixed.
+This affects the reliability of the test and ultimately, if the test fails, it could not be fixed.
 
 ## Why not Paparazzi?
 
