@@ -5,6 +5,8 @@ package com.github.takahirom.roborazzi
 import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
+import com.dropbox.differ.ImageComparator
+import com.dropbox.differ.SimpleImageComparator
 import java.awt.*
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
@@ -13,13 +15,13 @@ import java.io.File
 import javax.imageio.ImageIO
 
 
-class RoboCanvas(width: Int, height: Int) {
+class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
   private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_USHORT_565_RGB)
   val width: Int get() = bufferedImage.width
   val height: Int get() = bufferedImage.height
   val croppedWidth: Int get() = croppedImage.width
   val croppedHeight: Int get() = croppedImage.height
-  private var rightBottomPoint = 0 to 0
+  private var rightBottomPoint = if (filled) width to height else 0 to 0
   private fun updateRightBottom(x: Int, y: Int) {
     rightBottomPoint = maxOf(x, rightBottomPoint.first) to maxOf(y, rightBottomPoint.second)
   }
@@ -43,6 +45,24 @@ class RoboCanvas(width: Int, height: Int) {
     updateRightBottom(r.right, r.bottom)
     consumeEmptyPoints(r)
   }
+
+  internal fun drawImage(image: BufferedImage) {
+    bufferedImage.graphics { graphics2D ->
+      graphics2D.drawImage(
+        image,
+        0,
+        0,
+        null
+      )
+    }
+    updateRightBottom(image.width, image.height)
+//    consumeEmptyPoints(r)
+  }
+
+  internal fun getBufferedImage() {
+
+  }
+
 
   fun drawRectOutline(r: Rect, paint: Paint) {
     bufferedImage.graphics { graphics2D ->
@@ -181,6 +201,12 @@ class RoboCanvas(width: Int, height: Int) {
     )
   }
 
+  fun differ(other: RoboCanvas): ImageComparator.ComparisonResult {
+    val otherImage = other.bufferedImage
+    val simpleImageComparator = SimpleImageComparator(maxDistance = 0.007F)
+    return simpleImageComparator.compare(DifferBufferedImage(bufferedImage), DifferBufferedImage(otherImage))
+  }
+
   private fun drawPendingDraw() {
 //    val start = System.currentTimeMillis()
     baseDrawList.forEach { it() }
@@ -202,10 +228,55 @@ class RoboCanvas(width: Int, height: Int) {
   }
 
   companion object {
+    fun load(file: File): RoboCanvas {
+      val loadedImage: BufferedImage = ImageIO.read(file)
+      val roboCanvas = RoboCanvas(loadedImage.width, loadedImage.height)
+      roboCanvas.drawImage(loadedImage)
+      return roboCanvas
+    }
+
     const val TRANSPARENT_NONE = 0xFF shl 56
     const val TRANSPARENT_BIT = 0xEE shl 56
     const val TRANSPARENT_MEDIUM = 0x88 shl 56
     const val TRANSPARENT_STRONG = 0x66 shl 56
+
+    fun generateCompareCanvas(goldenCanvas: RoboCanvas, newCanvas: RoboCanvas): RoboCanvas {
+      newCanvas.drawPendingDraw()
+      val image1 = goldenCanvas.bufferedImage
+      val image2 = newCanvas.bufferedImage
+      val diff = generateDiffImage(image1, image2)
+      val width = image1.width + diff.width + image2.width
+      val height = image1.height.coerceAtLeast(diff.height).coerceAtLeast(image2.height)
+
+      val combined = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+
+      val g = combined.createGraphics()
+      g.drawImage(image1, 0, 0, null)
+      g.drawImage(diff, image1.width, 0, null)
+      g.drawImage(image2, image1.width + diff.width, 0, null)
+      g.dispose()
+      return RoboCanvas(width, height, true).apply {
+        drawImage(combined)
+      }
+    }
+
+    private fun generateDiffImage(originalImage: BufferedImage, comparedImage: BufferedImage): BufferedImage {
+      val width = minOf(originalImage.width, comparedImage.width)
+      val height = minOf(originalImage.height, comparedImage.height)
+      val diffImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+      for (x in 0 until width) {
+        for (y in 0 until height) {
+          val rgbOrig = originalImage.getRGB(x, y)
+          val rgbComp = comparedImage.getRGB(x, y)
+          if (rgbOrig != rgbComp) {
+            diffImage.setRGB(x, y, -0x10000)
+          } else {
+            0x0
+          }
+        }
+      }
+      return diffImage
+    }
   }
 }
 

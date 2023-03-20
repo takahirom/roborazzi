@@ -27,7 +27,7 @@ class RoborazziRule private constructor(
   }
 
   data class Options(
-    val captureType: CaptureType = CaptureType.Gif,
+    val captureType: CaptureType = CaptureType.LastImage,
     /**
      * capture only when the test fail
      */
@@ -87,6 +87,15 @@ class RoborazziRule private constructor(
           } catch (e: Exception) {
             throw e
           }
+        }
+        if (!roborazziEnabled()) {
+          evaluate()
+          return
+        }
+        if(!roborazziRecordingEnabled() && options.captureType == CaptureType.Gif) {
+          // currently, gif compare is not supported
+          evaluate()
+          return
         }
         if (description.annotations.filterIsInstance<Ignore>().isNotEmpty()) return evaluate()
         val folder = File(options.outputDirectoryPath)

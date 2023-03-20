@@ -1,7 +1,13 @@
+buildscript{
+  dependencies{
+    classpath files('/Users/a14901/git/roborazzi/roborazzi-gradle-plugin/build/libs/roborazzi-gradle-plugin.jar')
+  }
+}
 plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
 }
+apply plugin: io.github.takahirom.roborazzi.RoborazziPlugin
 
 android {
   namespace 'com.github.takahirom.roborazzi.sample'
