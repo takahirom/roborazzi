@@ -4,13 +4,20 @@
 
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10-alpha-1) and enables screenshot testing.📣
 
-From this version, please use Roborazzi Gradle Plugin to use Roborazzi.
+Starting with this version, please use the Roborazzi Gradle plugin to use Roborazzi.
+
+To take screenshots, please use Robolectric 4.10 alpha 1 and please add `@GraphicsMode(GraphicsMode.Mode.NATIVE)` to your test class.
+
+```kotlin
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+```
+
 
 ```
 apply plugin: 'io.github.takahirom.roborazzi'
 ```
 
-To save the image as you did in previous releases, do the following.
+To save the image, do the following.
 
 ```
  ./gradlew  recordRoborazziDebug
@@ -106,6 +113,7 @@ This test will output this file.
 
 ```kotlin
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTestWithOnlyFail {
   @get:Rule
   val roborazziRule = RoborazziRule(
@@ -164,12 +172,19 @@ Test (Just add RoborazziRule)
 
 ```kotlin
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ComposeTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   @get:Rule
-  val roborazziRule = RoborazziRule(composeTestRule, composeTestRule.onRoot())
+  val roborazziRule = RoborazziRule(
+    composeRule = composeTestRule,
+    captureRoot = composeTestRule.onRoot(),
+    options = RoborazziRule.Options(
+      RoborazziRule.CaptureType.Gif
+    )
+  )
 
   @Test
   fun composable() {
@@ -184,6 +199,9 @@ class ComposeTest {
   }
 }
 ```
+
+
+![com github takahirom roborazzi sample ComposeTest_composable](https://user-images.githubusercontent.com/1386930/226366224-b9950b60-26a2-489e-bc03-08bfb86c533a.gif)
 
 
 ### RoborazziRule options
