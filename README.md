@@ -107,6 +107,7 @@ You can take a screenshot by calling captureRoboImage().
 app/src/test/java/../ManualTest.kt
 
 ```kotlin
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.ext.junit.runners.AndroidJUnit4
