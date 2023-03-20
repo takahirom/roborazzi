@@ -9,7 +9,7 @@ plugins {
 }
 if (file('../roborazzi-gradle-plugin/build/libs/roborazzi-gradle-plugin.jar').exists()) {
   // for sync
-  apply plugin: 'io.github.takahirom.roborazzi.gradle'
+  apply plugin: 'io.github.takahirom.roborazzi'
 }
 
 android {
