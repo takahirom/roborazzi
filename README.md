@@ -2,6 +2,11 @@
 
 **Make JVM Android Integration Test Visible**
 
+## Roborazzi 1.0.0-alpha-1 now supports Robolectric Native Graphics (RNG) and enables screenshot testing.📣📣 
+
+![image](https://user-images.githubusercontent.com/1386930/226312533-1f64af63-4d07-4613-9acc-459b6a972672.png)
+
+
 ## Try it out
 
 It is available on maven central.
