@@ -28,7 +28,31 @@ To view the changes in the image, run `verifyRoborazziDebug` task. This way, the
 
 ## Try it out
 
-It is available on maven central.
+Available on Maven Central.
+
+### Apply Roborazzi Gradle Plugin
+
+root build.gradle
+
+```
+plugins {
+  id 'com.android.application' version '7.3.1' apply false
+...
+  id "io.github.takahirom.roborazzi" version "1.0.0-beta-1" apply false
+}
+```
+
+module build.gradle
+
+```
+plugins {
+  id 'io.github.takahirom.roborazzi'
+}
+```
+
+or
+
+root build.gradle
 
 ```kotlin
 buildscript {
@@ -36,8 +60,18 @@ buildscript {
     classpath 'io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[write the latest vesrion]'
   }
 }
-apply plugin: 'io.github.takahirom.roborazzi'
+```
 
+module build.gradle
+
+```
+apply plugin: 'io.github.takahirom.roborazzi'
+```
+
+### Add dependencies
+
+
+```
 // Core functions
 testImplementation("io.github.takahirom.roborazzi:roborazzi:[write the latest vesrion]")
 // JUnit rules
