@@ -59,11 +59,6 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
 //    consumeEmptyPoints(r)
   }
 
-  internal fun getBufferedImage() {
-
-  }
-
-
   fun drawRectOutline(r: Rect, paint: Paint) {
     bufferedImage.graphics { graphics2D ->
       graphics2D.color = Color(paint.getColor(), true)

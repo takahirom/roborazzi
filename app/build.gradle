@@ -1,6 +1,6 @@
 buildscript{
   dependencies{
-    classpath files('/Users/a14901/git/roborazzi/roborazzi-gradle-plugin/build/libs/roborazzi-gradle-plugin.jar')
+    classpath files('../roborazzi-gradle-plugin/build/libs/roborazzi-gradle-plugin.jar')
   }
 }
 plugins {
