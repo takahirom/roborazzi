@@ -31,7 +31,6 @@ This is because they both mock the Android framework.
 Without Robolectric, you can't write tests that actually click on components and run them with Hilt tests.
 
 
-
 ## Try it out
 
 Available on Maven Central.
@@ -47,8 +46,6 @@ To take screenshots, please use Robolectric 4.10 alpha 1 or later and please add
 ```kotlin
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 ```
-
-[Learn more about why we use Robolectric instead of device tests.](#why-test-with-jvm-instead-of-testing-on-android).
 
 ### Apply Roborazzi Gradle Plugin
 
