@@ -115,6 +115,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.GraphicsMode
 ...
+import com.github.takahirom.roborazzi.captureRoboImage
 
 // Tips: You can use Robolectric while using AndroidJUnit4
 @RunWith(AndroidJUnit4::class)
