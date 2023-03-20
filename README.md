@@ -4,12 +4,6 @@
 
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10-alpha-1) and enables screenshot testing.📣
 
-To take screenshots, please use Robolectric 4.10 alpha 1 and please add `@GraphicsMode(GraphicsMode.Mode.NATIVE)` to your test class.
-
-```kotlin
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-```
-
 To save the image, run `recordRoborazziDebug` task.
 
 ```
@@ -25,12 +19,48 @@ To view the changes in the image, run `verifyRoborazziDebug` task. This way, the
 ![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
 
 
+## Why
+
+Whenever you test with Robolectric, you feel like you are writing tests blindfolded because you cannot see the layout.  
+This tool makes the layout visible and provides the necessary information for debugging.
+
+I believe this tool will create a culture of testing by eliminating the anxiety factor in writing tests.
+
+## Why test with JVM instead of testing on Android?
+
+Because when testing on a device, it is easy for the test to fail due to the device environment, animations, etc. 
+This affects the reliability of the test and ultimately, if the test fails, it will not be fixed.
+
+## Why not Paparazzi?
+
+Paparazzi is a great tool to see the actual display in the JVM.  
+Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with Robolectric. 
+This is because they both mock the Android framework.  
+Without Robolectric, you can't write tests that actually click on components and run them with Hilt tests.
+
+
 
 ## Try it out
 
 Available on Maven Central.
 
+### Add Robolectric
+
+This library is dependent on Robolectric. Please see below to add Robolectric.
+
+https://robolectric.org/getting-started/
+
+To take screenshots, please use Robolectric 4.10 alpha 1 or later and please add `@GraphicsMode(GraphicsMode.Mode.NATIVE)` to your test class.
+
+```kotlin
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+```
+
+[Learn more about why we use Robolectric instead of device tests.](#why-test-with-jvm-instead-of-testing-on-android).
+
 ### Apply Roborazzi Gradle Plugin
+
+Roborazzi is available on maven central.
 
 root build.gradle
 
@@ -85,33 +115,49 @@ testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:[write th
 
 You can take a screenshot by calling captureRoboImage().
 
+app/src/test/java/../ManualTest.kt
+
 ```kotlin
-@Test
-fun captureRoboImageSample() {
-  // launch
-  launch(MainActivity::class.java)
+import androidx.test.core.app.ActivityScenario
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.GraphicsMode
 
-  // screen level image
-  onView(ViewMatchers.isRoot())
-    .captureRoboImage("build/first_screen.png")
+@RunWith(AndroidJUnit4::class)
+// Enable Robolectric Native Graphics (RNG) 
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class ManualTest {
+  @get:Rule
+  val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-  // compose image
-  composeTestRule.onNodeWithTag("MyComposeButton")
-    .onParent()
-    .captureRoboImage("build/compose.png")
+  @Test
+  fun captureRoboImageSample() {
+    // Tips: You can use Robolectric with Espresso API
+    // launch
+    ActivitySenario.launch(MainActivity::class.java)
 
-  // small component image
-  onView(withId(R.id.button_first))
-    .captureRoboImage("build/button.png")
+    // screen level image
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage("build/first_screen.png")
 
-  // move to next page
-  onView(withId(R.id.button_first))
-    .perform(click())
+    // compose image
+    composeTestRule.onNodeWithTag("MyComposeButton")
+      .onParent()
+      .captureRoboImage("build/compose.png")
 
-  onView(ViewMatchers.isRoot())
-    .captureRoboImage("build/second_screen.png")
-}
+    // small component image
+    onView(withId(R.id.button_first))
+      .captureRoboImage("build/button.png")
+
+    // move to next page
+    onView(withId(R.id.button_first))
+      .perform(click())
+
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage("build/second_screen.png")
+  }
 ```
+
 
 ### Generate gif automatically
 
@@ -285,22 +331,3 @@ If you are having trouble debugging your test, try Dump mode as follows.
 
 ![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
 
-
-## Why
-
-Whenever you test with Robolectric, you feel like you are writing tests blindfolded because you cannot see the layout.  
-This tool makes the layout visible and provides the necessary information for debugging.
-
-I believe this tool will create a culture of testing by eliminating the anxiety factor in writing tests.
-
-## Why test with JVM instead of testing on Android?
-
-Because when testing on a device, it is easy for the test to fail due to the device environment, animations, etc. 
-This affects the reliability of the test and ultimately, if the test fails, it will not be fixed.
-
-## Why not Paparazzi?
-
-Paparazzi is a great tool to see the actual display in the JVM.  
-Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with Robolectric. 
-This is because they both mock the Android framework.  
-Without Robolectric, you can't write tests that actually click on components and run them with Hilt tests.
