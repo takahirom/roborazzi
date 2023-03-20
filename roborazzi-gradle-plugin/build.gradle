@@ -4,8 +4,8 @@ apply plugin: 'java-gradle-plugin'
 gradlePlugin {
   plugins {
     roborazzi {
-      id = 'io.github.takahirom.roborazzi'
-      implementationClass = 'io.github.takahirom.roborazzi.PaparazziPlugin'
+      id = 'io.github.takahirom.roborazzi.gradle'
+      implementationClass = 'io.github.takahirom.roborazzi.RoborazziPlugin'
     }
   }
 }
