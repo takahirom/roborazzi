@@ -4,8 +4,6 @@
 
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10-alpha-1) and enables screenshot testing.📣
 
-Starting with this version, please use the Roborazzi Gradle plugin to use Roborazzi.
-
 To take screenshots, please use Robolectric 4.10 alpha 1 and please add `@GraphicsMode(GraphicsMode.Mode.NATIVE)` to your test class.
 
 ```kotlin
