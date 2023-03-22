@@ -20,15 +20,15 @@ To view the changes in the image, run `verifyRoborazziDebug` task. This way, the
 
 ## Why test with JVM instead of testing on Android?
 
-Because when testing on a device, it is easy for the test to fail due to the device environment, animations, etc. 
-This affects the reliability of the test and ultimately, if the test fails, it could not be fixed.
+Because when testing on a device, tests can fail easily due to the device environment, animations, etc. 
+This affects the reliability of the test and ultimately, if the test fails, it cannot be fixed.
 
 ## Why not Paparazzi?
 
 Paparazzi is a great tool to see the actual display in the JVM.  
 Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with Robolectric. 
 This is because they both mock the Android framework.  
-Without Robolectric, you can't write tests that actually click on components and run them with Hilt tests.
+To run tests with Hilt and actually click on components, you need Robolectric.
 
 
 ## Try it out
