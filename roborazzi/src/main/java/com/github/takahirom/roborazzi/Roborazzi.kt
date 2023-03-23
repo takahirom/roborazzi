@@ -52,7 +52,7 @@ fun ViewInteraction.captureRoboImage(
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
   perform(ImageCaptureViewAction(captureOptions) { canvas ->
-    saveOrVerify(canvas, file)
+    saveOrVerify(canvas, file, captureOptions)
     canvas.release()
   })
 }
@@ -138,7 +138,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
     ),
     captureOptions = captureOptions,
   ) { canvas ->
-    saveOrVerify(canvas, file)
+    saveOrVerify(canvas, file, captureOptions)
     canvas.release()
   }
 }
@@ -271,13 +271,13 @@ fun ViewInteraction.captureAndroidView(
       }
     },
     saveGif = { file ->
-        saveGif(file, canvases)
+      saveGif(file, canvases)
     },
     saveLastImage = { file ->
-      saveLastImage(canvases, file)
+      saveLastImage(canvases, file, captureOptions)
     },
     saveAllImage = { fileCreator ->
-      saveAllImage(fileCreator, canvases)
+      saveAllImage(fileCreator, canvases, captureOptions)
     },
     clear = {
       canvases.forEach { it.release() }
@@ -288,14 +288,15 @@ fun ViewInteraction.captureAndroidView(
 
 private fun saveLastImage(
   canvases: MutableList<RoboCanvas>,
-  file: File
+  file: File,
+  captureOptions: CaptureOptions,
 ) {
   val roboCanvas = canvases.lastOrNull()
   if (roboCanvas == null) {
     println("Roborazzi could not capture for this test")
     return
   }
-  saveOrVerify(roboCanvas, file)
+  saveOrVerify(roboCanvas, file, captureOptions)
 }
 
 // Only for library, please don't use this directly
@@ -356,10 +357,10 @@ fun SemanticsNodeInteraction.captureComposeNode(
       saveGif(file, canvases)
     },
     saveLastImage = { file ->
-      saveLastImage(canvases, file)
+      saveLastImage(canvases, file, captureOptions)
     },
     saveAllImage = { fileCreator ->
-      saveAllImage(fileCreator, canvases)
+      saveAllImage(fileCreator, canvases, captureOptions)
     },
     clear = {
       canvases.forEach { it.release() }
@@ -389,26 +390,29 @@ private fun saveGif(
 
 private fun saveAllImage(
   fileCreator: (String) -> File,
-  canvases: MutableList<RoboCanvas>
+  canvases: MutableList<RoboCanvas>,
+  captureOptions: CaptureOptions,
 ) {
   canvases.forEachIndexed { index, canvas ->
-    saveOrVerify(canvas, fileCreator(index.toString()))
+    saveOrVerify(canvas, fileCreator(index.toString()), captureOptions)
   }
 }
 
-private fun saveOrVerify(canvas: RoboCanvas, file: File) {
+private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: CaptureOptions) {
   if (roborazziVerifyEnabled()) {
     val goldenRoboCanvas = if (file.exists()) {
       RoboCanvas.load(file)
     } else {
       RoboCanvas(canvas.width, canvas.height, true)
     }
-    val changed = if (canvas.height == goldenRoboCanvas.height && canvas.width == goldenRoboCanvas.width) {
-      val comparisonResult = canvas.differ(goldenRoboCanvas)
-      comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount > 0.01
-    } else {
-      true
-    }
+    val changed =
+      if (canvas.height == goldenRoboCanvas.height && canvas.width == goldenRoboCanvas.width) {
+        val comparisonResult = canvas.differ(goldenRoboCanvas)
+        val changeRatio = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
+        changeRatio > captureOptions.verifyOptions.changeThreshold
+      } else {
+        true
+      }
     if (changed) {
       RoboCanvas.generateCompareCanvas(goldenRoboCanvas, canvas)
         .save(File(file.parent, file.nameWithoutExtension + "_compare." + file.extension))
