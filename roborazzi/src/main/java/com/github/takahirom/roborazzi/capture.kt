@@ -185,6 +185,7 @@ internal fun isNativeGraphicsEnabled() = try {
 
 class CaptureOptions(
   val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
+  val verifyOptions: VerifyOptions = VerifyOptions()
 ) {
   sealed interface CaptureType {
     class Screenshot : CaptureType
@@ -196,6 +197,14 @@ class CaptureOptions(
       val query: ((RoboComponent) -> Boolean)? = null,
     ) : CaptureType
   }
+
+  data class VerifyOptions(
+    /**
+     * This value determines the threshold of pixel change at which the diff image is output or not.
+     * The value should be between 0 and 1
+     */
+    val toleranceThreshold: Double = 0.1
+  )
 
   internal val shouldTakeBitmap: Boolean = when (captureType) {
     is CaptureType.Dump -> {
