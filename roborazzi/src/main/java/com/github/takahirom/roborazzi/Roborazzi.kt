@@ -409,7 +409,7 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: Capture
       if (canvas.height == goldenRoboCanvas.height && canvas.width == goldenRoboCanvas.width) {
         val comparisonResult = canvas.differ(goldenRoboCanvas)
         val changeRatio = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
-        changeRatio > captureOptions.verifyOptions.toleranceThreshold
+        changeRatio > captureOptions.verifyOptions.changeThreshold
       } else {
         true
       }
