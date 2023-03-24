@@ -1,4 +1,4 @@
-name: main branch test
+name: diff test
 
 on:
   push
@@ -17,10 +17,12 @@ jobs:
           distribution: 'zulu'
           java-version: 19
 
-      - uses: actions/download-artifact@v3
+      - uses: dawidd6/action-download-artifact@v2
         with:
           name: screenshots
           path: app/build/outputs/roborazzi
+          workflow: test.yml
+          branch: main
       - name: test
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
