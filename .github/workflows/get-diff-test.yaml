@@ -27,7 +27,6 @@ jobs:
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
           ./gradlew app:verifyRoborazziDebug --stacktrace
-                - uses: actions/upload-artifact@v3
       - uses: actions/upload-artifact@v3
         with:
           name: screenshot-diff
