@@ -21,7 +21,7 @@ jobs:
         with:
           name: screenshots
           path: app/build/outputs/roborazzi
-          workflow: test.yml
+          workflow: test.yaml
           branch: main
       - name: test
         run: |
