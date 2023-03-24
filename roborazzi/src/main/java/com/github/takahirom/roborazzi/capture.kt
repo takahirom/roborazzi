@@ -203,7 +203,7 @@ class CaptureOptions(
      * This value determines the threshold of pixel change at which the diff image is output or not.
      * The value should be between 0 and 1
      */
-    val changeThreshold: Double = 0.1
+    val changeThreshold: Double = 0.01
   )
 
   internal val shouldTakeBitmap: Boolean = when (captureType) {
