@@ -208,7 +208,7 @@ data class CaptureOptions(
   )
 
   data class RecordOptions(
-    val resizeImage: Double = 1.0
+    val resizeScale: Double = 1.0
   )
 
   internal val shouldTakeBitmap: Boolean = when (captureType) {

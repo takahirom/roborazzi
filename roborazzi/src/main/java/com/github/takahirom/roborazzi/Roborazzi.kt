@@ -383,7 +383,7 @@ private fun saveGif(
       canvases.maxOf { it.croppedHeight }
     )
     canvases.forEach { canvas ->
-      e.addFrame(canvas, captureOptions.recordOptions.resizeImage)
+      e.addFrame(canvas, captureOptions.recordOptions.resizeScale)
     }
   }
   e.finish()
@@ -401,13 +401,15 @@ private fun saveAllImage(
 
 private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: CaptureOptions) {
   if (roborazziVerifyEnabled()) {
+    val width = (canvas.width * captureOptions.recordOptions.resizeScale).toInt()
+    val height = (canvas.height * captureOptions.recordOptions.resizeScale).toInt()
     val goldenRoboCanvas = if (file.exists()) {
       RoboCanvas.load(file)
     } else {
-      RoboCanvas(canvas.width, canvas.height, true)
+      RoboCanvas(width, height, true)
     }
     val changed =
-      if (canvas.height == goldenRoboCanvas.height && canvas.width == goldenRoboCanvas.width) {
+      if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
         val comparisonResult = canvas.differ(goldenRoboCanvas)
         val changeRatio = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
         changeRatio > captureOptions.verifyOptions.changeThreshold
@@ -418,16 +420,16 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: Capture
       RoboCanvas.generateCompareCanvas(
         goldenRoboCanvas,
         canvas,
-        captureOptions.recordOptions.resizeImage
+        captureOptions.recordOptions.resizeScale
       )
         .save(
           File(file.parent, file.nameWithoutExtension + "_compare." + file.extension),
-          captureOptions.recordOptions.resizeImage
+          captureOptions.recordOptions.resizeScale
         )
     }
   } else {
     // roborazzi.record is checked before
-    canvas.save(file, captureOptions.recordOptions.resizeImage)
+    canvas.save(file, captureOptions.recordOptions.resizeScale)
   }
 }
 
