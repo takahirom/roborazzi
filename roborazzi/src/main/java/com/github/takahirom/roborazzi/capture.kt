@@ -183,9 +183,9 @@ internal fun isNativeGraphicsEnabled() = try {
   false
 }
 
-class CaptureOptions(
+data class CaptureOptions(
   val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
-  val verifyOptions: VerifyOptions = VerifyOptions()
+  val verifyOptions: VerifyOptions = VerifyOptions(),
 ) {
   sealed interface CaptureType {
     class Screenshot : CaptureType
