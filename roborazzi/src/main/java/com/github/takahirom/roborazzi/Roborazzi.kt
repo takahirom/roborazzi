@@ -20,8 +20,8 @@ import java.util.Locale
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 
-const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 
+const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 fun roborazziEnabled(): Boolean {
   return System.getProperty("roborazzi.test.record") == "true" || System.getProperty("roborazzi.test.verify") == "true"
 }
@@ -35,7 +35,7 @@ fun roborazziRecordingEnabled(): Boolean {
 }
 
 fun ViewInteraction.captureRoboImage(
-  filePath: String,
+  filePath: String = DefaultFileNameCreator.generateFilePath("png"),
   captureOptions: CaptureOptions = CaptureOptions(),
 ) {
   if (!roborazziEnabled()) return
@@ -58,7 +58,7 @@ fun ViewInteraction.captureRoboImage(
 }
 
 fun ViewInteraction.captureRoboGif(
-  filePath: String,
+  filePath: String = DefaultFileNameCreator.generateFilePath("gif"),
   captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ) {
@@ -82,13 +82,13 @@ fun ViewInteraction.captureRoboGif(
 }
 
 fun ViewInteraction.captureRoboLastImage(
-  filePath: String,
+  filePath: String = DefaultFileNameCreator.generateFilePath("png"),
   captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
-  captureRoboGif(File(filePath), captureOptions, block)
+  captureRoboLastImage(File(filePath), captureOptions, block)
 }
 
 fun ViewInteraction.captureRoboLastImage(
@@ -119,7 +119,7 @@ fun ViewInteraction.captureRoboAllImage(
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
-  filePath: String,
+  filePath: String = DefaultFileNameCreator.generateFilePath("png"),
   captureOptions: CaptureOptions = CaptureOptions(),
 ) {
   if (!roborazziEnabled()) return
@@ -145,7 +145,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
 
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
-  filePath: String,
+  filePath: String = DefaultFileNameCreator.generateFilePath("gif"),
   captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ) {

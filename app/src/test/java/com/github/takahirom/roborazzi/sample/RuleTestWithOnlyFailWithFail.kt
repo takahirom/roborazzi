@@ -28,7 +28,7 @@ class RuleTestWithOnlyFailWithFail {
 
   @Ignore
   @Test
-  fun captureRoboGifSampleFail() {
+  fun captureRoboLastImageSampleFail() {
     // launch
     launch(MainActivity::class.java)
     // move to next page

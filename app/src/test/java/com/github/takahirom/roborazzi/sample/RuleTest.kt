@@ -18,7 +18,10 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTest {
     @get:Rule
-    val roborazziRule = RoborazziRule(onView(isRoot()))
+    val roborazziRule = RoborazziRule(
+      captureRoot = onView(isRoot()),
+      options = RoborazziRule.Options(RoborazziRule.CaptureType.Gif)
+    )
   @Test
   fun captureRoboGifSample() {
     // launch

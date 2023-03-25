@@ -38,12 +38,12 @@ class ManualTest {
   fun captureRoboImageSample() {
     // screen level image
     onView(ViewMatchers.isRoot())
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen.png")
+      .captureRoboImage()
 
     // compose image
     composeTestRule.onNodeWithTag("MyComposeButton")
       .onParent()
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_compose.png")
+      .captureRoboImage()
 
     // small component image
     onView(withId(R.id.button_first))
@@ -54,7 +54,7 @@ class ManualTest {
       .perform(click())
 
     onView(ViewMatchers.isRoot())
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_second_screen.png")
+      .captureRoboImage()
   }
 
   @Test

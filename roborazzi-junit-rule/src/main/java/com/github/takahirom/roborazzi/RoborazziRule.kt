@@ -88,6 +88,7 @@ class RoborazziRule private constructor(
             throw e
           }
         }
+        val captureType = options.captureType
         if (!roborazziEnabled()) {
           evaluate()
           return
@@ -115,20 +116,20 @@ class RoborazziRule private constructor(
           )
         }
         if (!options.onlyFail || result.result.isFailure) {
-          when (options.captureType) {
+          when (captureType) {
             CaptureType.LastImage -> {
               val file = File(
                 folder.absolutePath,
-                description.className + "_" + description.methodName + ".png"
+                DefaultFileNameCreator.generate(description) + ".png"
               )
               result.saveLastImage(file)
             }
 
             CaptureType.AllImage -> {
-              result.saveAllImage { suffix ->
+              result.saveAllImage {
                 File(
                   folder.absolutePath,
-                  description.className + "_" + description.methodName + "_" + suffix + ".png"
+                  DefaultFileNameCreator.generate(description) + ".png"
                 )
               }
             }
@@ -136,7 +137,7 @@ class RoborazziRule private constructor(
             CaptureType.Gif -> {
               val file = File(
                 folder.absolutePath,
-                description.className + "_" + description.methodName + ".gif"
+                DefaultFileNameCreator.generate(description) + ".gif"
               )
               result.saveGif(file)
             }
