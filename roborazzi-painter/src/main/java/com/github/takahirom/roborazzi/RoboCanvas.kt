@@ -164,8 +164,8 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
     return bufferedImage.getRGB(x, y)
   }
 
-  fun outputImage(): BufferedImage {
-    return croppedImage
+  internal fun outputImage(resizeImage: Double): BufferedImage {
+    return croppedImage.scale(resizeImage)
   }
 
   private val croppedImage by lazy {
@@ -287,15 +287,16 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
   }
 }
 
-private fun BufferedImage.scale(newCanvasResize: Double): BufferedImage {
+private fun BufferedImage.scale(scale: Double): BufferedImage {
   val before: BufferedImage = this
-  val w = before.width
-  val h = before.height
-  val after = BufferedImage(w, h, BufferedImage.TYPE_USHORT_565_RGB)
+  val w = before.width * scale
+  val h = before.height * scale
+  val after = BufferedImage(w.toInt(), h.toInt(), before.type)
   val at = AffineTransform()
-  at.scale(newCanvasResize, newCanvasResize)
+  at.scale(scale, scale)
   val scaleOp = AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR)
-  return scaleOp.filter(before, after)
+  scaleOp.filter(before, after)
+  return after
 }
 
 private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {

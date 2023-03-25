@@ -370,7 +370,8 @@ fun SemanticsNodeInteraction.captureComposeNode(
 
 private fun saveGif(
   file: File,
-  canvases: MutableList<RoboCanvas>
+  canvases: MutableList<RoboCanvas>,
+  captureOptions: CaptureOptions,
 ) {
   val e = AnimatedGifEncoder()
   e.setRepeat(0)
@@ -382,7 +383,7 @@ private fun saveGif(
       canvases.maxOf { it.croppedHeight }
     )
     canvases.forEach { canvas ->
-      e.addFrame(canvas)
+      e.addFrame(canvas, captureOptions.recordOptions.resizeImage)
     }
   }
   e.finish()
@@ -414,7 +415,11 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: Capture
         true
       }
     if (changed) {
-      RoboCanvas.generateCompareCanvas(goldenRoboCanvas, canvas, captureOptions.recordOptions.resizeImage)
+      RoboCanvas.generateCompareCanvas(
+        goldenRoboCanvas,
+        canvas,
+        captureOptions.recordOptions.resizeImage
+      )
         .save(
           File(file.parent, file.nameWithoutExtension + "_compare." + file.extension),
           captureOptions.recordOptions.resizeImage
