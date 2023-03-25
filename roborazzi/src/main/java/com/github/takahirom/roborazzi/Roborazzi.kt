@@ -271,7 +271,7 @@ fun ViewInteraction.captureAndroidView(
       }
     },
     saveGif = { file ->
-      saveGif(file, canvases)
+      saveGif(file, canvases, captureOptions)
     },
     saveLastImage = { file ->
       saveLastImage(canvases, file, captureOptions)
@@ -354,7 +354,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
       }
     },
     saveGif = { file ->
-      saveGif(file, canvases)
+      saveGif(file, canvases, captureOptions)
     },
     saveLastImage = { file ->
       saveLastImage(canvases, file, captureOptions)
