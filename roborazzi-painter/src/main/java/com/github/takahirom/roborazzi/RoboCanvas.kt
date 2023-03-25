@@ -10,6 +10,8 @@ import com.dropbox.differ.SimpleImageComparator
 import java.awt.*
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
+import java.awt.geom.AffineTransform
+import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
@@ -187,10 +189,10 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
     pendingDrawList.add(pendingDraw)
   }
 
-  fun save(file: File) {
+  fun save(file: File, resizeImage: Double) {
     drawPendingDraw()
     ImageIO.write(
-      croppedImage,
+      croppedImage.scale(resizeImage),
       "png",
       file
     )
@@ -199,7 +201,10 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
   fun differ(other: RoboCanvas): ImageComparator.ComparisonResult {
     val otherImage = other.bufferedImage
     val simpleImageComparator = SimpleImageComparator(maxDistance = 0.007F)
-    return simpleImageComparator.compare(DifferBufferedImage(bufferedImage), DifferBufferedImage(otherImage))
+    return simpleImageComparator.compare(
+      DifferBufferedImage(bufferedImage),
+      DifferBufferedImage(otherImage)
+    )
   }
 
   private fun drawPendingDraw() {
@@ -235,10 +240,14 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
     const val TRANSPARENT_MEDIUM = 0x88 shl 56
     const val TRANSPARENT_STRONG = 0x66 shl 56
 
-    fun generateCompareCanvas(goldenCanvas: RoboCanvas, newCanvas: RoboCanvas): RoboCanvas {
+    fun generateCompareCanvas(
+      goldenCanvas: RoboCanvas,
+      newCanvas: RoboCanvas,
+      newCanvasResize: Double
+    ): RoboCanvas {
       newCanvas.drawPendingDraw()
       val image1 = goldenCanvas.bufferedImage
-      val image2 = newCanvas.bufferedImage
+      val image2 = newCanvas.bufferedImage.scale(newCanvasResize)
       val diff = generateDiffImage(image1, image2)
       val width = image1.width + diff.width + image2.width
       val height = image1.height.coerceAtLeast(diff.height).coerceAtLeast(image2.height)
@@ -255,7 +264,10 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
       }
     }
 
-    private fun generateDiffImage(originalImage: BufferedImage, comparedImage: BufferedImage): BufferedImage {
+    private fun generateDiffImage(
+      originalImage: BufferedImage,
+      comparedImage: BufferedImage
+    ): BufferedImage {
       val width = minOf(originalImage.width, comparedImage.width)
       val height = minOf(originalImage.height, comparedImage.height)
       val diffImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
@@ -273,6 +285,19 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
       return diffImage
     }
   }
+}
+
+private fun BufferedImage.scale(newCanvasResize: Double): BufferedImage {
+  val before: BufferedImage = this
+  val w = before.width
+  val h = before.height
+  var after = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
+  val at = AffineTransform()
+  at.scale(newCanvasResize, newCanvasResize)
+  val scaleOp = AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR)
+  return scaleOp.filter(before, after)
+
+
 }
 
 private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {

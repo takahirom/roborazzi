@@ -414,12 +414,15 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: Capture
         true
       }
     if (changed) {
-      RoboCanvas.generateCompareCanvas(goldenRoboCanvas, canvas)
-        .save(File(file.parent, file.nameWithoutExtension + "_compare." + file.extension))
+      RoboCanvas.generateCompareCanvas(goldenRoboCanvas, canvas, captureOptions.recordOptions.resizeImage)
+        .save(
+          File(file.parent, file.nameWithoutExtension + "_compare." + file.extension),
+          captureOptions.recordOptions.resizeImage
+        )
     }
   } else {
     // roborazzi.record is checked before
-    canvas.save(file)
+    canvas.save(file, captureOptions.recordOptions.resizeImage)
   }
 }
 
