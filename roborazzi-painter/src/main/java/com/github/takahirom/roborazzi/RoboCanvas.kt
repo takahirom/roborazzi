@@ -291,13 +291,11 @@ private fun BufferedImage.scale(newCanvasResize: Double): BufferedImage {
   val before: BufferedImage = this
   val w = before.width
   val h = before.height
-  var after = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
+  val after = BufferedImage(w, h, BufferedImage.TYPE_USHORT_565_RGB)
   val at = AffineTransform()
   at.scale(newCanvasResize, newCanvasResize)
   val scaleOp = AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR)
   return scaleOp.filter(before, after)
-
-
 }
 
 private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {
