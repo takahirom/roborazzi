@@ -49,8 +49,7 @@ fun ViewInteraction.captureRoboImage(
   file: File,
   captureOptions: CaptureOptions = CaptureOptions(),
 ) {
-  // currently, gif compare is not supported
-  if (!roborazziRecordingEnabled()) return
+  if (!roborazziEnabled()) return
   perform(ImageCaptureViewAction(captureOptions) { canvas ->
     saveOrVerify(canvas, file, captureOptions)
     canvas.release()
@@ -400,9 +399,10 @@ private fun saveAllImage(
 }
 
 private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: CaptureOptions) {
+  val resizeScale = captureOptions.recordOptions.resizeScale
   if (roborazziVerifyEnabled()) {
-    val width = (canvas.width * captureOptions.recordOptions.resizeScale).toInt()
-    val height = (canvas.height * captureOptions.recordOptions.resizeScale).toInt()
+    val width = (canvas.width * resizeScale).toInt()
+    val height = (canvas.height * resizeScale).toInt()
     val goldenRoboCanvas = if (file.exists()) {
       RoboCanvas.load(file)
     } else {
@@ -410,7 +410,7 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: Capture
     }
     val changed =
       if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
-        val comparisonResult = canvas.differ(goldenRoboCanvas)
+        val comparisonResult = canvas.differ(goldenRoboCanvas, resizeScale)
         val changeRatio = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
         changeRatio > captureOptions.verifyOptions.changeThreshold
       } else {
@@ -418,18 +418,18 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: Capture
       }
     if (changed) {
       RoboCanvas.generateCompareCanvas(
-        goldenRoboCanvas,
-        canvas,
-        captureOptions.recordOptions.resizeScale
+        goldenCanvas = goldenRoboCanvas,
+        newCanvas = canvas,
+        newCanvasResize = resizeScale
       )
         .save(
-          File(file.parent, file.nameWithoutExtension + "_compare." + file.extension),
-          captureOptions.recordOptions.resizeScale
+          file = File(file.parent, file.nameWithoutExtension + "_compare." + file.extension),
+          resizeScale = resizeScale
         )
     }
   } else {
     // roborazzi.record is checked before
-    canvas.save(file, captureOptions.recordOptions.resizeScale)
+    canvas.save(file, resizeScale)
   }
 }
 

@@ -189,20 +189,20 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
     pendingDrawList.add(pendingDraw)
   }
 
-  fun save(file: File, resizeImage: Double) {
+  fun save(file: File, resizeScale: Double) {
     drawPendingDraw()
     ImageIO.write(
-      croppedImage.scale(resizeImage),
+      croppedImage.scale(resizeScale),
       "png",
       file
     )
   }
 
-  fun differ(other: RoboCanvas): ImageComparator.ComparisonResult {
+  fun differ(other: RoboCanvas, resizeScale: Double): ImageComparator.ComparisonResult {
     val otherImage = other.bufferedImage
     val simpleImageComparator = SimpleImageComparator(maxDistance = 0.007F)
     return simpleImageComparator.compare(
-      DifferBufferedImage(bufferedImage),
+      DifferBufferedImage(bufferedImage.scale(resizeScale)),
       DifferBufferedImage(otherImage)
     )
   }
