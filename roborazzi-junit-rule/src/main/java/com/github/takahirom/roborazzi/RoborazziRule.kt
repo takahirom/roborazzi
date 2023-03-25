@@ -120,7 +120,7 @@ class RoborazziRule private constructor(
             CaptureType.LastImage -> {
               val file = File(
                 folder.absolutePath,
-                DefaultFileNameCreator.generate(description) + ".png"
+                DefaultFileNameGenerator.generate(description) + ".png"
               )
               result.saveLastImage(file)
             }
@@ -129,7 +129,7 @@ class RoborazziRule private constructor(
               result.saveAllImage {
                 File(
                   folder.absolutePath,
-                  DefaultFileNameCreator.generate(description) + ".png"
+                  DefaultFileNameGenerator.generate(description) + ".png"
                 )
               }
             }
@@ -137,7 +137,7 @@ class RoborazziRule private constructor(
             CaptureType.Gif -> {
               val file = File(
                 folder.absolutePath,
-                DefaultFileNameCreator.generate(description) + ".gif"
+                DefaultFileNameGenerator.generate(description) + ".gif"
               )
               result.saveGif(file)
             }

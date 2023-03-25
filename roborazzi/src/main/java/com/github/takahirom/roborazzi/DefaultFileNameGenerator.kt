@@ -4,7 +4,7 @@ import org.junit.Test
 import org.junit.runner.Description
 
 
-object DefaultFileNameCreator {
+object DefaultFileNameGenerator {
   private val descriptionToTakenCount = mutableMapOf<String, Int>()
 
   fun generateFilePath(extension: String): String {
@@ -15,7 +15,9 @@ object DefaultFileNameCreator {
     // Find test method name
     val allStackTraces = Thread.getAllStackTraces()
     val filteredTracces = allStackTraces
-      .filterKeys { it.name.contains("Main") }
+      // The Thread Name is come from here
+      // https://github.com/robolectric/robolectric/blob/40832ada4a0651ecbb0151ebed2c99e9d1d71032/robolectric/src/main/java/org/robolectric/internal/AndroidSandbox.java#L67
+      .filterKeys { it.name.contains("Main Thread") }
     val traceElements = filteredTracces
       .flatMap { it.value.toList() }
     val stackTraceElement = traceElements

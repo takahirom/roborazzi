@@ -35,7 +35,7 @@ fun roborazziRecordingEnabled(): Boolean {
 }
 
 fun ViewInteraction.captureRoboImage(
-  filePath: String = DefaultFileNameCreator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   captureOptions: CaptureOptions = CaptureOptions(),
 ) {
   if (!roborazziEnabled()) return
@@ -58,7 +58,7 @@ fun ViewInteraction.captureRoboImage(
 }
 
 fun ViewInteraction.captureRoboGif(
-  filePath: String = DefaultFileNameCreator.generateFilePath("gif"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
   captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ) {
@@ -82,7 +82,7 @@ fun ViewInteraction.captureRoboGif(
 }
 
 fun ViewInteraction.captureRoboLastImage(
-  filePath: String = DefaultFileNameCreator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ) {
@@ -119,7 +119,7 @@ fun ViewInteraction.captureRoboAllImage(
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
-  filePath: String = DefaultFileNameCreator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   captureOptions: CaptureOptions = CaptureOptions(),
 ) {
   if (!roborazziEnabled()) return
@@ -145,7 +145,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
 
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
-  filePath: String = DefaultFileNameCreator.generateFilePath("gif"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
   captureOptions: CaptureOptions = CaptureOptions(),
   block: () -> Unit
 ) {
