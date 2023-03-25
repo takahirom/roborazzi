@@ -18,7 +18,6 @@ object DefaultFileNameCreator {
       .filterKeys { it.name.contains("Main") }
     val traceElements = filteredTracces
       .flatMap { it.value.toList() }
-    println(traceElements)
     val stackTraceElement = traceElements
       .firstOrNull {
         try {
@@ -31,7 +30,6 @@ object DefaultFileNameCreator {
       ?: throw IllegalArgumentException("Roborazzi can't find method of test. Please specify file name or use Rule")
     val testName =
       (stackTraceElement.className + "." + stackTraceElement.methodName).replace(".", "_")
-    println("named:" + testName)
     return countableTestName(testName)
   }
 

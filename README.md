@@ -133,7 +133,10 @@ class ManualTest {
 
     // screen level image
     onView(ViewMatchers.isRoot())
-      .captureRoboImage("build/first_screen.png")
+      // If you don't specify a screenshot file name, Roborazzi will automatically use the method name as the file name for you.
+      // The format of the file name will be as follows:
+      // build/outputs/roborazzi/com_..._ManualTest_captureRoboImageSample.png
+      .captureRoboImage()
 
     // compose image
     composeTestRule.onNodeWithTag("MyComposeButton")
