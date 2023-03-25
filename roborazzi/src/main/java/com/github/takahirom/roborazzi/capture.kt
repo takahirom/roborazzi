@@ -186,6 +186,7 @@ internal fun isNativeGraphicsEnabled() = try {
 data class CaptureOptions(
   val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
   val verifyOptions: VerifyOptions = VerifyOptions(),
+  val recordOptions: RecordOptions = RecordOptions(),
 ) {
   sealed interface CaptureType {
     class Screenshot : CaptureType
@@ -204,6 +205,10 @@ data class CaptureOptions(
      * The value should be between 0 and 1
      */
     val changeThreshold: Double = 0.01
+  )
+
+  data class RecordOptions(
+    val resizeScale: Double = 1.0
   )
 
   internal val shouldTakeBitmap: Boolean = when (captureType) {

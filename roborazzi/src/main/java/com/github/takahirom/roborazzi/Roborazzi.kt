@@ -49,8 +49,7 @@ fun ViewInteraction.captureRoboImage(
   file: File,
   captureOptions: CaptureOptions = CaptureOptions(),
 ) {
-  // currently, gif compare is not supported
-  if (!roborazziRecordingEnabled()) return
+  if (!roborazziEnabled()) return
   perform(ImageCaptureViewAction(captureOptions) { canvas ->
     saveOrVerify(canvas, file, captureOptions)
     canvas.release()
@@ -271,7 +270,7 @@ fun ViewInteraction.captureAndroidView(
       }
     },
     saveGif = { file ->
-      saveGif(file, canvases)
+      saveGif(file, canvases, captureOptions)
     },
     saveLastImage = { file ->
       saveLastImage(canvases, file, captureOptions)
@@ -354,7 +353,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
       }
     },
     saveGif = { file ->
-      saveGif(file, canvases)
+      saveGif(file, canvases, captureOptions)
     },
     saveLastImage = { file ->
       saveLastImage(canvases, file, captureOptions)
@@ -370,7 +369,8 @@ fun SemanticsNodeInteraction.captureComposeNode(
 
 private fun saveGif(
   file: File,
-  canvases: MutableList<RoboCanvas>
+  canvases: MutableList<RoboCanvas>,
+  captureOptions: CaptureOptions,
 ) {
   val e = AnimatedGifEncoder()
   e.setRepeat(0)
@@ -382,7 +382,7 @@ private fun saveGif(
       canvases.maxOf { it.croppedHeight }
     )
     canvases.forEach { canvas ->
-      e.addFrame(canvas)
+      e.addFrame(canvas, captureOptions.recordOptions.resizeScale)
     }
   }
   e.finish()
@@ -399,27 +399,37 @@ private fun saveAllImage(
 }
 
 private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: CaptureOptions) {
+  val resizeScale = captureOptions.recordOptions.resizeScale
   if (roborazziVerifyEnabled()) {
+    val width = (canvas.width * resizeScale).toInt()
+    val height = (canvas.height * resizeScale).toInt()
     val goldenRoboCanvas = if (file.exists()) {
       RoboCanvas.load(file)
     } else {
-      RoboCanvas(canvas.width, canvas.height, true)
+      RoboCanvas(width, height, true)
     }
     val changed =
-      if (canvas.height == goldenRoboCanvas.height && canvas.width == goldenRoboCanvas.width) {
-        val comparisonResult = canvas.differ(goldenRoboCanvas)
+      if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
+        val comparisonResult = canvas.differ(goldenRoboCanvas, resizeScale)
         val changeRatio = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
         changeRatio > captureOptions.verifyOptions.changeThreshold
       } else {
         true
       }
     if (changed) {
-      RoboCanvas.generateCompareCanvas(goldenRoboCanvas, canvas)
-        .save(File(file.parent, file.nameWithoutExtension + "_compare." + file.extension))
+      RoboCanvas.generateCompareCanvas(
+        goldenCanvas = goldenRoboCanvas,
+        newCanvas = canvas,
+        newCanvasResize = resizeScale
+      )
+        .save(
+          file = File(file.parent, file.nameWithoutExtension + "_compare." + file.extension),
+          resizeScale = resizeScale
+        )
     }
   } else {
     // roborazzi.record is checked before
-    canvas.save(file)
+    canvas.save(file, resizeScale)
   }
 }
 

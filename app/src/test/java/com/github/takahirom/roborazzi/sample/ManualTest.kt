@@ -47,7 +47,10 @@ class ManualTest {
 
     // small component image
     onView(withId(R.id.button_first))
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_view_button.png")
+      .captureRoboImage(
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_view_button.png",
+        captureOptions = CaptureOptions(recordOptions = CaptureOptions.RecordOptions(0.5))
+      )
 
     // move to next page
     onView(withId(R.id.button_first))
