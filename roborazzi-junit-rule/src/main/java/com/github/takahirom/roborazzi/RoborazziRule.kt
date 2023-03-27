@@ -36,7 +36,7 @@ class RoborazziRule private constructor(
      * output directory path
      */
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
-    val captureOptions: CaptureOptions = CaptureOptions(),
+    val roborazziOptions: RoborazziOptions = RoborazziOptions(),
   )
 
   enum class CaptureType {
@@ -106,12 +106,12 @@ class RoborazziRule private constructor(
         val result = when (captureRoot) {
           is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureComposeNode(
             composeRule = captureRoot.composeRule,
-            captureOptions = options.captureOptions,
+            roborazziOptions = options.roborazziOptions,
             block = evaluate
           )
 
           is CaptureRoot.View -> captureRoot.viewInteraction.captureAndroidView(
-            captureOptions = options.captureOptions,
+            roborazziOptions = options.roborazziOptions,
             block = evaluate
           )
         }

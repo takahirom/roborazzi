@@ -11,9 +11,9 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.CaptureOptions
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 import com.github.takahirom.roborazzi.RoboComponent
+import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -49,7 +49,7 @@ class ManualTest {
     onView(withId(R.id.button_first))
       .captureRoboImage(
         filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_view_button.png",
-        captureOptions = CaptureOptions(recordOptions = CaptureOptions.RecordOptions(0.5))
+        roborazziOptions = RoborazziOptions(recordOptions = RoborazziOptions.RecordOptions(0.5))
       )
 
     // move to next page
@@ -66,8 +66,8 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = filePath,
-        captureOptions = CaptureOptions(
-          captureType = CaptureOptions.CaptureType.Dump(query = withViewId(R.id.textview_first))
+        roborazziOptions = RoborazziOptions(
+          captureType = RoborazziOptions.CaptureType.Dump(query = withViewId(R.id.textview_first))
         )
       )
 
@@ -81,8 +81,8 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose.png",
-        captureOptions = CaptureOptions(
-          captureType = CaptureOptions.CaptureType.Dump(
+        roborazziOptions = RoborazziOptions(
+          captureType = RoborazziOptions.CaptureType.Dump(
             query = withComposeTestTag("child:0")
           )
         )
@@ -91,8 +91,8 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose_custom.png",
-        captureOptions = CaptureOptions(
-          captureType = CaptureOptions.CaptureType.Dump(
+        roborazziOptions = RoborazziOptions(
+          captureType = RoborazziOptions.CaptureType.Dump(
             query = { roboComponent ->
               when (roboComponent) {
                 is RoboComponent.Compose -> roboComponent.testTag?.startsWith("child") == true
