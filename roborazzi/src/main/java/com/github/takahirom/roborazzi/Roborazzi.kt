@@ -410,7 +410,7 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: Robor
     }
     val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
       val comparisonResult = canvas.differ(goldenRoboCanvas, resizeScale)
-      roborazziOptions.verifyOptions.resultValidator(comparisonResult)
+      !roborazziOptions.verifyOptions.resultValidator(comparisonResult)
     } else {
       true
     }
