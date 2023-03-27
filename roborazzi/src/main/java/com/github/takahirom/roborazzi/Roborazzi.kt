@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.view.ViewTreeObserver
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.view.doOnNextLayout
@@ -191,7 +190,7 @@ fun ViewInteraction.captureAndroidView(
 
   val canvases = mutableListOf<RoboCanvas>()
 
-  val listener = ViewTreeObserver.OnGlobalLayoutListener {
+  val listener = ScreenChangeTracker.OnScreenChangeListener {
     Handler(Looper.getMainLooper()).post {
       this@captureAndroidView.perform(
         ImageCaptureViewAction(roborazziOptions) { canvas ->
@@ -210,10 +209,10 @@ fun ViewInteraction.captureAndroidView(
     }
 
     override fun perform(uiController: UiController, view: View) {
-      val viewTreeObserver = view.viewTreeObserver
-      viewTreeObserver.addOnGlobalLayoutListener(listener)
+      val screenChangeTracker = ScreenChangeTracker(view.viewTreeObserver)
+      screenChangeTracker.addListener(listener)
       removeListener = {
-        viewTreeObserver.removeOnGlobalLayoutListener(listener)
+        screenChangeTracker.removeListener(listener)
       }
     }
   }
@@ -298,6 +297,7 @@ private fun saveLastImage(
   saveOrVerify(roboCanvas, file, roborazziOptions)
 }
 
+
 // Only for library, please don't use this directly
 fun SemanticsNodeInteraction.captureComposeNode(
   composeRule: AndroidComposeTestRule<*, *>,
@@ -319,25 +319,27 @@ fun SemanticsNodeInteraction.captureComposeNode(
       canvases.add(it)
     }
   }
-  val listener = ViewTreeObserver.OnGlobalLayoutListener(capture)
+  val listener = ScreenChangeTracker.OnScreenChangeListener(capture)
   try {
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     capture()
-    val viewTreeObserver = composeRule.activity.window.decorView.viewTreeObserver
-    viewTreeObserver.addOnGlobalLayoutListener(listener)
+    val screenChangeTracker =
+      ScreenChangeTracker(composeRule.activity.window.decorView.viewTreeObserver)
+    screenChangeTracker.addListener(listener)
     removeListener = {
-      viewTreeObserver.removeOnGlobalLayoutListener(listener)
+      screenChangeTracker.removeListener(listener)
     }
   } catch (e: Exception) {
     // It seems there is no screen, so wait
     composeRule.runOnIdle {
-      val viewTreeObserver = composeRule.activity.window.decorView.viewTreeObserver
+      val screenChangeTracker =
+        ScreenChangeTracker(composeRule.activity.window.decorView.viewTreeObserver)
       composeRule.activity.window.decorView.doOnNextLayout {
         capture()
       }
-      viewTreeObserver.addOnGlobalLayoutListener(listener)
+      screenChangeTracker.addListener(listener)
       removeListener = {
-        viewTreeObserver.removeOnGlobalLayoutListener(listener)
+        screenChangeTracker.removeListener(listener)
       }
     }
   }
