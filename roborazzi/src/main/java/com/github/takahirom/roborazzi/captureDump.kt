@@ -18,8 +18,9 @@ internal fun captureDump(
   val componentCount = rootComponent.countOfComponent()
 
   val canvas = RoboCanvas(
-    rootComponent.rect.right + basicSize + deepestDepth * depthSlide + componentCount * 20,
-    rootComponent.rect.bottom + basicSize + deepestDepth * depthSlide + componentCount * 20
+    width = rootComponent.rect.right + basicSize + deepestDepth * depthSlide + componentCount * 20,
+    height = rootComponent.rect.bottom + basicSize + deepestDepth * depthSlide + componentCount * 20,
+    filled = false,
   )
   val paddingRect = Rect(basicSize / 2, basicSize / 2, basicSize / 2, basicSize / 2)
 
