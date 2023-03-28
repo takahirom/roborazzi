@@ -33,3 +33,8 @@ jobs:
           path: app/build/outputs/roborazzi
           retention-days: 30
 
+      - uses: actions/upload-artifact@v3
+        with:
+          name: screenshot-diff-reports
+          path: app/build/reposrts
+          retention-days: 30
