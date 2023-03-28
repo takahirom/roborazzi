@@ -288,39 +288,79 @@ class ComposeTest {
 You can use some RoborazziRule options
 
 ```kotlin
-/**
- * If you add this annotation to the test, the test will be ignored by roborazzi
- */
-annotation class Ignore
+class RoborazziRule private constructor(
+  ...
+) : TestWatcher() {
+  /**
+   * If you add this annotation to the test, the test will be ignored by roborazzi
+   */
+  annotation class Ignore
 
-data class Options(
-  val captureType: CaptureType = CaptureType.Gif,
-  /**
-   * capture only when the test fail
-   */
-  val onlyFail: Boolean = false,
-  /**
-   * output directory path
-   */
-  val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
-)
+  data class Options(
+    val captureType: CaptureType = CaptureType.Gif,
+    /**
+     * capture only when the test fail
+     */
+    val onlyFail: Boolean = false,
+    /**
+     * output directory path
+     */
+    val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
+    val roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  )
 
-enum class CaptureType {
-  /**
-   * Generate last images for each test
-   */
-  LastImage,
+  enum class CaptureType {
+    /**
+     * Generate last images for each test
+     */
+    LastImage,
 
-  /**
-   * Generate images for each layout change such as TestClass_method_0.png for each test.
-   */
-  AllImage,
+    /**
+     * Generate images for each layout change such as TestClass_method_0.png for each test.
+     */
+    AllImage,
 
-  /**
-   * Generate gif images for each test
-   */
-  Gif
-}
+    /**
+     * Generate gif images for each test
+     */
+    Gif
+  }
+```
+
+### Roborazzi options
+
+```
+data class RoborazziOptions(
+  val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
+  val verifyOptions: VerifyOptions = VerifyOptions(),
+  val recordOptions: RecordOptions = RecordOptions(),
+) {
+  sealed interface CaptureType {
+    class Screenshot : CaptureType
+
+    data class Dump(
+      val takeScreenShot: Boolean = isNativeGraphicsEnabled(),
+      val basicSize: Int = 600,
+      val depthSlideSize: Int = 30,
+      val query: ((RoboComponent) -> Boolean)? = null,
+    ) : CaptureType
+  }
+
+  data class VerifyOptions(
+    /**
+     * This value determines the threshold of pixel change at which the diff image is output or not.
+     * The value should be between 0 and 1
+     */
+    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean
+  ) {
+    constructor(
+      changeThreshold: Float = 0.01F,
+    ) : this(ThresholdValidator(changeThreshold))
+  }
+
+  data class RecordOptions(
+    val resizeScale: Double = 1.0
+  )
 ```
 
 ### Dump mode
