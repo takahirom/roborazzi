@@ -416,7 +416,7 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: Robor
       log("${file.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
-      log("${file.name}  The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
+      log("${file.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
       true
     }
 
