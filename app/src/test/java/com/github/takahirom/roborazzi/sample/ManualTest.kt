@@ -11,6 +11,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.dropbox.differ.ImageComparator
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -83,8 +84,9 @@ class ManualTest {
         filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose.png",
         roborazziOptions = RoborazziOptions(
           captureType = RoborazziOptions.CaptureType.Dump(
-            query = withComposeTestTag("child:0")
-          )
+            query = withComposeTestTag("child:0"),
+          ),
+          RoborazziOptions.VerifyOptions { result: ImageComparator.ComparisonResult -> 0 < result.pixelDifferences }
         )
       )
 
