@@ -15,6 +15,7 @@ import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
 import androidx.test.platform.app.InstrumentationRegistry
+import com.dropbox.differ.ImageComparator
 import java.io.File
 import java.util.Locale
 import org.hamcrest.Matcher
@@ -401,21 +402,24 @@ private fun saveAllImage(
 private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: RoborazziOptions) {
   val resizeScale = roborazziOptions.recordOptions.resizeScale
   if (roborazziVerifyEnabled()) {
-    val width = (canvas.width * resizeScale).toInt()
-    val height = (canvas.height * resizeScale).toInt()
+    val width = (canvas.croppedWidth * resizeScale).toInt()
+    val height = (canvas.croppedHeight * resizeScale).toInt()
     val goldenRoboCanvas = if (file.exists()) {
       RoboCanvas.load(file)
     } else {
       RoboCanvas(width, height, true)
     }
-    val changed =
-      if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
-        val comparisonResult = canvas.differ(goldenRoboCanvas, resizeScale)
-        val changeRatio = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
-        changeRatio > roborazziOptions.verifyOptions.changeThreshold
-      } else {
-        true
-      }
+    val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
+      val comparisonResult: ImageComparator.ComparisonResult =
+        canvas.differ(goldenRoboCanvas, resizeScale)
+      val changed = !roborazziOptions.verifyOptions.resultValidator(comparisonResult)
+      log("${file.name} The differ result :$comparisonResult changed:$changed")
+      changed
+    } else {
+      log("${file.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
+      true
+    }
+
     if (changed) {
       RoboCanvas.generateCompareCanvas(
         goldenCanvas = goldenRoboCanvas,
@@ -431,6 +435,10 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: Robor
     // roborazzi.record is checked before
     canvas.save(file, resizeScale)
   }
+}
+
+private fun log(message: String) {
+  println("Roborazzi: $message")
 }
 
 private class ImageCaptureViewAction(
@@ -473,7 +481,7 @@ internal fun capture(
     is RoborazziOptions.CaptureType.Screenshot -> {
       val image = rootComponent.image!!
       onCanvas(
-        RoboCanvas(width = image.width, height = image.height).apply {
+        RoboCanvas(width = image.width, height = image.height, true).apply {
           drawImage(Rect(0, 0, image.width, image.height), image)
         }
       )

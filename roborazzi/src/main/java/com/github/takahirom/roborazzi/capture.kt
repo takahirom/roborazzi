@@ -10,6 +10,7 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.test.espresso.util.HumanReadables
+import com.dropbox.differ.ImageComparator
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.config.ConfigurationRegistry
 
@@ -210,8 +211,12 @@ data class RoborazziOptions(
      * This value determines the threshold of pixel change at which the diff image is output or not.
      * The value should be between 0 and 1
      */
-    val changeThreshold: Double = 0.01
-  )
+    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean
+  ) {
+    constructor(
+      changeThreshold: Float = 0.01F,
+    ) : this(ThresholdValidator(changeThreshold))
+  }
 
   data class RecordOptions(
     val resizeScale: Double = 1.0
