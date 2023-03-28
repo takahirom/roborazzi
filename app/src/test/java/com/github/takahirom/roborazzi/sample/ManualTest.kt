@@ -86,7 +86,7 @@ class ManualTest {
           captureType = RoborazziOptions.CaptureType.Dump(
             query = withComposeTestTag("child:0"),
           ),
-          RoborazziOptions.VerifyOptions { result: ImageComparator.ComparisonResult -> result.pixelDifferences < 1 }
+          verifyOptions = RoborazziOptions.VerifyOptions { result: ImageComparator.ComparisonResult -> result.pixelDifferences < 1 }
         )
       )
 
