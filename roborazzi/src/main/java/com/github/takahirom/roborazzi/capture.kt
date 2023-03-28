@@ -42,11 +42,11 @@ sealed interface RoboComponent {
 
   class View(
     view: android.view.View,
-    captureOptions: CaptureOptions,
+    roborazziOptions: RoborazziOptions,
   ) : RoboComponent {
     override val width: Int = view.width
     override val height: Int = view.height
-    override val image: Bitmap? = if (captureOptions.shouldTakeBitmap) {
+    override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
       view.fetchImage()
     } else {
       null
@@ -56,9 +56,9 @@ sealed interface RoboComponent {
       view.getGlobalVisibleRect(rect)
       rect
     }
-    override val children: List<RoboComponent> = captureOptions
+    override val children: List<RoboComponent> = roborazziOptions
       .captureType
-      .roboComponentChildVisitor(view, captureOptions)
+      .roboComponentChildVisitor(view, roborazziOptions)
 
     val id: Int = view.id
 
@@ -81,18 +81,18 @@ sealed interface RoboComponent {
 
   class Compose(
     node: SemanticsNode,
-    captureOptions: CaptureOptions,
+    roborazziOptions: RoborazziOptions,
   ) : RoboComponent {
     override val width: Int = node.layoutInfo.width
     override val height: Int = node.layoutInfo.height
-    override val image: Bitmap? = if (captureOptions.shouldTakeBitmap) {
+    override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
       node.fetchImage()
     } else {
       null
     }
-    override val children: List<RoboComponent> = captureOptions
+    override val children: List<RoboComponent> = roborazziOptions
       .captureType
-      .roboComponentChildVisitor(node, captureOptions)
+      .roboComponentChildVisitor(node, roborazziOptions)
     override val text: String = node.printToString()
     override val visibility: Visibility = Visibility.Visible
     val testTag: String? = node.config.getOrNull(SemanticsProperties.TestTag)
@@ -125,19 +125,19 @@ sealed interface RoboComponent {
   }
 
   companion object {
-    internal val defaultChildVisitor: (Any, CaptureOptions) -> List<RoboComponent> =
-      { platformNode: Any, captureOptions: CaptureOptions ->
+    internal val defaultChildVisitor: (Any, RoborazziOptions) -> List<RoboComponent> =
+      { platformNode: Any, roborazziOptions: RoborazziOptions ->
         when {
           hasCompose && platformNode is androidx.compose.ui.platform.AbstractComposeView -> {
             (platformNode.getChildAt(0) as? ViewRootForTest)?.semanticsOwner?.rootSemanticsNode?.let {
-              listOf(Compose(it, captureOptions))
+              listOf(Compose(it, roborazziOptions))
             } ?: listOf()
           }
 
           platformNode is ViewGroup -> {
             (0 until platformNode.childCount).map {
               View(
-                platformNode.getChildAt(it), captureOptions
+                platformNode.getChildAt(it), roborazziOptions
               )
             }
           }
@@ -145,7 +145,7 @@ sealed interface RoboComponent {
           hasCompose && platformNode is SemanticsNode -> {
             platformNode.children.map {
               Compose(
-                it, captureOptions
+                it, roborazziOptions
               )
             }
           }
@@ -183,7 +183,13 @@ internal fun isNativeGraphicsEnabled() = try {
   false
 }
 
-data class CaptureOptions(
+@Deprecated(
+  replaceWith = ReplaceWith("RoborazziOptions", "com.github.takahirom.roborazzi.RoborazziOptions"),
+  message = "Please rename to RoborazziOptions. The reason why I'm renaming to RoborazziOptions is that the class is not only for capture but also verify."
+)
+typealias CaptureOptions = RoborazziOptions
+
+data class RoborazziOptions(
   val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
   val verifyOptions: VerifyOptions = VerifyOptions(),
   val recordOptions: RecordOptions = RecordOptions(),
@@ -228,11 +234,11 @@ data class CaptureOptions(
   }
 }
 
-internal val CaptureOptions.CaptureType.roboComponentChildVisitor: (Any, CaptureOptions) -> List<RoboComponent>
+internal val RoborazziOptions.CaptureType.roboComponentChildVisitor: (Any, RoborazziOptions) -> List<RoboComponent>
   get() {
     return when (this) {
-      is CaptureOptions.CaptureType.Dump -> RoboComponent.defaultChildVisitor
-      is CaptureOptions.CaptureType.Screenshot -> { _, _ -> listOf() }
+      is RoborazziOptions.CaptureType.Dump -> RoboComponent.defaultChildVisitor
+      is RoborazziOptions.CaptureType.Screenshot -> { _, _ -> listOf() }
     }
   }
 

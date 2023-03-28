@@ -7,12 +7,12 @@ import android.text.TextPaint
 import kotlin.math.abs
 internal fun captureDump(
   rootComponent: RoboComponent,
-  captureOptions: CaptureOptions.CaptureType.Dump,
+  roborazziOptions: RoborazziOptions.CaptureType.Dump,
   onCanvas: (RoboCanvas) -> Unit
 ) {
   val start = System.currentTimeMillis()
-  val basicSize = captureOptions.basicSize
-  val depthSlide = captureOptions.depthSlideSize
+  val basicSize = roborazziOptions.basicSize
+  val depthSlide = roborazziOptions.depthSlideSize
 
   val deepestDepth = rootComponent.depth()
   val componentCount = rootComponent.countOfComponent()
@@ -38,7 +38,7 @@ internal fun captureDump(
   fun bfs() {
     while (depthAndComponentQueue.isNotEmpty()) {
       val (depth, component) = depthAndComponentQueue.removeFirst()
-      val queryResult = QueryResult.of(component, captureOptions.query)
+      val queryResult = QueryResult.of(component, roborazziOptions.query)
       fun Int.overrideByQuery(queryResult: QueryResult): Int = when (queryResult) {
         QueryResult.Disabled -> this
         is QueryResult.Enabled -> if (queryResult.matched) {

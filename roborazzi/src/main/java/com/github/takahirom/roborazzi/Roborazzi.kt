@@ -36,44 +36,44 @@ fun roborazziRecordingEnabled(): Boolean {
 
 fun ViewInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
     file = File(filePath),
-    captureOptions = captureOptions
+    roborazziOptions = roborazziOptions
   )
 }
 
 fun ViewInteraction.captureRoboImage(
   file: File,
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   if (!roborazziEnabled()) return
-  perform(ImageCaptureViewAction(captureOptions) { canvas ->
-    saveOrVerify(canvas, file, captureOptions)
+  perform(ImageCaptureViewAction(roborazziOptions) { canvas ->
+    saveOrVerify(canvas, file, roborazziOptions)
     canvas.release()
   })
 }
 
 fun ViewInteraction.captureRoboGif(
   filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
-  captureRoboGif(File(filePath), captureOptions, block)
+  captureRoboGif(File(filePath), roborazziOptions, block)
 }
 
 fun ViewInteraction.captureRoboGif(
   file: File,
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
-  captureAndroidView(captureOptions, block).apply {
+  captureAndroidView(roborazziOptions, block).apply {
     saveGif(file)
     clear()
     result.getOrThrow()
@@ -82,21 +82,21 @@ fun ViewInteraction.captureRoboGif(
 
 fun ViewInteraction.captureRoboLastImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
-  captureRoboLastImage(File(filePath), captureOptions, block)
+  captureRoboLastImage(File(filePath), roborazziOptions, block)
 }
 
 fun ViewInteraction.captureRoboLastImage(
   file: File,
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ) {
   if (!roborazziEnabled()) return
-  captureAndroidView(captureOptions, block).apply {
+  captureAndroidView(roborazziOptions, block).apply {
     saveLastImage(file)
     clear()
     result.getOrThrow()
@@ -105,11 +105,11 @@ fun ViewInteraction.captureRoboLastImage(
 
 fun ViewInteraction.captureRoboAllImage(
   fileNameCreator: (prefix: String) -> File,
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ) {
   if (!roborazziEnabled()) return
-  captureAndroidView(captureOptions, block).apply {
+  captureAndroidView(roborazziOptions, block).apply {
     saveAllImage(fileNameCreator)
     clear()
     result.getOrThrow()
@@ -119,25 +119,25 @@ fun ViewInteraction.captureRoboAllImage(
 
 fun SemanticsNodeInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   if (!roborazziEnabled()) return
-  captureRoboImage(File(filePath), captureOptions)
+  captureRoboImage(File(filePath), roborazziOptions)
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
   file: File,
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   if (!roborazziEnabled()) return
   capture(
     rootComponent = RoboComponent.Compose(
       node = this.fetchSemanticsNode("fail to captureRoboImage"),
-      captureOptions = captureOptions
+      roborazziOptions = roborazziOptions
     ),
-    captureOptions = captureOptions,
+    roborazziOptions = roborazziOptions,
   ) { canvas ->
-    saveOrVerify(canvas, file, captureOptions)
+    saveOrVerify(canvas, file, roborazziOptions)
     canvas.release()
   }
 }
@@ -145,14 +145,14 @@ fun SemanticsNodeInteraction.captureRoboImage(
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
   filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
   captureComposeNode(
     composeRule = composeRule,
-    captureOptions = captureOptions,
+    roborazziOptions = roborazziOptions,
     block = block
   ).apply {
     saveGif(File(filePath))
@@ -163,12 +163,12 @@ fun SemanticsNodeInteraction.captureRoboGif(
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
   file: File,
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
-  captureComposeNode(composeRule, captureOptions, block).apply {
+  captureComposeNode(composeRule, roborazziOptions, block).apply {
     saveGif(file)
     clear()
   }
@@ -184,7 +184,7 @@ class CaptureResult(
 
 // Only for library, please don't use this directly
 fun ViewInteraction.captureAndroidView(
-  captureOptions: CaptureOptions,
+  roborazziOptions: RoborazziOptions,
   block: () -> Unit
 ): CaptureResult {
   var removeListener = {}
@@ -194,7 +194,7 @@ fun ViewInteraction.captureAndroidView(
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
     Handler(Looper.getMainLooper()).post {
       this@captureAndroidView.perform(
-        ImageCaptureViewAction(captureOptions) { canvas ->
+        ImageCaptureViewAction(roborazziOptions) { canvas ->
           canvases.add(canvas)
         }
       )
@@ -247,7 +247,7 @@ fun ViewInteraction.captureAndroidView(
   try {
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     perform(
-      ImageCaptureViewAction(captureOptions) { canvas ->
+      ImageCaptureViewAction(roborazziOptions) { canvas ->
         canvases.add(canvas)
       }
     )
@@ -270,13 +270,13 @@ fun ViewInteraction.captureAndroidView(
       }
     },
     saveGif = { file ->
-      saveGif(file, canvases, captureOptions)
+      saveGif(file, canvases, roborazziOptions)
     },
     saveLastImage = { file ->
-      saveLastImage(canvases, file, captureOptions)
+      saveLastImage(canvases, file, roborazziOptions)
     },
     saveAllImage = { fileCreator ->
-      saveAllImage(fileCreator, canvases, captureOptions)
+      saveAllImage(fileCreator, canvases, roborazziOptions)
     },
     clear = {
       canvases.forEach { it.release() }
@@ -288,20 +288,20 @@ fun ViewInteraction.captureAndroidView(
 private fun saveLastImage(
   canvases: MutableList<RoboCanvas>,
   file: File,
-  captureOptions: CaptureOptions,
+  roborazziOptions: RoborazziOptions,
 ) {
   val roboCanvas = canvases.lastOrNull()
   if (roboCanvas == null) {
     println("Roborazzi could not capture for this test")
     return
   }
-  saveOrVerify(roboCanvas, file, captureOptions)
+  saveOrVerify(roboCanvas, file, roborazziOptions)
 }
 
 // Only for library, please don't use this directly
 fun SemanticsNodeInteraction.captureComposeNode(
   composeRule: AndroidComposeTestRule<*, *>,
-  captureOptions: CaptureOptions = CaptureOptions(),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ): CaptureResult {
   var removeListener = {}
@@ -312,9 +312,9 @@ fun SemanticsNodeInteraction.captureComposeNode(
     capture(
       rootComponent = RoboComponent.Compose(
         this@captureComposeNode.fetchSemanticsNode("roborazzi can't find component"),
-        captureOptions
+        roborazziOptions
       ),
-      captureOptions = captureOptions
+      roborazziOptions = roborazziOptions
     ) {
       canvases.add(it)
     }
@@ -353,13 +353,13 @@ fun SemanticsNodeInteraction.captureComposeNode(
       }
     },
     saveGif = { file ->
-      saveGif(file, canvases, captureOptions)
+      saveGif(file, canvases, roborazziOptions)
     },
     saveLastImage = { file ->
-      saveLastImage(canvases, file, captureOptions)
+      saveLastImage(canvases, file, roborazziOptions)
     },
     saveAllImage = { fileCreator ->
-      saveAllImage(fileCreator, canvases, captureOptions)
+      saveAllImage(fileCreator, canvases, roborazziOptions)
     },
     clear = {
       canvases.forEach { it.release() }
@@ -370,7 +370,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
 private fun saveGif(
   file: File,
   canvases: MutableList<RoboCanvas>,
-  captureOptions: CaptureOptions,
+  roborazziOptions: RoborazziOptions,
 ) {
   val e = AnimatedGifEncoder()
   e.setRepeat(0)
@@ -382,7 +382,7 @@ private fun saveGif(
       canvases.maxOf { it.croppedHeight }
     )
     canvases.forEach { canvas ->
-      e.addFrame(canvas, captureOptions.recordOptions.resizeScale)
+      e.addFrame(canvas, roborazziOptions.recordOptions.resizeScale)
     }
   }
   e.finish()
@@ -391,15 +391,15 @@ private fun saveGif(
 private fun saveAllImage(
   fileCreator: (String) -> File,
   canvases: MutableList<RoboCanvas>,
-  captureOptions: CaptureOptions,
+  roborazziOptions: RoborazziOptions,
 ) {
   canvases.forEachIndexed { index, canvas ->
-    saveOrVerify(canvas, fileCreator(index.toString()), captureOptions)
+    saveOrVerify(canvas, fileCreator(index.toString()), roborazziOptions)
   }
 }
 
-private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: CaptureOptions) {
-  val resizeScale = captureOptions.recordOptions.resizeScale
+private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: RoborazziOptions) {
+  val resizeScale = roborazziOptions.recordOptions.resizeScale
   if (roborazziVerifyEnabled()) {
     val width = (canvas.width * resizeScale).toInt()
     val height = (canvas.height * resizeScale).toInt()
@@ -412,7 +412,7 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: Capture
       if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
         val comparisonResult = canvas.differ(goldenRoboCanvas, resizeScale)
         val changeRatio = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
-        changeRatio > captureOptions.verifyOptions.changeThreshold
+        changeRatio > roborazziOptions.verifyOptions.changeThreshold
       } else {
         true
       }
@@ -434,7 +434,7 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, captureOptions: Capture
 }
 
 private class ImageCaptureViewAction(
-  val captureOptions: CaptureOptions,
+  val roborazziOptions: RoborazziOptions,
   val saveAction: (RoboCanvas) -> Unit
 ) :
   ViewAction {
@@ -450,9 +450,9 @@ private class ImageCaptureViewAction(
     capture(
       rootComponent = RoboComponent.View(
         view = view,
-        captureOptions,
+        roborazziOptions,
       ),
-      captureOptions = captureOptions,
+      roborazziOptions = roborazziOptions,
       onCanvas = saveAction
     )
   }
@@ -460,17 +460,17 @@ private class ImageCaptureViewAction(
 
 internal fun capture(
   rootComponent: RoboComponent,
-  captureOptions: CaptureOptions,
+  roborazziOptions: RoborazziOptions,
   onCanvas: (RoboCanvas) -> Unit
 ) {
-  when (captureOptions.captureType) {
-    is CaptureOptions.CaptureType.Dump -> captureDump(
+  when (roborazziOptions.captureType) {
+    is RoborazziOptions.CaptureType.Dump -> captureDump(
       rootComponent = rootComponent,
-      captureOptions = captureOptions.captureType,
+      roborazziOptions = roborazziOptions.captureType,
       onCanvas = onCanvas
     )
 
-    is CaptureOptions.CaptureType.Screenshot -> {
+    is RoborazziOptions.CaptureType.Screenshot -> {
       val image = rootComponent.image!!
       onCanvas(
         RoboCanvas(width = image.width, height = image.height).apply {
