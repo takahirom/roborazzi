@@ -413,12 +413,10 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: Robor
       val comparisonResult: ImageComparator.ComparisonResult =
         canvas.differ(goldenRoboCanvas, resizeScale)
       val changed = !roborazziOptions.verifyOptions.resultValidator(comparisonResult)
-      println("The differ result :$comparisonResult changed:$changed")
+      log("${file.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
-      println(
-        "The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight}) "
-      )
+      log("${file.name}  The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
       true
     }
 
@@ -437,6 +435,10 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: Robor
     // roborazzi.record is checked before
     canvas.save(file, resizeScale)
   }
+}
+
+private fun log(message: String) {
+  println("Roborazzi: $message")
 }
 
 private class ImageCaptureViewAction(
