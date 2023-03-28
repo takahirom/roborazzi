@@ -36,5 +36,5 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: screenshot-diff-reports
-          path: app/build/reposrts
+          path: app/build/reports
           retention-days: 30
