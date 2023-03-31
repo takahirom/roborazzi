@@ -24,7 +24,7 @@ import org.hamcrest.Matchers
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 fun roborazziEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.record") == "true" || System.getProperty("roborazzi.test.verify") == "true"
+  return System.getProperty("roborazzi.test.record") == "false" || System.getProperty("roborazzi.test.verify") == "false"
 }
 
 fun roborazziVerifyEnabled(): Boolean {
