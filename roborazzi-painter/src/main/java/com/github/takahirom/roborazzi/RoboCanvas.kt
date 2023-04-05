@@ -191,6 +191,10 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean) {
 
   fun save(file: File, resizeScale: Double) {
     drawPendingDraw()
+    val directory = file.parentFile
+    if (!directory.exists()) {
+      directory.mkdirs()
+    }
     ImageIO.write(
       croppedImage.scale(resizeScale),
       "png",
