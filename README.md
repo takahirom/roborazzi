@@ -2,7 +2,7 @@
 
 **Make JVM Android Integration Test Visible**
 
-## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10-alpha-1) and enables screenshot testing.📣
+## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10) and enables screenshot testing.📣
 
 To save the image, run `recordRoborazziDebug` task.
 
