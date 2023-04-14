@@ -17,7 +17,7 @@ import java.io.File
 import javax.imageio.ImageIO
 
 
-class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
+class RoboCanvas(width: Int, height: Int, filled: Boolean) {
   private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_USHORT_565_RGB)
   val width: Int get() = bufferedImage.width
   val height: Int get() = bufferedImage.height
@@ -28,7 +28,7 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
     rightBottomPoint = maxOf(x, rightBottomPoint.first) to maxOf(y, rightBottomPoint.second)
   }
 
-  var emptyPoints = (0..width step 50)
+  var emptyPoints: MutableSet<Pair<Int, Int>> = (0..width step 50)
     .flatMap { x -> (0..height step 50).map { y -> x to y } }
     .toMutableSet()
     private set
@@ -191,6 +191,10 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
 
   fun save(file: File, resizeScale: Double) {
     drawPendingDraw()
+    val directory = file.parentFile
+    if (!directory.exists()) {
+      directory.mkdirs()
+    }
     ImageIO.write(
       croppedImage.scale(resizeScale),
       "png",
@@ -202,7 +206,7 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
     val otherImage = other.bufferedImage
     val simpleImageComparator = SimpleImageComparator(maxDistance = 0.007F)
     return simpleImageComparator.compare(
-      DifferBufferedImage(bufferedImage.scale(resizeScale)),
+      DifferBufferedImage(croppedImage.scale(resizeScale)),
       DifferBufferedImage(otherImage)
     )
   }
@@ -230,7 +234,7 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean = false) {
   companion object {
     fun load(file: File): RoboCanvas {
       val loadedImage: BufferedImage = ImageIO.read(file)
-      val roboCanvas = RoboCanvas(loadedImage.width, loadedImage.height)
+      val roboCanvas = RoboCanvas(loadedImage.width, loadedImage.height, true)
       roboCanvas.drawImage(loadedImage)
       return roboCanvas
     }
