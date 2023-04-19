@@ -12,6 +12,8 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.test.espresso.util.HumanReadables
 import com.dropbox.differ.ImageComparator
+import io.github.takahirom.roborazzi.CompareReportCaptureResult
+import io.github.takahirom.roborazzi.RoborazziReportConst
 import java.io.File
 import java.io.FileWriter
 import org.robolectric.annotation.GraphicsMode
@@ -224,24 +226,30 @@ data class RoborazziOptions(
   }
 
   interface Reporter {
-    fun report(compareReportResult: CompareReportResult)
+    fun report(compareReportCaptureResult: CompareReportCaptureResult)
   }
 
-  class DefaultReporter(val reportDir: File = File("build/reports/roborazzi/")) : Reporter {
+  class DefaultReporter : Reporter {
 
     init {
-      reportDir.mkdirs()
+      File(RoborazziReportConst.compareReportDirPath).mkdirs()
     }
 
-    override fun report(compareReportResult: CompareReportResult) {
+    override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
+      val absolutePath = File(RoborazziReportConst.compareReportDirPath).absolutePath
+      val nameWithoutExtension = when (compareReportCaptureResult) {
+        is CompareReportCaptureResult.Added -> compareReportCaptureResult.compareFile
+        is CompareReportCaptureResult.Changed -> compareReportCaptureResult.goldenFile
+        is CompareReportCaptureResult.Unchanged -> compareReportCaptureResult.goldenFile
+      }.nameWithoutExtension
       val reportFileName =
-        "${reportDir.absolutePath}/${compareReportResult.timestamp}_${compareReportResult.goldenFile.nameWithoutExtension}.json"
+        "$absolutePath/${compareReportCaptureResult.timestampNs}_$nameWithoutExtension.json"
       val fileWriter = FileWriter(
         reportFileName,
         true
       )
       JsonWriter(fileWriter).use { writer ->
-        compareReportResult.writeJson(writer)
+        compareReportCaptureResult.writeJson(writer)
       }
       fileWriter.close()
     }

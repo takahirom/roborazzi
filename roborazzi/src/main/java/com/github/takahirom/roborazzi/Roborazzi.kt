@@ -16,6 +16,7 @@ import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dropbox.differ.ImageComparator
+import io.github.takahirom.roborazzi.CompareReportCaptureResult
 import java.io.File
 import java.util.Locale
 import org.hamcrest.Matcher
@@ -399,13 +400,17 @@ private fun saveAllImage(
   }
 }
 
-private fun saveOrCompare(canvas: RoboCanvas, file: File, roborazziOptions: RoborazziOptions) {
+private fun saveOrCompare(
+  canvas: RoboCanvas,
+  goaldenFile: File,
+  roborazziOptions: RoborazziOptions
+) {
   val resizeScale = roborazziOptions.recordOptions.resizeScale
   if (roborazziVerifyEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
     val height = (canvas.croppedHeight * resizeScale).toInt()
-    val goldenRoboCanvas = if (file.exists()) {
-      RoboCanvas.load(file)
+    val goldenRoboCanvas = if (goaldenFile.exists()) {
+      RoboCanvas.load(goaldenFile)
     } else {
       RoboCanvas(width, height, true)
     }
@@ -413,41 +418,50 @@ private fun saveOrCompare(canvas: RoboCanvas, file: File, roborazziOptions: Robo
       val comparisonResult: ImageComparator.ComparisonResult =
         canvas.differ(goldenRoboCanvas, resizeScale)
       val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
-      log("${file.name} The differ result :$comparisonResult changed:$changed")
+      log("${goaldenFile.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
-      log("${file.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
+      log("${goaldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
       true
     }
 
     if (changed) {
-      val compareFilePath = File(file.parent, file.nameWithoutExtension + "_compare." + file.extension)
+      val compareFilePath = File(
+        goaldenFile.parent,
+        goaldenFile.nameWithoutExtension + "_compare." + goaldenFile.extension
+      )
       RoboCanvas.generateCompareCanvas(
         goldenCanvas = goldenRoboCanvas,
         newCanvas = canvas,
         newCanvasResize = resizeScale
       )
         .save(
-          file = file,
+          file = compareFilePath,
           resizeScale = resizeScale
         )
-
-      CompareReportResult.Changed(
-        compareFile = compareFilePath,
-        goldenFile = file,
-        timestamp = System.currentTimeMillis(),
-      )
+      if (goaldenFile.exists()) {
+        CompareReportCaptureResult.Changed(
+          compareFile = compareFilePath,
+          goldenFile = goaldenFile,
+          timestampNs = System.nanoTime(),
+        )
+      } else {
+        CompareReportCaptureResult.Added(
+          compareFile = compareFilePath,
+          timestampNs = System.nanoTime(),
+        )
+      }
     } else {
-      CompareReportResult.Unchanged(
-        goldenFile = file,
-        timestamp = System.currentTimeMillis(),
+      CompareReportCaptureResult.Unchanged(
+        goldenFile = goaldenFile,
+        timestampNs = System.nanoTime(),
       )
     }.let {
       roborazziOptions.compareOptions.reporter.report(it)
     }
   } else {
     // roborazzi.record is checked before
-    canvas.save(file, resizeScale)
+    canvas.save(goaldenFile, resizeScale)
   }
 }
 
