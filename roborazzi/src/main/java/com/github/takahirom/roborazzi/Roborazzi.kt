@@ -25,11 +25,13 @@ import org.hamcrest.Matchers
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 fun roborazziEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.record") == "true" || System.getProperty("roborazzi.test.verify") == "true"
+  return System.getProperty("roborazzi.test.record") == "true" ||
+    System.getProperty("roborazzi.test.verify") == "true" ||
+    System.getProperty("roborazzi.test.compare") == "true"
 }
 
-fun roborazziVerifyEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.verify") == "true"
+fun roborazziCompareEnabled(): Boolean {
+  return System.getProperty("roborazzi.test.compare") == "true"
 }
 
 fun roborazziRecordingEnabled(): Boolean {
@@ -406,7 +408,9 @@ private fun saveOrCompare(
   roborazziOptions: RoborazziOptions
 ) {
   val resizeScale = roborazziOptions.recordOptions.resizeScale
-  if (roborazziVerifyEnabled()) {
+  println(roborazziCompareEnabled())
+
+  if (roborazziCompareEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
     val height = (canvas.croppedHeight * resizeScale).toInt()
     val goldenRoboCanvas = if (goaldenFile.exists()) {

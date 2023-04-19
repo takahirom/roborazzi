@@ -54,50 +54,48 @@ sealed class CompareReportCaptureResult {
   companion object {
     fun fromJsonFile(inputPath: String): CompareReportCaptureResult {
       FileReader(inputPath).use { fileReader ->
-        return fromJsonReader(JsonReader(fileReader))
+        return JsonReader(fileReader).use { fromJsonReader(it) }
       }
     }
 
-    fun fromJsonReader(fileReader: JsonReader): CompareReportCaptureResult {
-      fileReader.use { jsonReader ->
-        var type: String? = null
-        var compareFile: String? = null
-        var goldenFile: String? = null
-        var timestampNs: Long? = null
+    fun fromJsonReader(jsonReader: JsonReader): CompareReportCaptureResult {
+      var type: String? = null
+      var compareFile: String? = null
+      var goldenFile: String? = null
+      var timestampNs: Long? = null
 
-        jsonReader.beginObject()
-        while (jsonReader.hasNext()) {
-          when (jsonReader.nextName()) {
-            "type" -> type = jsonReader.nextString()
-            "compare_file_path" -> compareFile = jsonReader.nextString()
-            "golden_file_path" -> goldenFile = jsonReader.nextString()
-            "timestamp" -> timestampNs = jsonReader.nextLong()
-            else -> jsonReader.skipValue()
-          }
+      jsonReader.beginObject()
+      while (jsonReader.hasNext()) {
+        when (jsonReader.nextName()) {
+          "type" -> type = jsonReader.nextString()
+          "compare_file_path" -> compareFile = jsonReader.nextString()
+          "golden_file_path" -> goldenFile = jsonReader.nextString()
+          "timestamp" -> timestampNs = jsonReader.nextLong()
+          else -> jsonReader.skipValue()
         }
-        jsonReader.endObject()
-
-        val captureResult = when (type) {
-          "changed" -> Changed(
-            compareFile = File(compareFile),
-            goldenFile = File(goldenFile),
-            timestampNs = timestampNs!!
-          )
-
-          "unchanged" -> Unchanged(
-            goldenFile = File(goldenFile),
-            timestampNs = timestampNs!!
-          )
-
-          "added" -> Added(
-            compareFile = File(compareFile),
-            timestampNs = timestampNs!!
-          )
-
-          else -> throw IllegalArgumentException("Unknown type $type")
-        }
-        return captureResult
       }
+      jsonReader.endObject()
+
+      val captureResult = when (type) {
+        "changed" -> Changed(
+          compareFile = File(compareFile),
+          goldenFile = File(goldenFile),
+          timestampNs = timestampNs!!
+        )
+
+        "unchanged" -> Unchanged(
+          goldenFile = File(goldenFile),
+          timestampNs = timestampNs!!
+        )
+
+        "added" -> Added(
+          compareFile = File(compareFile),
+          timestampNs = timestampNs!!
+        )
+
+        else -> throw IllegalArgumentException("Unknown type $type")
+      }
+      return captureResult
     }
   }
 }

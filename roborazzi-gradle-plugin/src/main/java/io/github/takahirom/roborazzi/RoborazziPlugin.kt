@@ -6,6 +6,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import java.util.Locale
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -54,7 +55,7 @@ class RoborazziPlugin : Plugin<Project> {
       compareVariants.configure { it.dependsOn(compareReportGenerateTaskProvider) }
 
       val verifyTaskProvider =
-        project.tasks.register("verifyRoborazzi$variantSlug", RoborazziTask::class.java) {
+        project.tasks.register("verifyRoborazzi$variantSlug", VerifyTask::class.java) {
           it.group = VERIFICATION_GROUP
         }
       verifyVariants.configure { it.dependsOn(verifyTaskProvider) }
@@ -66,11 +67,7 @@ class RoborazziPlugin : Plugin<Project> {
       project.gradle.taskGraph.whenReady { graph ->
         isRecordRun.set(recordTaskProvider.map { graph.hasTask(it) })
         isVerifyRun.set(verifyTaskProvider.map { graph.hasTask(it) })
-        isCompareRun.set(verifyTaskProvider.zip(
-          compareReportGenerateTaskProvider
-        ) { verify, compare ->
-          graph.hasTask(verify) || graph.hasTask(compare)
-        })
+        isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
       }
 
       val testTaskProvider = project.tasks.named("test$testVariantSlug", Test::class.java) { test ->
@@ -123,7 +120,6 @@ class RoborazziPlugin : Plugin<Project> {
   open class CompareReportGenerateTask : RoborazziTask() {
     @TaskAction
     fun doWork() {
-      println("CompareTask.doLast")
       val results: List<CompareReportCaptureResult> =
         project.file(RoborazziReportConst.compareReportDirPath).listFiles().orEmpty().mapNotNull {
           if (it.name.endsWith(".json")) {
@@ -133,8 +129,8 @@ class RoborazziPlugin : Plugin<Project> {
           }
         }
       val reportFile =
-        project.file(RoborazziReportConst.compareSummaryReportDirPath + "/compare-report.json")
-      println("Save report to ${reportFile.absolutePath} with results:$results")
+        project.file(RoborazziReportConst.compareSummaryReportFilePath)
+      println("Save report to ${reportFile.absolutePath} with results:${results.size}")
 
       val jsonWriter = JsonWriter(
         reportFile.writer()
@@ -155,6 +151,23 @@ class RoborazziPlugin : Plugin<Project> {
         }
         writer.endArray()
         writer.endObject()
+      }
+    }
+  }
+
+  open class VerifyTask : RoborazziTask() {
+    @TaskAction
+    fun doWork() {
+      val reportFile =
+        project.file(RoborazziReportConst.compareSummaryReportFilePath)
+
+      val reportResult = CompareReportResult.fromJsonFile(reportFile.absolutePath)
+      if (reportResult.summary.total != reportResult.summary.unchanged) {
+        throw GradleException(
+          "Roborazzi verification failed. " +
+            "See ${reportFile.absolutePath} for details.\n" +
+            "Changes: ${reportResult.compareReportCaptureResults.filter { it !is CompareReportCaptureResult.Unchanged }}"
+        )
       }
     }
   }

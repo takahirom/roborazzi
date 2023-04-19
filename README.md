@@ -10,7 +10,17 @@ To save the image, run `recordRoborazziDebug` task.
  ./gradlew recordRoborazziDebug
 ```
 
-To view the changes in the image, run `verifyRoborazziDebug` task. This way, the changes between the image and the one you are saving now will be saved as [original]_compare.png.
+To view the changes in the image, run `compareRoborazziDebug` task. This way, the changes between
+the image and the one you are saving now will be saved as [original]_compare.png.
+And generate a json file that contains the diff information in `build/test-results/roborazzi`.
+
+```
+ ./gradlew compareRoborazziDebug
+```
+
+To verify the changes in the image, run `verifyRoborazziDebug` task. If the image is different from
+the one you are saving now, the test will fail.
+This task depends on `compareRoborazziDebug` task.
 
 ```
  ./gradlew verifyRoborazziDebug
@@ -20,16 +30,17 @@ To view the changes in the image, run `verifyRoborazziDebug` task. This way, the
 
 ## Why test with JVM instead of testing on Android?
 
-Because when testing on a device, tests can fail easily due to the device environment, animations, etc. 
+Because when testing on a device, tests can fail easily due to the device environment, animations,
+etc.
 This affects the reliability of the test and ultimately, if the test fails, it cannot be fixed.
 
 ## Why not Paparazzi?
 
 Paparazzi is a great tool to see the actual display in the JVM.  
-Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with Robolectric. 
+Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with
+Robolectric.
 This is because they both mock the Android framework.  
 To run tests with Hilt and actually click on components, you need Robolectric.
-
 
 ## Try it out
 
@@ -41,7 +52,8 @@ This library is dependent on Robolectric. Please see below to add Robolectric.
 
 https://robolectric.org/getting-started/
 
-To take screenshots, please use Robolectric 4.10 alpha 1 or later and please add `@GraphicsMode(GraphicsMode.Mode.NATIVE)` to your test class.
+To take screenshots, please use Robolectric 4.10 alpha 1 or later and please
+add `@GraphicsMode(GraphicsMode.Mode.NATIVE)` to your test class.
 
 ```kotlin
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -76,7 +88,7 @@ root build.gradle
 ```kotlin
 buildscript {
   dependencies {
-  ...
+    ...
     classpath 'io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[write the latest vesrion]'
   }
 }
@@ -89,7 +101,6 @@ apply plugin: 'io.github.takahirom.roborazzi'
 ```
 
 ### Add dependencies
-
 
 ```
 // Core functions
@@ -114,48 +125,48 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.GraphicsMode
+
 ...
-import com.github.takahirom.roborazzi.captureRoboImage
+import com . github . takahirom . roborazzi . captureRoboImage
 
-// Tips: You can use Robolectric while using AndroidJUnit4
-@RunWith(AndroidJUnit4::class)
+  // Tips: You can use Robolectric while using AndroidJUnit4
+  @RunWith(AndroidJUnit4::class)
 // Enable Robolectric Native Graphics (RNG) 
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-class ManualTest {
-  @get:Rule
-  val composeTestRule = createAndroidComposeRule<MainActivity>()
+  @GraphicsMode(GraphicsMode.Mode.NATIVE)
+  class ManualTest {
+    @get:Rule
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-  @Test
-  fun captureRoboImageSample() {
-    // Tips: You can use Robolectric with Espresso API
-    // launch
-    ActivitySenario.launch(MainActivity::class.java)
+    @Test
+    fun captureRoboImageSample() {
+      // Tips: You can use Robolectric with Espresso API
+      // launch
+      ActivitySenario.launch(MainActivity::class.java)
 
-    // screen level image
-    onView(ViewMatchers.isRoot())
-      // If you don't specify a screenshot file name, Roborazzi will automatically use the method name as the file name for you.
-      // The format of the file name will be as follows:
-      // build/outputs/roborazzi/com_..._ManualTest_captureRoboImageSample.png
-      .captureRoboImage()
+      // screen level image
+      onView(ViewMatchers.isRoot())
+        // If you don't specify a screenshot file name, Roborazzi will automatically use the method name as the file name for you.
+        // The format of the file name will be as follows:
+        // build/outputs/roborazzi/com_..._ManualTest_captureRoboImageSample.png
+        .captureRoboImage()
 
-    // compose image
-    composeTestRule.onNodeWithTag("MyComposeButton")
-      .onParent()
-      .captureRoboImage("build/compose.png")
+      // compose image
+      composeTestRule.onNodeWithTag("MyComposeButton")
+        .onParent()
+        .captureRoboImage("build/compose.png")
 
-    // small component image
-    onView(withId(R.id.button_first))
-      .captureRoboImage("build/button.png")
+      // small component image
+      onView(withId(R.id.button_first))
+        .captureRoboImage("build/button.png")
 
-    // move to next page
-    onView(withId(R.id.button_first))
-      .perform(click())
+      // move to next page
+      onView(withId(R.id.button_first))
+        .perform(click())
 
-    onView(ViewMatchers.isRoot())
-      .captureRoboImage("build/second_screen.png")
-  }
+      onView(ViewMatchers.isRoot())
+        .captureRoboImage("build/second_screen.png")
+    }
 ```
-
 
 ### Generate gif automatically
 
@@ -180,10 +191,9 @@ fun captureRoboGifSample() {
 
 <img width="350" src="https://user-images.githubusercontent.com/1386930/226362212-35d34c9e-6df1-4671-8949-10fad7ad98c9.gif" />
 
-
 ### Automatically generate gif with test rule
 
-With the JUnit test rule, you do not need to name the gif image, 
+With the JUnit test rule, you do not need to name the gif image,
 and if you prefer, you can output the gif image **only if the test fails**.
 
 This test will output this file.
@@ -279,9 +289,7 @@ class ComposeTest {
 }
 ```
 
-
 ![com github takahirom roborazzi sample ComposeTest_composable](https://user-images.githubusercontent.com/1386930/226366224-b9950b60-26a2-489e-bc03-08bfb86c533a.gif)
-
 
 ### RoborazziRule options
 
@@ -368,7 +376,6 @@ data class RoborazziOptions(
 If you are having trouble debugging your test, try Dump mode as follows.
 
 ![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
-
 
 ### LICENSE
 
