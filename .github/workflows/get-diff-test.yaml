@@ -17,6 +17,9 @@ jobs:
           distribution: 'zulu'
           java-version: 19
 
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v2
+
       - uses: dawidd6/action-download-artifact@v2
         with:
           name: screenshots
