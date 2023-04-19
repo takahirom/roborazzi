@@ -6,6 +6,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import java.util.Locale
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -54,7 +55,7 @@ class RoborazziPlugin : Plugin<Project> {
       compareVariants.configure { it.dependsOn(compareReportGenerateTaskProvider) }
 
       val verifyTaskProvider =
-        project.tasks.register("verifyRoborazzi$variantSlug", RoborazziTask::class.java) {
+        project.tasks.register("verifyRoborazzi$variantSlug", VerifyTask::class.java) {
           it.group = VERIFICATION_GROUP
         }
       verifyVariants.configure { it.dependsOn(verifyTaskProvider) }
@@ -123,7 +124,6 @@ class RoborazziPlugin : Plugin<Project> {
   open class CompareReportGenerateTask : RoborazziTask() {
     @TaskAction
     fun doWork() {
-      println("CompareTask.doLast")
       val results: List<CompareReportCaptureResult> =
         project.file(RoborazziReportConst.compareReportDirPath).listFiles().orEmpty().mapNotNull {
           if (it.name.endsWith(".json")) {
@@ -133,7 +133,7 @@ class RoborazziPlugin : Plugin<Project> {
           }
         }
       val reportFile =
-        project.file(RoborazziReportConst.compareSummaryReportDirPath + "/compare-report.json")
+        project.file(RoborazziReportConst.compareSummaryReportFilePath)
       println("Save report to ${reportFile.absolutePath} with results:$results")
 
       val jsonWriter = JsonWriter(
@@ -155,6 +155,23 @@ class RoborazziPlugin : Plugin<Project> {
         }
         writer.endArray()
         writer.endObject()
+      }
+    }
+  }
+
+  open class VerifyTask : RoborazziTask() {
+    @TaskAction
+    fun doWork() {
+      val reportFile =
+        project.file(RoborazziReportConst.compareSummaryReportFilePath)
+
+      val reportResult = CompareReportResult.fromJsonFile(reportFile.absolutePath)
+      if (reportResult.summary.total != reportResult.summary.unchanged) {
+        throw GradleException(
+          "Roborazzi verification failed. " +
+            "See ${reportFile.absolutePath} for details.\n" +
+            "Changes: ${reportResult.compareReportCaptureResults.filter { it !is CompareReportCaptureResult.Unchanged }}"
+        )
       }
     }
   }

@@ -4,6 +4,7 @@ import android.util.JsonReader
 import java.io.FileReader
 
 data class Summary(
+  val total: Int,
   val added: Int,
   val changed: Int,
   val unchanged: Int
@@ -11,11 +12,13 @@ data class Summary(
   companion object {
     fun fromJson(jsonReader: JsonReader): Summary {
       jsonReader.beginObject()
+      var total: Int? = null
       var added: Int? = null
       var changed: Int? = null
       var unchanged: Int? = null
       while (jsonReader.hasNext()) {
         when (jsonReader.nextName()) {
+          "total" -> total = jsonReader.nextInt()
           "added" -> added = jsonReader.nextInt()
           "changed" -> changed = jsonReader.nextInt()
           "unchanged" -> unchanged = jsonReader.nextInt()
@@ -24,6 +27,7 @@ data class Summary(
       }
       jsonReader.endObject()
       return Summary(
+        total = total!!,
         added = added!!,
         changed = changed!!,
         unchanged = unchanged!!
@@ -44,19 +48,20 @@ data class CompareReportResult(
           jsonReader.beginObject()
           var summary: Summary? = null
           var compareReportCaptureResults: List<CompareReportCaptureResult>? = null
-          when (jsonReader.nextName()) {
-            "summary" -> summary = Summary.fromJson(jsonReader)
-            "results" -> {
-              jsonReader.beginArray()
-              val results = mutableListOf<CompareReportCaptureResult>()
-              while (jsonReader.hasNext()) {
-                results.add(CompareReportCaptureResult.fromJsonReader(jsonReader))
+          while (jsonReader.hasNext()) {
+            when (jsonReader.nextName()) {
+              "summary" -> summary = Summary.fromJson(jsonReader)
+              "results" -> {
+                jsonReader.beginArray()
+                val results = mutableListOf<CompareReportCaptureResult>()
+                while (jsonReader.hasNext()) {
+                  results.add(CompareReportCaptureResult.fromJsonReader(jsonReader))
+                }
+                jsonReader.endArray()
+                compareReportCaptureResults = results
               }
-              jsonReader.endArray()
-              compareReportCaptureResults = results
+              else -> jsonReader.skipValue()
             }
-
-            else -> jsonReader.skipValue()
           }
           jsonReader.endObject()
           return CompareReportResult(
