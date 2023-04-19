@@ -52,7 +52,7 @@ fun ViewInteraction.captureRoboImage(
 ) {
   if (!roborazziEnabled()) return
   perform(ImageCaptureViewAction(roborazziOptions) { canvas ->
-    saveOrVerify(canvas, file, roborazziOptions)
+    saveOrCompare(canvas, file, roborazziOptions)
     canvas.release()
   })
 }
@@ -138,7 +138,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
     ),
     roborazziOptions = roborazziOptions,
   ) { canvas ->
-    saveOrVerify(canvas, file, roborazziOptions)
+    saveOrCompare(canvas, file, roborazziOptions)
     canvas.release()
   }
 }
@@ -296,7 +296,7 @@ private fun saveLastImage(
     println("Roborazzi could not capture for this test")
     return
   }
-  saveOrVerify(roboCanvas, file, roborazziOptions)
+  saveOrCompare(roboCanvas, file, roborazziOptions)
 }
 
 // Only for library, please don't use this directly
@@ -395,11 +395,11 @@ private fun saveAllImage(
   roborazziOptions: RoborazziOptions,
 ) {
   canvases.forEachIndexed { index, canvas ->
-    saveOrVerify(canvas, fileCreator(index.toString()), roborazziOptions)
+    saveOrCompare(canvas, fileCreator(index.toString()), roborazziOptions)
   }
 }
 
-private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: RoborazziOptions) {
+private fun saveOrCompare(canvas: RoboCanvas, file: File, roborazziOptions: RoborazziOptions) {
   val resizeScale = roborazziOptions.recordOptions.resizeScale
   if (roborazziVerifyEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
@@ -412,7 +412,7 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: Robor
     val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
       val comparisonResult: ImageComparator.ComparisonResult =
         canvas.differ(goldenRoboCanvas, resizeScale)
-      val changed = !roborazziOptions.verifyOptions.resultValidator(comparisonResult)
+      val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
       log("${file.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
@@ -421,15 +421,29 @@ private fun saveOrVerify(canvas: RoboCanvas, file: File, roborazziOptions: Robor
     }
 
     if (changed) {
+      val compareFilePath = File(file.parent, file.nameWithoutExtension + "_compare." + file.extension)
       RoboCanvas.generateCompareCanvas(
         goldenCanvas = goldenRoboCanvas,
         newCanvas = canvas,
         newCanvasResize = resizeScale
       )
         .save(
-          file = File(file.parent, file.nameWithoutExtension + "_compare." + file.extension),
+          file = file,
           resizeScale = resizeScale
         )
+
+      CompareReportResult.Changed(
+        compareFile = compareFilePath,
+        goldenFile = file,
+        timestamp = System.currentTimeMillis(),
+      )
+    } else {
+      CompareReportResult.Unchanged(
+        goldenFile = file,
+        timestamp = System.currentTimeMillis(),
+      )
+    }.let {
+      roborazziOptions.compareOptions.reporter.report(it)
     }
   } else {
     // roborazzi.record is checked before

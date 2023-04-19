@@ -2,6 +2,7 @@ package com.github.takahirom.roborazzi
 
 import android.graphics.Bitmap
 import android.graphics.Rect
+import android.util.JsonWriter
 import android.view.ViewGroup
 import androidx.annotation.IdRes
 import androidx.compose.ui.graphics.toAndroidRect
@@ -11,6 +12,8 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.test.espresso.util.HumanReadables
 import com.dropbox.differ.ImageComparator
+import java.io.File
+import java.io.FileWriter
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.config.ConfigurationRegistry
 
@@ -192,7 +195,7 @@ typealias CaptureOptions = RoborazziOptions
 
 data class RoborazziOptions(
   val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
-  val verifyOptions: VerifyOptions = VerifyOptions(),
+  val compareOptions: CompareOptions = CompareOptions(),
   val recordOptions: RecordOptions = RecordOptions(),
 ) {
   sealed interface CaptureType {
@@ -206,16 +209,42 @@ data class RoborazziOptions(
     ) : CaptureType
   }
 
-  data class VerifyOptions(
+  data class CompareOptions(
+    val reporter: Reporter = DefaultReporter(),
     /**
      * This value determines the threshold of pixel change at which the diff image is output or not.
      * The value should be between 0 and 1
      */
-    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean
+    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
+      reporter: Reporter = DefaultReporter(),
       changeThreshold: Float = 0.01F,
-    ) : this(ThresholdValidator(changeThreshold))
+    ) : this(reporter, ThresholdValidator(changeThreshold))
+  }
+
+  interface Reporter {
+    fun report(compareReportResult: CompareReportResult)
+  }
+
+  class DefaultReporter(val reportDir: File = File("build/reports/roborazzi/")) : Reporter {
+
+    init {
+      reportDir.mkdirs()
+    }
+
+    override fun report(compareReportResult: CompareReportResult) {
+      val reportFileName =
+        "${reportDir.absolutePath}/${compareReportResult.timestamp}_${compareReportResult.goldenFile.nameWithoutExtension}.json"
+      val fileWriter = FileWriter(
+        reportFileName,
+        true
+      )
+      JsonWriter(fileWriter).use { writer ->
+        compareReportResult.writeJson(writer)
+      }
+      fileWriter.close()
+    }
   }
 
   data class RecordOptions(
