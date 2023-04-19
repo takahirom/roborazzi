@@ -67,11 +67,7 @@ class RoborazziPlugin : Plugin<Project> {
       project.gradle.taskGraph.whenReady { graph ->
         isRecordRun.set(recordTaskProvider.map { graph.hasTask(it) })
         isVerifyRun.set(verifyTaskProvider.map { graph.hasTask(it) })
-        isCompareRun.set(verifyTaskProvider.zip(
-          compareReportGenerateTaskProvider
-        ) { verify, compare ->
-          graph.hasTask(verify) || graph.hasTask(compare)
-        })
+        isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
       }
 
       val testTaskProvider = project.tasks.named("test$testVariantSlug", Test::class.java) { test ->
@@ -134,7 +130,7 @@ class RoborazziPlugin : Plugin<Project> {
         }
       val reportFile =
         project.file(RoborazziReportConst.compareSummaryReportFilePath)
-      println("Save report to ${reportFile.absolutePath} with results:$results")
+      println("Save report to ${reportFile.absolutePath} with results:${results.size}")
 
       val jsonWriter = JsonWriter(
         reportFile.writer()
