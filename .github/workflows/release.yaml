@@ -33,4 +33,4 @@ jobs:
           max_attempts: 3
           retry_on: error
           timeout_minutes: 20
-          command: ./gradlew publish --stacktrace
+          command: ./gradlew publish --stacktrace --no-configuration-cache
