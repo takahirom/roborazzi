@@ -4,12 +4,15 @@ import android.util.JsonWriter
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import java.util.Locale
-import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
@@ -51,12 +54,15 @@ class RoborazziPlugin : Plugin<Project> {
           CompareReportGenerateTask::class.java
         ) {
           it.group = VERIFICATION_GROUP
+          it.inputDir.set(project.file(RoborazziReportConst.compareReportDirPath))
+          it.outputFile.set(project.file(RoborazziReportConst.compareSummaryReportFilePath))
         }
       compareVariants.configure { it.dependsOn(compareReportGenerateTaskProvider) }
 
       val verifyTaskProvider =
         project.tasks.register("verifyRoborazzi$variantSlug", VerifyTask::class.java) {
           it.group = VERIFICATION_GROUP
+          it.inputFile.set(project.file(RoborazziReportConst.compareSummaryReportFilePath))
         }
       verifyVariants.configure { it.dependsOn(verifyTaskProvider) }
 
@@ -79,23 +85,18 @@ class RoborazziPlugin : Plugin<Project> {
 
         val roborazziProperties =
           project.properties.filterKeys { it.startsWith("io.github.takahirom.roborazzi") }
+        val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
 
-        @Suppress("ObjectLiteralToLambda")
-        // why not a lambda?  See: https://docs.gradle.org/7.2/userguide/validation_problems.html#implementation_unknown
-        test.doFirst(object : Action<Task> {
-          override fun execute(t: Task) {
-            test.systemProperties["roborazzi.test.record"] = isRecordRun.get()
-            test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
-            test.systemProperties["roborazzi.test.verify"] = isVerifyRun.get()
-            test.systemProperties.putAll(roborazziProperties)
-            if (isCompareRun.get()) {
-              val roborazziReportConst = RoborazziReportConst
-              val compareReportDir = project.file(roborazziReportConst.compareReportDirPath)
-              compareReportDir.deleteRecursively()
-              compareReportDir.mkdirs()
-            }
+        test.doFirst {
+          test.systemProperties["roborazzi.test.record"] = isRecordRun.get()
+          test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
+          test.systemProperties["roborazzi.test.verify"] = isVerifyRun.get()
+          test.systemProperties.putAll(roborazziProperties)
+          if (isCompareRun.get()) {
+            compareReportDir.deleteRecursively()
+            compareReportDir.mkdirs()
           }
-        })
+        }
       }
 
       recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
@@ -117,11 +118,18 @@ class RoborazziPlugin : Plugin<Project> {
     }
   }
 
-  open class CompareReportGenerateTask : RoborazziTask() {
+  abstract class CompareReportGenerateTask : RoborazziTask() {
+
+    @get:InputDirectory
+    abstract val inputDir: DirectoryProperty
+
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
+
     @TaskAction
     fun doWork() {
       val results: List<CompareReportCaptureResult> =
-        project.file(RoborazziReportConst.compareReportDirPath).listFiles().orEmpty().mapNotNull {
+        inputDir.asFileTree.mapNotNull {
           if (it.name.endsWith(".json")) {
             CompareReportCaptureResult.fromJsonFile(it.path)
           } else {
@@ -129,7 +137,7 @@ class RoborazziPlugin : Plugin<Project> {
           }
         }
       val reportFile =
-        project.file(RoborazziReportConst.compareSummaryReportFilePath)
+        outputFile.asFile.get()
       println("Save report to ${reportFile.absolutePath} with results:${results.size}")
 
       val jsonWriter = JsonWriter(
@@ -155,11 +163,15 @@ class RoborazziPlugin : Plugin<Project> {
     }
   }
 
-  open class VerifyTask : RoborazziTask() {
+  abstract class VerifyTask : RoborazziTask() {
+
+    @get:InputFile
+    abstract val inputFile: RegularFileProperty
+
     @TaskAction
     fun doWork() {
       val reportFile =
-        project.file(RoborazziReportConst.compareSummaryReportFilePath)
+        inputFile.asFile.get()
 
       val reportResult = CompareReportResult.fromJsonFile(reportFile.absolutePath)
       if (reportResult.summary.total != reportResult.summary.unchanged) {
