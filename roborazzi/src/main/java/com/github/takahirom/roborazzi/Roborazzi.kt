@@ -465,7 +465,7 @@ private fun saveOrCompare(
         timestampNs = System.nanoTime(),
       )
     }.let {
-      roborazziOptions.compareOptions.roborazziTestReporter.report(it)
+      roborazziOptions.compareOptions.roborazziCompareReporter.report(it)
     }
   } else {
     // roborazzi.record is checked before

@@ -211,34 +211,34 @@ data class RoborazziOptions(
   }
 
   data class CompareOptions(
-    val roborazziTestReporter: RoborazziTestReporter = RoborazziTestReporter(),
+    val roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
-      roborazziTestReporter: RoborazziTestReporter = RoborazziTestReporter(),
+      roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
       /**
        * This value determines the threshold of pixel change at which the diff image is output or not.
        * The value should be between 0 and 1
        */
       changeThreshold: Float = 0.01F,
-    ) : this(roborazziTestReporter, ThresholdValidator(changeThreshold))
+    ) : this(roborazziCompareReporter, ThresholdValidator(changeThreshold))
   }
 
-  interface RoborazziTestReporter {
+  interface RoborazziCompareReporter {
     fun report(compareReportCaptureResult: CompareReportCaptureResult)
 
     companion object {
-      operator fun invoke(): RoborazziTestReporter {
+      operator fun invoke(): RoborazziCompareReporter {
         return if (roborazziVerifyEnabled()) {
-          VerifyRoborazziTestReporter()
+          VerifyRoborazziCompareReporter()
         } else {
-          JsonOutputRoborazziTestReporter()
+          JsonOutputRoborazziCompareReporter()
 
         }
       }
     }
 
-    class JsonOutputRoborazziTestReporter : RoborazziTestReporter {
+    class JsonOutputRoborazziCompareReporter : RoborazziCompareReporter {
 
       init {
         File(RoborazziReportConst.compareReportDirPath).mkdirs()
@@ -264,7 +264,7 @@ data class RoborazziOptions(
       }
     }
 
-    class VerifyRoborazziTestReporter : RoborazziTestReporter {
+    class VerifyRoborazziCompareReporter : RoborazziCompareReporter {
       override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
         when (compareReportCaptureResult) {
           is CompareReportCaptureResult.Added -> throw AssertionError(
