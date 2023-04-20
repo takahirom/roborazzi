@@ -412,8 +412,6 @@ private fun saveOrCompare(
   roborazziOptions: RoborazziOptions
 ) {
   val resizeScale = roborazziOptions.recordOptions.resizeScale
-  println(roborazziCompareEnabled())
-
   if (roborazziCompareEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
     val height = (canvas.croppedHeight * resizeScale).toInt()
