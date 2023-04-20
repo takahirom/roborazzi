@@ -34,6 +34,10 @@ fun roborazziCompareEnabled(): Boolean {
   return System.getProperty("roborazzi.test.compare") == "true"
 }
 
+fun roborazziVerifyEnabled(): Boolean {
+  return System.getProperty("roborazzi.test.verify") == "true"
+}
+
 fun roborazziRecordingEnabled(): Boolean {
   return System.getProperty("roborazzi.test.record") == "true"
 }
@@ -443,6 +447,12 @@ private fun saveOrCompare(
           file = compareFilePath,
           resizeScale = resizeScale
         )
+      if (roborazziVerifyEnabled()) {
+        throw AssertionError(
+          "Roborazzi: ${goaldenFile.absolutePath} is changed.\n" +
+            "See compare image at ${compareFilePath.absolutePath}"
+        )
+      }
       if (goaldenFile.exists()) {
         CompareReportCaptureResult.Changed(
           compareFile = compareFilePath,

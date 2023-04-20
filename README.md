@@ -20,7 +20,6 @@ And generate a json file that contains the diff information in `build/test-resul
 
 To verify the changes in the image, run `verifyRoborazziDebug` task. If the image is different from
 the one you are saving now, the test will fail.
-This task depends on `compareRoborazziDebug` task.
 
 ```
  ./gradlew verifyRoborazziDebug
