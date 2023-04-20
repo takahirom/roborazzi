@@ -447,12 +447,6 @@ private fun saveOrCompare(
           file = compareFilePath,
           resizeScale = resizeScale
         )
-      if (roborazziVerifyEnabled()) {
-        throw AssertionError(
-          "Roborazzi: ${goaldenFile.absolutePath} is changed.\n" +
-            "See compare image at ${compareFilePath.absolutePath}"
-        )
-      }
       if (goaldenFile.exists()) {
         CompareReportCaptureResult.Changed(
           compareFile = compareFilePath,
@@ -471,7 +465,7 @@ private fun saveOrCompare(
         timestampNs = System.nanoTime(),
       )
     }.let {
-      roborazziOptions.compareOptions.reporter.report(it)
+      roborazziOptions.compareOptions.roborazziTestReporter.report(it)
     }
   } else {
     // roborazzi.record is checked before

@@ -44,8 +44,6 @@ val hasCompose = try {
 }
 
 sealed interface RoboComponent {
-  val image: Bitmap?
-
   class View(
     view: android.view.View,
     roborazziOptions: RoborazziOptions,
@@ -111,6 +109,7 @@ sealed interface RoboComponent {
     }
   }
 
+  val image: Bitmap?
   val rect: Rect
   val children: List<RoboComponent>
   val text: String
@@ -212,46 +211,76 @@ data class RoborazziOptions(
   }
 
   data class CompareOptions(
-    val reporter: Reporter = DefaultReporter(),
-    /**
-     * This value determines the threshold of pixel change at which the diff image is output or not.
-     * The value should be between 0 and 1
-     */
+    val roborazziTestReporter: RoborazziTestReporter = RoborazziTestReporter(),
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
-      reporter: Reporter = DefaultReporter(),
+      roborazziTestReporter: RoborazziTestReporter = RoborazziTestReporter(),
+      /**
+       * This value determines the threshold of pixel change at which the diff image is output or not.
+       * The value should be between 0 and 1
+       */
       changeThreshold: Float = 0.01F,
-    ) : this(reporter, ThresholdValidator(changeThreshold))
+    ) : this(roborazziTestReporter, ThresholdValidator(changeThreshold))
   }
 
-  interface Reporter {
+  interface RoborazziTestReporter {
     fun report(compareReportCaptureResult: CompareReportCaptureResult)
-  }
 
-  class DefaultReporter : Reporter {
+    companion object {
+      operator fun invoke(): RoborazziTestReporter {
+        return if (roborazziVerifyEnabled()) {
+          VerifyRoborazziTestReporter()
+        } else {
+          JsonOutputRoborazziTestReporter()
 
-    init {
-      File(RoborazziReportConst.compareReportDirPath).mkdirs()
+        }
+      }
     }
 
-    override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
-      val absolutePath = File(RoborazziReportConst.compareReportDirPath).absolutePath
-      val nameWithoutExtension = when (compareReportCaptureResult) {
-        is CompareReportCaptureResult.Added -> compareReportCaptureResult.compareFile
-        is CompareReportCaptureResult.Changed -> compareReportCaptureResult.goldenFile
-        is CompareReportCaptureResult.Unchanged -> compareReportCaptureResult.goldenFile
-      }.nameWithoutExtension
-      val reportFileName =
-        "$absolutePath/${compareReportCaptureResult.timestampNs}_$nameWithoutExtension.json"
-      val fileWriter = FileWriter(
-        reportFileName,
-        true
-      )
-      JsonWriter(fileWriter).use { writer ->
-        compareReportCaptureResult.writeJson(writer)
+    class JsonOutputRoborazziTestReporter : RoborazziTestReporter {
+
+      init {
+        File(RoborazziReportConst.compareReportDirPath).mkdirs()
       }
-      fileWriter.close()
+
+      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
+        val absolutePath = File(RoborazziReportConst.compareReportDirPath).absolutePath
+        val nameWithoutExtension = when (compareReportCaptureResult) {
+          is CompareReportCaptureResult.Added -> compareReportCaptureResult.compareFile
+          is CompareReportCaptureResult.Changed -> compareReportCaptureResult.goldenFile
+          is CompareReportCaptureResult.Unchanged -> compareReportCaptureResult.goldenFile
+        }.nameWithoutExtension
+        val reportFileName =
+          "$absolutePath/${compareReportCaptureResult.timestampNs}_$nameWithoutExtension.json"
+        val fileWriter = FileWriter(
+          reportFileName,
+          true
+        )
+        JsonWriter(fileWriter).use { writer ->
+          compareReportCaptureResult.writeJson(writer)
+        }
+        fileWriter.close()
+      }
+    }
+
+    class VerifyRoborazziTestReporter : RoborazziTestReporter {
+      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
+        when (compareReportCaptureResult) {
+          is CompareReportCaptureResult.Added -> throw AssertionError(
+            "Roborazzi: ${compareReportCaptureResult.compareFile.absolutePath} is added.\n" +
+              "See compare image at ${compareReportCaptureResult.compareFile.absolutePath}"
+          )
+
+          is CompareReportCaptureResult.Changed -> throw AssertionError(
+            "Roborazzi: ${compareReportCaptureResult.goldenFile.absolutePath} is changed.\n" +
+              "See compare image at ${compareReportCaptureResult.compareFile.absolutePath}"
+          )
+
+          is CompareReportCaptureResult.Unchanged -> {
+          }
+        }
+      }
     }
   }
 
