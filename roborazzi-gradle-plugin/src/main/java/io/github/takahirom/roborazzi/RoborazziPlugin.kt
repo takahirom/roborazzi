@@ -5,13 +5,11 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import java.util.Locale
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
@@ -60,9 +58,8 @@ class RoborazziPlugin : Plugin<Project> {
       compareVariants.configure { it.dependsOn(compareReportGenerateTaskProvider) }
 
       val verifyTaskProvider =
-        project.tasks.register("verifyRoborazzi$variantSlug", VerifyTask::class.java) {
+        project.tasks.register("verifyRoborazzi$variantSlug", RoborazziTask::class.java) {
           it.group = VERIFICATION_GROUP
-          it.inputFile.set(project.file(RoborazziReportConst.compareSummaryReportFilePath))
         }
       verifyVariants.configure { it.dependsOn(verifyTaskProvider) }
 
@@ -101,7 +98,7 @@ class RoborazziPlugin : Plugin<Project> {
 
       recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
       compareReportGenerateTaskProvider.configure { it.dependsOn(testTaskProvider) }
-      verifyTaskProvider.configure { it.dependsOn(compareReportGenerateTaskProvider) }
+      verifyTaskProvider.configure { it.dependsOn(testTaskProvider) }
     }
   }
 
@@ -159,27 +156,6 @@ class RoborazziPlugin : Plugin<Project> {
         }
         writer.endArray()
         writer.endObject()
-      }
-    }
-  }
-
-  abstract class VerifyTask : RoborazziTask() {
-
-    @get:InputFile
-    abstract val inputFile: RegularFileProperty
-
-    @TaskAction
-    fun doWork() {
-      val reportFile =
-        inputFile.asFile.get()
-
-      val reportResult = CompareReportResult.fromJsonFile(reportFile.absolutePath)
-      if (reportResult.summary.total != reportResult.summary.unchanged) {
-        throw GradleException(
-          "Roborazzi verification failed. " +
-            "See ${reportFile.absolutePath} for details.\n" +
-            "Changes: ${reportResult.compareReportCaptureResults.filter { it !is CompareReportCaptureResult.Unchanged }}"
-        )
       }
     }
   }

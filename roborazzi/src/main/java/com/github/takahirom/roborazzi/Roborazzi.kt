@@ -34,6 +34,10 @@ fun roborazziCompareEnabled(): Boolean {
   return System.getProperty("roborazzi.test.compare") == "true"
 }
 
+fun roborazziVerifyEnabled(): Boolean {
+  return System.getProperty("roborazzi.test.verify") == "true"
+}
+
 fun roborazziRecordingEnabled(): Boolean {
   return System.getProperty("roborazzi.test.record") == "true"
 }
@@ -461,7 +465,7 @@ private fun saveOrCompare(
         timestampNs = System.nanoTime(),
       )
     }.let {
-      roborazziOptions.compareOptions.reporter.report(it)
+      roborazziOptions.compareOptions.roborazziCompareReporter.report(it)
     }
   } else {
     // roborazzi.record is checked before
