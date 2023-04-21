@@ -45,7 +45,7 @@ jobs:
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
           echo '<resources><string name="first_fragment_label">This is verify test screen! Verify me!</string></resources>' > app/src/main/res/values/strings_for_test.xml
-          ./gradlew app:verifyRoborazziDebug --stacktrace
+          ./gradlew app:verifyRoborazziDebug --stacktrace --continue
           if [ $? -eq 0 ]; then
             echo "Gradle tests succeeded. The verify task should fail. Reporting failure."
             exit 1
