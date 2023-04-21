@@ -88,7 +88,6 @@ class RoborazziPlugin : Plugin<Project> {
           test.systemProperties["roborazzi.test.record"] = isRecordRun.get()
           test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
           test.systemProperties["roborazzi.test.verify"] = isVerifyRun.get()
-          println("Roborazzi roborazziProperties:"+roborazziProperties)
           test.systemProperties.putAll(roborazziProperties)
           if (isCompareRun.get()) {
             compareReportDir.deleteRecursively()
