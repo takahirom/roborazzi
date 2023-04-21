@@ -1,10 +1,15 @@
 package com.github.takahirom.roborazzi.sample
 
+import android.graphics.Bitmap
+import android.view.View
+import androidx.compose.material3.Text
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onParent
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.core.graphics.applyCanvas
+import androidx.core.graphics.createBitmap
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -25,7 +30,6 @@ import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
@@ -58,6 +62,21 @@ class ManualTest {
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
+
+    composeTestRule.activity.findViewById<View>(R.id.button_second)
+      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_view_button_second_by_view.png")
+
+    captureRoboImage {
+      Text("Hello Compose!")
+    }
+
+    createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+      .apply {
+        applyCanvas {
+          drawColor(android.graphics.Color.RED)
+        }
+      }
+      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_view_button_second_by_bitmap.png")
   }
 
   @Test

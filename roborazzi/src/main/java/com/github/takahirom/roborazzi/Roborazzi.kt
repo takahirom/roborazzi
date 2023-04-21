@@ -2,15 +2,24 @@ package com.github.takahirom.roborazzi
 
 import android.app.Activity
 import android.app.Application
+import android.graphics.Bitmap
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.view.doOnNextLayout
+import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
@@ -21,6 +30,7 @@ import java.io.File
 import java.util.Locale
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
+import org.hamcrest.core.IsEqual
 
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
@@ -70,6 +80,85 @@ fun ViewInteraction.captureRoboImage(
     saveOrCompare(canvas, file, roborazziOptions)
     canvas.release()
   })
+}
+
+fun View.captureRoboImage(
+  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+) {
+  if (!roborazziEnabled()) return
+  captureRoboImage(
+    file = File(filePath),
+    roborazziOptions = roborazziOptions
+  )
+}
+
+fun View.captureRoboImage(
+  file: File,
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+) {
+  if (!roborazziEnabled()) return
+  onView(IsEqual(this)).captureRoboImage(
+    file = file,
+    roborazziOptions = roborazziOptions
+  )
+}
+
+fun Bitmap.captureRoboImage(
+  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+) {
+  if (!roborazziEnabled()) return
+  captureRoboImage(
+    file = File(filePath),
+    roborazziOptions = roborazziOptions
+  )
+}
+fun Bitmap.captureRoboImage(
+  file: File,
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+) {
+  if (!roborazziEnabled()) return
+  val image = this
+  val canvas =
+    RoboCanvas(width = image.width, height = image.height, true).apply {
+      drawImage(Rect(0, 0, image.width, image.height), image)
+    }
+  saveOrCompare(canvas, file, roborazziOptions)
+  canvas.release()
+}
+
+fun captureRoboImage(
+  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  content: @Composable () -> Unit,
+) {
+  captureRoboImage(
+    file = File(filePath),
+    roborazziOptions = roborazziOptions,
+    content = content
+  )
+}
+
+fun captureRoboImage(
+  file: File,
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  content: @Composable () -> Unit,
+) {
+  if (!roborazziEnabled()) return
+  val activityScenario = ActivityScenario.launch(ComponentActivity::class.java)
+  activityScenario.onActivity { activity ->
+    activity.setContent {
+      content()
+    }
+    val composeView = activity.window.decorView
+      .findViewById<ViewGroup>(android.R.id.content)
+      .getChildAt(0) as ComposeView
+    val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
+    val semanticsOwner = viewRootForTest.semanticsOwner
+    semanticsOwner.rootSemanticsNode
+    viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+  }
 }
 
 fun ViewInteraction.captureRoboGif(
