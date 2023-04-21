@@ -31,7 +31,7 @@ jobs:
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
           echo '<resources><string name="first_fragment_label">This is verify test screen! Verify me!</string></resources>' > app/src/main/res/values/strings_for_test.xml
           ./gradlew app:compareRoborazziDebug --stacktrace
-          // Check if there are difference with app/build/outputs/roborazzi/test_compare.png
+          # Check if there are difference with app/build/outputs/roborazzi/test_compare.png
           file_path="app/build/outputs/roborazzi/com_github_takahirom_roborazzi_sample_ManualTest_captureRoboImageSample_compare.png"
           if [ ! -f "$file_path" ]; then
             echo "Error: File $file_path not found."
