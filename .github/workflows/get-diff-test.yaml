@@ -57,14 +57,16 @@ jobs:
           ./gradlew app:verifyRoborazziDebug --stacktrace
           if [ $? -eq 0 ]; then
             echo "Gradle tests succeeded. The verify task should fail. Reporting failure."
+            echo "::set-output name=gradle_failed::true"
             exit 1
           else
             echo "Gradle tests failed. Reporting success."
+            echo "::set-output name=gradle_failed::false"
             exit 0
           fi
 
       - name: Run shell script on Gradle failure
-        if: steps.verify-test.outputs.gradle_failed == 'true'
+        if: steps.verify-test.outcome == 'failure'
         run: |
           echo "Roborazzi should verify changes"
           exit 1
