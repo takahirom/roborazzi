@@ -1,5 +1,4 @@
 android {
-  namespace 'com.github.takahirom.roborazzi'
   compileSdk 33
 
   defaultConfig {
