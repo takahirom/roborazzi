@@ -114,16 +114,20 @@ fun Bitmap.captureRoboImage(
     roborazziOptions = roborazziOptions
   )
 }
+
 fun Bitmap.captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   if (!roborazziEnabled()) return
   val image = this
-  val canvas =
-    RoboCanvas(width = image.width, height = image.height, true).apply {
-      drawImage(Rect(0, 0, image.width, image.height), image)
-    }
+  val canvas = RoboCanvas(
+    width = image.width,
+    height = image.height,
+    filled = true
+  ).apply {
+    drawImage(Rect(0, 0, image.width, image.height), image)
+  }
   saveOrCompare(canvas, file, roborazziOptions)
   canvas.release()
 }
