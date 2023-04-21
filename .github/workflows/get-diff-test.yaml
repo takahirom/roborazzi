@@ -29,7 +29,7 @@ jobs:
       - name: compare test
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
-          echo '<resources><string name="first_fragment_label">This is compare test screen! Compare me!</string></resources>' > app/src/main/res/values/strings_for_test.xml
+          echo '<resources><string name="first_fragment_label">Hello! This is compare test screen! Compare me!</string></resources>' > app/src/main/res/values/strings_for_test.xml
           ./gradlew app:compareRoborazziDebug --stacktrace
           # Check if there are difference with app/build/outputs/roborazzi/test_compare.png
           find app/build/outputs/roborazzi
@@ -45,7 +45,7 @@ jobs:
       - name: verify test
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
-          echo '<resources><string name="first_fragment_label">This is verify test screen! Verify me!</string></resources>' > app/src/main/res/values/strings_for_test.xml
+          echo '<resources><string name="first_fragment_label">Hello! This is verify test screen! Verify me!</string></resources>' > app/src/main/res/values/strings_for_test.xml
           ./gradlew app:verifyRoborazziDebug --stacktrace --continue
           if [ $? -eq 0 ]; then
             echo "Gradle tests succeeded. The verify task should fail. Reporting failure."
