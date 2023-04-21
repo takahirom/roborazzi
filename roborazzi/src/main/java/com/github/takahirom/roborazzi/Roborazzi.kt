@@ -24,10 +24,18 @@ import org.hamcrest.Matchers
 
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
+var ROBORAZZI_DEBUG = false
 fun roborazziEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.record") == "true" ||
-    System.getProperty("roborazzi.test.verify") == "true" ||
-    System.getProperty("roborazzi.test.compare") == "true"
+  val isEnabled = roborazziRecordingEnabled() ||
+    roborazziCompareEnabled() ||
+    roborazziVerifyEnabled()
+  debugLog {
+    "roborazziEnabled: $isEnabled \n" +
+      "roborazziRecordingEnabled(): ${roborazziRecordingEnabled()}\n" +
+      "roborazziCompareEnabled(): ${roborazziCompareEnabled()}\n" +
+      "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n"
+  }
+  return isEnabled
 }
 
 fun roborazziCompareEnabled(): Boolean {
@@ -412,7 +420,7 @@ private fun saveOrCompare(
   roborazziOptions: RoborazziOptions
 ) {
   val resizeScale = roborazziOptions.recordOptions.resizeScale
-  if (roborazziCompareEnabled()) {
+  if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
     val height = (canvas.croppedHeight * resizeScale).toInt()
     val goldenRoboCanvas = if (goaldenFile.exists()) {
@@ -473,6 +481,12 @@ private fun saveOrCompare(
 
 private fun log(message: String) {
   println("Roborazzi: $message")
+}
+
+private inline fun debugLog(crossinline message: () -> String) {
+  if (ROBORAZZI_DEBUG) {
+    println("Roborazzi Debug: ${message()}")
+  }
 }
 
 private class ImageCaptureViewAction(
