@@ -30,6 +30,19 @@ jobs:
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
           ./gradlew app:compareRoborazziDebug --stacktrace
+
+      - name: verify test
+        run: |
+          ./gradlew roborazzi-gradle-plugin:build --stacktrace
+          echo '<resources><string name="first_fragment_label">This is verify test screen! Verify me!</string></resources>' > app/src/main/res/values/strings_for_test.xml
+          ./gradlew app:verifyRoborazziDebug --stacktrace
+          if [ $? -eq 0 ]; then
+            echo "Gradle tests succeeded. The verify task should fail. Reporting failure."
+            exit 1
+          else
+            echo "Gradle tests failed. Reporting success."
+            exit 0
+          fi
       - uses: actions/upload-artifact@v3
         with:
           name: screenshot-diff
