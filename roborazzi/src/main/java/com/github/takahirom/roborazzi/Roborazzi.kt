@@ -25,6 +25,10 @@ import org.hamcrest.Matchers
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 
+@RequiresOptIn("This Roborazzi API is experimental and is likely to be changed or removed entirely")
+annotation class RoborazziExperimetalApi
+
+@RoborazziExperimetalApi
 var ROBORAZZI_DEBUG = false
 fun roborazziEnabled(): Boolean {
   val isEnabled = roborazziRecordingEnabled() ||
@@ -39,14 +43,17 @@ fun roborazziEnabled(): Boolean {
   return isEnabled
 }
 
+@RoborazziExperimetalApi
 fun roborazziCompareEnabled(): Boolean {
   return System.getProperty("roborazzi.test.compare") == "true"
 }
 
+@RoborazziExperimetalApi
 fun roborazziVerifyEnabled(): Boolean {
   return System.getProperty("roborazzi.test.verify") == "true"
 }
 
+@RoborazziExperimetalApi
 fun roborazziRecordingEnabled(): Boolean {
   return System.getProperty("roborazzi.test.record") == "true"
 }
@@ -484,6 +491,7 @@ private fun log(message: String) {
   println("Roborazzi: $message")
 }
 
+@OptIn(RoborazziExperimetalApi::class)
 private inline fun debugLog(crossinline message: () -> String) {
   if (ROBORAZZI_DEBUG) {
     println("Roborazzi Debug: ${message()}")
