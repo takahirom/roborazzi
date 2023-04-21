@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-  namespace 'com.github.takahirom.roborazzi'
+  namespace 'com.github.takahirom.roborazzi.junit.rule'
   compileSdk 33
 
   defaultConfig {

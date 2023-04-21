@@ -6,6 +6,8 @@ plugins {
 // TODO: Use build-logic
 apply from: rootProject.file('gradle/android.gradle')
 
+android.namespace 'com.github.takahirom.roborazzi'
+
 dependencies {
   implementation project(':roborazzi-painter')
   implementation project(':roborazzi-core')
