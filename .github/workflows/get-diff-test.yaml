@@ -55,18 +55,9 @@ jobs:
             <string name="hello_first_fragment">Verify Hello first fragment</string>
           </resources>' > app/src/main/res/values/strings_for_test.xml
           ./gradlew app:verifyRoborazziDebug --stacktrace
-          if [ $? -eq 0 ]; then
-            echo "Gradle tests succeeded. The verify task should fail. Reporting failure."
-            echo "::set-output name=gradle_failed::true"
-            exit 1
-          else
-            echo "Gradle tests failed. Reporting success."
-            echo "::set-output name=gradle_failed::false"
-            exit 0
-          fi
 
       - name: Run shell script on Gradle failure
-        if: steps.verify-test.outcome == 'failure'
+        if: steps.verify-test.outcome == 'success'
         run: |
           echo "Roborazzi should verify changes"
           exit 1
