@@ -167,6 +167,110 @@ import com . github . takahirom . roborazzi . captureRoboImage
     }
 ```
 
+### Integrate to your GitHub Actions
+
+It is easy to integrate Roborazzi to your GitHub Actions.
+
+#### Add a job to store screenshots
+
+```yaml
+name: store screenshots
+
+on:
+  push
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx6g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+
+jobs:
+  test:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3.9.0
+        with:
+          distribution: 'zulu'
+          java-version: 19
+
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v2
+
+      - name: test
+        run: |
+          # Create screenshots
+          ./gradlew app:recordRoborazziDebug --stacktrace
+      
+      # Upload screenshots to GitHub Actions Artifacts
+      - uses: actions/upload-artifact@v3
+        with:
+          name: screenshots
+          path: app/build/outputs/roborazzi
+          retention-days: 30
+```
+
+#### Add a job to verify screenshots
+
+```yaml
+name: verify test
+
+on:
+  push
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx6g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+
+jobs:
+  test:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3.9.0
+        with:
+          distribution: 'zulu'
+          java-version: 19
+
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v2
+
+      # Download screenshots from main branch
+      - uses: dawidd6/action-download-artifact@v2
+        with:
+          name: screenshots
+          path: app/build/outputs/roborazzi
+          workflow: test.yaml
+          branch: main
+
+      - name: verify test
+        id: verify-test
+        run: |
+          # If there is a difference between the screenshots, the test will fail.
+          ./gradlew app:verifyRoborazziDebug --stacktrace
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: screenshot-diff
+          path: app/build/outputs/roborazzi
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: screenshot-diff-reports
+          path: app/build/reports
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: screenshot-diff-test-results
+          path: app/build/test-results
+          retention-days: 30
+
+```
+
 ### Generate gif automatically
 
 ```kotlin
