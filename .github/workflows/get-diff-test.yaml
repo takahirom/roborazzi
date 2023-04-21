@@ -46,13 +46,15 @@ jobs:
           fi
 
       - name: verify test
+        id: verify-test
+        continue-on-error: true
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
           echo '<resources>
             <string name="first_fragment_label">Hello! This is verify test screen! Verify me!</string>
             <string name="hello_first_fragment">Verify Hello first fragment</string>
           </resources>' > app/src/main/res/values/strings_for_test.xml
-          ./gradlew app:verifyRoborazziDebug --stacktrace --continue
+          ./gradlew app:verifyRoborazziDebug --stacktrace
           if [ $? -eq 0 ]; then
             echo "Gradle tests succeeded. The verify task should fail. Reporting failure."
             exit 1
@@ -60,6 +62,13 @@ jobs:
             echo "Gradle tests failed. Reporting success."
             exit 0
           fi
+
+      - name: Run shell script on Gradle failure
+        if: steps.verify-test.outputs.gradle_failed == 'true'
+        run: |
+          echo "Roborazzi should verify changes"
+          exit 1
+
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
