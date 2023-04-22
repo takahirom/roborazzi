@@ -23,13 +23,13 @@ import androidx.core.graphics.withClip
 import kotlin.math.min
 
 
-fun View.fetchImage(fullScreen: Boolean): Bitmap? {
+fun View.fetchImage(applyDeviceCrop: Boolean): Bitmap? {
   if (this.width <= 0 || this.height <= 0) return null
   val bitmapFuture = ResolvableFuture.create<Bitmap>()
   generateBitmap(bitmapFuture)
   val bitmap = bitmapFuture.get()
 
-  return if (fullScreen) {
+  return if (applyDeviceCrop) {
     bitmap?.applyDeviceCrop(resources.configuration)
   } else {
     bitmap
