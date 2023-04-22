@@ -152,7 +152,7 @@ class ManualTest {
           // build/outputs/roborazzi/com_..._ManualTest_captureRoboImageSample.png
           .captureRoboImage()
 
-      // Capture Jetpack Compose
+      // Capture Jetpack Compose Node
       composeTestRule.onNodeWithTag("MyComposeButton")
           .onParent()
           .captureRoboImage("build/compose.png")
@@ -165,29 +165,30 @@ class ManualTest {
       onView(withId(R.id.button_first))
           .perform(click())
 
+      val view: View = composeTestRule.activity.findViewById<View>(R.id.button_second)
       // Capture view on window
-      composeTestRule.activity.findViewById<View>(R.id.button_second)
-          .captureRoboImage("build/manual_view_on_window.png")
+      view.captureRoboImage("build/manual_view_on_window.png")
 
-      // Capture view not on window
-      TextView(composeTestRule.activity).apply {
+      val textView = TextView(composeTestRule.activity).apply {
         text = "Hello View!"
         setTextColor(android.graphics.Color.RED)
-      }.captureRoboImage("build/manual_view_without_window.png")
+      }
+      // Capture view not on window
+      textView.captureRoboImage("build/manual_view_without_window.png")
 
-      // Capture compose lambda
+      // Capture Jetpack Compose lambda
       captureRoboImage("build/manual_compose.png") {
         Text("Hello Compose!")
       }
 
-      // Capture Bitmap
-      createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+      val bitmap: Bitmap = createBitmap(100, 100, Bitmap.Config.ARGB_8888)
           .apply {
             applyCanvas {
               drawColor(android.graphics.Color.YELLOW)
             }
           }
-          .captureRoboImage("build/manual_bitmap.png") 
+      // Capture Bitmap
+      bitmap.captureRoboImage("build/manual_bitmap.png") 
     }
 }
 ```
