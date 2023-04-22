@@ -2,6 +2,8 @@ package com.github.takahirom.roborazzi
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.os.Bundle
@@ -18,6 +20,7 @@ import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.view.doOnNextLayout
+import androidx.core.view.drawToBitmap
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
@@ -98,10 +101,41 @@ fun View.captureRoboImage(
   roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   if (!roborazziEnabled()) return
-  onView(IsEqual(this)).captureRoboImage(
-    file = file,
-    roborazziOptions = roborazziOptions
-  )
+
+  val targetView = this@captureRoboImage
+  if (targetView.isAttachedToWindow) {
+    onView(IsEqual(targetView)).captureRoboImage(
+      file = file,
+      roborazziOptions = roborazziOptions
+    )
+  } else {
+    fun Context.getActivity(): Activity? {
+      if (this is Activity) return this
+      if (this is ContextWrapper) return baseContext.getActivity()
+      return null
+    }
+
+    val activity = requireNotNull(targetView.context.getActivity()) { "View should have Activity" }
+    val targetParent = targetView.parent as? ViewGroup
+    val layoutParams = targetView.layoutParams
+    targetParent?.removeView(targetView)
+
+    val viewGroup = activity.window.decorView
+      .findViewById(android.R.id.content) as ViewGroup
+    viewGroup.addView(
+      targetView, ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT
+      )
+    )
+    InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+
+    // If we use Espresso.onView(), the image will have window background color.
+    targetView.drawToBitmap().captureRoboImage(file, roborazziOptions)
+    viewGroup.removeView(targetView)
+
+    targetParent?.addView(targetView, layoutParams)
+  }
 }
 
 fun Bitmap.captureRoboImage(
