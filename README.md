@@ -62,7 +62,9 @@ add `@GraphicsMode(GraphicsMode.Mode.NATIVE)` to your test class.
 
 Roborazzi is available on maven central.
 
-root build.gradle
+This plugin simply creates Gradle tasks record, verify, compare and passes the configuration to the test.
+
+Define plugin in root build.gradle
 
 ```
 plugins {
@@ -71,7 +73,7 @@ plugins {
 }
 ```
 
-module build.gradle
+Apply plugin in module build.gradle
 
 ```
 plugins {
