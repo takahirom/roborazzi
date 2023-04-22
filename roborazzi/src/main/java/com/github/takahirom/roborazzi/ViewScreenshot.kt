@@ -3,8 +3,12 @@ package com.github.takahirom.roborazzi
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Rect
 import android.os.Build
 import android.os.Handler
@@ -15,13 +19,61 @@ import android.view.SurfaceView
 import android.view.View
 import android.view.Window
 import androidx.concurrent.futures.ResolvableFuture
+import androidx.core.graphics.withClip
+import kotlin.math.min
 
-fun View.fetchImage(): Bitmap? {
+
+fun View.fetchImage(applyDeviceCrop: Boolean): Bitmap? {
   if (this.width <= 0 || this.height <= 0) return null
   val bitmapFuture = ResolvableFuture.create<Bitmap>()
   generateBitmap(bitmapFuture)
   val bitmap = bitmapFuture.get()
-  return bitmap
+
+  return if (applyDeviceCrop) {
+    bitmap?.applyDeviceCrop(resources.configuration)
+  } else {
+    bitmap
+  }
+}
+
+internal fun Bitmap.applyDeviceCrop(
+  configuration: Configuration
+): Bitmap {
+  val isRoundCrop =
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 && configuration.isScreenRound
+
+  return if (isRoundCrop) {
+    cropRound()
+  } else {
+    this
+  }
+}
+
+internal fun Bitmap.cropRound(): Bitmap {
+  val newBitmap = Bitmap.createBitmap(this.width, this.height, Bitmap.Config.ARGB_8888)
+
+  val canvas = Canvas(newBitmap)
+  val paint = Paint().apply {
+    isAntiAlias = true
+  }
+  canvas.drawColor(Color.TRANSPARENT)
+
+  val width = canvas.width.toFloat()
+  val height = canvas.height.toFloat()
+  val path = Path().apply {
+    addCircle(
+      width / 2,
+      height / 2,
+      min(width / 2, height / 2),
+      Path.Direction.CCW
+    )
+  }
+
+  canvas.withClip(path) {
+    drawBitmap(this@cropRound, 0f, 0f, paint)
+  }
+
+  return newBitmap
 }
 
 // From AOSP: https://cs.android.com/androidx/android-test/+/master:core/java/androidx/test/core/view/WindowCapture.kt;drc=25e2f2b042b283eea3b7ced82fb3c6504b6cca63
