@@ -165,16 +165,16 @@ class ManualTest {
 
       // Capture view on window
       composeTestRule.activity.findViewById<View>(R.id.button_second)
-          .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_on_window.png")
+          .captureRoboImage("build/manual_view_on_window.png")
 
       // Capture view not on window
       TextView(composeTestRule.activity).apply {
         text = "Hello View!"
         setTextColor(android.graphics.Color.RED)
-      }.captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png")
+      }.captureRoboImage("build/manual_view_without_window.png")
 
       // Capture compose lambda
-      captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_compose.png") {
+      captureRoboImage("build/manual_compose.png") {
         Text("Hello Compose!")
       }
 
@@ -185,7 +185,7 @@ class ManualTest {
               drawColor(android.graphics.Color.YELLOW)
             }
           }
-          .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_bitmap.png") 
+          .captureRoboImage("build/manual_bitmap.png") 
     }
 }
 ```
