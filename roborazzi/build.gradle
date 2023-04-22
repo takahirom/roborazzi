@@ -5,6 +5,7 @@ plugins {
 
 // TODO: Use build-logic
 apply from: rootProject.file('gradle/android.gradle')
+android.buildFeatures.compose = true
 
 android.namespace 'com.github.takahirom.roborazzi'
 
@@ -15,11 +16,13 @@ dependencies {
   def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
   implementation composeBom
   compileOnly "androidx.compose.ui:ui"
+  compileOnly "androidx.activity:activity-compose:1.7.1"
+
   compileOnly "androidx.compose.ui:ui-test"
   compileOnly "androidx.compose.ui:ui-test-junit4"
 
   compileOnly "org.robolectric:robolectric:4.10"
-  implementation 'androidx.core:core-ktx:1.7.0'
+  implementation 'androidx.core:core-ktx:1.8.0'
   api "com.dropbox.differ:differ:0.0.1-alpha1"
 
   api 'androidx.test.espresso:espresso-core:3.5.1'

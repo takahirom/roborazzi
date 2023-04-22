@@ -1,10 +1,16 @@
 package com.github.takahirom.roborazzi.sample
 
+import android.graphics.Bitmap
+import android.view.View
+import android.widget.TextView
+import androidx.compose.material3.Text
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onParent
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.core.graphics.applyCanvas
+import androidx.core.graphics.createBitmap
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -25,7 +31,6 @@ import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
@@ -52,12 +57,36 @@ class ManualTest {
         roborazziOptions = RoborazziOptions(recordOptions = RoborazziOptions.RecordOptions(0.5))
       )
 
-    // move to next page
+    // move to next page with Espresso
     onView(withId(R.id.button_first))
       .perform(click())
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
+
+    // View on window
+    composeTestRule.activity.findViewById<View>(R.id.button_second)
+      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_on_window.png")
+
+    // View not on window
+    TextView(composeTestRule.activity).apply {
+      text = "Hello View!"
+      setTextColor(android.graphics.Color.RED)
+    }.captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png")
+
+    // Compose lambda
+    captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_compose.png") {
+      Text("Hello Compose!")
+    }
+
+    // Bitmap
+    createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+      .apply {
+        applyCanvas {
+          drawColor(android.graphics.Color.YELLOW)
+        }
+      }
+      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_bitmap.png")
   }
 
   @Test
