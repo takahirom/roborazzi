@@ -51,7 +51,7 @@ sealed interface RoboComponent {
     override val width: Int = view.width
     override val height: Int = view.height
     override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
-      view.fetchImage()
+      view.fetchImage(fullScreen = roborazziOptions.recordOptions.fullScreen)
     } else {
       null
     }
@@ -90,7 +90,7 @@ sealed interface RoboComponent {
     override val width: Int = node.layoutInfo.width
     override val height: Int = node.layoutInfo.height
     override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
-      node.fetchImage()
+      node.fetchImage(fullScreen = roborazziOptions.recordOptions.fullScreen)
     } else {
       null
     }
@@ -285,7 +285,8 @@ data class RoborazziOptions(
   }
 
   data class RecordOptions(
-    val resizeScale: Double = 1.0
+    val resizeScale: Double = 1.0,
+    val fullScreen: Boolean = true
   )
 
   internal val shouldTakeBitmap: Boolean = when (captureType) {
