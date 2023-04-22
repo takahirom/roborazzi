@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziRule
 import org.junit.Assert.*
 import org.junit.Rule
@@ -30,7 +31,17 @@ class ComposeTest {
   val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   @get:Rule
-  val roborazziRule = RoborazziRule(composeTestRule, composeTestRule.onRoot())
+  val roborazziRule = RoborazziRule(
+    composeRule = composeTestRule,
+    captureRoot = composeTestRule.onRoot(),
+    options = RoborazziRule.Options(
+      roborazziOptions = RoborazziOptions(
+        recordOptions = RoborazziOptions.RecordOptions(
+          applyDeviceCrop = true
+        )
+      )
+    )
+  )
 
   @Test
   fun composable() {
