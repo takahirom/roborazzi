@@ -1,9 +1,7 @@
 package com.github.takahirom.roborazzi.sample
 
-import android.app.AlertDialog
 import android.graphics.Bitmap
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -73,17 +71,6 @@ class ManualTest {
       text = "Hello View!"
       setTextColor(android.graphics.Color.RED)
     }.captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png")
-
-    AlertDialog.Builder(composeTestRule.activity)
-      .setTitle("title")
-      .setMessage("message")
-      .setView(View(composeTestRule.activity).apply {
-        layoutParams = ViewGroup.LayoutParams(100, 100)
-        setBackgroundColor(android.graphics.Color.GREEN)
-      })
-      .show()
-      .window!!.decorView
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_dialog.png")
 
     captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_compose.png") {
       Text("Hello Compose!")
