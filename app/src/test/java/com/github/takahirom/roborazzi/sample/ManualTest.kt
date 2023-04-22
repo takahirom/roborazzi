@@ -57,25 +57,29 @@ class ManualTest {
         roborazziOptions = RoborazziOptions(recordOptions = RoborazziOptions.RecordOptions(0.5))
       )
 
-    // move to next page
+    // move to next page with Espresso
     onView(withId(R.id.button_first))
       .perform(click())
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
 
+    // View on window
     composeTestRule.activity.findViewById<View>(R.id.button_second)
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_view_button_second_by_view.png")
+      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_on_window.png")
 
+    // View not on window
     TextView(composeTestRule.activity).apply {
       text = "Hello View!"
       setTextColor(android.graphics.Color.RED)
     }.captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png")
 
+    // Compose lambda
     captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_compose.png") {
       Text("Hello Compose!")
     }
 
+    // Bitmap
     createBitmap(100, 100, Bitmap.Config.ARGB_8888)
       .apply {
         applyCanvas {

@@ -125,14 +125,15 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.GraphicsMode
 
-...
-import com . github . takahirom . roborazzi . captureRoboImage
+// All you need to do is use the captureRoboImage function in the test!
+import com.github.takahirom.roborazzi.captureRoboImage
 
-  // Tips: You can use Robolectric while using AndroidJUnit4
-  @RunWith(AndroidJUnit4::class)
+
+// Tips: You can use Robolectric while using AndroidJUnit4
+@RunWith(AndroidJUnit4::class)
 // Enable Robolectric Native Graphics (RNG) 
-  @GraphicsMode(GraphicsMode.Mode.NATIVE)
-  class ManualTest {
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class ManualTest { 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
@@ -142,29 +143,51 @@ import com . github . takahirom . roborazzi . captureRoboImage
       // launch
       ActivitySenario.launch(MainActivity::class.java)
 
-      // screen level image
+      // Capture screen
       onView(ViewMatchers.isRoot())
-        // If you don't specify a screenshot file name, Roborazzi will automatically use the method name as the file name for you.
-        // The format of the file name will be as follows:
-        // build/outputs/roborazzi/com_..._ManualTest_captureRoboImageSample.png
-        .captureRoboImage()
+          // If you don't specify a screenshot file name, Roborazzi will automatically use the method name as the file name for you.
+          // The format of the file name will be as follows:
+          // build/outputs/roborazzi/com_..._ManualTest_captureRoboImageSample.png
+          .captureRoboImage()
 
-      // compose image
+      // Capture Jetpack Compose
       composeTestRule.onNodeWithTag("MyComposeButton")
-        .onParent()
-        .captureRoboImage("build/compose.png")
+          .onParent()
+          .captureRoboImage("build/compose.png")
 
-      // small component image
+      // Capture small view on window
       onView(withId(R.id.button_first))
-        .captureRoboImage("build/button.png")
+          .captureRoboImage("build/button.png")
 
       // move to next page
       onView(withId(R.id.button_first))
-        .perform(click())
+          .perform(click())
 
-      onView(ViewMatchers.isRoot())
-        .captureRoboImage("build/second_screen.png")
+      // Capture view on window
+      composeTestRule.activity.findViewById<View>(R.id.button_second)
+          .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_on_window.png")
+
+      // Capture view not on window
+      TextView(composeTestRule.activity).apply {
+        text = "Hello View!"
+        setTextColor(android.graphics.Color.RED)
+      }.captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png")
+
+      // Capture compose lambda
+      captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_compose.png") {
+        Text("Hello Compose!")
+      }
+
+      // Capture Bitmap
+      createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+          .apply {
+            applyCanvas {
+              drawColor(android.graphics.Color.YELLOW)
+            }
+          }
+          .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_bitmap.png") 
     }
+}
 ```
 
 ### Generate gif automatically
