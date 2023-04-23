@@ -289,7 +289,7 @@ data class RoborazziOptions(
   data class RecordOptions(
     val resizeScale: Double = 1.0,
     val applyDeviceCrop: Boolean = false,
-    val pixelBitConfig: PixelBitConfig = PixelBitConfig.Rgb565,
+    val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
   )
 
   enum class PixelBitConfig {
