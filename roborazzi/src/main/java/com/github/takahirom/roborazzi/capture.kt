@@ -51,7 +51,9 @@ sealed interface RoboComponent {
     override val width: Int = view.width
     override val height: Int = view.height
     override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
-      view.fetchImage(applyDeviceCrop = roborazziOptions.recordOptions.applyDeviceCrop)
+      view.fetchImage(
+        recordOptions = roborazziOptions.recordOptions,
+      )
     } else {
       null
     }
@@ -90,7 +92,7 @@ sealed interface RoboComponent {
     override val width: Int = node.layoutInfo.width
     override val height: Int = node.layoutInfo.height
     override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
-      node.fetchImage(applyDeviceCrop = roborazziOptions.recordOptions.applyDeviceCrop)
+      node.fetchImage(recordOptions = roborazziOptions.recordOptions)
     } else {
       null
     }
@@ -286,8 +288,28 @@ data class RoborazziOptions(
 
   data class RecordOptions(
     val resizeScale: Double = 1.0,
-    val applyDeviceCrop: Boolean = false
+    val applyDeviceCrop: Boolean = false,
+    val pixelBitConfig: PixelBitConfig = PixelBitConfig.Rgb565,
   )
+
+  enum class PixelBitConfig {
+    Argb8888,
+    Rgb565;
+
+    fun toBitmapConfig(): Bitmap.Config {
+      return when (this) {
+        Argb8888 -> Bitmap.Config.ARGB_8888
+        Rgb565 -> Bitmap.Config.RGB_565
+      }
+    }
+
+    fun toBufferedImageType(): Int {
+      return when (this) {
+        Argb8888 -> 2 // BufferedImage.TYPE_INT_ARGB
+        Rgb565 -> 8 // BufferedImage.TYPE_USHORT_565_RGB
+      }
+    }
+  }
 
   internal val shouldTakeBitmap: Boolean = when (captureType) {
     is CaptureType.Dump -> {
