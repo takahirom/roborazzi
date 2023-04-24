@@ -17,8 +17,8 @@ import java.io.File
 import javax.imageio.ImageIO
 
 
-class RoboCanvas(width: Int, height: Int, filled: Boolean) {
-  private val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_USHORT_565_RGB)
+class RoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: Int) {
+  private val bufferedImage = BufferedImage(width, height, bufferedImageType)
   val width: Int get() = bufferedImage.width
   val height: Int get() = bufferedImage.height
   val croppedWidth: Int get() = croppedImage.width
@@ -232,9 +232,14 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean) {
   }
 
   companion object {
-    fun load(file: File): RoboCanvas {
+    fun load(file: File, bufferedImageType: Int): RoboCanvas {
       val loadedImage: BufferedImage = ImageIO.read(file)
-      val roboCanvas = RoboCanvas(loadedImage.width, loadedImage.height, true)
+      val roboCanvas = RoboCanvas(
+        loadedImage.width,
+        height = loadedImage.height,
+        filled = true,
+        bufferedImageType = bufferedImageType
+      )
       roboCanvas.drawImage(loadedImage)
       return roboCanvas
     }
@@ -247,7 +252,8 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean) {
     fun generateCompareCanvas(
       goldenCanvas: RoboCanvas,
       newCanvas: RoboCanvas,
-      newCanvasResize: Double
+      newCanvasResize: Double,
+      bufferedImageType: Int
     ): RoboCanvas {
       newCanvas.drawPendingDraw()
       val image1 = goldenCanvas.bufferedImage
@@ -256,14 +262,19 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean) {
       val width = image1.width + diff.width + image2.width
       val height = image1.height.coerceAtLeast(diff.height).coerceAtLeast(image2.height)
 
-      val combined = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+      val combined = BufferedImage(width, height, bufferedImageType)
 
       val g = combined.createGraphics()
       g.drawImage(image1, 0, 0, null)
       g.drawImage(diff, image1.width, 0, null)
       g.drawImage(image2, image1.width + diff.width, 0, null)
       g.dispose()
-      return RoboCanvas(width, height, true).apply {
+      return RoboCanvas(
+        width = width,
+        height = height,
+        filled = true,
+        bufferedImageType = bufferedImageType
+      ).apply {
         drawImage(combined)
       }
     }

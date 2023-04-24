@@ -37,7 +37,8 @@ class ComposeTest {
     options = RoborazziRule.Options(
       roborazziOptions = RoborazziOptions(
         recordOptions = RoborazziOptions.RecordOptions(
-          applyDeviceCrop = true
+          applyDeviceCrop = true,
+          pixelBitConfig = RoborazziOptions.PixelBitConfig.Argb8888,
         )
       )
     )
