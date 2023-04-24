@@ -60,29 +60,19 @@ class GenerateQualifiersTest {
           val widthDp = (xDimension / (xdpi / 160)).toInt()
           val heightDp = (yDimension / (ydpi / 160)).toInt()
 
-          val densityQualifier = when (pixelDensity) {
-            "ldpi" -> "ldpi"
-            "mdpi" -> "mdpi"
-            "hdpi" -> "hdpi"
-            "xhdpi" -> "xhdpi"
-            "xxhdpi" -> "xxhdpi"
-            "xxxhdpi" -> "xxxhdpi"
-            else -> "unknown"
-          }
-
           val screenRatioQualifier = if (screenRatio == "long") "long" else "notlong"
           val shapeQualifier = if (xDimension == yDimension) "round" else "notround"
 
           val device = when (xmlFile.name) {
             "wear.xml" -> { "watch" }
-            else -> { "phone" }
+            else -> { "any" }
           }
           if(widthDp < heightDp) {
-            println ("const val ${name}Port = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-port-$device-$densityQualifier-keyshidden-$nav\"")
-            println ("const val ${name}Land = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-land-$device-$densityQualifier-keyshidden-$nav\"")
+            println ("const val ${name}Port = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-port-$device-$pixelDensity-keyshidden-$nav\"")
+            println ("const val ${name}Land = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-land-$device-$pixelDensity-keyshidden-$nav\"")
           } else {
-            println ("const val ${name}Land = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-land-$device-$densityQualifier-keyshidden-$nav\"")
-            println ("const val ${name}Port = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-port-$device-$densityQualifier-keyshidden-$nav\"")
+            println ("const val ${name}Land = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-land-$device-$pixelDensity-keyshidden-$nav\"")
+            println ("const val ${name}Port = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-port-$device-$pixelDensity-keyshidden-$nav\"")
           }
         }
       }
