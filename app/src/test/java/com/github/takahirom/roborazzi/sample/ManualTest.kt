@@ -39,7 +39,7 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
   sdk = [30],
-  qualifiers = RobolectricDeviceQualifiers.Nexus_OnePort
+  qualifiers = RobolectricDeviceQualifiers.NexusOnePort
 )
 class ManualTest {
   @get:Rule

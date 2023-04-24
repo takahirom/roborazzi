@@ -2,7 +2,6 @@ package com.github.takahirom.roborazzi
 
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
-import org.junit.Ignore
 import org.junit.Test
 import org.w3c.dom.Document
 import org.w3c.dom.Node
@@ -13,7 +12,7 @@ class GenerateQualifiersTest {
    * Before execute this. Please run `scripts/download_device_xml.sh`
    */
   @Test
-  @Ignore
+//  @Ignore
   fun generate() {
     println(File(".").absolutePath)
     val xmlFiles =
@@ -32,7 +31,7 @@ class GenerateQualifiersTest {
           // find device name
           val deviceNodes = device.childNodes.toList()
           val name = deviceNodes.first { it.nodeName == "d:name" }.textContent
-            .replace(" ", "_")
+            .replace(" ", "")
             .replace("(", "")
             .replace(")", "")
             .replace("'", "")
