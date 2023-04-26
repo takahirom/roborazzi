@@ -52,8 +52,13 @@ object RobolectricDeviceQualifiers {
               .replace("\"", "")
 
             if (name[0] in '0'..'9') return@device println("skip device:$name")
-            val skippingDevice = listOf("GalaxyNexus", "Pixel2", "Pixel3", "NexusS", "Pixel4")
-            if (skippingDevice.any { name.startsWith(it) }) {
+            val skippingDevicePrefixes =
+              listOf("GalaxyNexus", "Pixel2", "Pixel3", "NexusS", "Pixel4")
+            if (skippingDevicePrefixes.any { name.startsWith(it) }) {
+              return@device println("skip device:$name")
+            }
+            val skippingDevices = listOf("Nexus72012", "Pixel")
+            if (skippingDevices.any { name == it }) {
               return@device println("skip device:$name")
             }
 

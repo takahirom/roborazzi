@@ -15,7 +15,6 @@ object RobolectricDeviceQualifiers {
 
   // FROM: nexus.xml
   const val NexusOne = "w302dp-h503dp-normal-long-notround-any-hdpi-keyshidden-trackball"
-  const val Nexus72012 = "w656dp-h1024dp-large-notlong-notround-any-tvdpi-keyshidden-nonav"
   const val Nexus4 = "w384dp-h640dp-normal-notlong-notround-any-xhdpi-keyshidden-nonav"
   const val Nexus10 = "w1365dp-h853dp-xlarge-notlong-notround-any-xhdpi-keyshidden-nonav"
   const val Nexus7 = "w594dp-h951dp-large-notlong-notround-any-xhdpi-keyshidden-nonav"
@@ -25,7 +24,6 @@ object RobolectricDeviceQualifiers {
   const val Nexus5X = "w409dp-h724dp-normal-notlong-notround-any-420dpi-keyshidden-nonav"
   const val Nexus6P = "w428dp-h762dp-normal-notlong-notround-any-560dpi-keyshidden-nonav"
   const val PixelC = "w1329dp-h935dp-xlarge-notlong-notround-any-xhdpi-keyshidden-nonav"
-  const val Pixel = "w392dp-h697dp-normal-notlong-notround-any-420dpi-keyshidden-nonav"
   const val PixelXL = "w431dp-h766dp-normal-notlong-notround-any-560dpi-keyshidden-nonav"
   const val Pixel5 = "w390dp-h844dp-normal-long-notround-any-440dpi-keyshidden-nonav"
 
