@@ -2,7 +2,7 @@ package com.github.takahirom.roborazzi
 
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
-import org.junit.Ignore
+import kotlin.math.roundToInt
 import org.junit.Test
 import org.w3c.dom.Document
 import org.w3c.dom.Node
@@ -13,7 +13,7 @@ class GenerateQualifiersTest {
    * Before execute this. Please run `scripts/download_device_xml.sh`
    */
   @Test
-  @Ignore
+//  @Ignore
   fun generate() {
     println(File(".").absolutePath)
     val xmlFiles =
@@ -53,7 +53,16 @@ object RobolectricDeviceQualifiers {
 
             if (name[0] in '0'..'9') return@device println("skip device:$name")
             val skippingDevicePrefixes =
-              listOf("GalaxyNexus", "Pixel2", "Pixel3", "NexusS", "Pixel4")
+              listOf(
+                "GalaxyNexus",
+                "Pixel2",
+                "Pixel3",
+                "NexusS",
+                "Nexus10",
+                "Nexus4",
+                "Nexus5",
+                "Nexus6"
+              )
             if (skippingDevicePrefixes.any { name.startsWith(it) }) {
               return@device println("skip device:$name")
             }
@@ -72,13 +81,22 @@ object RobolectricDeviceQualifiers {
             val dimensions = screenNodes.first { it.nodeName == "d:dimensions" }.childNodes.toList()
             val xDimension = dimensions.first { it.nodeName == "d:x-dimension" }.textContent.toInt()
             val yDimension = dimensions.first { it.nodeName == "d:y-dimension" }.textContent.toInt()
-            val xdpi = screenNodes.first { it.nodeName == "d:xdpi" }.textContent.toDouble()
-            val ydpi = screenNodes.first { it.nodeName == "d:ydpi" }.textContent.toDouble()
 
             val nav = hardwareNodes.first { it.nodeName == "d:nav" }.textContent
+            val densityValue = when (pixelDensity) {
+              "ldpi" -> 120
+              "mdpi" -> 160
+              "hdpi" -> 240
+              "xhdpi" -> 320
+              "xxhdpi" -> 480
+              "xxxhdpi" -> 640
+              "tvdpi" -> 213
+              else -> pixelDensity.dropLast(3).toInt()
+            }.toDouble()
 
-            val widthDp = (xDimension / (xdpi / 160)).toInt()
-            val heightDp = (yDimension / (ydpi / 160)).toInt()
+
+            val widthDp = (xDimension / (densityValue / 160)).roundToInt()
+            val heightDp = (yDimension / (densityValue / 160)).roundToInt()
 
             val screenRatioQualifier = if (screenRatio == "long") "long" else "notlong"
             val shapeQualifier = if (xDimension == yDimension) "round" else "notround"
