@@ -571,13 +571,25 @@ private fun saveOrCompare(
         goaldenFile.parent,
         goaldenFile.nameWithoutExtension + "_compare." + goaldenFile.extension
       )
-      RoboCanvas.generateCompareCanvas(
+      val compareCanvas = RoboCanvas.generateCompareCanvas(
         goldenCanvas = goldenRoboCanvas,
         newCanvas = canvas,
         newCanvasResize = resizeScale
       )
+      compareCanvas
         .save(
           file = compareFilePath,
+          resizeScale = resizeScale
+        )
+      compareCanvas.release()
+
+      val actualFilePath = File(
+        goaldenFile.parent,
+        goaldenFile.nameWithoutExtension + "_actual." + goaldenFile.extension
+      )
+      canvas
+        .save(
+          file = actualFilePath,
           resizeScale = resizeScale
         )
       if (goaldenFile.exists()) {
