@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.math.roundToInt
+import org.junit.Ignore
 import org.junit.Test
 import org.w3c.dom.Document
 import org.w3c.dom.Node
@@ -13,7 +14,7 @@ class GenerateQualifiersTest {
    * Before execute this. Please run `scripts/download_device_xml.sh`
    */
   @Test
-//  @Ignore
+  @Ignore
   fun generate() {
     println(File(".").absolutePath)
     val xmlFiles =
