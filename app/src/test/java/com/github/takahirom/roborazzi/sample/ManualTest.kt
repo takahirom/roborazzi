@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 import com.github.takahirom.roborazzi.RoboComponent
+import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
@@ -31,15 +32,20 @@ import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(
+  sdk = [30],
+  qualifiers = RobolectricDeviceQualifiers.NexusOne
+)
 class ManualTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-  @Test
+  @Test @Config(qualifiers = "+land")
   fun captureRoboImageSample() {
     // screen level image
     onView(ViewMatchers.isRoot())
