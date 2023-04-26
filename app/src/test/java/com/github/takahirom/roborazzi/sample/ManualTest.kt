@@ -39,13 +39,13 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
   sdk = [30],
-  qualifiers = RobolectricDeviceQualifiers.NexusOnePort
+  qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
 class ManualTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-  @Test
+  @Test @Config(qualifiers = "+land")
   fun captureRoboImageSample() {
     // screen level image
     onView(ViewMatchers.isRoot())

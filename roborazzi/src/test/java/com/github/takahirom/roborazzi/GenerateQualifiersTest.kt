@@ -39,7 +39,7 @@ object RobolectricDeviceQualifiers {
           val devices = document.getElementsByTagName("d:device").toList()
 
           appendLine("// FROM: ${xmlFile.name}")
-          devices.forEach { device ->
+          devices.forEach device@{ device ->
             // find device name
             val deviceNodes = device.childNodes.toList()
             val name = deviceNodes.first { it.nodeName == "d:name" }.textContent
@@ -50,9 +50,12 @@ object RobolectricDeviceQualifiers {
               .replace("-", "")
               .replace(".", "")
               .replace("\"", "")
-              .let {
-                if (it[0] in '0'..'9') "Device$it" else it
-              }
+
+            if (name[0] in '0'..'9') return@device println("skip device:$name")
+            val skippingDevice = listOf("GalaxyNexus", "Pixel2", "Pixel3", "NexusS", "Pixel4")
+            if (skippingDevice.any { name.startsWith(it) }) {
+              return@device println("skip device:$name")
+            }
 
             val hardwareNodes =
               deviceNodes.first { it.nodeName == "d:hardware" }.childNodes.toList()
@@ -92,13 +95,7 @@ object RobolectricDeviceQualifiers {
                 "any"
               }
             }
-            if (widthDp < heightDp) {
-              appendLine("const val ${name}Port = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-port-$device-$pixelDensity-keyshidden-$nav\"")
-              appendLine("const val ${name}Land = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-land-$device-$pixelDensity-keyshidden-$nav\"")
-            } else {
-              appendLine("const val ${name}Land = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-land-$device-$pixelDensity-keyshidden-$nav\"")
-              appendLine("const val ${name}Port = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-port-$device-$pixelDensity-keyshidden-$nav\"")
-            }
+            appendLine("const val ${name} = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-$device-$pixelDensity-keyshidden-$nav\"")
           }
         }
       appendLine("}")
