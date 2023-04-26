@@ -546,6 +546,12 @@ private fun saveOrCompare(
   goaldenFile: File,
   roborazziOptions: RoborazziOptions
 ) {
+  val forbiddenFileSuffixes = listOf("_compare", "_actual")
+  forbiddenFileSuffixes.forEach {
+    if (goaldenFile.nameWithoutExtension.endsWith(it)) {
+      throw IllegalArgumentException("The file name should not end with $it because it is reserved for Roborazzi")
+    }
+  }
   val resizeScale = roborazziOptions.recordOptions.resizeScale
   if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
