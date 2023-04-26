@@ -15,7 +15,7 @@ import androidx.compose.ui.test.InternalTestApi
 import androidx.compose.ui.window.DialogWindowProvider
 import kotlin.math.roundToInt
 
-fun SemanticsNode.fetchImage(applyDeviceCrop: Boolean): Bitmap? {
+fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
   val node = this
   val view = (node.root as ViewRootForTest).view
 
@@ -26,7 +26,7 @@ fun SemanticsNode.fetchImage(applyDeviceCrop: Boolean): Bitmap? {
     nodeBounds.right.roundToInt(),
     nodeBounds.bottom.roundToInt()
   )
-  return view.fetchImage(applyDeviceCrop = applyDeviceCrop)?.crop(nodeBoundsRect)
+  return view.fetchImage(recordOptions = recordOptions)?.crop(nodeBoundsRect)
 }
 
 

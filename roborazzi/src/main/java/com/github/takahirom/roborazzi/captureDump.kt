@@ -7,20 +7,22 @@ import android.text.TextPaint
 import kotlin.math.abs
 internal fun captureDump(
   rootComponent: RoboComponent,
-  roborazziOptions: RoborazziOptions.CaptureType.Dump,
+  dumpOptions: RoborazziOptions.CaptureType.Dump,
+  recordOptions: RoborazziOptions.RecordOptions,
   onCanvas: (RoboCanvas) -> Unit
 ) {
   val start = System.currentTimeMillis()
-  val basicSize = roborazziOptions.basicSize
-  val depthSlide = roborazziOptions.depthSlideSize
+  val basicSize = dumpOptions.basicSize
+  val depthSlide = dumpOptions.depthSlideSize
 
   val deepestDepth = rootComponent.depth()
   val componentCount = rootComponent.countOfComponent()
 
   val canvas = RoboCanvas(
-    width = rootComponent.rect.right + basicSize + deepestDepth * depthSlide + componentCount * 20,
-    height = rootComponent.rect.bottom + basicSize + deepestDepth * depthSlide + componentCount * 20,
-    filled = false,
+      width = rootComponent.rect.right + basicSize + deepestDepth * depthSlide + componentCount * 20,
+      height = rootComponent.rect.bottom + basicSize + deepestDepth * depthSlide + componentCount * 20,
+      filled = false,
+      bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType(),
   )
   val paddingRect = Rect(basicSize / 2, basicSize / 2, basicSize / 2, basicSize / 2)
 
@@ -39,7 +41,7 @@ internal fun captureDump(
   fun bfs() {
     while (depthAndComponentQueue.isNotEmpty()) {
       val (depth, component) = depthAndComponentQueue.removeFirst()
-      val queryResult = QueryResult.of(component, roborazziOptions.query)
+      val queryResult = QueryResult.of(component, dumpOptions.query)
       fun Int.overrideByQuery(queryResult: QueryResult): Int = when (queryResult) {
         QueryResult.Disabled -> this
         is QueryResult.Enabled -> if (queryResult.matched) {

@@ -23,34 +23,35 @@ import androidx.core.graphics.withClip
 import kotlin.math.min
 
 
-fun View.fetchImage(applyDeviceCrop: Boolean): Bitmap? {
+fun View.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
   if (this.width <= 0 || this.height <= 0) return null
   val bitmapFuture = ResolvableFuture.create<Bitmap>()
-  generateBitmap(bitmapFuture)
+  generateBitmap(bitmapFuture, recordOptions.pixelBitConfig)
   val bitmap = bitmapFuture.get()
 
-  return if (applyDeviceCrop) {
-    bitmap?.applyDeviceCrop(resources.configuration)
+  return if (recordOptions.applyDeviceCrop) {
+    bitmap?.applyDeviceCrop(resources.configuration, recordOptions.pixelBitConfig)
   } else {
     bitmap
   }
 }
 
 internal fun Bitmap.applyDeviceCrop(
-  configuration: Configuration
+  configuration: Configuration,
+  pixelBitConfig: RoborazziOptions.PixelBitConfig
 ): Bitmap {
   val isRoundCrop =
     Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 && configuration.isScreenRound
 
   return if (isRoundCrop) {
-    cropRound()
+    cropRound(pixelBitConfig)
   } else {
     this
   }
 }
 
-internal fun Bitmap.cropRound(): Bitmap {
-  val newBitmap = Bitmap.createBitmap(this.width, this.height, Bitmap.Config.ARGB_8888)
+internal fun Bitmap.cropRound(pixelBitConfig: RoborazziOptions.PixelBitConfig): Bitmap {
+  val newBitmap = Bitmap.createBitmap(this.width, this.height, pixelBitConfig.toBitmapConfig())
 
   val canvas = Canvas(newBitmap)
   val paint = Paint().apply {
@@ -77,11 +78,14 @@ internal fun Bitmap.cropRound(): Bitmap {
 }
 
 // From AOSP: https://cs.android.com/androidx/android-test/+/master:core/java/androidx/test/core/view/WindowCapture.kt;drc=25e2f2b042b283eea3b7ced82fb3c6504b6cca63
-private fun View.generateBitmap(bitmapFuture: ResolvableFuture<Bitmap>) {
+private fun View.generateBitmap(
+  bitmapFuture: ResolvableFuture<Bitmap>,
+  pixelBitConfig: RoborazziOptions.PixelBitConfig
+) {
   if (bitmapFuture.isCancelled) {
     return
   }
-  val destBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+  val destBitmap = Bitmap.createBitmap(width, height, pixelBitConfig.toBitmapConfig())
   when {
     Build.VERSION.SDK_INT < 26 -> generateBitmapFromDraw(destBitmap, bitmapFuture)
     this is SurfaceView -> generateBitmapFromSurfaceViewPixelCopy(destBitmap, bitmapFuture)

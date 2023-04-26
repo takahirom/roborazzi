@@ -158,7 +158,8 @@ fun Bitmap.captureRoboImage(
   val canvas = RoboCanvas(
     width = image.width,
     height = image.height,
-    filled = true
+    filled = true,
+    bufferedImageType = roborazziOptions.recordOptions.pixelBitConfig.toBufferedImageType()
   ).apply {
     drawImage(Rect(0, 0, image.width, image.height), image)
   }
@@ -552,14 +553,20 @@ private fun saveOrCompare(
       throw IllegalArgumentException("The file name should not end with $it because it is reserved for Roborazzi")
     }
   }
-  val resizeScale = roborazziOptions.recordOptions.resizeScale
+  val recordOptions = roborazziOptions.recordOptions
+  val resizeScale = recordOptions.resizeScale
   if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
     val height = (canvas.croppedHeight * resizeScale).toInt()
     val goldenRoboCanvas = if (goaldenFile.exists()) {
-      RoboCanvas.load(goaldenFile)
+      RoboCanvas.load(goaldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
     } else {
-      RoboCanvas(width, height, true)
+      RoboCanvas(
+        width = width,
+        height = height,
+        filled = true,
+        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
+      )
     }
     val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
       val comparisonResult: ImageComparator.ComparisonResult =
@@ -580,7 +587,8 @@ private fun saveOrCompare(
       val compareCanvas = RoboCanvas.generateCompareCanvas(
         goldenCanvas = goldenRoboCanvas,
         newCanvas = canvas,
-        newCanvasResize = resizeScale
+        newCanvasResize = resizeScale,
+        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
       )
       compareCanvas
         .save(
@@ -669,14 +677,20 @@ internal fun capture(
   when (roborazziOptions.captureType) {
     is RoborazziOptions.CaptureType.Dump -> captureDump(
       rootComponent = rootComponent,
-      roborazziOptions = roborazziOptions.captureType,
+      dumpOptions = roborazziOptions.captureType,
+      recordOptions = roborazziOptions.recordOptions,
       onCanvas = onCanvas
     )
 
     is RoborazziOptions.CaptureType.Screenshot -> {
       val image = rootComponent.image!!
       onCanvas(
-        RoboCanvas(width = image.width, height = image.height, true).apply {
+        RoboCanvas(
+          width = image.width,
+          height = image.height,
+          filled = true,
+          bufferedImageType = roborazziOptions.recordOptions.pixelBitConfig.toBufferedImageType()
+        ).apply {
           drawImage(Rect(0, 0, image.width, image.height), image)
         }
       )
