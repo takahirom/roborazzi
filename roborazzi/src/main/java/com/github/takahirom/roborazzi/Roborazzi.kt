@@ -567,7 +567,7 @@ private fun saveOrCompare(
     }
 
     if (changed) {
-      val compareFilePath = File(
+      val compareFile = File(
         goaldenFile.parent,
         goaldenFile.nameWithoutExtension + "_compare." + goaldenFile.extension
       )
@@ -578,29 +578,31 @@ private fun saveOrCompare(
       )
       compareCanvas
         .save(
-          file = compareFilePath,
+          file = compareFile,
           resizeScale = resizeScale
         )
       compareCanvas.release()
 
-      val actualFilePath = File(
+      val actualFile = File(
         goaldenFile.parent,
         goaldenFile.nameWithoutExtension + "_actual." + goaldenFile.extension
       )
       canvas
         .save(
-          file = actualFilePath,
+          file = actualFile,
           resizeScale = resizeScale
         )
       if (goaldenFile.exists()) {
         CompareReportCaptureResult.Changed(
-          compareFile = compareFilePath,
+          compareFile = compareFile,
+          actualFile = actualFile,
           goldenFile = goaldenFile,
           timestampNs = System.nanoTime(),
         )
       } else {
         CompareReportCaptureResult.Added(
-          compareFile = compareFilePath,
+          compareFile = compareFile,
+          actualFile = actualFile,
           timestampNs = System.nanoTime(),
         )
       }
