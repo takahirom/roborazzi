@@ -22,6 +22,7 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.view.drawToBitmap
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
@@ -409,6 +410,7 @@ fun ViewInteraction.captureAndroidView(
       } catch (e: Exception) {
         throw e
       } finally {
+        onIdle()
         removeListener()
         val application = instrumentation.targetContext.applicationContext as Application
         application.unregisterActivityLifecycleCallbacks(activityCallbacks)
@@ -480,10 +482,9 @@ fun SemanticsNodeInteraction.captureComposeNode(
       canvases.addIfChanged(it, roborazziOptions)
     }
   }
-
+  val handler = Handler(Looper.getMainLooper())
   val composeApplyObserver = Snapshot.registerApplyObserver { anies, snapshot ->
-
-    Handler(Looper.getMainLooper()).postAtFrontOfQueue {
+    handler.postAtFrontOfQueue {
       try {
         capture()
       } catch (e: Exception) {
@@ -506,8 +507,8 @@ fun SemanticsNodeInteraction.captureComposeNode(
       } catch (e: Exception) {
         throw e
       } finally {
-        composeApplyObserver.dispose()
         composeRule.waitForIdle()
+        composeApplyObserver.dispose()
       }
     },
     saveGif = { file ->
