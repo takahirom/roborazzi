@@ -178,6 +178,9 @@ class ManualTest {
   }
 
   @Test
+  @Config(
+    qualifiers = "w150dp-h200dp",
+  )
   fun captureRoboGifSampleCompose() {
     composeTestRule.onRoot(false)
       .captureRoboGif(
