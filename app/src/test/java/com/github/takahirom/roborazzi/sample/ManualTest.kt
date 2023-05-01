@@ -51,6 +51,7 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
 
+
     // compose image
     composeTestRule.onNodeWithTag("MyComposeButton")
       .onParent()
