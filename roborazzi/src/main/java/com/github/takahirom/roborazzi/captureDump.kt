@@ -81,7 +81,7 @@ internal fun captureDump(
         }
 
         canvas.addPendingDraw {
-          val componentRawText = dumpOptions.explanation(component)
+          val componentRawText = dumpOptions.explanation(component) ?: return@addPendingDraw
           val texts = componentRawText.formattedTextList()
 
           val isAllBlank = texts.isEmpty() || texts.all { it.isBlank() }

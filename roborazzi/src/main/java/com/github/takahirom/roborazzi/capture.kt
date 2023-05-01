@@ -255,7 +255,7 @@ data class RoborazziOptions(
       val basicSize: Int = 600,
       val depthSlideSize: Int = 30,
       val query: ((RoboComponent) -> Boolean)? = null,
-      val explanation: ((RoboComponent) -> String) = DefaultExplanation,
+      val explanation: ((RoboComponent) -> String?) = DefaultExplanation,
     ) : CaptureType {
       companion object {
         val DefaultExplanation: ((RoboComponent) -> String) = {
