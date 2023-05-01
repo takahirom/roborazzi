@@ -5,6 +5,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.text.TextPaint
 import kotlin.math.abs
+
 internal fun captureDump(
   rootComponent: RoboComponent,
   dumpOptions: RoborazziOptions.CaptureType.Dump,
@@ -19,10 +20,10 @@ internal fun captureDump(
   val componentCount = rootComponent.countOfComponent()
 
   val canvas = RoboCanvas(
-      width = rootComponent.rect.right + basicSize + deepestDepth * depthSlide + componentCount * 20,
-      height = rootComponent.rect.bottom + basicSize + deepestDepth * depthSlide + componentCount * 20,
-      filled = false,
-      bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType(),
+    width = rootComponent.rect.right + basicSize + deepestDepth * depthSlide + componentCount * 20,
+    height = rootComponent.rect.bottom + basicSize + deepestDepth * depthSlide + componentCount * 20,
+    filled = false,
+    bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType(),
   )
   val paddingRect = Rect(basicSize / 2, basicSize / 2, basicSize / 2, basicSize / 2)
 
@@ -80,8 +81,14 @@ internal fun captureDump(
         }
 
         canvas.addPendingDraw {
-          val componentRawText = component.text
+          val componentRawText = dumpOptions.explanation(component)
           val texts = componentRawText.formattedTextList()
+
+          val isAllBlank = texts.isEmpty() || texts.all { it.isBlank() }
+          if (isAllBlank) {
+            return@addPendingDraw
+          }
+
           val (rawBoxWidth, rawBoxHeight) = canvas.textCalc(texts)
           val textPadding = 5
           val boxWidth = rawBoxWidth + textPadding * 2

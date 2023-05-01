@@ -4,9 +4,11 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import android.util.JsonWriter
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.annotation.IdRes
 import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -78,6 +80,20 @@ sealed interface RoboComponent {
       }
     }
     override val text: String = HumanReadables.describe(view)
+
+    // TODO: Support other accessibility information
+    override val accessibilityText: String = run {
+      buildString {
+        val contentDescription = view.contentDescription?.toString()
+        val text = (view as? TextView)?.text?.toString()
+        if (contentDescription != null) {
+          appendLine("Content Description: \"${contentDescription}\"")
+        } else if (text != null) {
+          appendLine("Text: \"$text\"")
+        }
+      }
+    }
+
     override val visibility: Visibility = when (view.visibility) {
       android.view.View.VISIBLE -> Visibility.Visible
       android.view.View.GONE -> Visibility.Gone
@@ -100,6 +116,35 @@ sealed interface RoboComponent {
       .captureType
       .roboComponentChildVisitor(node, roborazziOptions)
     override val text: String = node.printToString()
+    override val accessibilityText: String = run {
+      buildString {
+        val contentDescription = node.config.getOrNull(SemanticsProperties.ContentDescription)
+        val text = node.config.getOrNull(SemanticsProperties.Text)
+        if (contentDescription != null) {
+          appendLine("Content Description: \"${contentDescription.joinToString(", ")}\"")
+        } else if (text != null) {
+          appendLine("Text: \"${text.joinToString(", ")}\"")
+        }
+        val stateDescription = node.config.getOrNull(SemanticsProperties.StateDescription)
+        if (stateDescription != null) {
+          appendLine("State Description: \"${stateDescription}\"")
+        }
+        val onClickLabel = node.config.getOrNull(SemanticsActions.OnClick)
+        if (onClickLabel != null) {
+          appendLine("On Click: \"${onClickLabel}\"")
+        }
+        val progress = node.config.getOrNull(SemanticsProperties.ProgressBarRangeInfo)
+        if (progress != null) {
+          appendLine("Progress: \"${progress}\"")
+        }
+        val customActions = node.config.getOrNull(SemanticsActions.CustomActions)
+        if (customActions != null) {
+          for (action in customActions) {
+            appendLine("Custom Action: \"${action.label}\"")
+          }
+        }
+      }
+    }
     override val visibility: Visibility = Visibility.Visible
     val testTag: String? = node.config.getOrNull(SemanticsProperties.TestTag)
 
@@ -115,6 +160,7 @@ sealed interface RoboComponent {
   val rect: Rect
   val children: List<RoboComponent>
   val text: String
+  val accessibilityText: String
   val visibility: Visibility
   val width: Int
   val height: Int
@@ -209,7 +255,18 @@ data class RoborazziOptions(
       val basicSize: Int = 600,
       val depthSlideSize: Int = 30,
       val query: ((RoboComponent) -> Boolean)? = null,
-    ) : CaptureType
+      val explanation: ((RoboComponent) -> String) = DefaultExplanation,
+    ) : CaptureType {
+      companion object {
+        val DefaultExplanation: ((RoboComponent) -> String) = {
+          it.text
+        }
+        val AccessibilityExplanation: ((RoboComponent) -> String) = {
+          it.accessibilityText
+        }
+
+      }
+    }
   }
 
   data class CompareOptions(
