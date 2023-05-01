@@ -32,7 +32,7 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
   sdk = [30],
-  qualifiers = RobolectricDeviceQualifiers.WearOSRound
+  qualifiers = RobolectricDeviceQualifiers.WearOSLargeRound
 )
 class ComposeSetContentTest {
   @get:Rule
