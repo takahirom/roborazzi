@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import android.util.JsonWriter
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.annotation.IdRes
 import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.platform.ViewRootForTest
@@ -12,8 +11,10 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.test.espresso.util.HumanReadables
 import com.dropbox.differ.ImageComparator
+import com.github.takahirom.roborazzi.accessibility.TreeDebug
 import io.github.takahirom.roborazzi.CompareReportCaptureResult
 import io.github.takahirom.roborazzi.RoborazziReportConst
 import java.io.File
@@ -84,13 +85,8 @@ sealed interface RoboComponent {
     // TODO: Support other accessibility information
     override val accessibilityText: String = run {
       buildString {
-        val contentDescription = view.contentDescription?.toString()
-        val text = (view as? TextView)?.text?.toString()
-        if (contentDescription != null) {
-          appendLine("Content Description: \"${contentDescription}\"")
-        } else if (text != null) {
-          appendLine("Text: \"$text\"")
-        }
+        val accessibilityNodeInfo = AccessibilityNodeInfoCompat.obtain(view)
+        append(TreeDebug.nodeDebugDescription(accessibilityNodeInfo))
       }
     }
 
