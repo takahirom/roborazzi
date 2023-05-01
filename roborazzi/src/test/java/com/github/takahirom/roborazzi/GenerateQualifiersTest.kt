@@ -1,6 +1,5 @@
 package com.github.takahirom.roborazzi
 
-import kotlin.math.roundToInt
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
 import nl.adaptivity.xmlutil.serialization.DefaultXmlSerializationPolicy
@@ -56,74 +55,43 @@ class GenerateQualifiersTest {
         """.trimIndent()
       )
       deviceTypes.forEach { (tagId, devices) ->
-          writeUtf8("\n\t// Type: ${tagId ?: "default"}\n")
-          devices.forEach { device ->
-            // find device name
-            val name = device.name
-              .replace(" ", "")
-              .replace("(", "")
-              .replace(")", "")
-              .replace("'", "")
-              .replace("-", "")
-              .replace(".", "")
-              .replace("\"", "")
+        writeUtf8("\n\t// Type: ${tagId ?: "default"}\n")
+        devices.forEach { device ->
+          // find device name
+          val name = device.name
+            .replace(" ", "")
+            .replace("(", "")
+            .replace(")", "")
+            .replace("'", "")
+            .replace("-", "")
+            .replace(".", "")
+            .replace("\"", "")
 
-            val shouldSkipDevice = shouldSkip(name, device)
+          val shouldSkipDevice = shouldSkip(name, device)
 
-            if (shouldSkipDevice) {
-              println("skip device:$name")
-              return@forEach
-            }
-
-            val hardware = device.hardware
-
-            val screen = hardware.screen
-            val screenSize = screen.screenSize
-            val screenRatio = screen.screenRatio
-            val pixelDensity = screen.pixelDensity
-            val dimensions = screen.dimensions
-            val xDimension = dimensions.xDimension
-            val yDimension = dimensions.yDimension
-
-            val nav = hardware.nav
-            val densityValue = when (pixelDensity) {
-              "ldpi" -> 120
-              "mdpi" -> 160
-              "hdpi" -> 240
-              "xhdpi" -> 320
-              "xxhdpi" -> 480
-              "xxxhdpi" -> 640
-              "tvdpi" -> 213
-              else -> pixelDensity.dropLast(3).toInt()
-            }.toDouble()
-
-
-            val widthDp = (xDimension / (densityValue / 160)).roundToInt()
-            val heightDp = (yDimension / (densityValue / 160)).roundToInt()
-
-            val screenRatioQualifier = if (screenRatio == "long") "long" else "notlong"
-            val shapeQualifier = if (xDimension == yDimension) "round" else "notround"
-
-            val device = when (tagId) {
-              "android-wear" -> {
-                "watch"
-              }
-
-              "android-tv" -> {
-                "television"
-              }
-
-              "android-automotive-playstore" -> {
-                "car"
-              }
-
-              else -> {
-                "any"
-              }
-            }
-            writeUtf8("\tconst val ${name} = \"w${widthDp}dp-h${heightDp}dp-$screenSize-$screenRatioQualifier-$shapeQualifier-$device-$pixelDensity-keyshidden-$nav\"\n")
+          if (shouldSkipDevice) {
+            println("skip device:$name")
+            return@forEach
           }
+
+          val screen = device.hardware.screen
+          val screenSize = screen.screenSize
+
+          val qualifier = listOf(
+            "w${screen.widthDp}dp",
+            "h${screen.heightDp}dp",
+            screenSize,
+            device.screenRatio,
+            device.shape,
+            device.type,
+            screen.pixelDensity,
+            "keyshidden",
+            device.hardware.nav
+          ).joinToString("-")
+
+          writeUtf8("\tconst val $name = \"$qualifier\"\n")
         }
+      }
 
       writeUtf8("\n}")
     }

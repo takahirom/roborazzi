@@ -41,6 +41,6 @@ object RobolectricDeviceQualifiers {
 	const val WearOSLargeRound = "w227dp-h227dp-small-long-round-watch-xhdpi-keyshidden-nonav"
 	const val WearOSSmallRound = "w192dp-h192dp-small-long-round-watch-xhdpi-keyshidden-nonav"
 	const val WearOSRectangular = "w201dp-h238dp-small-long-notround-watch-xhdpi-keyshidden-nonav"
-	const val WearOSSquare = "w180dp-h180dp-small-long-round-watch-xhdpi-keyshidden-nonav"
+	const val WearOSSquare = "w180dp-h180dp-small-long-notround-watch-xhdpi-keyshidden-nonav"
 
 }
