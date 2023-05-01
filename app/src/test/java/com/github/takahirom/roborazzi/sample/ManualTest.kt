@@ -142,7 +142,7 @@ class ManualTest {
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
-        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose_custom.png",
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_a11y_dump.png",
         roborazziOptions = RoborazziOptions(
           captureType = RoborazziOptions.CaptureType.Dump(
             explanation = RoborazziOptions.CaptureType.Dump.AccessibilityExplanation,
