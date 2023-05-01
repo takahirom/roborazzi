@@ -1,7 +1,10 @@
 name: diff test
 
 on:
-  push
+  push:
+    branches:
+      - main
+  pull_request:
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx6g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
