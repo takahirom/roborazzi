@@ -24,6 +24,7 @@ import androidx.core.view.drawToBitmap
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoActivityResumedException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
@@ -398,8 +399,8 @@ fun ViewInteraction.captureAndroidView(
       }
     )
     perform(viewTreeListenerAction)
-  } catch (e: Exception) {
-    // It seems there is no screen, so wait
+  } catch (e: NoActivityResumedException) {
+    // It seems there is no resumed activity, so wait
     val application = instrumentation.targetContext.applicationContext as Application
     application.registerActivityLifecycleCallbacks(activityCallbacks)
   }
@@ -487,8 +488,8 @@ fun SemanticsNodeInteraction.captureComposeNode(
     handler.postAtFrontOfQueue {
       try {
         capture()
-      } catch (e: Exception) {
-        // It seems there is no screen, so wait
+      } catch (e: IllegalStateException) {
+        // No compose hierarchies found in the app, so wait
         e.printStackTrace()
       }
 
@@ -497,8 +498,8 @@ fun SemanticsNodeInteraction.captureComposeNode(
   try {
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     capture()
-  } catch (e: Exception) {
-    // It seems there is no screen, so wait
+  } catch (e: IllegalStateException) {
+    // No compose hierarchies found in the app, so wait
   }
   return CaptureResult(
     result = runCatching {
