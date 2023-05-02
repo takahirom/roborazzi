@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
+import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -164,6 +165,7 @@ class ManualTest {
 
     onView(ViewMatchers.isRoot())
       .captureRoboAllImage({ File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_all_$it.png") }) {
+        onIdle()
         // back
         pressBack()
         // move to next page
