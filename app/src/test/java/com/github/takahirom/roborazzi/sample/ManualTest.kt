@@ -162,7 +162,7 @@ class ManualTest {
         onView(withId(R.id.button_first))
           .perform(click())
       }
-
+    onIdle()
     onView(ViewMatchers.isRoot())
       .captureRoboAllImage({ File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_all_$it.png") }) {
         onIdle()
