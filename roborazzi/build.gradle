@@ -1,6 +1,7 @@
 plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
+  id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.21'
 }
 
 // TODO: Use build-logic
@@ -28,4 +29,10 @@ dependencies {
   api "com.dropbox.differ:differ:0.0.1-alpha1"
 
   api 'androidx.test.espresso:espresso-core:3.5.1'
+
+  // For fetching device qualifiers from AOSP
+  testImplementation "io.ktor:ktor-serialization-kotlinx-xml:2.3.0"
+  testImplementation "com.squareup.okhttp3:okhttp:5.0.0-alpha.11"
+  testImplementation "com.squareup.okhttp3:okhttp-coroutines:5.0.0-alpha.11"
+  testImplementation("org.apache.commons:commons-compress:1.23.0")
 }
