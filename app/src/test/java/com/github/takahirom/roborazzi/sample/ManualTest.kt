@@ -45,7 +45,8 @@ class ManualTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-  @Test @Config(qualifiers = "+land")
+  @Test
+  @Config(qualifiers = "+land")
   fun captureRoboImageSample() {
     // screen level image
     onView(ViewMatchers.isRoot())
@@ -135,6 +136,17 @@ class ManualTest {
                 is RoboComponent.View -> false
               }
             })
+        )
+      )
+
+
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_a11y_dump.png",
+        roborazziOptions = RoborazziOptions(
+          captureType = RoborazziOptions.CaptureType.Dump(
+            explanation = RoborazziOptions.CaptureType.Dump.AccessibilityExplanation,
+          )
         )
       )
   }
