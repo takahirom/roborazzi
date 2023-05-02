@@ -21,6 +21,7 @@ import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 
 
+@Ignore
 class GenerateQualifiersTest {
   val devicesTarGz =
     ("https://android.googlesource.com" +
@@ -38,7 +39,6 @@ class GenerateQualifiersTest {
   }
 
   @Test
-  @Ignore
   fun generate() {
     val deviceTypes = runBlocking { readAllDevices() }.groupBy { it.tagId }
 
