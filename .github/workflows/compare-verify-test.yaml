@@ -29,6 +29,7 @@ jobs:
           path: app/build/outputs/roborazzi
           workflow: test.yaml
           branch: main
+
       - name: compare test
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
