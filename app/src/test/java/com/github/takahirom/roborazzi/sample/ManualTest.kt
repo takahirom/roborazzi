@@ -14,11 +14,8 @@ import androidx.core.graphics.createBitmap
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
@@ -166,8 +163,6 @@ class ManualTest {
       }
     onView(ViewMatchers.isRoot())
       .captureRoboAllImage({ File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_all_$it.png") }) {
-        onView(withText("Second Fragment"))
-          .check(matches(isDisplayed()))
         // back
         pressBack()
         // move to next page

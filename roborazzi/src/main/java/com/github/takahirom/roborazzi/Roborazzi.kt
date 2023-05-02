@@ -231,8 +231,7 @@ fun ViewInteraction.captureRoboLastImage(
   roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ) {
-  // currently, gif compare is not supported
-  if (!roborazziRecordingEnabled()) return
+  if (!roborazziEnabled()) return
   captureRoboLastImage(File(filePath), roborazziOptions, block)
 }
 
