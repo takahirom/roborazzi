@@ -30,13 +30,6 @@ jobs:
           workflow: test.yaml
           branch: main
 
-      - name: verify unchanged test
-        id: verify-unchanged-test
-        continue-on-error: true
-        run: |
-          ./gradlew roborazzi-gradle-plugin:build --stacktrace
-          ./gradlew app:verifyRoborazziDebug --stacktrace
-
       - name: compare test
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
