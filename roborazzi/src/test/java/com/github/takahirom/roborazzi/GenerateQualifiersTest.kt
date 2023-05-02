@@ -74,22 +74,7 @@ class GenerateQualifiersTest {
             return@forEach
           }
 
-          val screen = device.hardware.screen
-          val screenSize = screen.screenSize
-
-          val qualifier = listOf(
-            "w${screen.widthDp}dp",
-            "h${screen.heightDp}dp",
-            screenSize,
-            device.screenRatio,
-            device.shape,
-            device.type,
-            screen.pixelDensity,
-            "keyshidden",
-            device.hardware.nav
-          ).joinToString("-")
-
-          writeUtf8("\tconst val $name = \"$qualifier\"\n")
+          writeUtf8("\tconst val $name = \"${device.qualifier}\"\n")
         }
       }
 
