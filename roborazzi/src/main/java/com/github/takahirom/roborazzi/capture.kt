@@ -2,6 +2,7 @@ package com.github.takahirom.roborazzi
 
 import android.graphics.Bitmap
 import android.graphics.Rect
+import android.os.Build
 import android.util.JsonWriter
 import android.view.ViewGroup
 import android.widget.TextView
@@ -87,9 +88,28 @@ sealed interface RoboComponent {
         val contentDescription = view.contentDescription?.toString()
         val text = (view as? TextView)?.text?.toString()
         if (contentDescription != null) {
-          appendLine("Content Description: \"${contentDescription}\"")
+          appendLine("Content Description: \"$contentDescription\"")
         } else if (text != null) {
           appendLine("Text: \"$text\"")
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+          val stateDescription = view.stateDescription?.toString()
+
+          if (stateDescription != null) {
+            appendLine("State Description: \"$stateDescription\"")
+          }
+        }
+
+        val clickable = view.hasOnClickListeners() && view.isClickable
+        if (clickable) {
+          appendLine("Clickable: \"true\"")
+        }
+
+
+        val isImportantForAccessibility = view.isImportantForAccessibility
+        if (isImportantForAccessibility) {
+          appendLine("isImportantForAccessibility: \"true\"")
         }
       }
     }
