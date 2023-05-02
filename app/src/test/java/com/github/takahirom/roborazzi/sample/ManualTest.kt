@@ -173,7 +173,6 @@ class ManualTest {
         onView(withId(R.id.button_first))
           .perform(click())
       }
-
     onView(ViewMatchers.isRoot())
       .captureRoboAllImage({ File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_all_$it.png") }) {
         // back
@@ -190,6 +189,9 @@ class ManualTest {
   }
 
   @Test
+  @Config(
+    qualifiers = "w150dp-h200dp",
+  )
   fun captureRoboGifSampleCompose() {
     composeTestRule.onRoot(false)
       .captureRoboGif(
