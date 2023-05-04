@@ -195,8 +195,6 @@ fun captureRoboImage(
       .findViewById<ViewGroup>(android.R.id.content)
       .getChildAt(0) as ComposeView
     val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
-    val semanticsOwner = viewRootForTest.semanticsOwner
-    semanticsOwner.rootSemanticsNode
     viewRootForTest.view.captureRoboImage(file, roborazziOptions)
   }
 }
