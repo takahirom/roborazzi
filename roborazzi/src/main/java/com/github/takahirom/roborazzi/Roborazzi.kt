@@ -12,7 +12,6 @@ import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.Snapshot
@@ -187,7 +186,7 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziEnabled()) return
-  val activityScenario = ActivityScenario.launch(ComponentActivity::class.java)
+  val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
   activityScenario.onActivity { activity ->
     activity.setContent {
       content()
