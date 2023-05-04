@@ -48,7 +48,9 @@ fun roborazziEnabled(): Boolean {
     "roborazziEnabled: $isEnabled \n" +
       "roborazziRecordingEnabled(): ${roborazziRecordingEnabled()}\n" +
       "roborazziCompareEnabled(): ${roborazziCompareEnabled()}\n" +
-      "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n"
+      "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n" +
+      "roborazziWorkingDirectoryPath(): ${roborazziWorkingDirectoryPath()}\n" +
+      "roborazziSnapshotReportRootPath(): ${roborazziSnapshotReportRootPath()}\n"
   }
   return isEnabled
 }
@@ -65,13 +67,21 @@ fun roborazziRecordingEnabled(): Boolean {
   return System.getProperty("roborazzi.test.record") == "true"
 }
 
+fun roborazziWorkingDirectoryPath(): String {
+  return System.getProperty("roborazzi.test.working.directory.path") ?: "."
+}
+
+fun roborazziSnapshotReportRootPath(): String {
+  return System.getProperty("roborazzi.report.snapshot.root.path") ?: "."
+}
+
 fun ViewInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
-    file = File(filePath),
+    file = fileWithWorkingDirectoryIfRelativePath(filePath),
     roborazziOptions = roborazziOptions
   )
 }
@@ -93,7 +103,7 @@ fun View.captureRoboImage(
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
-    file = File(filePath),
+    file = fileWithWorkingDirectoryIfRelativePath(filePath),
     roborazziOptions = roborazziOptions
   )
 }
@@ -146,7 +156,7 @@ fun Bitmap.captureRoboImage(
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
-    file = File(filePath),
+    file = fileWithWorkingDirectoryIfRelativePath(filePath),
     roborazziOptions = roborazziOptions
   )
 }
@@ -175,7 +185,7 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   captureRoboImage(
-    file = File(filePath),
+    file = fileWithWorkingDirectoryIfRelativePath(filePath),
     roborazziOptions = roborazziOptions,
     content = content
   )
@@ -209,7 +219,7 @@ fun ViewInteraction.captureRoboGif(
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
-  captureRoboGif(File(filePath), roborazziOptions, block)
+  captureRoboGif(fileWithWorkingDirectoryIfRelativePath(filePath), roborazziOptions, block)
 }
 
 fun ViewInteraction.captureRoboGif(
@@ -232,7 +242,7 @@ fun ViewInteraction.captureRoboLastImage(
   block: () -> Unit
 ) {
   if (!roborazziEnabled()) return
-  captureRoboLastImage(File(filePath), roborazziOptions, block)
+  captureRoboLastImage(fileWithWorkingDirectoryIfRelativePath(filePath), roborazziOptions, block)
 }
 
 fun ViewInteraction.captureRoboLastImage(
@@ -267,7 +277,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   if (!roborazziEnabled()) return
-  captureRoboImage(File(filePath), roborazziOptions)
+  captureRoboImage(fileWithWorkingDirectoryIfRelativePath(filePath), roborazziOptions)
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
@@ -300,7 +310,7 @@ fun SemanticsNodeInteraction.captureRoboGif(
     roborazziOptions = roborazziOptions,
     block = block
   ).apply {
-    saveGif(File(filePath))
+    saveGif(fileWithWorkingDirectoryIfRelativePath(filePath))
     clear()
   }
 }
@@ -316,6 +326,21 @@ fun SemanticsNodeInteraction.captureRoboGif(
   captureComposeNode(composeRule, roborazziOptions, block).apply {
     saveGif(file)
     clear()
+  }
+}
+
+internal fun fileWithWorkingDirectoryIfRelativePath(path: String): File {
+  val file = if (path.startsWith("/")) {
+    File(path)
+  } else {
+    File(roborazziWorkingDirectoryPath(), path)
+  }
+  debugLog {
+    "fileWithWorkingDirectoryIfRelativePath " + path + " -> " + file.absolutePath
+  }
+  file.apply {
+    parentFile?.mkdirs()
+    return this
   }
 }
 
@@ -559,7 +584,7 @@ private fun saveAllImage(
 
 private fun saveOrCompare(
   canvas: RoboCanvas,
-  goaldenFile: File,
+  goldenFile: File,
   roborazziOptions: RoborazziOptions
 ) {
   val recordOptions = roborazziOptions.recordOptions
@@ -567,8 +592,8 @@ private fun saveOrCompare(
   if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
     val height = (canvas.croppedHeight * resizeScale).toInt()
-    val goldenRoboCanvas = if (goaldenFile.exists()) {
-      RoboCanvas.load(goaldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
+    val goldenRoboCanvas = if (goldenFile.exists()) {
+      RoboCanvas.load(goldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
     } else {
       RoboCanvas(
         width = width,
@@ -581,17 +606,17 @@ private fun saveOrCompare(
       val comparisonResult: ImageComparator.ComparisonResult =
         canvas.differ(goldenRoboCanvas, resizeScale)
       val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
-      log("${goaldenFile.name} The differ result :$comparisonResult changed:$changed")
+      log("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
-      log("${goaldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
+      log("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
       true
     }
 
     if (changed) {
-      val compareFilePath = File(
-        goaldenFile.parent,
-        goaldenFile.nameWithoutExtension + "_compare." + goaldenFile.extension
+      val compareFile = File(
+        goldenFile.parent,
+        goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
       )
       RoboCanvas.generateCompareCanvas(
         goldenCanvas = goldenRoboCanvas,
@@ -600,24 +625,25 @@ private fun saveOrCompare(
         bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
       )
         .save(
-          file = compareFilePath,
+          file = compareFile,
           resizeScale = resizeScale
         )
-      if (goaldenFile.exists()) {
+      if (goldenFile.exists()) {
+
         CompareReportCaptureResult.Changed(
-          compareFile = compareFilePath,
-          goldenFile = goaldenFile,
-          timestampNs = System.nanoTime(),
+          compareFilePath = compareFile.relativeFromSnapshotReportRoot(),
+          goldenFilePath = goldenFile.relativeFromSnapshotReportRoot(),
+          timestampNs = System.nanoTime()
         )
       } else {
         CompareReportCaptureResult.Added(
-          compareFile = compareFilePath,
+          compareFilePath = compareFile.relativeFromSnapshotReportRoot(),
           timestampNs = System.nanoTime(),
         )
       }
     } else {
       CompareReportCaptureResult.Unchanged(
-        goldenFile = goaldenFile,
+        goldenFilePath = goldenFile.relativeFromSnapshotReportRoot(),
         timestampNs = System.nanoTime(),
       )
     }.let {
@@ -625,9 +651,13 @@ private fun saveOrCompare(
     }
   } else {
     // roborazzi.record is checked before
-    canvas.save(goaldenFile, resizeScale)
+    canvas.save(goldenFile, resizeScale)
   }
 }
+
+private fun File.relativeFromSnapshotReportRoot() =
+  File(roborazziSnapshotReportRootPath()).toPath().toAbsolutePath()
+    .relativize(this.toPath().toAbsolutePath()).toString()
 
 private fun log(message: String) {
   println("Roborazzi: $message")

@@ -2,7 +2,6 @@ package io.github.takahirom.roborazzi
 
 import android.util.JsonReader
 import android.util.JsonWriter
-import java.io.File
 import java.io.FileReader
 
 sealed class CompareReportCaptureResult {
@@ -11,41 +10,41 @@ sealed class CompareReportCaptureResult {
   abstract val timestampNs: Long
 
   data class Added(
-    val compareFile: File,
+    val compareFilePath: String,
     override val timestampNs: Long
   ) : CompareReportCaptureResult() {
     override fun writeJson(writer: JsonWriter) {
       writer.beginObject()
       writer.name("type").value("added")
-      writer.name("compare_file_path").value(compareFile.absolutePath)
+      writer.name("compare_file_path").value(compareFilePath)
       writer.name("timestamp").value(timestampNs)
       writer.endObject()
     }
   }
 
   data class Changed(
-    val compareFile: File,
-    val goldenFile: File,
+    val compareFilePath: String,
+    val goldenFilePath: String,
     override val timestampNs: Long
   ) : CompareReportCaptureResult() {
     override fun writeJson(writer: JsonWriter) {
       writer.beginObject()
       writer.name("type").value("changed")
-      writer.name("compare_file_path").value(compareFile.absolutePath)
-      writer.name("golden_file_path").value(goldenFile.absolutePath)
+      writer.name("compare_file_path").value(compareFilePath)
+      writer.name("golden_file_path").value(goldenFilePath)
       writer.name("timestamp").value(timestampNs)
       writer.endObject()
     }
   }
 
   data class Unchanged(
-    val goldenFile: File,
+    val goldenFilePath: String,
     override val timestampNs: Long
   ) : CompareReportCaptureResult() {
     override fun writeJson(writer: JsonWriter) {
       writer.beginObject()
       writer.name("type").value("unchanged")
-      writer.name("golden_file_path").value(goldenFile.absolutePath)
+      writer.name("golden_file_path").value(goldenFilePath)
       writer.name("timestamp").value(timestampNs)
       writer.endObject()
     }
@@ -60,16 +59,16 @@ sealed class CompareReportCaptureResult {
 
     fun fromJsonReader(jsonReader: JsonReader): CompareReportCaptureResult {
       var type: String? = null
-      var compareFile: String? = null
-      var goldenFile: String? = null
+      var compareFilePath: String? = null
+      var goldenFilePath: String? = null
       var timestampNs: Long? = null
 
       jsonReader.beginObject()
       while (jsonReader.hasNext()) {
         when (jsonReader.nextName()) {
           "type" -> type = jsonReader.nextString()
-          "compare_file_path" -> compareFile = jsonReader.nextString()
-          "golden_file_path" -> goldenFile = jsonReader.nextString()
+          "compare_file_path" -> compareFilePath = jsonReader.nextString()
+          "golden_file_path" -> goldenFilePath = jsonReader.nextString()
           "timestamp" -> timestampNs = jsonReader.nextLong()
           else -> jsonReader.skipValue()
         }
@@ -78,18 +77,18 @@ sealed class CompareReportCaptureResult {
 
       val captureResult = when (type) {
         "changed" -> Changed(
-          compareFile = File(compareFile),
-          goldenFile = File(goldenFile),
+          compareFilePath = checkNotNull(compareFilePath),
+          goldenFilePath = checkNotNull(goldenFilePath),
           timestampNs = timestampNs!!
         )
 
         "unchanged" -> Unchanged(
-          goldenFile = File(goldenFile),
+          goldenFilePath = checkNotNull(goldenFilePath),
           timestampNs = timestampNs!!
         )
 
         "added" -> Added(
-          compareFile = File(compareFile),
+          compareFilePath = checkNotNull(compareFilePath),
           timestampNs = timestampNs!!
         )
 

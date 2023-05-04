@@ -248,11 +248,14 @@ data class RoborazziOptions(
 
       override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
         val absolutePath = File(RoborazziReportConst.compareReportDirPath).absolutePath
-        val nameWithoutExtension = when (compareReportCaptureResult) {
-          is CompareReportCaptureResult.Added -> compareReportCaptureResult.compareFile
-          is CompareReportCaptureResult.Changed -> compareReportCaptureResult.goldenFile
-          is CompareReportCaptureResult.Unchanged -> compareReportCaptureResult.goldenFile
-        }.nameWithoutExtension
+        val nameWithoutExtension = File(
+          roborazziSnapshotReportRootPath(),
+          when (compareReportCaptureResult) {
+            is CompareReportCaptureResult.Added -> compareReportCaptureResult.compareFilePath
+            is CompareReportCaptureResult.Changed -> compareReportCaptureResult.goldenFilePath
+            is CompareReportCaptureResult.Unchanged -> compareReportCaptureResult.goldenFilePath
+          }
+        ).nameWithoutExtension
         val reportFileName =
           "$absolutePath/${compareReportCaptureResult.timestampNs}_$nameWithoutExtension.json"
         val fileWriter = FileWriter(
@@ -270,13 +273,13 @@ data class RoborazziOptions(
       override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
         when (compareReportCaptureResult) {
           is CompareReportCaptureResult.Added -> throw AssertionError(
-            "Roborazzi: ${compareReportCaptureResult.compareFile.absolutePath} is added.\n" +
-              "See compare image at ${compareReportCaptureResult.compareFile.absolutePath}"
+            "Roborazzi: ${compareReportCaptureResult.compareFilePath} is added.\n" +
+              "See compare image at ${compareReportCaptureResult.compareFilePath}"
           )
 
           is CompareReportCaptureResult.Changed -> throw AssertionError(
-            "Roborazzi: ${compareReportCaptureResult.goldenFile.absolutePath} is changed.\n" +
-              "See compare image at ${compareReportCaptureResult.compareFile.absolutePath}"
+            "Roborazzi: ${compareReportCaptureResult.goldenFilePath} is changed.\n" +
+              "See compare image at ${compareReportCaptureResult.compareFilePath}"
           )
 
           is CompareReportCaptureResult.Unchanged -> {

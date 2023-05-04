@@ -99,7 +99,7 @@ class RoborazziRule private constructor(
           return
         }
         if (description.annotations.filterIsInstance<Ignore>().isNotEmpty()) return evaluate()
-        val folder = File(options.outputDirectoryPath)
+        val folder = File(roborazziWorkingDirectoryPath(), options.outputDirectoryPath)
         if (!folder.exists()) {
           folder.mkdirs()
         }
