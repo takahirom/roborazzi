@@ -52,8 +52,8 @@ class RoborazziPlugin : Plugin<Project> {
           CompareReportGenerateTask::class.java
         ) {
           it.group = VERIFICATION_GROUP
-          it.inputDir.set(project.file(RoborazziReportConst.compareReportDirPath))
-          it.outputFile.set(project.file(RoborazziReportConst.compareSummaryReportFilePath))
+          it.inputResultJsonsDir.set(project.file(RoborazziReportConst.compareReportDirPath))
+          it.outputJsonFile.set(project.file(RoborazziReportConst.compareSummaryReportFilePath))
         }
       compareVariants.configure { it.dependsOn(compareReportGenerateTaskProvider) }
 
@@ -74,14 +74,11 @@ class RoborazziPlugin : Plugin<Project> {
       }
 
       val testTaskProvider = project.tasks.named("test$testVariantSlug", Test::class.java) { test ->
-        test.systemProperties["roborazzi.build.dir"] =
-          project.layout.buildDirectory.get().toString()
-
 //        test.outputs.dir(reportOutputDir)
 //        test.outputs.dir(snapshotOutputDir)
 
         val roborazziProperties =
-          project.properties.filterKeys { it.startsWith("io.github.takahirom.roborazzi") }
+          project.properties.filterKeys { it.startsWith("roborazzi") }
         val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
 
         test.doFirst {
@@ -118,44 +115,36 @@ class RoborazziPlugin : Plugin<Project> {
   abstract class CompareReportGenerateTask : RoborazziTask() {
 
     @get:InputDirectory
-    abstract val inputDir: DirectoryProperty
+    abstract val inputResultJsonsDir: DirectoryProperty
 
     @get:OutputFile
-    abstract val outputFile: RegularFileProperty
+    abstract val outputJsonFile: RegularFileProperty
 
     @TaskAction
     fun doWork() {
-      val results: List<CompareReportCaptureResult> =
-        inputDir.asFileTree.mapNotNull {
-          if (it.name.endsWith(".json")) {
-            CompareReportCaptureResult.fromJsonFile(it.path)
-          } else {
-            null
-          }
+      val results: List<CompareReportCaptureResult> = inputResultJsonsDir.asFileTree.mapNotNull {
+        if (it.name.endsWith(".json")) {
+          CompareReportCaptureResult.fromJsonFile(it.path)
+        } else {
+          null
         }
-      val reportFile =
-        outputFile.asFile.get()
+      }
+      val reportFile = outputJsonFile.asFile.get()
       println("Save report to ${reportFile.absolutePath} with results:${results.size}")
 
       val jsonWriter = JsonWriter(
         reportFile.writer()
       )
       jsonWriter.use { writer ->
-        writer.beginObject()
-
-        writer.name("summary").beginObject()
-        writer.name("total").value(results.size)
-        writer.name("added").value(results.count { it is CompareReportCaptureResult.Added })
-        writer.name("changed").value(results.count { it is CompareReportCaptureResult.Changed })
-        writer.name("unchanged").value(results.count { it is CompareReportCaptureResult.Unchanged })
-        writer.endObject()
-
-        writer.name("results").beginArray()
-        results.forEach { result ->
-          result.writeJson(writer)
-        }
-        writer.endArray()
-        writer.endObject()
+        CompareReportResult(
+          summary = CompareSummary(
+            total = results.size,
+            added = results.count { it is CompareReportCaptureResult.Added },
+            changed = results.count { it is CompareReportCaptureResult.Changed },
+            unchanged = results.count { it is CompareReportCaptureResult.Unchanged }
+          ),
+          compareReportCaptureResults = results
+        ).writeJson(writer)
       }
     }
   }
