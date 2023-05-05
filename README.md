@@ -297,6 +297,12 @@ jobs:
 
 ```
 
+#### Advanced workflow Sample: Compare Snapshot Results on Pull Requests
+
+For those who are looking for a more advanced example, we have prepared a sample repository that demonstrates how to use Roborazzi to compare snapshot results on GitHub pull requests. This sample showcases the integration of Roborazzi with GitHub Actions workflows, making it easy to visualize and review the differences between snapshots directly in the pull request comments.
+
+Check out the [roborazzi-compare-on-github-comment-sample](https://github.com/takahirom/roborazzi-compare-on-github-comment-sample) repository to see this powerful feature in action and learn how to implement it in your own projects. 
+
 ### Generate gif automatically
 
 ```kotlin
