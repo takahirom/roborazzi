@@ -108,7 +108,7 @@ jobs:
           for file in $files; do
             # Get the file name and insert newlines every 20 characters
             fileName=$(echo "$(basename $file)" | sed -r 's/(.{20})/\1<br>/g')
-            echo "| [$fileName](https://github.com/takahirom/roborazzi-compare-on-github-comment/blob/$BRANCH_NAME/$file) | ![](https://github.com/takahirom/roborazzi-compare-on-github-comment/blob/$BRANCH_NAME/$file?raw=true) |" >> $GITHUB_OUTPUT
+            echo "| [$fileName](https://github.com/takahirom/roborazzi/blob/$BRANCH_NAME/$file) | ![](https://github.com/takahirom/roborazzi/blob/$BRANCH_NAME/$file?raw=true) |" >> $GITHUB_OUTPUT
           done
           echo "${delimiter}" >> $GITHUB_OUTPUT
       - name: Find Comment
