@@ -100,7 +100,7 @@ jobs:
           echo "reports<<${delimiter}" >> $GITHUB_OUTPUT
           
           # Create markdown table header
-          echo "Snapshot diff report" >> $GITHUB_OUTPUT
+          echo "Snapshot diff report ([About this comment](https://github.com/takahirom/roborazzi-compare-on-github-comment-sample))" >> $GITHUB_OUTPUT
           echo "| File name | Image |" >> $GITHUB_OUTPUT
           echo "|-------|-------|" >> $GITHUB_OUTPUT
           
