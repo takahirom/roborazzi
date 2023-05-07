@@ -26,7 +26,7 @@ class RuleTestWithAllImage {
     Options(
       captureType = CaptureType.AllImage,
       fileGenerator = { description, folder, fileExtension ->
-        File(folder, "${description.testClass}.${description.methodName}.${number++}.$fileExtension")
+        File(folder, "${description.testClass.name}.${description.methodName}.${number++}.$fileExtension")
       }
     ),
   )
