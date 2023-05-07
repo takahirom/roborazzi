@@ -19,13 +19,14 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTestWithAllImage {
+  private var number = 0
   @get:Rule
   val roborazziRule = RoborazziRule(
     onView(isRoot()),
     Options(
       captureType = CaptureType.AllImage,
       fileGenerator = { description, folder, fileExtension ->
-        File(folder, "${description.testClass}.${description.methodName}.$fileExtension")
+        File(folder, "${description.testClass}.${description.methodName}.${number++}.$fileExtension")
       }
     ),
   )
