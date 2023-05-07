@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule.Options
+import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,10 +19,17 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTestWithAllImage {
-  @get:Rule val roborazziRule = RoborazziRule(
+  @get:Rule
+  val roborazziRule = RoborazziRule(
     onView(isRoot()),
-    Options(CaptureType.AllImage)
+    Options(
+      captureType = CaptureType.AllImage,
+      fileGenerator = { description, folder, fileExtension ->
+        File(folder, "${description.testClass}.${description.methodName}.$fileExtension")
+      }
+    ),
   )
+
   @Test
   fun captureRoboGifSample() {
     // launch

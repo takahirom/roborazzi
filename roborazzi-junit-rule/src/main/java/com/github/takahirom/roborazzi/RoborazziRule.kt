@@ -36,6 +36,16 @@ class RoborazziRule private constructor(
      * output directory path
      */
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
+    val fileGenerator: (
+      description: Description,
+      folder: File,
+      fileExtension: String
+    ) -> File = { description, folder, fileExtension ->
+      File(
+        folder.absolutePath,
+        DefaultFileNameGenerator.generate(description) + "." + fileExtension
+      )
+    },
     val roborazziOptions: RoborazziOptions = RoborazziOptions(),
   )
 
@@ -93,7 +103,7 @@ class RoborazziRule private constructor(
           evaluate()
           return
         }
-        if(!roborazziRecordingEnabled() && options.captureType == CaptureType.Gif) {
+        if (!roborazziRecordingEnabled() && options.captureType == CaptureType.Gif) {
           // currently, gif compare is not supported
           evaluate()
           return
@@ -118,27 +128,19 @@ class RoborazziRule private constructor(
         if (!options.onlyFail || result.result.isFailure) {
           when (captureType) {
             CaptureType.LastImage -> {
-              val file = File(
-                folder.absolutePath,
-                DefaultFileNameGenerator.generate(description) + ".png"
-              )
+              val file = options.fileGenerator(description, folder, "png")
+
               result.saveLastImage(file)
             }
 
             CaptureType.AllImage -> {
               result.saveAllImage {
-                File(
-                  folder.absolutePath,
-                  DefaultFileNameGenerator.generate(description) + ".png"
-                )
+                options.fileGenerator(description, folder, "png")
               }
             }
 
             CaptureType.Gif -> {
-              val file = File(
-                folder.absolutePath,
-                DefaultFileNameGenerator.generate(description) + ".gif"
-              )
+              val file = options.fileGenerator(description, folder, "gif")
               result.saveGif(file)
             }
           }
