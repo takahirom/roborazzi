@@ -36,7 +36,7 @@ class RoborazziRule private constructor(
      * output directory path
      */
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
-    val fileGenerator: (
+    val outputFileProvider: (
       description: Description,
       folder: File,
       fileExtension: String
@@ -128,19 +128,19 @@ class RoborazziRule private constructor(
         if (!options.onlyFail || result.result.isFailure) {
           when (captureType) {
             CaptureType.LastImage -> {
-              val file = options.fileGenerator(description, folder, "png")
+              val file = options.outputFileProvider(description, folder, "png")
 
               result.saveLastImage(file)
             }
 
             CaptureType.AllImage -> {
               result.saveAllImage {
-                options.fileGenerator(description, folder, "png")
+                options.outputFileProvider(description, folder, "png")
               }
             }
 
             CaptureType.Gif -> {
-              val file = options.fileGenerator(description, folder, "gif")
+              val file = options.outputFileProvider(description, folder, "gif")
               result.saveGif(file)
             }
           }
