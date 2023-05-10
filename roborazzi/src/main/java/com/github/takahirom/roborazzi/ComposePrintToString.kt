@@ -39,7 +39,10 @@ private fun SemanticsNode.printToStringInner(
     if (nestingLevel > 0) {
         sb.append("$nestingIndent |-")
     }
-    sb.append("Node #$id at ")
+    // Node number changed unexpectedly
+    // sb.append("Node #$id at ")
+    sb.append("Node at ")
+
     sb.append(rectToShortString(unclippedGlobalBounds))
 
     if (config.contains(SemanticsProperties.TestTag)) {

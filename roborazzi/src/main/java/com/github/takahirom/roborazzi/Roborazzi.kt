@@ -12,17 +12,18 @@ import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.core.view.doOnNextLayout
 import androidx.core.view.drawToBitmap
 import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoActivityResumedException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
@@ -185,7 +186,7 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziEnabled()) return
-  val activityScenario = ActivityScenario.launch(ComponentActivity::class.java)
+  val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
   activityScenario.onActivity { activity ->
     activity.setContent {
       content()
@@ -194,8 +195,6 @@ fun captureRoboImage(
       .findViewById<ViewGroup>(android.R.id.content)
       .getChildAt(0) as ComposeView
     val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
-    val semanticsOwner = viewRootForTest.semanticsOwner
-    semanticsOwner.rootSemanticsNode
     viewRootForTest.view.captureRoboImage(file, roborazziOptions)
   }
 }
@@ -229,8 +228,7 @@ fun ViewInteraction.captureRoboLastImage(
   roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ) {
-  // currently, gif compare is not supported
-  if (!roborazziRecordingEnabled()) return
+  if (!roborazziEnabled()) return
   captureRoboLastImage(File(filePath), roborazziOptions, block)
 }
 
@@ -335,11 +333,12 @@ fun ViewInteraction.captureAndroidView(
 
   val canvases = mutableListOf<RoboCanvas>()
 
+  val handler = Handler(Looper.getMainLooper())
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
-    Handler(Looper.getMainLooper()).post {
+    handler.postAtFrontOfQueue {
       this@captureAndroidView.perform(
         ImageCaptureViewAction(roborazziOptions) { canvas ->
-          canvases.add(canvas)
+          canvases.addIfChanged(canvas, roborazziOptions)
         }
       )
     }
@@ -371,7 +370,7 @@ fun ViewInteraction.captureAndroidView(
     }
 
     override fun onActivityResumed(activity: Activity) {
-      Handler(Looper.getMainLooper()).post {
+      handler.postAtFrontOfQueue {
         perform(viewTreeListenerAction)
       }
     }
@@ -392,12 +391,12 @@ fun ViewInteraction.captureAndroidView(
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     perform(
       ImageCaptureViewAction(roborazziOptions) { canvas ->
-        canvases.add(canvas)
+        canvases.addIfChanged(canvas, roborazziOptions)
       }
     )
     perform(viewTreeListenerAction)
-  } catch (e: Exception) {
-    // It seems there is no screen, so wait
+  } catch (e: NoActivityResumedException) {
+    // It seems there is no resumed activity, so wait
     val application = instrumentation.targetContext.applicationContext as Application
     application.registerActivityLifecycleCallbacks(activityCallbacks)
   }
@@ -408,6 +407,7 @@ fun ViewInteraction.captureAndroidView(
       } catch (e: Exception) {
         throw e
       } finally {
+        onIdle()
         removeListener()
         val application = instrumentation.targetContext.applicationContext as Application
         application.unregisterActivityLifecycleCallbacks(activityCallbacks)
@@ -429,6 +429,24 @@ fun ViewInteraction.captureAndroidView(
   )
 }
 
+private fun MutableList<RoboCanvas>.addIfChanged(
+  next: RoboCanvas,
+  roborazziOptions: RoborazziOptions
+) {
+  val prev = this.lastOrNull() ?: run {
+    this.add(next)
+    return
+  }
+  val differ: ImageComparator.ComparisonResult =
+    prev.differ(next, 1.0)
+  if (!roborazziOptions.compareOptions.resultValidator(differ)) {
+    this.add(next)
+  } else {
+    // If the image is not changed, we should release the image.
+    next.release()
+  }
+}
+
 private fun saveLastImage(
   canvases: MutableList<RoboCanvas>,
   file: File,
@@ -448,8 +466,6 @@ fun SemanticsNodeInteraction.captureComposeNode(
   roborazziOptions: RoborazziOptions = RoborazziOptions(),
   block: () -> Unit
 ): CaptureResult {
-  var removeListener = {}
-
   val canvases = mutableListOf<RoboCanvas>()
 
   val capture = {
@@ -460,30 +476,26 @@ fun SemanticsNodeInteraction.captureComposeNode(
       ),
       roborazziOptions = roborazziOptions
     ) {
-      canvases.add(it)
+      canvases.addIfChanged(it, roborazziOptions)
     }
   }
-  val listener = ViewTreeObserver.OnGlobalLayoutListener(capture)
+  val handler = Handler(Looper.getMainLooper())
+  val composeApplyObserver = Snapshot.registerApplyObserver { anies, snapshot ->
+    handler.postAtFrontOfQueue {
+      try {
+        capture()
+      } catch (e: IllegalStateException) {
+        // No compose hierarchies found in the app, so wait
+        e.printStackTrace()
+      }
+
+    }
+  }
   try {
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     capture()
-    val viewTreeObserver = composeRule.activity.window.decorView.viewTreeObserver
-    viewTreeObserver.addOnGlobalLayoutListener(listener)
-    removeListener = {
-      viewTreeObserver.removeOnGlobalLayoutListener(listener)
-    }
-  } catch (e: Exception) {
-    // It seems there is no screen, so wait
-    composeRule.runOnIdle {
-      val viewTreeObserver = composeRule.activity.window.decorView.viewTreeObserver
-      composeRule.activity.window.decorView.doOnNextLayout {
-        capture()
-      }
-      viewTreeObserver.addOnGlobalLayoutListener(listener)
-      removeListener = {
-        viewTreeObserver.removeOnGlobalLayoutListener(listener)
-      }
-    }
+  } catch (e: IllegalStateException) {
+    // No compose hierarchies found in the app, so wait
   }
   return CaptureResult(
     result = runCatching {
@@ -493,7 +505,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
         throw e
       } finally {
         composeRule.waitForIdle()
-        removeListener()
+        composeApplyObserver.dispose()
       }
     },
     saveGif = { file ->

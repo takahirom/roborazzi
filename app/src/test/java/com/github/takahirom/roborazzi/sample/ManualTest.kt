@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 import com.github.takahirom.roborazzi.RoboComponent
+import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
@@ -31,15 +32,21 @@ import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(
+  sdk = [30],
+  qualifiers = RobolectricDeviceQualifiers.NexusOne
+)
 class ManualTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
   @Test
+  @Config(qualifiers = "+land")
   fun captureRoboImageSample() {
     // screen level image
     onView(ViewMatchers.isRoot())
@@ -131,6 +138,17 @@ class ManualTest {
             })
         )
       )
+
+
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_a11y_dump.png",
+        roborazziOptions = RoborazziOptions(
+          captureType = RoborazziOptions.CaptureType.Dump(
+            explanation = RoborazziOptions.CaptureType.Dump.AccessibilityExplanation,
+          )
+        )
+      )
   }
 
 
@@ -155,7 +173,6 @@ class ManualTest {
         onView(withId(R.id.button_first))
           .perform(click())
       }
-
     onView(ViewMatchers.isRoot())
       .captureRoboAllImage({ File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_all_$it.png") }) {
         // back
@@ -172,6 +189,9 @@ class ManualTest {
   }
 
   @Test
+  @Config(
+    qualifiers = "w150dp-h200dp",
+  )
   fun captureRoboGifSampleCompose() {
     composeTestRule.onRoot(false)
       .captureRoboGif(

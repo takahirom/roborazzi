@@ -5,7 +5,7 @@ import org.junit.runner.Description
 
 
 object DefaultFileNameGenerator {
-  private val descriptionToTakenCount = mutableMapOf<String, Int>()
+  private val testNameToTakenCount = mutableMapOf<String, Int>()
 
   fun generateFilePath(extension: String): String {
     return "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/${generateName()}.$extension"
@@ -36,8 +36,8 @@ object DefaultFileNameGenerator {
   }
 
   private fun countableTestName(testName: String): String {
-    val count = descriptionToTakenCount.getOrPut(testName) { 1 }
-    descriptionToTakenCount[testName] = count + 1
+    val count = testNameToTakenCount.getOrPut(testName) { 1 }
+    testNameToTakenCount[testName] = count + 1
     return if (count == 1) {
       testName
     } else {
