@@ -591,7 +591,7 @@ private fun saveOrCompare(
       true
     }
 
-    val report = if (changed) {
+    val result: CompareReportCaptureResult = if (changed) {
       val compareFile = File(
         goaldenFile.parent,
         goaldenFile.nameWithoutExtension + "_compare." + goaldenFile.extension
@@ -643,7 +643,7 @@ private fun saveOrCompare(
         timestampNs = System.nanoTime(),
       )
     }
-    roborazziOptions.compareOptions.roborazziCompareReporter.report(report)
+    roborazziOptions.compareOptions.roborazziCompareReporter.report(result)
   } else {
     // roborazzi.record is checked before
     canvas.save(goaldenFile, resizeScale)
