@@ -81,7 +81,11 @@ fun ViewInteraction.captureRoboImage(
 ) {
   if (!roborazziEnabled()) return
   perform(ImageCaptureViewAction(roborazziOptions) { canvas ->
-    saveOrCompare(canvas, file, roborazziOptions)
+    processOutputImageAndReport(
+      canvas = canvas,
+      goaldenFile = file,
+      roborazziOptions = roborazziOptions
+    )
     canvas.release()
   })
 }
@@ -164,7 +168,11 @@ fun Bitmap.captureRoboImage(
   ).apply {
     drawImage(Rect(0, 0, image.width, image.height), image)
   }
-  saveOrCompare(canvas, file, roborazziOptions)
+  processOutputImageAndReport(
+    canvas = canvas,
+    goaldenFile = file,
+    roborazziOptions = roborazziOptions
+  )
   canvas.release()
 }
 
@@ -279,7 +287,11 @@ fun SemanticsNodeInteraction.captureRoboImage(
     ),
     roborazziOptions = roborazziOptions,
   ) { canvas ->
-    saveOrCompare(canvas, file, roborazziOptions)
+    processOutputImageAndReport(
+      canvas = canvas,
+      goaldenFile = file,
+      roborazziOptions = roborazziOptions
+    )
     canvas.release()
   }
 }
@@ -457,7 +469,11 @@ private fun saveLastImage(
     println("Roborazzi could not capture for this test")
     return
   }
-  saveOrCompare(roboCanvas, file, roborazziOptions)
+  processOutputImageAndReport(
+    canvas = roboCanvas,
+    goaldenFile = file,
+    roborazziOptions = roborazziOptions
+  )
 }
 
 // Only for library, please don't use this directly
@@ -550,11 +566,15 @@ private fun saveAllImage(
   roborazziOptions: RoborazziOptions,
 ) {
   canvases.forEachIndexed { index, canvas ->
-    saveOrCompare(canvas, fileCreator(index.toString()), roborazziOptions)
+    processOutputImageAndReport(
+      canvas = canvas,
+      goaldenFile = fileCreator(index.toString()),
+      roborazziOptions = roborazziOptions
+    )
   }
 }
 
-private fun saveOrCompare(
+private fun processOutputImageAndReport(
   canvas: RoboCanvas,
   goaldenFile: File,
   roborazziOptions: RoborazziOptions
