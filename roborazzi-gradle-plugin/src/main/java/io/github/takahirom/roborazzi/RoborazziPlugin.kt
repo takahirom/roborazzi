@@ -23,6 +23,7 @@ class RoborazziPlugin : Plugin<Project> {
     val verifyVariants = project.tasks.register("verifyRoborazzi")
     val compareVariants = project.tasks.register("compareRoborazzi")
     val recordVariants = project.tasks.register("recordRoborazzi")
+    val verifyAndRecordVariants = project.tasks.register("verifyAndRecordRoborazzi")
 
     val hasLibraryPlugin = project.pluginManager.hasPlugin("com.android.library")
     val variants = if (hasLibraryPlugin) {
@@ -63,13 +64,21 @@ class RoborazziPlugin : Plugin<Project> {
         }
       verifyVariants.configure { it.dependsOn(verifyTaskProvider) }
 
+      val verifyAndRecordTaskProvider =
+        project.tasks.register("verifyAndRecordRoborazzi$variantSlug", RoborazziTask::class.java) {
+          it.group = VERIFICATION_GROUP
+        }
+      verifyAndRecordVariants.configure { it.dependsOn(verifyAndRecordTaskProvider) }
+
       val isRecordRun = project.objects.property(Boolean::class.java)
       val isVerifyRun = project.objects.property(Boolean::class.java)
       val isCompareRun = project.objects.property(Boolean::class.java)
+      val isVerifyAndRecordRun = project.objects.property(Boolean::class.java)
 
       project.gradle.taskGraph.whenReady { graph ->
         isRecordRun.set(recordTaskProvider.map { graph.hasTask(it) })
         isVerifyRun.set(verifyTaskProvider.map { graph.hasTask(it) })
+        isVerifyAndRecordRun.set(verifyAndRecordTaskProvider.map { graph.hasTask(it) })
         isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
       }
 
@@ -82,9 +91,11 @@ class RoborazziPlugin : Plugin<Project> {
         val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
 
         test.doFirst {
-          test.systemProperties["roborazzi.test.record"] = isRecordRun.get()
+          test.systemProperties["roborazzi.test.record"] =
+            isRecordRun.get() || isVerifyAndRecordRun.get()
           test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
-          test.systemProperties["roborazzi.test.verify"] = isVerifyRun.get()
+          test.systemProperties["roborazzi.test.verify"] =
+            isVerifyRun.get() || isVerifyAndRecordRun.get()
           test.systemProperties.putAll(roborazziProperties)
           if (isCompareRun.get()) {
             compareReportDir.deleteRecursively()
@@ -96,6 +107,7 @@ class RoborazziPlugin : Plugin<Project> {
       recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
       compareReportGenerateTaskProvider.configure { it.dependsOn(testTaskProvider) }
       verifyTaskProvider.configure { it.dependsOn(testTaskProvider) }
+      verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
     }
   }
 

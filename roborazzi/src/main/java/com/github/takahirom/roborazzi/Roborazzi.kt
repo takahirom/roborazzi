@@ -591,7 +591,7 @@ private fun saveOrCompare(
       true
     }
 
-    if (changed) {
+    val report = if (changed) {
       val compareFile = File(
         goaldenFile.parent,
         goaldenFile.nameWithoutExtension + "_compare." + goaldenFile.extension
@@ -609,10 +609,15 @@ private fun saveOrCompare(
         )
       compareCanvas.release()
 
-      val actualFile = File(
-        goaldenFile.parent,
-        goaldenFile.nameWithoutExtension + "_actual." + goaldenFile.extension
-      )
+      val actualFile = if (roborazziRecordingEnabled()) {
+        // If record option is enabled, we should save the actual file as the golden file.
+        goaldenFile
+      } else {
+        File(
+          goaldenFile.parent,
+          goaldenFile.nameWithoutExtension + "_actual." + goaldenFile.extension
+        )
+      }
       canvas
         .save(
           file = actualFile,
@@ -637,9 +642,8 @@ private fun saveOrCompare(
         goldenFile = goaldenFile,
         timestampNs = System.nanoTime(),
       )
-    }.let {
-      roborazziOptions.compareOptions.roborazziCompareReporter.report(it)
     }
+    roborazziOptions.compareOptions.roborazziCompareReporter.report(report)
   } else {
     // roborazzi.record is checked before
     canvas.save(goaldenFile, resizeScale)
