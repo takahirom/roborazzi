@@ -12,12 +12,14 @@ sealed class CompareReportCaptureResult {
 
   data class Added(
     val compareFile: File,
-    override val timestampNs: Long
+    val actualFile: File,
+    override val timestampNs: Long,
   ) : CompareReportCaptureResult() {
     override fun writeJson(writer: JsonWriter) {
       writer.beginObject()
       writer.name("type").value("added")
       writer.name("compare_file_path").value(compareFile.absolutePath)
+      writer.name("actual_file_path").value(actualFile.absolutePath)
       writer.name("timestamp").value(timestampNs)
       writer.endObject()
     }
@@ -26,12 +28,14 @@ sealed class CompareReportCaptureResult {
   data class Changed(
     val compareFile: File,
     val goldenFile: File,
+    val actualFile: File,
     override val timestampNs: Long
   ) : CompareReportCaptureResult() {
     override fun writeJson(writer: JsonWriter) {
       writer.beginObject()
       writer.name("type").value("changed")
       writer.name("compare_file_path").value(compareFile.absolutePath)
+      writer.name("actual_file_path").value(actualFile.absolutePath)
       writer.name("golden_file_path").value(goldenFile.absolutePath)
       writer.name("timestamp").value(timestampNs)
       writer.endObject()
@@ -62,6 +66,7 @@ sealed class CompareReportCaptureResult {
       var type: String? = null
       var compareFile: String? = null
       var goldenFile: String? = null
+      var actualFile: String? = null
       var timestampNs: Long? = null
 
       jsonReader.beginObject()
@@ -70,6 +75,7 @@ sealed class CompareReportCaptureResult {
           "type" -> type = jsonReader.nextString()
           "compare_file_path" -> compareFile = jsonReader.nextString()
           "golden_file_path" -> goldenFile = jsonReader.nextString()
+          "actual_file_path" -> actualFile = jsonReader.nextString()
           "timestamp" -> timestampNs = jsonReader.nextLong()
           else -> jsonReader.skipValue()
         }
@@ -80,6 +86,7 @@ sealed class CompareReportCaptureResult {
         "changed" -> Changed(
           compareFile = File(compareFile),
           goldenFile = File(goldenFile),
+          actualFile = File(actualFile),
           timestampNs = timestampNs!!
         )
 
@@ -90,7 +97,8 @@ sealed class CompareReportCaptureResult {
 
         "added" -> Added(
           compareFile = File(compareFile),
-          timestampNs = timestampNs!!
+          actualFile = File(actualFile),
+          timestampNs = timestampNs!!,
         )
 
         else -> throw IllegalArgumentException("Unknown type $type")

@@ -559,6 +559,12 @@ private fun saveOrCompare(
   goaldenFile: File,
   roborazziOptions: RoborazziOptions
 ) {
+  val forbiddenFileSuffixes = listOf("_compare", "_actual")
+  forbiddenFileSuffixes.forEach {
+    if (goaldenFile.nameWithoutExtension.endsWith(it)) {
+      throw IllegalArgumentException("The file name should not end with $it because it is reserved for Roborazzi")
+    }
+  }
   val recordOptions = roborazziOptions.recordOptions
   val resizeScale = recordOptions.resizeScale
   if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
@@ -586,29 +592,43 @@ private fun saveOrCompare(
     }
 
     if (changed) {
-      val compareFilePath = File(
+      val compareFile = File(
         goaldenFile.parent,
         goaldenFile.nameWithoutExtension + "_compare." + goaldenFile.extension
       )
-      RoboCanvas.generateCompareCanvas(
+      val compareCanvas = RoboCanvas.generateCompareCanvas(
         goldenCanvas = goldenRoboCanvas,
         newCanvas = canvas,
         newCanvasResize = resizeScale,
         bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
       )
+      compareCanvas
         .save(
-          file = compareFilePath,
+          file = compareFile,
+          resizeScale = resizeScale
+        )
+      compareCanvas.release()
+
+      val actualFile = File(
+        goaldenFile.parent,
+        goaldenFile.nameWithoutExtension + "_actual." + goaldenFile.extension
+      )
+      canvas
+        .save(
+          file = actualFile,
           resizeScale = resizeScale
         )
       if (goaldenFile.exists()) {
         CompareReportCaptureResult.Changed(
-          compareFile = compareFilePath,
+          compareFile = compareFile,
+          actualFile = actualFile,
           goldenFile = goaldenFile,
           timestampNs = System.nanoTime(),
         )
       } else {
         CompareReportCaptureResult.Added(
-          compareFile = compareFilePath,
+          compareFile = compareFile,
+          actualFile = actualFile,
           timestampNs = System.nanoTime(),
         )
       }
