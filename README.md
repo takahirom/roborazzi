@@ -4,26 +4,32 @@
 
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10) and enables screenshot testing.📣
 
-To save the image, run `recordRoborazziDebug` task.
+To record an image, execute the `recordRoborazziDebug` task:
 
 ```
- ./gradlew recordRoborazziDebug
+./gradlew recordRoborazziDebug
 ```
 
-To view the changes in the image, run `compareRoborazziDebug` task. This way, the changes between
-the image and the one you are saving now will be saved as [original]_compare.png.
-And generate a json file that contains the diff information in `build/test-results/roborazzi`.
+To review changes made to an image, execute the `compareRoborazziDebug` task. This action will compare the current image with the saved one, generating a comparison image labeled as `[original]_compare.png`. It also produces a JSON file containing the diff information, which can be found under `build/test-results/roborazzi`.
 
 ```
- ./gradlew compareRoborazziDebug
+./gradlew compareRoborazziDebug
 ```
 
-To verify the changes in the image, run `verifyRoborazziDebug` task. If the image is different from
-the one you are saving now, the test will fail.
+To validate changes made to an image, execute the `verifyRoborazziDebug` task. If there is any difference between the current image and the saved one, the test will fail.
 
 ```
- ./gradlew verifyRoborazziDebug
+./gradlew verifyRoborazziDebug
 ```
+
+---
+
+Additionally, you can use `verifyAndRecordRoborazziDebug` task to handle both recording and verifying in a single run:
+
+```
+./gradlew verifyAndRecordRoborazziDebug
+```
+This task will first verify the images and, if differences are detected, it will record a new baseline.
 
 ![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
 
