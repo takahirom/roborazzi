@@ -7,7 +7,11 @@ on:
     types:
       - completed
 
-permissions: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}-${{ github.event.workflow_run.id }}
+  cancel-in-progress: true
+
+permissions: { }
 
 jobs:
   Comment-CompareScreenshot:
@@ -33,7 +37,7 @@ jobs:
         name: Get pull request number
         shell: bash
         run: |
-          echo "pull_request_number=$(cat NR)" >> $GITHUB_OUTPUT
+          echo "pull_request_number=$(cat NR)" >> "$GITHUB_OUTPUT"
       - name: main checkout
         id: checkout-main
         uses: actions/checkout@v3
@@ -44,8 +48,8 @@ jobs:
           BRANCH_NAME: companion_${{ github.event.workflow_run.head_branch }}
         run: |
           # orphan means it will create no history branch
-          git branch -D $BRANCH_NAME || true
-          git checkout --orphan $BRANCH_NAME
+          git branch -D "$BRANCH_NAME" || true
+          git checkout --orphan "$BRANCH_NAME"
           git rm -rf .
       - uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
         with:
@@ -57,17 +61,17 @@ jobs:
         shell: bash
         run: |
           # Find all the files ending with _compare.png
-          files_to_add=$(find . -type f -name "*_compare.png")
+          mapfile -t files_to_add < <(find . -type f -name "*_compare.png")
           
           # Check for invalid file names and add only valid ones
           exist_valid_files="false"
-          for file in $files_to_add; do
+          for file in "${files_to_add[@]}"; do
             if [[ $file =~ ^[a-zA-Z0-9_./-]+$ ]]; then
               exist_valid_files="true"
               break
             fi
           done
-          echo "exist_valid_files=$exist_valid_files" >> $GITHUB_OUTPUT
+          echo "exist_valid_files=$exist_valid_files" >> "$GITHUB_OUTPUT"
       - id: push-screenshot-diff
         shell: bash
         if: steps.check-if-there-are-valid-files.outputs.exist_valid_files == 'true'
@@ -79,14 +83,14 @@ jobs:
           
           # Check for invalid file names and add only valid ones
           for file in $files_to_add; do
-            if [[ $file =~ ^[a-zA-Z0-9_./-]+$ ]]; then
+            if [[ "$file" =~ ^[a-zA-Z0-9_./-]+$ ]]; then
               git add "$file"
             fi
           done
           git config --global user.name ScreenshotBot
           git config --global user.email 41898282+github-actions[bot]@users.noreply.github.com
           git commit -m "Add screenshot diff"
-          git push origin HEAD:$BRANCH_NAME -f
+          git push origin HEAD:"$BRANCH_NAME" -f
       - id: generate-diff-reports
         name: Generate diff reports
         if: steps.check-if-there-are-valid-files.outputs.exist_valid_files == 'true'
@@ -97,20 +101,22 @@ jobs:
           # Find all the files ending with _compare.png in roborazzi folder
           files=$(find . -type f -name "*_compare.png" | grep "roborazzi/" | grep -E "^[a-zA-Z0-9_./-]+$")
           delimiter="$(openssl rand -hex 8)"
-          echo "reports<<${delimiter}" >> $GITHUB_OUTPUT
+          {
+            echo "reports<<${delimiter}"
           
-          # Create markdown table header
-          echo "Snapshot diff report ([About this comment](https://github.com/takahirom/roborazzi-compare-on-github-comment-sample))" >> $GITHUB_OUTPUT
-          echo "| File name | Image |" >> $GITHUB_OUTPUT
-          echo "|-------|-------|" >> $GITHUB_OUTPUT
+            # Create markdown table header
+            echo "Snapshot diff report"
+            echo "| File name | Image |"
+            echo "|-------|-------|"
+          } >> "$GITHUB_OUTPUT"
           
           # Iterate over the files and create table rows
           for file in $files; do
             # Get the file name and insert newlines every 20 characters
-            fileName=$(echo "$(basename $file)" | sed -r 's/(.{20})/\1<br>/g')
-            echo "| [$fileName](https://github.com/takahirom/roborazzi/blob/$BRANCH_NAME/$file) | ![](https://github.com/takahirom/roborazzi/blob/$BRANCH_NAME/$file?raw=true) |" >> $GITHUB_OUTPUT
+            fileName=$(basename "$file" | sed -r 's/(.{20})/\1<br>/g')
+            echo "| [$fileName](https://github.com/${{ github.repository }}/blob/$BRANCH_NAME/$file) | ![](https://github.com/${{ github.repository }}/blob/$BRANCH_NAME/$file?raw=true) |" >> "$GITHUB_OUTPUT"
           done
-          echo "${delimiter}" >> $GITHUB_OUTPUT
+          echo "${delimiter}" >> "$GITHUB_OUTPUT"
       - name: Find Comment
         uses: peter-evans/find-comment@v2
         id: fc
@@ -132,8 +138,8 @@ jobs:
       - name: Cleanup outdated companion branches
         run: |
           # Find outdated companion branches with last commit date
-          git branch -r --format="%(refname:lstrip=3)" | grep companion_ | while read branch; do
-            last_commit_date_timestamp=$(git log -1 --format=%ct origin/$branch)
+          git branch -r --format="%(refname:lstrip=3)" | grep companion_ | while read -r branch; do
+            last_commit_date_timestamp=$(git log -1 --format=%ct "origin/$branch")
             now_timestamp=$(date +%s)
             # Delete branch if it's older than 1 month
             # if [ $((now_timestamp - last_commit_date_timestamp)) -gt 2592000 ]; then
@@ -142,6 +148,7 @@ jobs:
             if [ $((now_timestamp - last_commit_date_timestamp)) -gt 1 ]; then
               # Comment out for demonstration purpose
               echo "Deleting $branch"
-              # git push origin --delete $branch
+
+              # git push origin --delete "$branch"
             fi
           done
