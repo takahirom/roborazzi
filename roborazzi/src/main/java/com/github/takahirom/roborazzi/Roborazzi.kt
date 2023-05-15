@@ -77,10 +77,10 @@ fun roborazziDefaultChangeThreshold(): Float {
 
 fun roborazziDefaultNameStrategy(): DefaultFileNameGenerator.DefaultNameStrategy {
   return DefaultFileNameGenerator.DefaultNameStrategy.fromOptionName(
-    checkNotNull(
+    optionName = checkNotNull(
       System.getProperty(
-        "roborazzi.test.nameStrategy",
-        "testPackageAndClassAndMethod"
+        "roborazzi.record.nameStrategy",
+        DefaultFileNameGenerator.DefaultNameStrategy.TestPackageAndClassAndMethod.optionName
       )
     )
   )
@@ -612,6 +612,7 @@ private fun processOutputImageAndReport(
   if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
     val height = (canvas.croppedHeight * resizeScale).toInt()
+    println("canvas.croppedHeight:${canvas.croppedHeight} resizeScale:$resizeScale height:$height")
     val goldenRoboCanvas = if (goaldenFile.exists()) {
       RoboCanvas.load(goaldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
     } else {

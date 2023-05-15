@@ -77,7 +77,7 @@ object DefaultFileNameGenerator {
         "_"
       ) + "_" + methodName
 
-      DefaultNameStrategy.TestClassAndMethod -> className.substringAfterLast(".") + "_" + methodName
+      DefaultNameStrategy.TestClassAndMethod -> className.substringAfterLast(".") + "." + methodName
       DefaultNameStrategy.TestMethod -> methodName ?: ""
     }
   }
