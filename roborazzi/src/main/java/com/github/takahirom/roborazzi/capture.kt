@@ -299,7 +299,7 @@ data class RoborazziOptions(
        * This value determines the threshold of pixel change at which the diff image is output or not.
        * The value should be between 0 and 1
        */
-      changeThreshold: Float = 0.01F,
+      changeThreshold: Float = roborazziDefaultChangeThreshold(),
     ) : this(roborazziCompareReporter, ThresholdValidator(changeThreshold))
   }
 
@@ -364,7 +364,7 @@ data class RoborazziOptions(
   }
 
   data class RecordOptions(
-    val resizeScale: Double = 1.0,
+    val resizeScale: Double = roborazziDefaultResizeScale(),
     val applyDeviceCrop: Boolean = false,
     val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
   )

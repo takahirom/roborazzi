@@ -47,7 +47,10 @@ fun roborazziEnabled(): Boolean {
     "roborazziEnabled: $isEnabled \n" +
       "roborazziRecordingEnabled(): ${roborazziRecordingEnabled()}\n" +
       "roborazziCompareEnabled(): ${roborazziCompareEnabled()}\n" +
-      "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n"
+      "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n" +
+      "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
+      "roborazziDefaultChangeThreshold(): ${roborazziDefaultChangeThreshold()}\n" +
+      "roborazziDefaultNameStrategy(): ${roborazziDefaultNameStrategy()}\n"
   }
   return isEnabled
 }
@@ -62,6 +65,25 @@ fun roborazziVerifyEnabled(): Boolean {
 
 fun roborazziRecordingEnabled(): Boolean {
   return System.getProperty("roborazzi.test.record") == "true"
+}
+
+fun roborazziDefaultResizeScale(): Double {
+  return checkNotNull(System.getProperty("roborazzi.record.resizeScale", "1.0")).toDouble()
+}
+
+fun roborazziDefaultChangeThreshold(): Float {
+  return checkNotNull(System.getProperty("roborazzi.compare.changeThreshold", "0.01")).toFloat()
+}
+
+fun roborazziDefaultNameStrategy(): DefaultFileNameGenerator.DefaultNameStrategy {
+  return DefaultFileNameGenerator.DefaultNameStrategy.fromOptionName(
+    checkNotNull(
+      System.getProperty(
+        "roborazzi.test.nameStrategy",
+        "testPackageAndClassAndMethod"
+      )
+    )
+  )
 }
 
 fun ViewInteraction.captureRoboImage(
