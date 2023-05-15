@@ -44,7 +44,7 @@ jobs:
         id: compare-screenshot-test
         run: |
           ./gradlew roborazzi-gradle-plugin:build --stacktrace
-          ./gradlew app:compareRoborazziDebug --stacktrace -Proborazzi.record.resizeScale=0.5 -Proborazzi.compare.changeThreshold=0.001 -Proborazzi.record.nameStrategy=testClassAndMethod --no-daemon
+          ./gradlew app:compareRoborazziDebug --stacktrace --no-daemon
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
