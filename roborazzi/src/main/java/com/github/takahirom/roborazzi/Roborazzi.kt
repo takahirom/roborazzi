@@ -50,7 +50,7 @@ fun roborazziEnabled(): Boolean {
       "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n" +
       "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
       "roborazziDefaultChangeThreshold(): ${roborazziDefaultChangeThreshold()}\n" +
-      "roborazziDefaultNameStrategy(): ${roborazziDefaultNameStrategy()}\n"
+      "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n"
   }
   return isEnabled
 }
@@ -75,12 +75,12 @@ fun roborazziDefaultChangeThreshold(): Float {
   return checkNotNull(System.getProperty("roborazzi.compare.changeThreshold", "0.01")).toFloat()
 }
 
-fun roborazziDefaultNameStrategy(): DefaultFileNameGenerator.DefaultNameStrategy {
-  return DefaultFileNameGenerator.DefaultNameStrategy.fromOptionName(
+fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStrategy {
+  return DefaultFileNameGenerator.DefaultNamingStrategy.fromOptionName(
     optionName = checkNotNull(
       System.getProperty(
-        "roborazzi.record.nameStrategy",
-        DefaultFileNameGenerator.DefaultNameStrategy.TestPackageAndClassAndMethod.optionName
+        "roborazzi.record.namingStrategy",
+        DefaultFileNameGenerator.DefaultNamingStrategy.TestPackageAndClassAndMethod.optionName
       )
     )
   )
