@@ -612,7 +612,6 @@ private fun processOutputImageAndReport(
   if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
     val height = (canvas.croppedHeight * resizeScale).toInt()
-    println("canvas.croppedHeight:${canvas.croppedHeight} resizeScale:$resizeScale height:$height")
     val goldenRoboCanvas = if (goaldenFile.exists()) {
       RoboCanvas.load(goaldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
     } else {
