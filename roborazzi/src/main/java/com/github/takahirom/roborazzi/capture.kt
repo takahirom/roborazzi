@@ -364,7 +364,7 @@ data class RoborazziOptions(
   }
 
   data class RecordOptions(
-    val resizeScale: Double = 1.0,
+    val resizeScale: Double = roborazziDefaultResizeScale(),
     val applyDeviceCrop: Boolean = false,
     val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
   )

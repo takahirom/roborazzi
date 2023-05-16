@@ -5,7 +5,22 @@ import org.junit.runner.Description
 
 
 object DefaultFileNameGenerator {
+  enum class DefaultNamingStrategy(val optionName: String) {
+    TestPackageAndClassAndMethod("testPackageAndClassAndMethod"),
+    EscapedTestPackageAndClassAndMethod("escapedTestPackageAndClassAndMethod"),
+    TestClassAndMethod("testClassAndMethod");
+
+    companion object {
+      fun fromOptionName(optionName: String): DefaultNamingStrategy {
+        return values().firstOrNull { it.optionName == optionName } ?: TestPackageAndClassAndMethod
+      }
+    }
+  }
+
   private val testNameToTakenCount = mutableMapOf<String, Int>()
+  private val defaultNamingStrategy by lazy {
+    roborazziDefaultNamingStrategy()
+  }
 
   fun generateFilePath(extension: String): String {
     return "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/${generateName()}.$extension"
@@ -31,7 +46,7 @@ object DefaultFileNameGenerator {
       }
       ?: throw IllegalArgumentException("Roborazzi can't find method of test. Please specify file name or use Rule")
     val testName =
-      (stackTraceElement.className + "." + stackTraceElement.methodName).replace(".", "_")
+      generateTestName(stackTraceElement.className, stackTraceElement.methodName)
     return countableTestName(testName)
   }
 
@@ -46,8 +61,22 @@ object DefaultFileNameGenerator {
   }
 
   fun generate(description: Description): String {
-    val methodName = description.className.replace(".", "_") + "_" + description.methodName
-    return countableTestName(methodName)
+    description.testClass
+    val className = description.className
+    val methodName = description.methodName
+    val testName = generateTestName(className, methodName)
+    return countableTestName(testName)
   }
 
+  private fun generateTestName(className: String, methodName: String?): String {
+    return when (defaultNamingStrategy) {
+      DefaultNamingStrategy.TestPackageAndClassAndMethod -> "$className.$methodName"
+      DefaultNamingStrategy.EscapedTestPackageAndClassAndMethod -> className.replace(
+        ".",
+        "_"
+      ) + "." + methodName
+
+      DefaultNamingStrategy.TestClassAndMethod -> className.substringAfterLast(".") + "." + methodName
+    }
+  }
 }
