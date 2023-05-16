@@ -8,8 +8,7 @@ object DefaultFileNameGenerator {
   enum class DefaultNamingStrategy(val optionName: String) {
     TestPackageAndClassAndMethod("testPackageAndClassAndMethod"),
     EscapedTestPackageAndClassAndMethod("escapedTestPackageAndClassAndMethod"),
-    TestClassAndMethod("testClassAndMethod"),
-    TestMethod("testMethod");
+    TestClassAndMethod("testClassAndMethod");
 
     companion object {
       fun fromOptionName(optionName: String): DefaultNamingStrategy {
@@ -78,7 +77,6 @@ object DefaultFileNameGenerator {
       ) + "_" + methodName
 
       DefaultNamingStrategy.TestClassAndMethod -> className.substringAfterLast(".") + "." + methodName
-      DefaultNamingStrategy.TestMethod -> methodName ?: ""
     }
   }
 }
