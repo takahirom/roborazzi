@@ -74,7 +74,7 @@ object DefaultFileNameGenerator {
       DefaultNamingStrategy.EscapedTestPackageAndClassAndMethod -> className.replace(
         ".",
         "_"
-      ) + "_" + methodName
+      ) + "." + methodName
 
       DefaultNamingStrategy.TestClassAndMethod -> className.substringAfterLast(".") + "." + methodName
     }
