@@ -77,27 +77,29 @@ class RoborazziPlugin : Plugin<Project> {
           isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
         }
 
-        val testTaskProvider = project.tasks.named("test$testVariantSlug", Test::class.java) { test ->
-//        test.outputs.dir(reportOutputDir)
-//        test.outputs.dir(snapshotOutputDir)
+        val testTaskProvider = project.tasks.withType(Test::class.java)
+          .matching { it.name == "test$testVariantSlug" }
+          .configureEach { test ->
+    //        test.outputs.dir(reportOutputDir)
+    //        test.outputs.dir(snapshotOutputDir)
 
-          val roborazziProperties =
-            project.properties.filterKeys { it.startsWith("roborazzi") }
-          val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
+              val roborazziProperties =
+                project.properties.filterKeys { it.startsWith("roborazzi") }
+              val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
 
-          test.doFirst {
-            test.systemProperties["roborazzi.test.record"] =
-              isRecordRun.get() || isVerifyAndRecordRun.get()
-            test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
-            test.systemProperties["roborazzi.test.verify"] =
-              isVerifyRun.get() || isVerifyAndRecordRun.get()
-            test.systemProperties.putAll(roborazziProperties)
-            if (isCompareRun.get()) {
-              compareReportDir.deleteRecursively()
-              compareReportDir.mkdirs()
+              test.doFirst {
+                test.systemProperties["roborazzi.test.record"] =
+                  isRecordRun.get() || isVerifyAndRecordRun.get()
+                test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
+                test.systemProperties["roborazzi.test.verify"] =
+                  isVerifyRun.get() || isVerifyAndRecordRun.get()
+                test.systemProperties.putAll(roborazziProperties)
+                if (isCompareRun.get()) {
+                  compareReportDir.deleteRecursively()
+                  compareReportDir.mkdirs()
+                }
+              }
             }
-          }
-        }
 
         recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
         compareReportGenerateTaskProvider.configure { it.dependsOn(testTaskProvider) }
