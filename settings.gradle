@@ -19,4 +19,6 @@ include ':roborazzi-junit-rule'
 include ':roborazzi'
 include ':roborazzi-painter'
 include ':roborazzi-core'
-include ':roborazzi-gradle-plugin'
+includeBuild("roborazzi-gradle-plugin") {
+  dependencySubstitution { substitute(module("io.github.takahirom.roborazzi:roborazzi-gradle-plugin")).using(project(":")) }
+}
