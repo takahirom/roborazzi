@@ -15,3 +15,7 @@ dependencyResolutionManagement {
     mavenCentral()
   }
 }
+
+rootProject.name = "roborazzi-gradle-plugin"
+include(':roborazzi-core')
+project(":roborazzi-core").projectDir = file('../roborazzi-core')

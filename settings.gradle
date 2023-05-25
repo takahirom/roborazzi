@@ -18,7 +18,9 @@ include ':app-without-compose'
 include ':roborazzi-junit-rule'
 include ':roborazzi'
 include ':roborazzi-painter'
-include ':roborazzi-core'
 includeBuild("roborazzi-gradle-plugin") {
-  dependencySubstitution { substitute(module("io.github.takahirom.roborazzi:roborazzi-gradle-plugin")).using(project(":")) }
+  dependencySubstitution {
+    substitute(module("io.github.takahirom.roborazzi:roborazzi-gradle-plugin")).using(project(":"))
+    substitute(module("io.github.takahirom.roborazzi:roborazzi-core")).using(project(":roborazzi-core"))
+  }
 }

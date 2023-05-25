@@ -1,0 +1,40 @@
+buildscript {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
+  }
+  dependencies {
+    classpath 'com.vanniktech:gradle-maven-publish-plugin:0.25.2'
+  }
+}
+import com.vanniktech.maven.publish.SonatypeHost
+
+plugins.withId('com.vanniktech.maven.publish') {
+  project.group = "io.github.takahirom.roborazzi"
+  mavenPublishing {
+    publishToMavenCentral(SonatypeHost.S01)
+    signAllPublications()
+  }
+
+  plugins.withId('maven-publish') {
+    publishing {
+      repositories {
+        maven {
+          name = "LocalMaven"
+          url = file("${rootProject.buildDir}/localMaven").toURI().toString()
+        }
+        def internalUrl = providers.gradleProperty("internalUrl")
+        if (internalUrl.isPresent()) {
+          maven {
+            name = "internal"
+            url = internalUrl
+            credentials {
+              username = providers.gradleProperty("internalUsername").get()
+              password = providers.gradleProperty("internalPassword").get()
+            }
+          }
+        }
+      }
+    }
+  }
+}

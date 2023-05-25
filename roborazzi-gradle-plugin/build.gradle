@@ -1,6 +1,7 @@
 plugins {
   id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin
 }
+apply from: rootProject.file('../gradle/release.gradle').path
 apply plugin: 'java-gradle-plugin'
 
 gradlePlugin {
