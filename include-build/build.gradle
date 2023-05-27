@@ -1,0 +1,36 @@
+plugins {
+  id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin
+  id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
+}
+
+allprojects {
+  plugins.withId('com.vanniktech.maven.publish') {
+    project.group = "io.github.takahirom.roborazzi"
+    mavenPublishing {
+      publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.S01)
+      signAllPublications()
+    }
+
+    plugins.withId('maven-publish') {
+      publishing {
+        repositories {
+          maven {
+            name = "LocalMaven"
+            url = file("${rootProject.buildDir}/localMaven").toURI().toString()
+          }
+          def internalUrl = providers.gradleProperty("internalUrl")
+          if (internalUrl.isPresent()) {
+            maven {
+              name = "internal"
+              url = internalUrl
+              credentials {
+                username = providers.gradleProperty("internalUsername").get()
+                password = providers.gradleProperty("internalPassword").get()
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

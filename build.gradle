@@ -1,41 +1,8 @@
-import com.vanniktech.maven.publish.SonatypeHost
-
 plugins {
-  id 'com.android.application' version '7.3.1' apply false
-  id 'com.android.library' version '7.3.1' apply false
-  id 'org.jetbrains.kotlin.android' version '1.7.20' apply false
-  id "com.vanniktech.maven.publish" version "0.24.0" apply false
-}
-
-allprojects {
-  if (project.path.startsWith(":roborazzi")) {
-    apply plugin: 'com.vanniktech.maven.publish'
-    project.group = "io.github.takahirom.roborazzi"
-    mavenPublishing {
-      publishToMavenCentral(SonatypeHost.S01)
-      signAllPublications()
-    }
-
-    plugins.withId('maven-publish') {
-      publishing {
-        repositories {
-          maven {
-            name = "LocalMaven"
-            url = file("${rootProject.buildDir}/localMaven").toURI().toString()
-          }
-          def internalUrl = providers.gradleProperty("internalUrl")
-          if (internalUrl.isPresent()) {
-            maven {
-              name = "internal"
-              url = internalUrl
-              credentials {
-                username = providers.gradleProperty("internalUsername").get()
-                password = providers.gradleProperty("internalPassword").get()
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  id 'com.android.application' version libs.versions.agp apply false
+  id 'com.android.library' version libs.versions.agp apply false
+  id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
+  id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
+  // Just for Gradle Build, included build will be applied
+  id("io.github.takahirom.roborazzi") version "1.0.0" apply false
 }

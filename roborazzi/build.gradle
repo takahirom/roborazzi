@@ -2,6 +2,7 @@ plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
   id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.21'
+  id "com.vanniktech.maven.publish"
 }
 
 // TODO: Use build-logic
@@ -12,7 +13,8 @@ android.namespace 'com.github.takahirom.roborazzi'
 
 dependencies {
   implementation project(':roborazzi-painter')
-  implementation project(':roborazzi-core')
+  // Please see settings.gradle
+  implementation 'io.github.takahirom.roborazzi:roborazzi-core'
 
   def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
   implementation composeBom

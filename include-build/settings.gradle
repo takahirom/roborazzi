@@ -1,0 +1,21 @@
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+  }
+}
+dependencyResolutionManagement {
+  versionCatalogs {
+    libs.from(files("../gradle/libs.versions.toml"))
+  }
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    google()
+    mavenCentral()
+  }
+}
+
+rootProject.name = "roborazzi-include-build"
+include(':roborazzi-core')
+include(':roborazzi-gradle-plugin')
