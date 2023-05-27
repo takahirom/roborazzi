@@ -1,8 +1,9 @@
 plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
+  id "com.vanniktech.maven.publish"
 }
-apply from: rootProject.file('gradle/release.gradle').path
+
 
 android {
   namespace 'com.github.takahirom.roborazzi.junit.rule'

@@ -2,8 +2,8 @@ plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
   id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.21'
+  id "com.vanniktech.maven.publish"
 }
-apply from: rootProject.file('gradle/release.gradle').path
 
 // TODO: Use build-logic
 apply from: rootProject.file('gradle/android.gradle')

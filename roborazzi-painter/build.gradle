@@ -1,7 +1,7 @@
 plugins {
   id 'org.jetbrains.kotlin.jvm'
+  id "com.vanniktech.maven.publish"
 }
-apply from: rootProject.file('gradle/release.gradle').path
 
 dependencies {
   compileOnly "org.robolectric:android-all:Q-robolectric-5415296"

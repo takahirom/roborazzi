@@ -7,10 +7,11 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
-              <build path="$PROJECT_DIR$/roborazzi-gradle-plugin" name="roborazzi-gradle-plugin">
+              <build path="$PROJECT_DIR$/include-build" name="roborazzi-include-build">
                 <projects>
-                  <project path="$PROJECT_DIR$/roborazzi-core" />
-                  <project path="$PROJECT_DIR$/roborazzi-gradle-plugin" />
+                  <project path="$PROJECT_DIR$/include-build" />
+                  <project path="$PROJECT_DIR$/include-build/roborazzi-core" />
+                  <project path="$PROJECT_DIR$/include-build/roborazzi-gradle-plugin" />
                 </projects>
               </build>
             </builds>
@@ -25,9 +26,10 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/app-without-compose" />
+            <option value="$PROJECT_DIR$/include-build" />
+            <option value="$PROJECT_DIR$/include-build/roborazzi-core" />
+            <option value="$PROJECT_DIR$/include-build/roborazzi-gradle-plugin" />
             <option value="$PROJECT_DIR$/roborazzi" />
-            <option value="$PROJECT_DIR$/roborazzi-core" />
-            <option value="$PROJECT_DIR$/roborazzi-gradle-plugin" />
             <option value="$PROJECT_DIR$/roborazzi-junit-rule" />
             <option value="$PROJECT_DIR$/roborazzi-painter" />
           </set>
