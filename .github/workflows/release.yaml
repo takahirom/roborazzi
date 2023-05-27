@@ -34,6 +34,6 @@ jobs:
           retry_on: error
           timeout_minutes: 20
           command: |
-            ./gradlew publish --stacktrace --no-configuration-cache
+            ./gradlew publish --rerun-tasks --stacktrace --no-configuration-cache
             cd include-build
-            ./gradlew publish --stacktrace --no-configuration-cache
+            ./gradlew publish --rerun-tasks --stacktrace --no-configuration-cache
