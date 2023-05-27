@@ -1,18 +1,15 @@
 plugins {
-  id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin
+  id 'com.android.library'
+  id 'org.jetbrains.kotlin.android'
   id "com.vanniktech.maven.publish"
 }
-
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
-  }
-}
+group = "com.github.takahirom.roborazzi"
+// TODO: Use build-logic
+apply from: rootProject.file('../gradle/android.gradle')
+android.namespace 'com.github.takahirom.roborazzi.core'
 
 dependencies {
   compileOnly gradleApi()
-  compileOnly "org.robolectric:android-all:Q-robolectric-5415296"
-
 }
 
 sourceSets {

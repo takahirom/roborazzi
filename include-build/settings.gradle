@@ -16,6 +16,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "roborazzi-include-build"
+rootProject.name = "include-build"
 include(':roborazzi-core')
 include(':roborazzi-gradle-plugin')

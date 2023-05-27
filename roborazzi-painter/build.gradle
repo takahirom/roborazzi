@@ -2,6 +2,17 @@ plugins {
   id 'org.jetbrains.kotlin.jvm'
   id "com.vanniktech.maven.publish"
 }
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile).all {
+  kotlinOptions {
+    jvmTarget = '1.8'
+  }
+}
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(8))
+  }
+}
 
 dependencies {
   compileOnly "org.robolectric:android-all:Q-robolectric-5415296"

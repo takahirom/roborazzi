@@ -7,7 +7,7 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
-              <build path="$PROJECT_DIR$/include-build" name="roborazzi-include-build">
+              <build path="$PROJECT_DIR$/include-build" name="include-build">
                 <projects>
                   <project path="$PROJECT_DIR$/include-build" />
                   <project path="$PROJECT_DIR$/include-build/roborazzi-core" />
@@ -17,8 +17,6 @@
             </builds>
           </compositeBuild>
         </compositeConfiguration>
-        <option name="testRunner" value="GRADLE" />
-        <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleJvm" value="17" />
         <option name="modules">
