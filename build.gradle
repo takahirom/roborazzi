@@ -6,3 +6,35 @@ plugins {
   // Just for Gradle Build, included build will be applied
   id("io.github.takahirom.roborazzi") version "1.0.0" apply false
 }
+
+allprojects {
+  plugins.withId('com.vanniktech.maven.publish') {
+    project.group = "io.github.takahirom.roborazzi"
+    mavenPublishing {
+      publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.S01)
+      signAllPublications()
+    }
+
+    plugins.withId('maven-publish') {
+      publishing {
+        repositories {
+          maven {
+            name = "LocalMaven"
+            url = file("${rootProject.buildDir}/localMaven").toURI().toString()
+          }
+          def internalUrl = providers.gradleProperty("internalUrl")
+          if (internalUrl.isPresent()) {
+            maven {
+              name = "internal"
+              url = internalUrl
+              credentials {
+                username = providers.gradleProperty("internalUsername").get()
+                password = providers.gradleProperty("internalPassword").get()
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
