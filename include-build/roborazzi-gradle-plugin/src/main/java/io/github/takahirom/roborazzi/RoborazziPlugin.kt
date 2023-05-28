@@ -1,6 +1,5 @@
 package io.github.takahirom.roborazzi
 
-import android.util.JsonWriter
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import java.util.Locale
@@ -144,20 +143,18 @@ class RoborazziPlugin : Plugin<Project> {
       val reportFile = outputJsonFile.asFile.get()
       println("Save report to ${reportFile.absolutePath} with results:${results.size}")
 
-      val jsonWriter = JsonWriter(
-        reportFile.writer()
+      val reportResult = CompareReportResult(
+        summary = CompareSummary(
+          total = results.size,
+          added = results.count { it is CompareReportCaptureResult.Added },
+          changed = results.count { it is CompareReportCaptureResult.Changed },
+          unchanged = results.count { it is CompareReportCaptureResult.Unchanged }
+        ),
+        compareReportCaptureResults = results
       )
-      jsonWriter.use { writer ->
-        CompareReportResult(
-          summary = CompareSummary(
-            total = results.size,
-            added = results.count { it is CompareReportCaptureResult.Added },
-            changed = results.count { it is CompareReportCaptureResult.Changed },
-            unchanged = results.count { it is CompareReportCaptureResult.Unchanged }
-          ),
-          compareReportCaptureResults = results
-        ).writeJson(writer)
-      }
+
+      val jsonResult = reportResult.toJson()
+      reportFile.writeText(jsonResult.toString())
     }
   }
 }

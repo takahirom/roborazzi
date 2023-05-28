@@ -3,7 +3,6 @@ package com.github.takahirom.roborazzi
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.os.Build
-import android.util.JsonWriter
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.IdRes
@@ -332,14 +331,9 @@ data class RoborazziOptions(
         }.nameWithoutExtension
         val reportFileName =
           "$absolutePath/${compareReportCaptureResult.timestampNs}_$nameWithoutExtension.json"
-        val fileWriter = FileWriter(
-          reportFileName,
-          true
-        )
-        JsonWriter(fileWriter).use { writer ->
-          compareReportCaptureResult.writeJson(writer)
-        }
-        fileWriter.close()
+
+        val jsonResult = compareReportCaptureResult.toJson()
+        FileWriter(reportFileName).use { it.write(jsonResult.toString()) }
       }
     }
 
