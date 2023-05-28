@@ -1,8 +1,8 @@
 package io.github.takahirom.roborazzi
 
-import android.util.JsonReader
-import android.util.JsonWriter
-import java.io.FileReader
+import java.io.File
+import org.json.JSONArray
+import org.json.JSONObject
 
 data class CompareSummary(
   val total: Int,
@@ -10,38 +10,22 @@ data class CompareSummary(
   val changed: Int,
   val unchanged: Int
 ) {
-  fun writeJson(writer: JsonWriter) {
-    writer.name("summary").beginObject()
-    writer.name("total").value(total)
-    writer.name("added").value(added)
-    writer.name("changed").value(changed)
-    writer.name("unchanged").value(unchanged)
-    writer.endObject()
+  fun toJson(): JSONObject {
+    val json = JSONObject()
+    json.put("total", total)
+    json.put("added", added)
+    json.put("changed", changed)
+    json.put("unchanged", unchanged)
+    return json
   }
 
   companion object {
-    fun fromJson(jsonReader: JsonReader): CompareSummary {
-      jsonReader.beginObject()
-      var total: Int? = null
-      var added: Int? = null
-      var changed: Int? = null
-      var unchanged: Int? = null
-      while (jsonReader.hasNext()) {
-        when (jsonReader.nextName()) {
-          "total" -> total = jsonReader.nextInt()
-          "added" -> added = jsonReader.nextInt()
-          "changed" -> changed = jsonReader.nextInt()
-          "unchanged" -> unchanged = jsonReader.nextInt()
-          else -> jsonReader.skipValue()
-        }
-      }
-      jsonReader.endObject()
-      return CompareSummary(
-        total = total!!,
-        added = added!!,
-        changed = changed!!,
-        unchanged = unchanged!!
-      )
+    fun fromJson(jsonObject: JSONObject): CompareSummary {
+      val total = jsonObject.getInt("total")
+      val added = jsonObject.getInt("added")
+      val changed = jsonObject.getInt("changed")
+      val unchanged = jsonObject.getInt("unchanged")
+      return CompareSummary(total, added, changed, unchanged)
     }
   }
 }
@@ -50,47 +34,33 @@ data class CompareReportResult(
   val summary: CompareSummary,
   val compareReportCaptureResults: List<CompareReportCaptureResult>
 ) {
-  fun writeJson(writer: JsonWriter) {
-    writer.beginObject()
-    summary.writeJson(writer)
-    writer.name("results").beginArray()
+  fun toJson(): JSONObject {
+    val json = JSONObject()
+    json.put("summary", summary.toJson())
+    val resultsArray = JSONArray()
     compareReportCaptureResults.forEach { result ->
-      result.writeJson(writer)
+      resultsArray.put(result.toJson())
     }
-    writer.endArray()
-    writer.endObject()
+    json.put("results", resultsArray)
+    return json
   }
 
   companion object {
     fun fromJsonFile(inputPath: String): CompareReportResult {
-      FileReader(inputPath).use { fileReader ->
-        JsonReader(fileReader).use { jsonReader ->
-          jsonReader.beginObject()
-          var summary: CompareSummary? = null
-          var compareReportCaptureResults: List<CompareReportCaptureResult>? = null
-          while (jsonReader.hasNext()) {
-            when (jsonReader.nextName()) {
-              "summary" -> summary = CompareSummary.fromJson(jsonReader)
-              "results" -> {
-                jsonReader.beginArray()
-                val results = mutableListOf<CompareReportCaptureResult>()
-                while (jsonReader.hasNext()) {
-                  results.add(CompareReportCaptureResult.fromJsonReader(jsonReader))
-                }
-                jsonReader.endArray()
-                compareReportCaptureResults = results
-              }
+      val fileContents = File(inputPath).readText()
+      val jsonObject = JSONObject(fileContents)
+      return fromJson(jsonObject)
+    }
 
-              else -> jsonReader.skipValue()
-            }
-          }
-          jsonReader.endObject()
-          return CompareReportResult(
-            summary = summary!!,
-            compareReportCaptureResults = compareReportCaptureResults!!
-          )
-        }
+    fun fromJson(jsonObject: JSONObject): CompareReportResult {
+      val summary = CompareSummary.fromJson(jsonObject.getJSONObject("summary"))
+      val resultsArray = jsonObject.getJSONArray("results")
+      val compareReportCaptureResults = mutableListOf<CompareReportCaptureResult>()
+      for (i in 0 until resultsArray.length()) {
+            val resultJson = resultsArray.getJSONObject(i)
+            compareReportCaptureResults.add(CompareReportCaptureResult.fromJson(resultJson))
       }
+      return CompareReportResult(summary, compareReportCaptureResults)
     }
   }
 }

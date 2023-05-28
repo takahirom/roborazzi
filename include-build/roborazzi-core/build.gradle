@@ -11,8 +11,7 @@ java {
 
 dependencies {
   compileOnly gradleApi()
-  compileOnly "org.robolectric:android-all:Q-robolectric-5415296"
-
+  compileOnly 'org.json:json:20220924'
 }
 
 sourceSets {
