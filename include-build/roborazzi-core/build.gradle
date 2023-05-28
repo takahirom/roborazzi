@@ -12,6 +12,8 @@ java {
 dependencies {
   compileOnly gradleApi()
   compileOnly 'org.json:json:20220924'
+  testImplementation 'org.json:json:20220924'
+  testImplementation 'junit:junit:4.13.2'
 }
 
 sourceSets {

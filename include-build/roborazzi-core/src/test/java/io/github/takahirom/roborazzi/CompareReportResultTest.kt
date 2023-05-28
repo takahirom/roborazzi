@@ -12,21 +12,21 @@ class CompareReportResultTest {
   fun testJsonSerialization() {
     val summary = CompareSummary(10, 2, 3, 5)
     val compareReportCaptureResults = listOf(
-      CompareReportCaptureResult.Added(
-        compareFile = File("/compare_file"),
-        actualFile = File("/actual_file"),
-        timestampNs = 123456789,
-      ),
-      CompareReportCaptureResult.Changed(
-        compareFile = File("/compare_file"),
-        goldenFile = File("/golden_file"),
-        actualFile = File("/actual_file"),
-        timestampNs = 123456789,
-      ),
-      CompareReportCaptureResult.Unchanged(
-        goldenFile = File("/golden_file"),
-        timestampNs = 123456789
-      )
+        CompareReportCaptureResult.Added(
+            compareFile = File("/compare_file"),
+            actualFile = File("/actual_file"),
+            timestampNs = 123456789,
+        ),
+        CompareReportCaptureResult.Changed(
+            compareFile = File("/compare_file"),
+            goldenFile = File("/golden_file"),
+            actualFile = File("/actual_file"),
+            timestampNs = 123456789,
+        ),
+        CompareReportCaptureResult.Unchanged(
+            goldenFile = File("/golden_file"),
+            timestampNs = 123456789
+        )
     )
 
     val compareReportResult = CompareReportResult(summary, compareReportCaptureResults)
