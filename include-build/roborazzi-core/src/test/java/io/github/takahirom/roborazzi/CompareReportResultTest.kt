@@ -1,7 +1,6 @@
 package io.github.takahirom.roborazzi
 
 import java.io.File
-import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -12,21 +11,21 @@ class CompareReportResultTest {
   fun testJsonSerialization() {
     val summary = CompareSummary(10, 2, 3, 5)
     val compareReportCaptureResults = listOf(
-        CompareReportCaptureResult.Added(
-            compareFile = File("/compare_file"),
-            actualFile = File("/actual_file"),
-            timestampNs = 123456789,
-        ),
-        CompareReportCaptureResult.Changed(
-            compareFile = File("/compare_file"),
-            goldenFile = File("/golden_file"),
-            actualFile = File("/actual_file"),
-            timestampNs = 123456789,
-        ),
-        CompareReportCaptureResult.Unchanged(
-            goldenFile = File("/golden_file"),
-            timestampNs = 123456789
-        )
+      CompareReportCaptureResult.Added(
+        compareFile = File("/compare_file"),
+        actualFile = File("/actual_file"),
+        timestampNs = 123456789,
+      ),
+      CompareReportCaptureResult.Changed(
+        compareFile = File("/compare_file"),
+        goldenFile = File("/golden_file"),
+        actualFile = File("/actual_file"),
+        timestampNs = 123456789,
+      ),
+      CompareReportCaptureResult.Unchanged(
+        goldenFile = File("/golden_file"),
+        timestampNs = 123456789
+      )
     )
 
     val compareReportResult = CompareReportResult(summary, compareReportCaptureResults)
@@ -49,27 +48,15 @@ class CompareReportResultTest {
       val captureResult = compareReportCaptureResults[i]
 
       assertEquals(
-        captureResult.compareFile?.absolutePath, try {
-          jsonResult.getString("compare_file_path")
-        } catch (e: JSONException) {
-          null
-        }
+        captureResult.compareFile?.absolutePath, jsonResult.optString("compare_file_path", null)
       )
       assertEquals(
         captureResult.goldenFile?.absolutePath,
-        try {
-          jsonResult.getString("golden_file_path")
-        } catch (e: JSONException) {
-          null
-        }
+        jsonResult.optString("golden_file_path", null)
       )
       assertEquals(
         captureResult.actualFile?.absolutePath,
-        try {
-          jsonResult.getString("actual_file_path")
-        } catch (e: JSONException) {
-          null
-        }
+        jsonResult.optString("actual_file_path", null)
       )
       assertEquals(captureResult.timestampNs, jsonResult.getLong("timestamp"))
     }
