@@ -1,4 +1,7 @@
-apply plugin: 'org.jetbrains.kotlin.jvm'
+plugins {
+  id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin
+  id "com.vanniktech.maven.publish"
+}
 apply plugin: 'java-gradle-plugin'
 
 gradlePlugin {
@@ -20,7 +23,7 @@ dependencies {
   compileOnly gradleApi()
   compileOnly "com.android.tools.build:gradle:7.3.1"
   implementation project(':roborazzi-core')
-  implementation "org.robolectric:android-all:Q-robolectric-5415296"
+  implementation 'org.json:json:20220924'
 }
 
 sourceSets {
