@@ -40,6 +40,7 @@ jobs:
           ./gradlew roborazzi-core:test
           cd ..
           ./gradlew app:recordRoborazziDebug --stacktrace
+          ./gradlew app-without-compose:recordRoborazziDebug --stacktrace
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
