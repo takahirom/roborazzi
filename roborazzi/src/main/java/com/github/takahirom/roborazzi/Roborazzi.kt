@@ -12,15 +12,10 @@ import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.view.drawToBitmap
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoActivityResumedException
@@ -192,37 +187,6 @@ fun Bitmap.captureRoboImage(
     roborazziOptions = roborazziOptions
   )
   canvas.release()
-}
-
-fun captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
-  content: @Composable () -> Unit,
-) {
-  captureRoboImage(
-    file = File(filePath),
-    roborazziOptions = roborazziOptions,
-    content = content
-  )
-}
-
-fun captureRoboImage(
-  file: File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
-  content: @Composable () -> Unit,
-) {
-  if (!roborazziEnabled()) return
-  val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
-  activityScenario.onActivity { activity ->
-    activity.setContent {
-      content()
-    }
-    val composeView = activity.window.decorView
-      .findViewById<ViewGroup>(android.R.id.content)
-      .getChildAt(0) as ComposeView
-    val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
-    viewRootForTest.view.captureRoboImage(file, roborazziOptions)
-  }
 }
 
 fun ViewInteraction.captureRoboGif(

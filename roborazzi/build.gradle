@@ -1,13 +1,12 @@
 plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
-  id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.21'
   id "com.vanniktech.maven.publish"
 }
 
 // TODO: Use build-logic
 apply from: rootProject.file('gradle/android.gradle')
-android.buildFeatures.compose = true
+android.buildFeatures.compose = false
 
 android.namespace 'com.github.takahirom.roborazzi'
 
@@ -20,9 +19,6 @@ dependencies {
   implementation composeBom
 
   testImplementation "androidx.compose.runtime:runtime"
-  compileOnly "androidx.compose.ui:ui"
-  compileOnly "androidx.activity:activity-compose:1.7.1"
-
   compileOnly "androidx.compose.ui:ui-test"
   compileOnly "androidx.compose.ui:ui-test-junit4"
 
