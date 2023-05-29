@@ -40,6 +40,8 @@ object DefaultFileNameGenerator {
         try {
           Class.forName(it.className).getMethod(it.methodName)
             .getAnnotation(Test::class.java) != null
+        } catch (e: NoClassDefFoundError) {
+          false
         } catch (e: Exception) {
           false
         }
