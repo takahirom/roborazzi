@@ -4,7 +4,7 @@
 
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10) and enables screenshot testing.📣
 
-## Why we need Roborazzi?
+## Why Choose Roborazzi?
 
 ### Why we need screenshot testing?
 
