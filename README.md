@@ -4,85 +4,33 @@
 
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10) and enables screenshot testing.📣
 
-<table>
-<tr>
-<td> Gradle Command </td> <td> Description </td>
-</tr>
-<tr>
-<td>
+## Why we need Roborazzi?
 
-```sh
-./gradlew recordRoborazziDebug
-```
+### Why we need screenshot testing?
 
-</td><td> 
+Screenshot testing is important for checking how your app looks and works.
+It can catch visual issues and also check the overall flow of your app. It's like testing your app
+the same way your users would use it, making it easier to catch problems that they would actually
+face.
+Plus, it's a great way to spot changes - this can be easier and quicker than writing lots of assert
+statements. So, with screenshot testing, you're not just checking your app looks right, you're also
+making sure it behaves correctly and is user-friendly.
 
-Record a screenshot
+### Why test with JVM instead of testing on Android?
 
-</td>
-</tr>
-<tr>
-<td>
+When testing on a device, tests can fail easily due to the device environment, animations, etc. This
+can result in false negatives, where tests fail due to issues with the device environment rather
+than the application code itself. These failures are often hard to reproduce and troubleshoot,
+making them difficult to fix.
 
-```sh
-./gradlew compareRoborazziDebug
-```
-
-</td><td>
-
-Review changes made to an image. This action will
-compare the current image with the saved one, generating a comparison image labeled
-as `[original]_compare.png`. It also produces a JSON file containing the diff information, which can
-be found under `build/test-results/roborazzi`.
-
-</td>
-</tr>
-<tr>
-<td>
-
-```sh
-./gradlew verifyRoborazziDebug
-```
-
-</td><td>
-
-Validate changes made to an image. If there is any difference between the current image and the
-saved one, the test will fail.
-
-</td>
-</tr>
-<tr>
-<td>
-
-```sh
-./gradlew verifyAndRecordRoborazziDebug
-```
-
-</td><td>
-
-This task will first verify the images and, if differences are detected, it will record a new
-baseline.
-
-</td>
-</tr>
-
-</table>
-
-![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
-
-## Why test with JVM instead of testing on Android?
-
-Because when testing on a device, tests can fail easily due to the device environment, animations,
-etc.
-This affects the reliability of the test and ultimately, if the test fails, it cannot be fixed.
-
-## Why not Paparazzi?
+### Why not Paparazzi? Why Roborazzi?
 
 Paparazzi is a great tool to see the actual display in the JVM.  
 Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with
 Robolectric.
 This is because they both mock the Android framework.  
 To run tests with Hilt and actually click on components, you need Robolectric.
+Roborazzi is a tool that allows you to take screenshots with Robolectric.
 
 ## Try it out
 
@@ -152,6 +100,73 @@ apply plugin: "io.github.takahirom.roborazzi"
 </td></tr>
 
 </table>
+
+
+<table>
+<tr>
+<td> Gradle Command </td> <td> Description </td>
+</tr>
+<tr>
+<td>
+
+```sh
+./gradlew recordRoborazziDebug
+```
+
+</td><td> 
+
+Record a screenshot
+
+</td>
+</tr>
+<tr>
+<td>
+
+```sh
+./gradlew compareRoborazziDebug
+```
+
+</td><td>
+
+Review changes made to an image. This action will
+compare the current image with the saved one, generating a comparison image labeled
+as `[original]_compare.png`. It also produces a JSON file containing the diff information, which can
+be found under `build/test-results/roborazzi`.
+
+</td>
+</tr>
+<tr>
+<td>
+
+```sh
+./gradlew verifyRoborazziDebug
+```
+
+</td><td>
+
+Validate changes made to an image. If there is any difference between the current image and the
+saved one, the test will fail.
+
+</td>
+</tr>
+<tr>
+<td>
+
+```sh
+./gradlew verifyAndRecordRoborazziDebug
+```
+
+</td><td>
+
+This task will first verify the images and, if differences are detected, it will record a new
+baseline.
+
+</td>
+</tr>
+
+</table>
+
+![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
 
 ### Add dependencies
 
