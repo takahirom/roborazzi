@@ -17,8 +17,6 @@
             </builds>
           </compositeBuild>
         </compositeConfiguration>
-        <option name="testRunner" value="GRADLE" />
-        <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleJvm" value="17" />
         <option name="modules">
@@ -30,6 +28,7 @@
             <option value="$PROJECT_DIR$/include-build/roborazzi-core" />
             <option value="$PROJECT_DIR$/include-build/roborazzi-gradle-plugin" />
             <option value="$PROJECT_DIR$/roborazzi" />
+            <option value="$PROJECT_DIR$/roborazzi-compose" />
             <option value="$PROJECT_DIR$/roborazzi-junit-rule" />
             <option value="$PROJECT_DIR$/roborazzi-painter" />
           </set>

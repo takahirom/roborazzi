@@ -39,7 +39,7 @@ jobs:
           cd include-build; 
           ./gradlew roborazzi-core:test
           cd ..
-          ./gradlew app:recordRoborazziDebug --stacktrace
+          ./gradlew recordRoborazziDebug --stacktrace
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
