@@ -84,18 +84,18 @@ test.
 
 Define plugin in root build.gradle
 
-```
+```groovy
 plugins {
-...
-  id "io.github.takahirom.roborazzi" version "[write the latest vesrion]" apply false
+  ...
+  id "io.github.takahirom.roborazzi" version "[version]" apply false
 }
 ```
 
 Apply plugin in module build.gradle
 
-```
+```groovy
 plugins {
-...
+  ...
   id 'io.github.takahirom.roborazzi'
 }
 ```
@@ -104,34 +104,32 @@ plugins {
 
 root build.gradle
 
-```kotlin
+```groovy
 buildscript {
   dependencies {
     ...
-    classpath 'io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[write the latest vesrion]'
+    classpath "io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[version]"
   }
 }
 ```
 
 module build.gradle
 
-```
-apply plugin: 'io.github.takahirom.roborazzi'
+```groovy
+apply plugin: "io.github.takahirom.roborazzi"
 ```
 
 </td></tr>
 
 </table>
 
-
-
 ### Add dependencies
 
-| Description     | Dependencies                                                                        |
-|-----------------|-------------------------------------------------------------------------------------|
-| Core functions  | testImplementation("io.github.takahirom.roborazzi:roborazzi:[version]")             |
-| Jetpack Compose | testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:[version]")`    |
-| JUnit rules     | testImplementation("`io.github.takahirom.roborazzi:roborazzi-junit-rule:[version]") |
+| Description     | Dependencies                                                                         |
+|-----------------|--------------------------------------------------------------------------------------|
+| Core functions  | `testImplementation("io.github.takahirom.roborazzi:roborazzi:[version]")`            |
+| Jetpack Compose | `testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:[version]")`    |
+| JUnit rules     | `testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:[version]")` |
 
 ## How to use
 
