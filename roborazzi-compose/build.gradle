@@ -1,0 +1,22 @@
+plugins {
+  id 'com.android.library'
+  id 'org.jetbrains.kotlin.android'
+  id "com.vanniktech.maven.publish"
+}
+
+// TODO: Use build-logic
+apply from: rootProject.file('gradle/android.gradle')
+android.buildFeatures.compose = true
+
+android.namespace 'com.github.takahirom.roborazzi.compose'
+
+dependencies {
+  implementation project(':roborazzi')
+
+  def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
+  implementation composeBom
+
+  testImplementation "androidx.compose.runtime:runtime"
+  compileOnly "androidx.compose.ui:ui"
+  compileOnly "androidx.activity:activity-compose:1.7.1"
+}

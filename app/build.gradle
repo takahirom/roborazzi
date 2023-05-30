@@ -52,6 +52,7 @@ java {
 
 dependencies {
   testImplementation project(":roborazzi")
+  testImplementation project(":roborazzi-compose")
   testImplementation project(":roborazzi-junit-rule")
 
   def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
