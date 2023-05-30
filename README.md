@@ -23,14 +23,11 @@ can result in false negatives, where tests fail due to issues with the device en
 than the application code itself. These failures are often hard to reproduce and troubleshoot,
 making them difficult to fix.
 
-### Why not Paparazzi? Why Roborazzi?
+### Paparazzi and Roborazzi: A Comparison
 
-Paparazzi is a great tool to see the actual display in the JVM.  
-Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with
-Robolectric.
-This is because they both mock the Android framework.  
-To run tests with Hilt and actually click on components, you need Robolectric.
-Roborazzi is a tool that allows you to take screenshots with Robolectric.
+Paparazzi is a fantastic tool for visualizing actual displays within the JVM. It leverages LayoutLib, Android Studio's layout drawing tool, for this purpose. However, because Paparazzi and Robolectric both mock the Android framework, they are incompatible.
+
+Roborazzi steps in to fill this gap. It integrates with Robolectric, making it possible to run tests with Hilt and interact with components, such as clicking on elements. Essentially, Roborazzi extends the capabilities of Paparazzi, offering a more dynamic, user-oriented testing experience that captures screenshots with Robolectric.
 
 ## Try it out
 
