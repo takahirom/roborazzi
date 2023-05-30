@@ -30,7 +30,7 @@ Record a screenshot
 
 </td><td>
 
-To review changes made to an image, execute the `compareRoborazziDebug` task. This action will
+Review changes made to an image. This action will
 compare the current image with the saved one, generating a comparison image labeled
 as `[original]_compare.png`. It also produces a JSON file containing the diff information, which can
 be found under `build/test-results/roborazzi`.
@@ -46,8 +46,8 @@ be found under `build/test-results/roborazzi`.
 
 </td><td>
 
-To validate changes made to an image, execute the `verifyRoborazziDebug` task. If there is any
-difference between the current image and the saved one, the test will fail.
+Validate changes made to an image. If there is any difference between the current image and the
+saved one, the test will fail.
 
 </td>
 </tr>
