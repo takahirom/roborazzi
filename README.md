@@ -5,32 +5,18 @@
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10) and enables screenshot testing.📣
 
 ## Why Choose Roborazzi?
+### Why is screenshot testing important?
+Screenshot testing is key to validate your app's appearance and functionality. It efficiently detects visual issues and tests the app as users would use it, making it easier to spot problems. It's quicker than writing many assert statements, ensuring your app looks right and behaves correctly.
 
-### Why we need screenshot testing?
-
-Screenshot testing is important for checking how your app looks and works.
-It can catch visual issues and also check the overall flow of your app. It's like testing your app
-the same way your users would use it, making it easier to catch problems that they would actually
-face.
-Plus, it's a great way to spot changes - this can be easier and quicker than writing lots of assert
-statements. So, with screenshot testing, you're not just checking your app looks right, you're also
-making sure it behaves correctly and is user-friendly.
-
-### Why test with JVM instead of testing on Android?
-
-When testing on a device, tests can fail easily due to the device environment, animations, etc. This
-can result in false negatives, where tests fail due to issues with the device environment rather
-than the application code itself. These failures are often hard to reproduce and troubleshoot,
-making them difficult to fix.
+### Why test with JVM instead of on Android device?
+Device testing can result in frequent failures due to the device environment, leading to false negatives. These failures are often hard to reproduce, making them tough to resolve.
 
 ### Paparazzi and Roborazzi: A Comparison
+Paparazzi is a great tool for visualizing displays within the JVM. However, it's incompatible with Robolectric, which also mocks the Android framework.
 
-Paparazzi is a fantastic tool for visualizing actual displays within the JVM. It leverages LayoutLib, Android Studio's layout drawing tool, for this purpose. However, because Paparazzi and Robolectric both mock the Android framework, they are incompatible.
+Roborazzi fills this gap. It integrates with Robolectric, allowing tests to run with Hilt and interact with components. Essentially, Roborazzi enhances Paparazzi's capabilities, providing a more efficient and reliable testing process by capturing screenshots with Robolectric.
 
-Roborazzi steps in to fill this gap. It integrates with Robolectric, making it possible to run tests with Hilt and interact with components, such as clicking on elements. Essentially, Roborazzi extends the capabilities of Paparazzi, offering a more dynamic, user-oriented testing experience that captures screenshots with Robolectric.
-
-
-<img src="https://github.com/takahirom/roborazzi/assets/1386930/95ff0402-c0c2-40b8-8768-855b7d9b41ee" width="300" />
+<img src="https://github.com/takahirom/roborazzi/assets/1386930/937a96a4-f637-4029-87e1-c1bb94abc8ae" width="320" />
 
 
 ## Try it out
