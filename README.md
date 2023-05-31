@@ -29,6 +29,10 @@ Paparazzi is a fantastic tool for visualizing actual displays within the JVM. It
 
 Roborazzi steps in to fill this gap. It integrates with Robolectric, making it possible to run tests with Hilt and interact with components, such as clicking on elements. Essentially, Roborazzi extends the capabilities of Paparazzi, offering a more dynamic, user-oriented testing experience that captures screenshots with Robolectric.
 
+
+<img src="https://github.com/takahirom/roborazzi/assets/1386930/95ff0402-c0c2-40b8-8768-855b7d9b41ee" width="300" />
+
+
 ## Try it out
 
 Available on Maven Central.
