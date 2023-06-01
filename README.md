@@ -155,6 +155,8 @@ baseline.
 
 </table>
 
+The comparison image, saved as `[original]_compare.png`, is shown below:
+
 ![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
 
 ### Add dependencies
