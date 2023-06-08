@@ -395,6 +395,9 @@ fun captureRoboGifSample() {
 
 ### Automatically generate gif with test rule
 
+> **Note**  
+> You **don't need to use RoborazziRule** if you're using captureRoboImage().
+
 With the JUnit test rule, you do not need to name the gif image,
 and if you prefer, you can output the gif image **only if the test fails**.
 
