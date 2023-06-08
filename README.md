@@ -498,6 +498,10 @@ class ComposeTest {
 
 ### RoborazziRule options
 
+> **Note**  
+> You **don't need to use RoborazziRule** if you're using captureRoboImage().
+
+
 You can use some RoborazziRule options
 
 ```kotlin
