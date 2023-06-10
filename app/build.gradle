@@ -1,17 +1,7 @@
-buildscript {
-  dependencies {
-    classpath files('../roborazzi-gradle-plugin/build/libs/roborazzi-gradle-plugin.jar')
-    classpath files('../roborazzi-core/build/libs/roborazzi-core.jar')
-    classpath "org.robolectric:android-all:Q-robolectric-5415296"
-  }
-}
 plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
-}
-if (file('../roborazzi-gradle-plugin/build/libs/roborazzi-gradle-plugin.jar').exists()) {
-  // for sync
-  apply plugin: 'io.github.takahirom.roborazzi'
+  id 'io.github.takahirom.roborazzi'
 }
 
 android {
@@ -62,6 +52,7 @@ java {
 
 dependencies {
   testImplementation project(":roborazzi")
+  testImplementation project(":roborazzi-compose")
   testImplementation project(":roborazzi-junit-rule")
 
   def composeBom = platform('androidx.compose:compose-bom:2022.12.00')

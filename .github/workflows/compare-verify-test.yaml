@@ -32,7 +32,6 @@ jobs:
 
       - name: compare test
         run: |
-          ./gradlew roborazzi-gradle-plugin:build --stacktrace
           echo '<resources>
             <string name="first_fragment_label">Hello! This is compare test screen! Compare me!</string>
             <string name="hello_first_fragment">Compare Hello first fragment</string>
@@ -53,7 +52,6 @@ jobs:
         id: verify-test
         continue-on-error: true
         run: |
-          ./gradlew roborazzi-gradle-plugin:build --stacktrace
           echo '<resources>
             <string name="first_fragment_label">Hello! This is verify test screen! Verify me!</string>
             <string name="hello_first_fragment">Verify Hello first fragment</string>

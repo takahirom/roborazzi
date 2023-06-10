@@ -1,10 +1,6 @@
 plugins {
-  id 'com.android.application' version libs.versions.agp apply false
-  id 'com.android.library' version libs.versions.agp apply false
-  id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
+  id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
-  // Just for Gradle Build, included build will be applied
-  id("io.github.takahirom.roborazzi") version "1.0.0" apply false
 }
 
 allprojects {

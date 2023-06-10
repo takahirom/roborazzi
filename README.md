@@ -4,48 +4,33 @@
 
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10) and enables screenshot testing.📣
 
-To record an image, execute the `recordRoborazziDebug` task:
+## Why we need Roborazzi?
 
-```
-./gradlew recordRoborazziDebug
-```
+### Why we need screenshot testing?
 
-To review changes made to an image, execute the `compareRoborazziDebug` task. This action will compare the current image with the saved one, generating a comparison image labeled as `[original]_compare.png`. It also produces a JSON file containing the diff information, which can be found under `build/test-results/roborazzi`.
+Screenshot testing is important for checking how your app looks and works.
+It can catch visual issues and also check the overall flow of your app. It's like testing your app
+the same way your users would use it, making it easier to catch problems that they would actually
+face.
+Plus, it's a great way to spot changes - this can be easier and quicker than writing lots of assert
+statements. So, with screenshot testing, you're not just checking your app looks right, you're also
+making sure it behaves correctly and is user-friendly.
 
-```
-./gradlew compareRoborazziDebug
-```
+### Why test with JVM instead of testing on Android?
 
-To validate changes made to an image, execute the `verifyRoborazziDebug` task. If there is any difference between the current image and the saved one, the test will fail.
+When testing on a device, tests can fail easily due to the device environment, animations, etc. This
+can result in false negatives, where tests fail due to issues with the device environment rather
+than the application code itself. These failures are often hard to reproduce and troubleshoot,
+making them difficult to fix.
 
-```
-./gradlew verifyRoborazziDebug
-```
-
----
-
-Additionally, you can use `verifyAndRecordRoborazziDebug` task to handle both recording and verifying in a single run:
-
-```
-./gradlew verifyAndRecordRoborazziDebug
-```
-This task will first verify the images and, if differences are detected, it will record a new baseline.
-
-![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
-
-## Why test with JVM instead of testing on Android?
-
-Because when testing on a device, tests can fail easily due to the device environment, animations,
-etc.
-This affects the reliability of the test and ultimately, if the test fails, it cannot be fixed.
-
-## Why not Paparazzi?
+### Why not Paparazzi? Why Roborazzi?
 
 Paparazzi is a great tool to see the actual display in the JVM.  
 Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with
 Robolectric.
 This is because they both mock the Android framework.  
 To run tests with Hilt and actually click on components, you need Robolectric.
+Roborazzi is a tool that allows you to take screenshots with Robolectric.
 
 ## Try it out
 
@@ -68,53 +53,128 @@ add `@GraphicsMode(GraphicsMode.Mode.NATIVE)` to your test class.
 
 Roborazzi is available on maven central.
 
-This plugin simply creates Gradle tasks record, verify, compare and passes the configuration to the test.
+This plugin simply creates Gradle tasks record, verify, compare and passes the configuration to the
+test.
+
+<table>
+<tr><td>plugins</td><td>buildscript</td></tr>
+<tr><td>
 
 Define plugin in root build.gradle
 
-```
+```groovy
 plugins {
-...
-  id "io.github.takahirom.roborazzi" version "[write the latest vesrion]" apply false
+  ...
+  id "io.github.takahirom.roborazzi" version "[version]" apply false
 }
 ```
 
 Apply plugin in module build.gradle
 
-```
+```groovy
 plugins {
-...
+  ...
   id 'io.github.takahirom.roborazzi'
 }
 ```
 
-or
+</td><td>
 
 root build.gradle
 
-```kotlin
+```groovy
 buildscript {
   dependencies {
     ...
-    classpath 'io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[write the latest vesrion]'
+    classpath "io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[version]"
   }
 }
 ```
 
 module build.gradle
 
+```groovy
+apply plugin: "io.github.takahirom.roborazzi"
 ```
-apply plugin: 'io.github.takahirom.roborazzi'
+
+</td></tr>
+
+</table>
+
+
+<table>
+<tr>
+<td> Gradle Command </td> <td> Description </td>
+</tr>
+<tr>
+<td>
+
+```sh
+./gradlew recordRoborazziDebug
 ```
+
+</td><td> 
+
+Record a screenshot
+
+</td>
+</tr>
+<tr>
+<td>
+
+```sh
+./gradlew compareRoborazziDebug
+```
+
+</td><td>
+
+Review changes made to an image. This action will
+compare the current image with the saved one, generating a comparison image labeled
+as `[original]_compare.png`. It also produces a JSON file containing the diff information, which can
+be found under `build/test-results/roborazzi`.
+
+</td>
+</tr>
+<tr>
+<td>
+
+```sh
+./gradlew verifyRoborazziDebug
+```
+
+</td><td>
+
+Validate changes made to an image. If there is any difference between the current image and the
+saved one, the test will fail.
+
+</td>
+</tr>
+<tr>
+<td>
+
+```sh
+./gradlew verifyAndRecordRoborazziDebug
+```
+
+</td><td>
+
+This task will first verify the images and, if differences are detected, it will record a new
+baseline.
+
+</td>
+</tr>
+
+</table>
+
+![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
 
 ### Add dependencies
 
-```
-// Core functions
-testImplementation("io.github.takahirom.roborazzi:roborazzi:[write the latest vesrion]")
-// JUnit rules
-testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:[write the latest vesrion]")
-```
+| Description     | Dependencies                                                                         |
+|-----------------|--------------------------------------------------------------------------------------|
+| Core functions  | `testImplementation("io.github.takahirom.roborazzi:roborazzi:[version]")`            |
+| Jetpack Compose | `testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:[version]")`    |
+| JUnit rules     | `testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:[version]")` |
 
 ## How to use
 
@@ -141,61 +201,61 @@ import com.github.takahirom.roborazzi.captureRoboImage
 @RunWith(AndroidJUnit4::class)
 // Enable Robolectric Native Graphics (RNG) 
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-class ManualTest { 
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule<MainActivity>()
+class ManualTest {
+  @get:Rule
+  val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    @Test
-    fun captureRoboImageSample() {
-      // Tips: You can use Robolectric with Espresso API
-      // launch
-      ActivitySenario.launch(MainActivity::class.java)
+  @Test
+  fun captureRoboImageSample() {
+    // Tips: You can use Robolectric with Espresso API
+    // launch
+    ActivitySenario.launch(MainActivity::class.java)
 
-      // Capture screen
-      onView(ViewMatchers.isRoot())
-          // If you don't specify a screenshot file name, Roborazzi will automatically use the method name as the file name for you.
-          // The format of the file name will be as follows:
-          // build/outputs/roborazzi/com_..._ManualTest_captureRoboImageSample.png
-          .captureRoboImage()
+    // Capture screen
+    onView(ViewMatchers.isRoot())
+      // If you don't specify a screenshot file name, Roborazzi will automatically use the method name as the file name for you.
+      // The format of the file name will be as follows:
+      // build/outputs/roborazzi/com_..._ManualTest_captureRoboImageSample.png
+      .captureRoboImage()
 
-      // Capture Jetpack Compose Node
-      composeTestRule.onNodeWithTag("MyComposeButton")
-          .onParent()
-          .captureRoboImage("build/compose.png")
+    // Capture Jetpack Compose Node
+    composeTestRule.onNodeWithTag("MyComposeButton")
+      .onParent()
+      .captureRoboImage("build/compose.png")
 
-      // Capture small view on window
-      onView(withId(R.id.button_first))
-          .captureRoboImage("build/button.png")
+    // Capture small view on window
+    onView(withId(R.id.button_first))
+      .captureRoboImage("build/button.png")
 
-      // move to next page
-      onView(withId(R.id.button_first))
-          .perform(click())
+    // move to next page
+    onView(withId(R.id.button_first))
+      .perform(click())
 
-      val view: View = composeTestRule.activity.findViewById<View>(R.id.button_second)
-      // Capture view on window
-      view.captureRoboImage("build/manual_view_on_window.png")
+    val view: View = composeTestRule.activity.findViewById<View>(R.id.button_second)
+    // Capture view on window
+    view.captureRoboImage("build/manual_view_on_window.png")
 
-      val textView = TextView(composeTestRule.activity).apply {
-        text = "Hello View!"
-        setTextColor(android.graphics.Color.RED)
-      }
-      // Capture view not on window
-      textView.captureRoboImage("build/manual_view_without_window.png")
-
-      // Capture Jetpack Compose lambda
-      captureRoboImage("build/manual_compose.png") {
-        Text("Hello Compose!")
-      }
-
-      val bitmap: Bitmap = createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-          .apply {
-            applyCanvas {
-              drawColor(android.graphics.Color.YELLOW)
-            }
-          }
-      // Capture Bitmap
-      bitmap.captureRoboImage("build/manual_bitmap.png") 
+    val textView = TextView(composeTestRule.activity).apply {
+      text = "Hello View!"
+      setTextColor(android.graphics.Color.RED)
     }
+    // Capture view not on window
+    textView.captureRoboImage("build/manual_view_without_window.png")
+
+    // Capture Jetpack Compose lambda
+    captureRoboImage("build/manual_compose.png") {
+      Text("Hello Compose!")
+    }
+
+    val bitmap: Bitmap = createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+      .apply {
+        applyCanvas {
+          drawColor(android.graphics.Color.YELLOW)
+        }
+      }
+    // Capture Bitmap
+    bitmap.captureRoboImage("build/manual_bitmap.png")
+  }
 }
 ```
 
@@ -232,7 +292,7 @@ jobs:
         run: |
           # Create screenshots
           ./gradlew app:recordRoborazziDebug --stacktrace
-      
+
       # Upload screenshots to GitHub Actions Artifacts
       - uses: actions/upload-artifact@v3
         with:
@@ -305,14 +365,19 @@ jobs:
 
 #### Advanced workflow Sample: Compare Snapshot Results on Pull Requests
 
-For those who are looking for a more advanced example, we have prepared a sample repository that demonstrates how to use Roborazzi to compare snapshot results on GitHub pull requests. This sample showcases the integration of Roborazzi with GitHub Actions workflows, making it easy to visualize and review the differences between snapshots directly in the pull request comments.
+For those who are looking for a more advanced example, we have prepared a sample repository that
+demonstrates how to use Roborazzi to compare snapshot results on GitHub pull requests. This sample
+showcases the integration of Roborazzi with GitHub Actions workflows, making it easy to visualize
+and review the differences between snapshots directly in the pull request comments.
 
-Check out the [roborazzi-compare-on-github-comment-sample](https://github.com/takahirom/roborazzi-compare-on-github-comment-sample) repository to see this powerful feature in action and learn how to implement it in your own projects. 
+Check out
+the [roborazzi-compare-on-github-comment-sample](https://github.com/takahirom/roborazzi-compare-on-github-comment-sample)
+repository to see this powerful feature in action and learn how to implement it in your own
+projects.
 
 Example of the comment
 
 <img src="https://user-images.githubusercontent.com/1386930/236480693-80483cde-53fe-4c04-ba1f-2352e14b5f15.png" width="600" />
-
 
 ### Generate gif automatically
 

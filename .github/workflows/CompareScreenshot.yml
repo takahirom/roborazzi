@@ -43,8 +43,7 @@ jobs:
       - name: compare screenshot test
         id: compare-screenshot-test
         run: |
-          ./gradlew roborazzi-gradle-plugin:build --stacktrace
-          ./gradlew app:compareRoborazziDebug --stacktrace
+          ./gradlew compareRoborazziDebug --stacktrace
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}

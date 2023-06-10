@@ -36,8 +36,10 @@ jobs:
       - name: record screenshot
         id: record-test
         run: |
-          ./gradlew roborazzi-gradle-plugin:build --stacktrace
-          ./gradlew app:recordRoborazziDebug --stacktrace
+          cd include-build; 
+          ./gradlew roborazzi-core:test
+          cd ..
+          ./gradlew recordRoborazziDebug --stacktrace
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}

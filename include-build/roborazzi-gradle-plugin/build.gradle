@@ -1,0 +1,31 @@
+plugins {
+  id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin
+  id "com.vanniktech.maven.publish"
+}
+apply plugin: 'java-gradle-plugin'
+
+gradlePlugin {
+  plugins {
+    roborazzi {
+      id = 'io.github.takahirom.roborazzi'
+      implementationClass = 'io.github.takahirom.roborazzi.RoborazziPlugin'
+    }
+  }
+}
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(11))
+  }
+}
+
+dependencies {
+  compileOnly gradleApi()
+  compileOnly "com.android.tools.build:gradle:7.3.1"
+  implementation project(':roborazzi-core')
+  implementation 'org.json:json:20220924'
+}
+
+sourceSets {
+  main.java.srcDir 'src/generated/kotlin'
+}

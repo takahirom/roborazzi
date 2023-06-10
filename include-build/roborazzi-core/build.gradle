@@ -1,0 +1,21 @@
+plugins {
+  id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin
+  id "com.vanniktech.maven.publish"
+}
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(11))
+  }
+}
+
+dependencies {
+  compileOnly gradleApi()
+  compileOnly 'org.json:json:20220924'
+  testImplementation 'org.json:json:20220924'
+  testImplementation 'junit:junit:4.13.2'
+}
+
+sourceSets {
+  main.java.srcDir 'src/generated/kotlin'
+}
