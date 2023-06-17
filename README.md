@@ -213,42 +213,82 @@ class ManualTest {
     composeTestRule.onNodeWithTag("MyComposeButton")
       .onParent()
       .captureRoboImage("build/compose.png")
-
-    // Capture small view on window
-    onView(withId(R.id.button_first))
-      .captureRoboImage("build/button.png")
-
-    // move to next page
-    onView(withId(R.id.button_first))
-      .perform(click())
-
-    val view: View = composeTestRule.activity.findViewById<View>(R.id.button_second)
-    // Capture view on window
-    view.captureRoboImage("build/manual_view_on_window.png")
-
-    val textView = TextView(composeTestRule.activity).apply {
-      text = "Hello View!"
-      setTextColor(android.graphics.Color.RED)
-    }
-    // Capture view not on window
-    textView.captureRoboImage("build/manual_view_without_window.png")
-
-    // Capture Jetpack Compose lambda
-    captureRoboImage("build/manual_compose.png") {
-      Text("Hello Compose!")
-    }
-
-    val bitmap: Bitmap = createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-      .apply {
-        applyCanvas {
-          drawColor(android.graphics.Color.YELLOW)
-        }
-      }
-    // Capture Bitmap
-    bitmap.captureRoboImage("build/manual_bitmap.png")
   }
 }
 ```
+
+Roborazzi supports the following APIs.
+
+<table>
+<tr><td>Capture</td><td>Code</td></tr>
+<tr><td>
+✅ Jetpack Compose's onNode()
+</td><td>
+
+```kotlin
+composeTestRule.onNodeWithTag("MyComposeButton")
+  .captureRoboImage()
+```
+
+</td></tr>
+<tr><td>
+✅ Espresso's onView()
+</td><td>
+
+```kotlin
+onView(ViewMatchers.isRoot())
+  .captureRoboImage()
+```
+
+```kotlin
+onView(withId(R.id.button_first))
+  .captureRoboImage()
+```
+
+</td></tr>
+<tr><td>
+✅ View
+</td><td>
+
+```kotlin
+val view: View = composeTestRule.activity.findViewById<View>(R.id.button_second)
+view.captureRoboImage()
+```
+
+</td></tr>
+
+<tr><td>
+✅ Jetpack Compose lambda
+
+</td><td>
+
+```kotlin
+captureRoboImage() {
+  Text("Hello Compose!")
+}
+```
+
+</td></tr>
+
+<tr><td>
+✅ Bitmap
+
+</td><td>
+
+```kotlin
+val bitmap: Bitmap = createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+  .apply {
+    applyCanvas {
+      drawColor(android.graphics.Color.YELLOW)
+    }
+  }
+bitmap.captureRoboImage()
+```
+
+</td></tr>
+
+</table>
+
 
 ### Integrate to your GitHub Actions
 
