@@ -157,7 +157,9 @@ baseline.
 
 The comparison image, saved as `[original]_compare.png`, is shown below:
 
-![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
+![image](https://github.com/takahirom/roborazzi/assets/1386930/579199d5-8e17-4f51-b990-de603ca36251)
+
+This uses [JetNew from Compose Samples](https://github.com/android/compose-samples/tree/main/JetNews). You can check the pull request introducing Roborazzi to the compose-samples [here](https://github.com/takahirom/compose-samples/pull/1/files).
 
 ### Add dependencies
 
