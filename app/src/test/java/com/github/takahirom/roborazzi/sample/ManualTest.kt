@@ -1,5 +1,7 @@
 package com.github.takahirom.roborazzi.sample
 
+import android.app.Application
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.view.View
 import android.widget.TextView
@@ -11,6 +13,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -32,6 +35,7 @@ import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -81,6 +85,13 @@ class ManualTest {
       setTextColor(android.graphics.Color.RED)
     }.captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png")
 
+    // If we comment out this line, the test will fail with ActivityNotFoundException.
+    val appContext: Application = ApplicationProvider.getApplicationContext()
+    val activityInfo = ActivityInfo().apply {
+      name = "com.github.takahirom.roborazzi.RoborazziTransparentActivity"
+      packageName = appContext.packageName
+    }
+    shadowOf(appContext.packageManager).addOrUpdateActivity(activityInfo)
     // Compose lambda
     captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_compose.png") {
       Text("Hello Compose!")
