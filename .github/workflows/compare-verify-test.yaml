@@ -27,7 +27,7 @@ jobs:
         with:
           name: screenshots
           path: app/build/outputs/roborazzi
-          workflow: test.yaml
+          workflow: StoreScreenshot.yml
           branch: main
 
       - name: compare test
