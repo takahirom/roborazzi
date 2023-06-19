@@ -289,6 +289,51 @@ bitmap.captureRoboImage()
 
 </table>
 
+### Device configuration
+
+You can configure the device by using the `@Config` annotation and `RobolectricDeviceQualifiers`.
+
+<table>
+<tr><td>Configuration</td><td>Code</td></tr>
+<tr><td>
+✅ Predefined device configuration
+</td><td>
+
+```kotlin
+@Config(qualifiers = RobolectricDeviceQualifiers.Pixel5)
+```
+
+</td></tr>
+<tr><td>
+✅ Night mode
+</td><td>
+
+```kotlin
+@Config(qualifiers = "+night")
+```
+
+</td></tr>
+<tr><td>
+✅ Locale
+</td><td>
+
+```kotlin
+@Config(qualifiers = "ja")
+```
+
+</td></tr>
+<tr><td>
+✅ Screen size
+</td><td>
+
+```kotlin
+@Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
+```
+
+</td></tr>
+
+</table>
+
 
 ### Integrate to your GitHub Actions
 

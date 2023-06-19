@@ -59,6 +59,12 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
   }
+  @Test
+  @Config(qualifiers = "+ja")
+  fun captureScreenLevelJapaneseWithEspresso() {
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage()
+  }
 
   @Test
   @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
@@ -66,6 +72,8 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
   }
+
+
 
   @Test
   fun captureComposeImage() {
