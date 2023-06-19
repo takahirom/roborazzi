@@ -332,7 +332,7 @@ fun test() {
 </td><td>
 
 ```kotlin
-@Config(qualifiers = "ja")
+@Config(qualifiers = "+ja")
 ```
 
 </td></tr>
