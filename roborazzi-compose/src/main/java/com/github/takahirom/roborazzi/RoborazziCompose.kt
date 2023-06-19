@@ -1,12 +1,16 @@
 package com.github.takahirom.roborazzi
 
+import android.app.Application
+import android.content.ComponentName
 import android.view.ViewGroup
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import java.io.File
+import org.robolectric.Shadows
 
 fun captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
@@ -26,6 +30,7 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziEnabled()) return
+  registerRoborazziActivityToRobolectricIfNeeded()
   val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
   activityScenario.onActivity { activity ->
     activity.setContent(content = content)
@@ -34,5 +39,23 @@ fun captureRoboImage(
       .getChildAt(0) as ComposeView
     val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
     viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+  }
+}
+
+/**
+ * Workaround for https://github.com/takahirom/roborazzi/issues/100
+ */
+private fun registerRoborazziActivityToRobolectricIfNeeded() {
+  try {
+    val appContext: Application = ApplicationProvider.getApplicationContext()
+    Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
+      ComponentName(
+        appContext.packageName,
+        RoborazziTransparentActivity::class.java.name,
+      )
+    )
+  } catch (e: ClassNotFoundException) {
+    // We don't rely on Robolectric
+    e.printStackTrace()
   }
 }
