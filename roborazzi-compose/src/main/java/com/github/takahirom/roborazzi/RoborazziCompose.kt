@@ -55,7 +55,7 @@ private fun registerRoborazziActivityToRobolectricIfNeeded() {
       )
     )
   } catch (e: ClassNotFoundException) {
-    // We don't rely on Robolectric
+    // Configured to run even without Robolectric
     e.printStackTrace()
   }
 }
