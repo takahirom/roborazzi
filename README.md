@@ -299,9 +299,21 @@ You can configure the device by using the `@Config` annotation and `RobolectricD
 ✅ Predefined device configuration
 </td><td>
 
+You can change the device configuration by adding `@Config` to the class or method.
+
 ```kotlin
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = RobolectricDeviceQualifiers.Pixel5)
+class RoborazziTest {
 ```
+
+```kotlin
+@Test
+@Config(qualifiers = RobolectricDeviceQualifiers.Pixel5)
+fun test() {
+```
+
 
 </td></tr>
 <tr><td>
