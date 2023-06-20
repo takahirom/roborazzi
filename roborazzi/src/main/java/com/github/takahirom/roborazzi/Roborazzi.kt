@@ -34,6 +34,7 @@ import org.hamcrest.core.IsEqual
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 var ROBORAZZI_DEBUG = false
+
 fun roborazziEnabled(): Boolean {
   val isEnabled = roborazziRecordingEnabled() ||
     roborazziCompareEnabled() ||
@@ -318,7 +319,7 @@ class CaptureResult(
   val clear: () -> Unit
 )
 
-// Only for library, please don't use this directly
+@InternalRoborazziApi
 fun ViewInteraction.captureAndroidView(
   roborazziOptions: RoborazziOptions,
   block: () -> Unit

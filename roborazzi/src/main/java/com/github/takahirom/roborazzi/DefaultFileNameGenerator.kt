@@ -22,8 +22,10 @@ object DefaultFileNameGenerator {
     roborazziDefaultNamingStrategy()
   }
 
+  @OptIn(InternalRoborazziApi::class)
   fun generateFilePath(extension: String): String {
-    return "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/${generateName()}.$extension"
+    val dir = provideRoborazziContext().outputDirectory
+    return "$dir/${generateName()}.$extension"
   }
 
   private fun generateName(): String {

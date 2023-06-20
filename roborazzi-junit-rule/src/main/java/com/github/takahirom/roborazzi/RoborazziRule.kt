@@ -51,6 +51,12 @@ class RoborazziRule private constructor(
 
   enum class CaptureType {
     /**
+     * Do not generate images. Just provide the image path and run the test.
+     */
+    @ExperimentalRoborazziApi
+    None,
+
+    /**
      * Generate last images for each test
      */
     LastImage,
@@ -88,14 +94,18 @@ class RoborazziRule private constructor(
     super.failed(e, description)
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
         val evaluate = {
           try {
+            provideRoborazziContext().setRuleOverrideOutputDirectory(options.outputDirectoryPath)
             base.evaluate()
           } catch (e: Exception) {
             throw e
+          } finally {
+            provideRoborazziContext().clearRuleOverrideOutputDirectory()
           }
         }
         val captureType = options.captureType
@@ -113,41 +123,60 @@ class RoborazziRule private constructor(
         if (!folder.exists()) {
           folder.mkdirs()
         }
-        val result = when (captureRoot) {
-          is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureComposeNode(
-            composeRule = captureRoot.composeRule,
-            roborazziOptions = options.roborazziOptions,
-            block = evaluate
-          )
 
-          is CaptureRoot.View -> captureRoot.viewInteraction.captureAndroidView(
-            roborazziOptions = options.roborazziOptions,
-            block = evaluate
-          )
-        }
-        if (!options.onlyFail || result.result.isFailure) {
-          when (captureType) {
-            CaptureType.LastImage -> {
-              val file = options.outputFileProvider(description, folder, "png")
+        when (captureType) {
+          CaptureType.AllImage, CaptureType.Gif -> {
+            val result = when (captureRoot) {
+              is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureComposeNode(
+                composeRule = captureRoot.composeRule,
+                roborazziOptions = options.roborazziOptions,
+                block = evaluate
+              )
 
-              result.saveLastImage(file)
+              is CaptureRoot.View -> captureRoot.viewInteraction.captureAndroidView(
+                roborazziOptions = options.roborazziOptions,
+                block = evaluate
+              )
             }
-
-            CaptureType.AllImage -> {
-              result.saveAllImage {
-                options.outputFileProvider(description, folder, "png")
+            if (!options.onlyFail || result.result.isFailure) {
+              if (captureType == CaptureType.AllImage) {
+                result.saveAllImage {
+                  options.outputFileProvider(description, folder, "png")
+                }
+              } else {
+                val file = options.outputFileProvider(description, folder, "gif")
+                result.saveGif(file)
               }
             }
+            result.clear()
+            result.result.exceptionOrNull()?.let {
+              throw it
+            }
 
-            CaptureType.Gif -> {
-              val file = options.outputFileProvider(description, folder, "gif")
-              result.saveGif(file)
+          }
+
+          CaptureType.None -> {
+            evaluate()
+          }
+
+          CaptureType.LastImage -> {
+            val result = runCatching {
+              evaluate()
+            }
+            if (!options.onlyFail || result.isFailure) {
+              val outputFile = options.outputFileProvider(description, folder, "png")
+              when (captureRoot) {
+                is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureRoboImage(
+                  outputFile
+                )
+
+                is CaptureRoot.View -> captureRoot.viewInteraction.captureRoboImage(outputFile)
+              }
+            }
+            result.exceptionOrNull()?.let {
+              throw it
             }
           }
-        }
-        result.clear()
-        result.result.exceptionOrNull()?.let {
-          throw it
         }
       }
     }

@@ -8,6 +8,12 @@ plugins {
 }
 
 allprojects {
+  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+      freeCompilerArgs += "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi"
+    }
+  }
+
   plugins.withId('com.vanniktech.maven.publish') {
     project.group = "io.github.takahirom.roborazzi"
     mavenPublishing {
