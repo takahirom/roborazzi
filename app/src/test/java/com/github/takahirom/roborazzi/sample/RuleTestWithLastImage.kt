@@ -20,7 +20,7 @@ import org.robolectric.annotation.GraphicsMode
 class RuleTestWithLastImage {
   @get:Rule val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
-    options = Options(CaptureType.LastImage)
+    options = Options(CaptureType.LastImage())
   )
   @Test
   fun captureRoboGifSample() {
