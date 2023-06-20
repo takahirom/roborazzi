@@ -18,15 +18,13 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTestWithPath {
-  private var number = 0
-
   @OptIn(ExperimentalRoborazziApi::class)
   @get:Rule
   val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
     options = Options(
       captureType = CaptureType.None,
-      outputDirectoryPath = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + "/custom_path",
+      outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_path",
     ),
   )
 
