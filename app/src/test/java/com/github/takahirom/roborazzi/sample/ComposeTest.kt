@@ -35,12 +35,14 @@ class ComposeTest {
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = RoborazziRule.Options(
-      roborazziOptions = RoborazziOptions(
-        recordOptions = RoborazziOptions.RecordOptions(
-          applyDeviceCrop = true,
-          pixelBitConfig = RoborazziOptions.PixelBitConfig.Argb8888,
+      captureType = RoborazziRule.CaptureType.LastImage(
+        roborazziOptions = RoborazziOptions(
+          recordOptions = RoborazziOptions.RecordOptions(
+            applyDeviceCrop = true,
+            pixelBitConfig = RoborazziOptions.PixelBitConfig.Argb8888,
+          )
         )
-      )
+      ),
     )
   )
 
