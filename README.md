@@ -575,7 +575,7 @@ class ComposeTest {
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = RoborazziRule.Options(
-      RoborazziRule.CaptureType.Gif
+      RoborazziRule.CaptureType.Gif()
     )
   )
 
@@ -613,7 +613,7 @@ class RoborazziRule private constructor(
   annotation class Ignore
 
   data class Options(
-    val captureType: CaptureType = CaptureType.Gif,
+    val captureType: CaptureType = CaptureType.LastImage(),
     /**
      * capture only when the test fail
      */
@@ -622,33 +622,47 @@ class RoborazziRule private constructor(
      * output directory path
      */
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
-    val roborazziOptions: RoborazziOptions = RoborazziOptions(),
   )
 
-  enum class CaptureType {
+  sealed interface CaptureType {
+    /**
+     * Do not generate images. Just provide the image path and run the test.
+     */
+    @ExperimentalRoborazziApi
+    object None : CaptureType
+
     /**
      * Generate last images for each test
      */
-    LastImage,
+    data class LastImage(
+      val outputFileProvider: FileCreator = defaultFileCreator,
+      val roborazziOptions: RoborazziOptions = RoborazziOptions(),
+    ) : CaptureType
 
     /**
-     * Generate images for each layout change such as TestClass_method_0.png for each test.
+     * Generate images for Each layout change like TestClass_method_0.png for each test
      */
-    AllImage,
+    data class AllImage(
+      val outputFileProvider: FileCreator = defaultFileCreator,
+      val roborazziOptions: RoborazziOptions = RoborazziOptions(),
+    ) : CaptureType
 
     /**
      * Generate gif images for each test
      */
-    Gif
+    data class Gif(
+      val outputFileProvider: FileCreator = defaultFileCreator,
+      val roborazziOptions: RoborazziOptions = RoborazziOptions(),
+    ) : CaptureType
   }
 ```
 
 ### Roborazzi options
 
-```
+```kotlin
 data class RoborazziOptions(
   val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
-  val verifyOptions: VerifyOptions = VerifyOptions(),
+  val compareOptions: CompareOptions = CompareOptions(),
   val recordOptions: RecordOptions = RecordOptions(),
 ) {
   sealed interface CaptureType {
@@ -659,24 +673,76 @@ data class RoborazziOptions(
       val basicSize: Int = 600,
       val depthSlideSize: Int = 30,
       val query: ((RoboComponent) -> Boolean)? = null,
-    ) : CaptureType
+      val explanation: ((RoboComponent) -> String?) = DefaultExplanation,
+    ) : CaptureType {
+      companion object {
+        val DefaultExplanation: ((RoboComponent) -> String) = {
+          it.text
+        }
+        val AccessibilityExplanation: ((RoboComponent) -> String) = {
+          it.accessibilityText
+        }
+      }
+    }
   }
 
-  data class VerifyOptions(
-    /**
-     * This value determines the threshold of pixel change at which the diff image is output or not.
-     * The value should be between 0 and 1
-     */
-    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean
+  data class CompareOptions(
+    val roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
+      roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+      /**
+       * This value determines the threshold of pixel change at which the diff image is output or not.
+       * The value should be between 0 and 1
+       */
       changeThreshold: Float = 0.01F,
-    ) : this(ThresholdValidator(changeThreshold))
+    ) : this(roborazziCompareReporter, ThresholdValidator(changeThreshold))
+  }
+
+  interface RoborazziCompareReporter {
+    fun report(compareReportCaptureResult: CompareReportCaptureResult)
+
+    companion object {
+      operator fun invoke(): RoborazziCompareReporter {
+    ...
+      }
+    }
+
+    class JsonOutputRoborazziCompareReporter : RoborazziCompareReporter {
+    ...
+
+      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
+    ...
+      }
+    }
+
+    class VerifyRoborazziCompareReporter : RoborazziCompareReporter {
+      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
+    ...
+      }
+    }
   }
 
   data class RecordOptions(
-    val resizeScale: Double = 1.0
+    val resizeScale: Double = roborazziDefaultResizeScale(),
+    val applyDeviceCrop: Boolean = false,
+    val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
   )
+
+  enum class PixelBitConfig {
+    Argb8888,
+    Rgb565;
+
+    fun toBitmapConfig(): Bitmap.Config {
+    ...
+    }
+
+    fun toBufferedImageType(): Int {
+    ...
+    }
+  }
+}
 ```
 
 ### Dump mode
