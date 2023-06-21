@@ -645,7 +645,7 @@ class RoborazziRule private constructor(
 
 ### Roborazzi options
 
-```
+```kotlin
 data class RoborazziOptions(
   val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
   val verifyOptions: VerifyOptions = VerifyOptions(),
