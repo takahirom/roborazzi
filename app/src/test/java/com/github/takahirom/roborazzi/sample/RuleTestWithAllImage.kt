@@ -23,8 +23,8 @@ class RuleTestWithAllImage {
 
   @get:Rule
   val roborazziRule = RoborazziRule(
-    onView(isRoot()),
-    Options(
+    captureRoot = onView(isRoot()),
+    options = Options(
       captureType = CaptureType.AllImage(
         outputFileProvider = { description, folder, fileExtension ->
           File(

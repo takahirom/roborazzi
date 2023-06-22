@@ -58,10 +58,6 @@ class RoborazziRule private constructor(
         DefaultFileNameGenerator.generate(description) + "." + fileExtension
       )
     },
-    @Deprecated(
-      "Use captureType.roborazziOptions instead. This property isn't used anymore.",
-      level = DeprecationLevel.ERROR
-    )
     val roborazziOptions: RoborazziOptions = RoborazziOptions(),
   )
 
@@ -77,7 +73,6 @@ class RoborazziRule private constructor(
      */
     data class LastImage(
       val outputFileProvider: FileCreator = defaultFileCreator,
-      val roborazziOptions: RoborazziOptions = RoborazziOptions(),
     ) : CaptureType
 
     /**
@@ -85,7 +80,6 @@ class RoborazziRule private constructor(
      */
     data class AllImage(
       val outputFileProvider: FileCreator = defaultFileCreator,
-      val roborazziOptions: RoborazziOptions = RoborazziOptions(),
     ) : CaptureType
 
     /**
@@ -93,7 +87,6 @@ class RoborazziRule private constructor(
      */
     data class Gif(
       val outputFileProvider: FileCreator = defaultFileCreator,
-      val roborazziOptions: RoborazziOptions = RoborazziOptions(),
     ) : CaptureType
   }
 
@@ -124,9 +117,11 @@ class RoborazziRule private constructor(
       override fun evaluate() {
         try {
           provideRoborazziContext().setRuleOverrideOutputDirectory(options.outputDirectoryPath)
+          provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
           runTest(base, description, captureRoot)
         } finally {
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
+          provideRoborazziContext().clearRuleOverrideRoborazziOptions()
         }
       }
     }
@@ -168,8 +163,8 @@ class RoborazziRule private constructor(
 
       is CaptureType.AllImage, is CaptureType.Gif -> {
         val roborazziOptions = when (captureType) {
-          is CaptureType.AllImage -> captureType.roborazziOptions
-          is CaptureType.Gif -> captureType.roborazziOptions
+          is CaptureType.AllImage -> options.roborazziOptions
+          is CaptureType.Gif -> options.roborazziOptions
           else -> error("Unsupported captureType")
         }
         val outputFileProvider = when (captureType) {
@@ -207,7 +202,7 @@ class RoborazziRule private constructor(
       }
 
       is CaptureType.LastImage -> {
-        val roborazziOptions = captureType.roborazziOptions
+        val roborazziOptions = options.roborazziOptions
         val outputFileProvider = captureType.outputFileProvider
         val result = runCatching {
           evaluate()

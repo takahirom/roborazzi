@@ -80,7 +80,7 @@ fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStra
 
 fun ViewInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
@@ -91,7 +91,7 @@ fun ViewInteraction.captureRoboImage(
 
 fun ViewInteraction.captureRoboImage(
   file: File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
   perform(ImageCaptureViewAction(roborazziOptions) { canvas ->
@@ -106,7 +106,7 @@ fun ViewInteraction.captureRoboImage(
 
 fun View.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
@@ -117,7 +117,7 @@ fun View.captureRoboImage(
 
 fun View.captureRoboImage(
   file: File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
 
@@ -159,7 +159,7 @@ fun View.captureRoboImage(
 
 fun Bitmap.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
@@ -170,7 +170,7 @@ fun Bitmap.captureRoboImage(
 
 fun Bitmap.captureRoboImage(
   file: File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
   val image = this
@@ -192,7 +192,7 @@ fun Bitmap.captureRoboImage(
 
 fun ViewInteraction.captureRoboGif(
   filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
@@ -202,7 +202,7 @@ fun ViewInteraction.captureRoboGif(
 
 fun ViewInteraction.captureRoboGif(
   file: File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
@@ -216,7 +216,7 @@ fun ViewInteraction.captureRoboGif(
 
 fun ViewInteraction.captureRoboLastImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   if (!roborazziEnabled()) return
@@ -225,7 +225,7 @@ fun ViewInteraction.captureRoboLastImage(
 
 fun ViewInteraction.captureRoboLastImage(
   file: File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   if (!roborazziEnabled()) return
@@ -238,7 +238,7 @@ fun ViewInteraction.captureRoboLastImage(
 
 fun ViewInteraction.captureRoboAllImage(
   fileNameCreator: (prefix: String) -> File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   if (!roborazziEnabled()) return
@@ -252,7 +252,7 @@ fun ViewInteraction.captureRoboAllImage(
 
 fun SemanticsNodeInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(File(filePath), roborazziOptions)
@@ -260,7 +260,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
 
 fun SemanticsNodeInteraction.captureRoboImage(
   file: File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
   capture(
@@ -282,7 +282,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
   filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
@@ -300,7 +300,7 @@ fun SemanticsNodeInteraction.captureRoboGif(
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
   file: File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
@@ -462,7 +462,7 @@ private fun saveLastImage(
 // Only for library, please don't use this directly
 fun SemanticsNodeInteraction.captureComposeNode(
   composeRule: AndroidComposeTestRule<*, *>,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ): CaptureResult {
   val canvases = mutableListOf<RoboCanvas>()
