@@ -46,10 +46,11 @@ class RoborazziRule private constructor(
     /**
      * output directory path
      */
-    val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
+    val outputDirectoryPath: String = provideRoborazziContext().outputDirectory,
 
-    val outputFileProvider: FileProvider = defaultFileProvider,
-    val roborazziOptions: RoborazziOptions = RoborazziOptions(),
+    val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
+      ?: defaultFileProvider,
+    val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   )
 
   sealed interface CaptureType {

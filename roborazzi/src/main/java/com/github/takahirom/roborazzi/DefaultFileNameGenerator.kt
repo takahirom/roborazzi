@@ -23,7 +23,7 @@ object DefaultFileNameGenerator {
     roborazziDefaultNamingStrategy()
   }
 
-  @OptIn(InternalRoborazziApi::class)
+  @InternalRoborazziApi
   fun generateFilePath(extension: String): String {
     val roborazziContext = provideRoborazziContext()
     val fileCreator = roborazziContext.fileProvider
