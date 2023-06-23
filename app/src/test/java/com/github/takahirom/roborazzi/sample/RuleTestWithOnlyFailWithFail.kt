@@ -9,6 +9,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,7 +28,7 @@ class RuleTestWithOnlyFailWithFail {
     )
   )
 
-//  @Ignore
+  @Ignore
   @Test
   fun captureRoboLastImageSampleFail() {
     // launch
