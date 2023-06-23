@@ -16,6 +16,13 @@ private val defaultFileProvider: FileProvider =
     )
   }
 
+/**
+ * This rule have two features.
+ * 1. Capture screenshots for each test.
+ * 2. Provide context such as [provideRoborazziContext] and [provideRoborazziOptions] etc for [captureRoboImage].
+ *
+ * This rule is **optional**. You can use [captureRoboImage] without this rule.
+ */
 class RoborazziRule private constructor(
   private val captureRoot: CaptureRoot,
   private val options: Options = Options()
@@ -37,10 +44,6 @@ class RoborazziRule private constructor(
   data class Options(
     val captureType: CaptureType = CaptureType.LastImage(),
     /**
-     * capture only when the test fail
-     */
-    val onlyFail: Boolean = false,
-    /**
      * output directory path
      */
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
@@ -53,23 +56,37 @@ class RoborazziRule private constructor(
     /**
      * Do not generate images. Just provide the image path and run the test.
      */
-    @ExperimentalRoborazziApi
     object None : CaptureType
 
     /**
      * Generate last images for each test
      */
-    class LastImage : CaptureType
+    data class LastImage(
+      /**
+       * capture only when the test fail
+       */
+      val onlyFail: Boolean = false,
+    ) : CaptureType
 
     /**
      * Generate images for Each layout change like TestClass_method_0.png for each test
      */
-    class AllImage : CaptureType
+    data class AllImage(
+      /**
+       * capture only when the test fail
+       */
+      val onlyFail: Boolean = false,
+    ) : CaptureType
 
     /**
      * Generate gif images for each test
      */
-    class Gif : CaptureType
+    data class Gif(
+      /**
+       * capture only when the test fail
+       */
+      val onlyFail: Boolean = false,
+    ) : CaptureType
   }
 
 
@@ -165,7 +182,12 @@ class RoborazziRule private constructor(
             block = evaluate
           )
         }
-        if (!options.onlyFail || result.result.isFailure) {
+        val isOnlyFail = when (captureType) {
+          is CaptureType.AllImage -> captureType.onlyFail
+          is CaptureType.Gif -> captureType.onlyFail
+          else -> false
+        }
+        if (!isOnlyFail || result.result.isFailure) {
           if (captureType is CaptureType.AllImage) {
             result.saveAllImage {
               options.outputFileProvider(description, folder, "png")
@@ -187,7 +209,7 @@ class RoborazziRule private constructor(
         val result = runCatching {
           evaluate()
         }
-        if (!options.onlyFail || result.isFailure) {
+        if (!captureType.onlyFail || result.isFailure) {
           val outputFile = options.outputFileProvider(description, folder, "png")
           when (captureRoot) {
             is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureRoboImage(

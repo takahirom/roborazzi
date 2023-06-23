@@ -20,12 +20,14 @@ class RuleTestWithOnlyFail {
   @get:Rule val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
     options = Options(
-      onlyFail = true
+      captureType = RoborazziRule.CaptureType.LastImage(
+        onlyFail = true
+      ),
     )
   )
 
   @Test
-  fun captureRoboGifSample() {
+  fun captureRoboLastImageSample() {
     // launch
     launch(MainActivity::class.java)
     // move to next page
