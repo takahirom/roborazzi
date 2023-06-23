@@ -1,5 +1,6 @@
 package com.github.takahirom.roborazzi
 
+import java.io.File
 import org.junit.Test
 import org.junit.runner.Description
 
@@ -24,7 +25,17 @@ object DefaultFileNameGenerator {
 
   @OptIn(InternalRoborazziApi::class)
   fun generateFilePath(extension: String): String {
-    val dir = provideRoborazziContext().outputDirectory
+    val roborazziContext = provideRoborazziContext()
+    val fileCreator = roborazziContext.fileProvider
+    val description = roborazziContext.description
+    if (fileCreator != null && description != null) {
+      return fileCreator(
+        description,
+        File(roborazziContext.outputDirectory),
+        extension
+      ).absolutePath
+    }
+    val dir = roborazziContext.outputDirectory
     return "$dir/${generateName()}.$extension"
   }
 

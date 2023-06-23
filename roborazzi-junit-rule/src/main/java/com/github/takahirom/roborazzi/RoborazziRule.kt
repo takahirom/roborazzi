@@ -8,16 +8,13 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
-private typealias FileCreator = (Description, File, String) -> File
-
-private val defaultFileCreator: FileCreator =
+private val defaultFileProvider: FileProvider =
   { description, folder, fileExtension ->
     File(
       folder.absolutePath,
       DefaultFileNameGenerator.generate(description) + "." + fileExtension
     )
   }
-
 
 class RoborazziRule private constructor(
   private val captureRoot: CaptureRoot,
@@ -48,16 +45,7 @@ class RoborazziRule private constructor(
      */
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
 
-    @Deprecated(
-      "Use captureType.outputFileProvider instead. This property isn't used anymore.",
-      level = DeprecationLevel.ERROR
-    )
-    val outputFileProvider: FileCreator = { description, folder, fileExtension ->
-      File(
-        folder.absolutePath,
-        DefaultFileNameGenerator.generate(description) + "." + fileExtension
-      )
-    },
+    val outputFileProvider: FileProvider = defaultFileProvider,
     val roborazziOptions: RoborazziOptions = RoborazziOptions(),
   )
 
@@ -71,23 +59,17 @@ class RoborazziRule private constructor(
     /**
      * Generate last images for each test
      */
-    data class LastImage(
-      val outputFileProvider: FileCreator = defaultFileCreator,
-    ) : CaptureType
+    class LastImage : CaptureType
 
     /**
      * Generate images for Each layout change like TestClass_method_0.png for each test
      */
-    data class AllImage(
-      val outputFileProvider: FileCreator = defaultFileCreator,
-    ) : CaptureType
+    class AllImage : CaptureType
 
     /**
      * Generate gif images for each test
      */
-    data class Gif(
-      val outputFileProvider: FileCreator = defaultFileCreator,
-    ) : CaptureType
+    class Gif : CaptureType
   }
 
 
@@ -118,10 +100,14 @@ class RoborazziRule private constructor(
         try {
           provideRoborazziContext().setRuleOverrideOutputDirectory(options.outputDirectoryPath)
           provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
+          provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
+          provideRoborazziContext().setRunnerOverrideDescription(description)
           runTest(base, description, captureRoot)
         } finally {
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
+          provideRoborazziContext().clearRuleOverrideFileProvider()
+          provideRoborazziContext().clearRunnerOverrideDescription()
         }
       }
     }
@@ -167,11 +153,6 @@ class RoborazziRule private constructor(
           is CaptureType.Gif -> options.roborazziOptions
           else -> error("Unsupported captureType")
         }
-        val outputFileProvider = when (captureType) {
-          is CaptureType.AllImage -> captureType.outputFileProvider
-          is CaptureType.Gif -> captureType.outputFileProvider
-          else -> error("Unsupported captureType")
-        }
         val result = when (captureRoot) {
           is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureComposeNode(
             composeRule = captureRoot.composeRule,
@@ -187,10 +168,10 @@ class RoborazziRule private constructor(
         if (!options.onlyFail || result.result.isFailure) {
           if (captureType is CaptureType.AllImage) {
             result.saveAllImage {
-              outputFileProvider(description, folder, "png")
+              options.outputFileProvider(description, folder, "png")
             }
           } else {
-            val file = outputFileProvider(description, folder, "gif")
+            val file = options.outputFileProvider(description, folder, "gif")
             result.saveGif(file)
           }
         }
@@ -203,12 +184,11 @@ class RoborazziRule private constructor(
 
       is CaptureType.LastImage -> {
         val roborazziOptions = options.roborazziOptions
-        val outputFileProvider = captureType.outputFileProvider
         val result = runCatching {
           evaluate()
         }
         if (!options.onlyFail || result.isFailure) {
-          val outputFile = outputFileProvider(description, folder, "png")
+          val outputFile = options.outputFileProvider(description, folder, "png")
           when (captureRoot) {
             is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureRoboImage(
               file = outputFile,
