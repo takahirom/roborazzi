@@ -172,9 +172,6 @@ class RoborazziRule private constructor(
       }
 
       is CaptureType.AllImage, is CaptureType.Gif -> {
-        if (captureRoot is CaptureRoot.None) {
-          error("captureRoot is required for AllImage and Gif")
-        }
         val roborazziOptions = when (captureType) {
           is CaptureType.AllImage -> options.roborazziOptions
           is CaptureType.Gif -> options.roborazziOptions
@@ -191,6 +188,10 @@ class RoborazziRule private constructor(
             roborazziOptions = roborazziOptions,
             block = evaluate
           )
+
+          CaptureRoot.None -> {
+            error("captureRoot is required for AllImage and Gif")
+          }
         }
         val isOnlyFail = when (captureType) {
           is CaptureType.AllImage -> captureType.onlyFail
@@ -231,6 +232,10 @@ class RoborazziRule private constructor(
               file = outputFile,
               roborazziOptions = roborazziOptions
             )
+
+            CaptureRoot.None -> {
+              error("captureRoot is required for AllImage and Gif")
+            }
           }
         }
         result.exceptionOrNull()?.let {
