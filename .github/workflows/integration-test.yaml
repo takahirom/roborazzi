@@ -27,7 +27,7 @@ jobs:
         id: integration-test
         run: |
           cd include-build
-          ./gradlew roborazzi-gradle-plugin:test --stacktrace
+          ./gradlew roborazzi-gradle-plugin:check --stacktrace
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
