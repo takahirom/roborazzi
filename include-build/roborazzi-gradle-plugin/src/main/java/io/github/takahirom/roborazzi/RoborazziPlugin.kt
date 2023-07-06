@@ -26,8 +26,7 @@ class RoborazziPlugin : Plugin<Project> {
 
     val hasLibraryPlugin = project.pluginManager.hasPlugin("com.android.library")
     val variants = if (hasLibraryPlugin) {
-      project.extensions.getByType(LibraryExtension::class.java)
-        .libraryVariants
+      (project.extensions.getByName("android") as LibraryExtension).libraryVariants
     } else {
       project.extensions.getByType(BaseAppModuleExtension::class.java)
         .applicationVariants
