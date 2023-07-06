@@ -39,6 +39,7 @@ class RoborazziRule private constructor(
     ) : CaptureRoot
 
     class View(val viewInteraction: ViewInteraction) : CaptureRoot
+    object None : CaptureRoot
   }
 
   data class Options(
@@ -108,6 +109,13 @@ class RoborazziRule private constructor(
     options = options
   )
 
+  constructor(
+    options: Options = Options()
+  ) : this(
+    captureRoot = CaptureRoot.None,
+    options = options
+  )
+
   override fun failed(e: Throwable?, description: Description?) {
     super.failed(e, description)
   }
@@ -119,13 +127,11 @@ class RoborazziRule private constructor(
           provideRoborazziContext().setRuleOverrideOutputDirectory(options.outputDirectoryPath)
           provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
           provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
-          provideRoborazziContext().setRunnerOverrideDescription(description)
           runTest(base, description, captureRoot)
         } finally {
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
           provideRoborazziContext().clearRuleOverrideFileProvider()
-          provideRoborazziContext().clearRunnerOverrideDescription()
         }
       }
     }
@@ -166,6 +172,9 @@ class RoborazziRule private constructor(
       }
 
       is CaptureType.AllImage, is CaptureType.Gif -> {
+        if (captureRoot is CaptureRoot.None) {
+          error("captureRoot is required for AllImage and Gif")
+        }
         val roborazziOptions = when (captureType) {
           is CaptureType.AllImage -> options.roborazziOptions
           is CaptureType.Gif -> options.roborazziOptions
