@@ -6,7 +6,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 import com.github.takahirom.roborazzi.RoborazziRule
-import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule.Options
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -20,7 +19,6 @@ class RuleTestWithPath {
   @get:Rule
   val roborazziRule = RoborazziRule(
     options = Options(
-      captureType = CaptureType.None,
       outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_path",
     ),
   )
