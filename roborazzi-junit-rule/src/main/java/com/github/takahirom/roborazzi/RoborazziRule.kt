@@ -234,7 +234,7 @@ class RoborazziRule private constructor(
             )
 
             CaptureRoot.None -> {
-              error("captureRoot is required for AllImage and Gif")
+              error("captureRoot is required for LastImage")
             }
           }
         }
