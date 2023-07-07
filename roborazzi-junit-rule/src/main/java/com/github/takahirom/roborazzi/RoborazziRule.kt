@@ -28,22 +28,13 @@ class RoborazziRule private constructor(
   private val options: Options = Options()
 ) : TestWatcher() {
   /**
-   * If you add this annotation to the test, the test will be ignored by roborazzi
+   * If you add this annotation to the test, the test will be ignored by
+   * roborazzi's CaptureType.LastImage, CaptureType.AllImage and CaptureType.Gif.
    */
   annotation class Ignore
 
-  internal sealed interface CaptureRoot {
-    class Compose(
-      val composeRule: AndroidComposeTestRule<*, *>,
-      val semanticsNodeInteraction: SemanticsNodeInteraction
-    ) : CaptureRoot
-
-    class View(val viewInteraction: ViewInteraction) : CaptureRoot
-    object None : CaptureRoot
-  }
-
   data class Options(
-    val captureType: CaptureType = CaptureType.LastImage(),
+    val captureType: CaptureType = CaptureType.None,
     /**
      * output directory path
      */
@@ -56,7 +47,7 @@ class RoborazziRule private constructor(
 
   sealed interface CaptureType {
     /**
-     * Do not generate images. Just provide the image path and run the test.
+     * Do not generate images. Just provide the image path to [captureRoboImage].
      */
     object None : CaptureType
 
@@ -91,6 +82,15 @@ class RoborazziRule private constructor(
     ) : CaptureType
   }
 
+  internal sealed interface CaptureRoot {
+    object None : CaptureRoot
+    class Compose(
+      val composeRule: AndroidComposeTestRule<*, *>,
+      val semanticsNodeInteraction: SemanticsNodeInteraction
+    ) : CaptureRoot
+
+    class View(val viewInteraction: ViewInteraction) : CaptureRoot
+  }
 
   constructor(
     captureRoot: ViewInteraction,
