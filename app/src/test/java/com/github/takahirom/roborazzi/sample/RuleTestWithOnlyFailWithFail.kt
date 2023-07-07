@@ -22,7 +22,9 @@ class RuleTestWithOnlyFailWithFail {
   val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
     options = Options(
-      onlyFail = true
+      captureType = RoborazziRule.CaptureType.LastImage(
+        onlyFail = true
+      ),
     )
   )
 

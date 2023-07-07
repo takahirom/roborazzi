@@ -11,6 +11,7 @@ allprojects {
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {
       freeCompilerArgs += "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi"
+      freeCompilerArgs += "-Xopt-in=com.github.takahirom.roborazzi.ExperimentalRoborazziApi"
     }
   }
 

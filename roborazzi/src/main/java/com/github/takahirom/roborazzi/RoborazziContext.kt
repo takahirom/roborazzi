@@ -1,58 +1,74 @@
 package com.github.takahirom.roborazzi
 
-@InternalRoborazziApi
+import java.io.File
+import org.junit.runner.Description
+
+@ExperimentalRoborazziApi
 object RoborazziContext {
-  private var runnerOverrideOutputDirectory: String? = null
   private var ruleOverrideOutputDirectory: String? = null
-  private var runnerOverrideRoborazziOptions: RoborazziOptions? = null
   private var ruleOverrideRoborazziOptions: RoborazziOptions? = null
+  private var ruleOverrideFileProvider: FileProvider? = null
+  private var ruleOverrideDescription: Description? = null
 
-  fun setRunnerOverrideOutputDirectory(outputDirectory: String) {
-    runnerOverrideOutputDirectory = outputDirectory
-  }
-
-  fun clearRunnerOverrideOutputDirectory() {
-    runnerOverrideOutputDirectory = null
-  }
-
+  @InternalRoborazziApi
   fun setRuleOverrideOutputDirectory(outputDirectory: String) {
     ruleOverrideOutputDirectory = outputDirectory
   }
 
+  @InternalRoborazziApi
   fun clearRuleOverrideOutputDirectory() {
     ruleOverrideOutputDirectory = null
   }
 
-  fun setRunnerOverrideRoborazziOptions(options: RoborazziOptions) {
-    runnerOverrideRoborazziOptions = options
-  }
-
-  fun clearRunnerOverrideRoborazziOptions() {
-    runnerOverrideRoborazziOptions = null
-  }
-
+  @InternalRoborazziApi
   fun setRuleOverrideRoborazziOptions(options: RoborazziOptions) {
     ruleOverrideRoborazziOptions = options
   }
 
+  @InternalRoborazziApi
   fun clearRuleOverrideRoborazziOptions() {
     ruleOverrideRoborazziOptions = null
   }
 
-  val outputDirectory
-    get() = if (ruleOverrideOutputDirectory != null) {
-      ruleOverrideOutputDirectory
-    } else {
-      runnerOverrideOutputDirectory
-    } ?: DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
+  @InternalRoborazziApi
+  fun setRuleOverrideFileProvider(fileProvider: FileProvider) {
+    ruleOverrideFileProvider = fileProvider
+  }
 
+  @InternalRoborazziApi
+  fun clearRuleOverrideFileProvider() {
+    ruleOverrideFileProvider = null
+  }
+
+  @InternalRoborazziApi
+  val outputDirectory
+    get() = ruleOverrideOutputDirectory ?: DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
+
+  @InternalRoborazziApi
   val options
-    get() = if (ruleOverrideRoborazziOptions != null) {
-      ruleOverrideRoborazziOptions
-    } else {
-      runnerOverrideRoborazziOptions
-    } ?: RoborazziOptions()
+    get() = ruleOverrideRoborazziOptions ?: RoborazziOptions()
+
+  // If we don't use Runner and JUnit Rule, we can't use this property.
+  @InternalRoborazziApi
+  val fileProvider: ((Description, File, String) -> File)?
+    get() = ruleOverrideFileProvider
+
+  // If we don't use Runner and JUnit Rule, we can't use this property.
+  @InternalRoborazziApi
+  val description: Description?
+    get() = ruleOverrideDescription
+
+  override fun toString(): String {
+    return """
+      RoborazziContext(
+        ruleOverrideOutputDirectory=$ruleOverrideOutputDirectory,
+        ruleOverrideRoborazziOptions=$ruleOverrideRoborazziOptions,
+        ruleOverrideFileProvider=$ruleOverrideFileProvider,
+        ruleOverrideDescription=$ruleOverrideDescription
+      )
+    """.trimIndent()
+  }
 }
 
-@InternalRoborazziApi
+@ExperimentalRoborazziApi
 fun provideRoborazziContext() = RoborazziContext

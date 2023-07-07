@@ -1,6 +1,8 @@
 plugins {
   id 'org.jetbrains.kotlin.jvm'
-  id "com.vanniktech.maven.publish"
+}
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
 }
 
 dependencies {

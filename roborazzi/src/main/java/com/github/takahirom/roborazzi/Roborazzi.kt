@@ -45,7 +45,8 @@ fun roborazziEnabled(): Boolean {
       "roborazziCompareEnabled(): ${roborazziCompareEnabled()}\n" +
       "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n" +
       "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
-      "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n"
+      "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n" +
+      "RoborazziContext: ${provideRoborazziContext()}\n"
   }
   return isEnabled
 }
@@ -479,7 +480,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
     }
   }
   val handler = Handler(Looper.getMainLooper())
-  val composeApplyObserver = Snapshot.registerApplyObserver { anies, snapshot ->
+  val composeApplyObserver = Snapshot.registerApplyObserver { _, _ ->
     handler.postAtFrontOfQueue {
       try {
         capture()
