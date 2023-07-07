@@ -45,6 +45,7 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
       .forwardStdError(System.err.writer())
       .withEnvironment(
         mapOf(
+          "ANDROID_HOME" to System.getenv("ANDROID_HOME"),
           "INTEGRATION_TEST" to "true",
           "ROBORAZZI_ROOT_PATH" to File("../..").absolutePath,
           "ROBORAZZI_INCLUDE_BUILD_ROOT_PATH" to File("..").absolutePath,
