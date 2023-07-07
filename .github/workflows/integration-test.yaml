@@ -33,12 +33,12 @@ jobs:
         if: ${{ always() }}
         with:
           name: test-reports
-          path: app/build/reports
+          path: include-build/roborazzi-gradle-plugin/build/reports
           retention-days: 30
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: test-test-results
-          path: app/build/test-results
+          path: include-build/roborazzi-gradle-plugin/build/test-results
           retention-days: 30
