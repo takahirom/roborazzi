@@ -21,9 +21,9 @@ class RuleTestWithPath {
   val roborazziRule = RoborazziRule(
     options = Options(
       outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_outputDirectoryPath",
-      outputFileProvider = { description, folder, fileExtension ->
+      outputFileProvider = { description, directory, fileExtension ->
         File(
-          folder,
+          directory,
           "custom_outputFileProvider-${description.testClass.name}.${description.methodName}.$fileExtension"
         )
       }

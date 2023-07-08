@@ -27,9 +27,9 @@ class RuleTestWithAllImage {
     captureRoot = onView(isRoot()),
     options = Options(
       captureType = CaptureType.AllImage(),
-      outputFileProvider = { description, folder, fileExtension ->
+      outputFileProvider = { description, directory, fileExtension ->
         File(
-          folder,
+          directory,
           "custom-${description.testClass.name}.${description.methodName}.${number++}.$fileExtension"
         )
       }

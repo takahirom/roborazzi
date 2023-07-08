@@ -9,9 +9,9 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 private val defaultFileProvider: FileProvider =
-  { description, folder, fileExtension ->
+  { description, directory, fileExtension ->
     File(
-      folder.absolutePath,
+      directory.absolutePath,
       DefaultFileNameGenerator.generate(description) + "." + fileExtension
     )
   }
@@ -163,9 +163,9 @@ class RoborazziRule private constructor(
       return
     }
     if (description.annotations.filterIsInstance<Ignore>().isNotEmpty()) return evaluate()
-    val folder = File(options.outputDirectoryPath)
-    if (!folder.exists()) {
-      folder.mkdirs()
+    val directory = File(options.outputDirectoryPath)
+    if (!directory.exists()) {
+      directory.mkdirs()
     }
 
     when (captureType) {
@@ -203,10 +203,10 @@ class RoborazziRule private constructor(
         if (!isOnlyFail || result.result.isFailure) {
           if (captureType is CaptureType.AllImage) {
             result.saveAllImage {
-              options.outputFileProvider(description, folder, "png")
+              options.outputFileProvider(description, directory, "png")
             }
           } else {
-            val file = options.outputFileProvider(description, folder, "gif")
+            val file = options.outputFileProvider(description, directory, "gif")
             result.saveGif(file)
           }
         }
@@ -223,7 +223,7 @@ class RoborazziRule private constructor(
           evaluate()
         }
         if (!captureType.onlyFail || result.isFailure) {
-          val outputFile = options.outputFileProvider(description, folder, "png")
+          val outputFile = options.outputFileProvider(description, directory, "png")
           when (captureRoot) {
             is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureRoboImage(
               file = outputFile,
