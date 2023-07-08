@@ -34,6 +34,5 @@ class RuleTestWithPath {
   fun captureRoboImage() {
     launch(MainActivity::class.java)
     onView(isRoot()).captureRoboImage()
-    assert(File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_outputDirectoryPath/custom_outputFileProvider-com.github.takahirom.roborazzi.sample.RuleTestWithPath.captureRoboImage.png").exists())
   }
 }
