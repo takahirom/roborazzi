@@ -127,11 +127,13 @@ class RoborazziRule private constructor(
           provideRoborazziContext().setRuleOverrideOutputDirectory(options.outputDirectoryPath)
           provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
           provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
+          provideRoborazziContext().setRuleOverrideDescription(description)
           runTest(base, description, captureRoot)
         } finally {
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
           provideRoborazziContext().clearRuleOverrideFileProvider()
+          provideRoborazziContext().clearRuleOverrideDescription()
         }
       }
     }

@@ -41,6 +41,16 @@ object RoborazziContext {
   }
 
   @InternalRoborazziApi
+  fun setRuleOverrideDescription(description: Description) {
+    ruleOverrideDescription = description
+  }
+
+  @InternalRoborazziApi
+  fun clearRuleOverrideDescription() {
+    ruleOverrideDescription = null
+  }
+
+  @InternalRoborazziApi
   val outputDirectory
     get() = ruleOverrideOutputDirectory ?: DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 

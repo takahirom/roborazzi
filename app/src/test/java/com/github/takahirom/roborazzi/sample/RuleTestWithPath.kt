@@ -8,6 +8,7 @@ import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
 import com.github.takahirom.roborazzi.captureRoboImage
+import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,7 +20,13 @@ class RuleTestWithPath {
   @get:Rule
   val roborazziRule = RoborazziRule(
     options = Options(
-      outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_path",
+      outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_outputDirectoryPath",
+      outputFileProvider = { description, folder, fileExtension ->
+        File(
+          folder,
+          "custom_outputFileProvider-${description.testClass.name}.${description.methodName}.$fileExtension"
+        )
+      }
     ),
   )
 
