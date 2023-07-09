@@ -23,6 +23,32 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun recordWithPropertiesAfterUnitTest() {
+    RoborazziGradleProject(testProjectDir).apply {
+      unitTest()
+      // Record task shouldn't skip even after unit test
+      recordWithSystemParameter()
+
+      checkRecordedFileExists("$pathAndName.testCapture.png")
+      checkRecordedFileNotExists("$pathAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$pathAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun recordAfterUnitTest() {
+    RoborazziGradleProject(testProjectDir).apply {
+      unitTest()
+      // Record task shouldn't skip even after unit test
+      record()
+
+      checkRecordedFileExists("$pathAndName.testCapture.png")
+      checkRecordedFileNotExists("$pathAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$pathAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
   fun verify_changeDetect() {
     RoborazziGradleProject(testProjectDir).apply {
       record()

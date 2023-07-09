@@ -15,6 +15,16 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task)
   }
 
+  fun unitTest(): BuildResult {
+    val task = "testDebugUnitTest"
+    return runTask(task)
+  }
+
+  fun recordWithSystemParameter(): BuildResult {
+    val task = "testDebugUnitTest"
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.test.record=true"))
+  }
+
   fun verify(): BuildResult {
     val task = "verifyRoborazziDebug"
     return runTask(task)
@@ -34,12 +44,22 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     Build, BuildAndFail
   }
 
-  private fun runTask(task: String, buildType: BuildType = BuildType.Build): BuildResult {
+  private fun runTask(
+    task: String,
+    buildType: BuildType = BuildType.Build,
+    additionalParameters: Array<String> = arrayOf()
+  ): BuildResult {
     appBuildFile.addIncludeBuild()
 
     val buildResult = GradleRunner.create()
       .withProjectDir(testProjectDir.root)
-      .withArguments(task, "--stacktrace", "--info", "--no-configuration-cache", "--rerun-tasks")
+      .withArguments(
+        task,
+        "--stacktrace",
+        "--info",
+        "--no-configuration-cache",
+        *additionalParameters
+      )
       .withPluginClasspath()
       .forwardStdOutput(System.out.writer())
       .forwardStdError(System.err.writer())

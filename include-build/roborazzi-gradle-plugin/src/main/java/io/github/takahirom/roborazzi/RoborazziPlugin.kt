@@ -87,6 +87,15 @@ class RoborazziPlugin : Plugin<Project> {
         val roborazziProperties =
           project.properties.filterKeys { it.startsWith("roborazzi") }
         val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
+        test.inputs.properties(
+          mapOf(
+            "isRecordRun" to isRecordRun,
+            "isVerifyRun" to isVerifyRun,
+            "isCompareRun" to isCompareRun,
+            "isVerifyAndRecordRun" to isVerifyAndRecordRun,
+            "roborazziProperties" to roborazziProperties,
+          )
+        )
 
         test.doFirst {
           test.systemProperties["roborazzi.test.record"] =
