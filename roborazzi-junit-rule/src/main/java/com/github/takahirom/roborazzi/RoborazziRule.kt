@@ -23,8 +23,6 @@ private val defaultFileProvider: FileProvider =
  * This rule have two features.
  * 1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for [captureRoboImage].
  * 2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
- *
- * This rule is **optional**. You can use [captureRoboImage] without this rule.
  */
 class RoborazziRule private constructor(
   private val captureRoot: CaptureRoot,

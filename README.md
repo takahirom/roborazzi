@@ -483,79 +483,17 @@ Example of the comment
 
 <img src="https://user-images.githubusercontent.com/1386930/236480693-80483cde-53fe-4c04-ba1f-2352e14b5f15.png" width="600" />
 
+## RoborazziRule (Optional)
 
-### Compose Support
+RoborazziRule is a JUnit rule for roborazzi.
+RoborazziRule is **optional**. You can use [captureRoboImage] without this rule.
 
-Test target
+RoborazziRule have two features.
 
-```kotlin
-@Composable
-fun SampleComposableFunction() {
-  var count by remember { mutableStateOf(0) }
-  Column(
-    Modifier
-      .size(300.dp)
-  ) {
-    Box(
-      Modifier
-        .testTag("MyComposeButton")
-        .size(50.dp)
-        .clickable {
-          count++
-        }
-    )
-    (0..count).forEach {
-      Box(
-        Modifier
-          .size(30.dp)
-      )
-    }
-  }
-}
-```
+1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for [captureRoboImage].
+2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
 
-Test (Just add RoborazziRule)
-
-```kotlin
-@RunWith(AndroidJUnit4::class)
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-class ComposeTest {
-  @get:Rule
-  val composeTestRule = createAndroidComposeRule<ComponentActivity>()
-
-  @get:Rule
-  val roborazziRule = RoborazziRule(
-    composeRule = composeTestRule,
-    captureRoot = composeTestRule.onRoot(),
-    options = RoborazziRule.Options(
-      RoborazziRule.CaptureType.Gif()
-    )
-  )
-
-  @Test
-  fun composable() {
-    composeTestRule.setContent {
-      SampleComposableFunction()
-    }
-    (0 until 3).forEach { _ ->
-      composeTestRule
-        .onNodeWithTag("MyComposeButton")
-        .performClick()
-    }
-  }
-}
-```
-
-![com github takahirom roborazzi sample ComposeTest_composable](https://user-images.githubusercontent.com/1386930/226366224-b9950b60-26a2-489e-bc03-08bfb86c533a.gif)
-
-
-### RoborazziRule (Optional) - Provide context for `captureRoboImage()`
-
-RoborazziRule is a JUnit test rule that provides some context for `captureRoboImage()`.
-This rule, while not mandatory, allows you to specify both the output directory path and the file
-name.
-
-The following code generates an output file
+For example, The following code generates an output file
 named `**custom_outputDirectoryPath**/**custom_outputFileProvider**-com.github.takahirom.roborazzi.sample.RuleTestWithPath.captureRoboImage.png` :
 
 ```kotlin
@@ -646,6 +584,70 @@ class RuleTestWithOnlyFail {
 }
 ```
 
+### Automatically generate Jetpack Compose gif with test rule
+
+Test target
+
+```kotlin
+@Composable
+fun SampleComposableFunction() {
+  var count by remember { mutableStateOf(0) }
+  Column(
+    Modifier
+      .size(300.dp)
+  ) {
+    Box(
+      Modifier
+        .testTag("MyComposeButton")
+        .size(50.dp)
+        .clickable {
+          count++
+        }
+    )
+    (0..count).forEach {
+      Box(
+        Modifier
+          .size(30.dp)
+      )
+    }
+  }
+}
+```
+
+Test (Just add RoborazziRule)
+
+```kotlin
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class ComposeTest {
+  @get:Rule
+  val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+  @get:Rule
+  val roborazziRule = RoborazziRule(
+    composeRule = composeTestRule,
+    captureRoot = composeTestRule.onRoot(),
+    options = RoborazziRule.Options(
+      RoborazziRule.CaptureType.Gif()
+    )
+  )
+
+  @Test
+  fun composable() {
+    composeTestRule.setContent {
+      SampleComposableFunction()
+    }
+    (0 until 3).forEach { _ ->
+      composeTestRule
+        .onNodeWithTag("MyComposeButton")
+        .performClick()
+    }
+  }
+}
+```
+
+![com github takahirom roborazzi sample ComposeTest_composable](https://user-images.githubusercontent.com/1386930/226366224-b9950b60-26a2-489e-bc03-08bfb86c533a.gif)
+
 ### RoborazziRule options
 
 You can use some RoborazziRule options
@@ -658,8 +660,6 @@ You can use some RoborazziRule options
  * This rule have two features.
  * 1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for [captureRoboImage].
  * 2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
- *
- * This rule is **optional**. You can use [captureRoboImage] without this rule.
  */
 class RoborazziRule private constructor(
   private val captureRoot: CaptureRoot,
