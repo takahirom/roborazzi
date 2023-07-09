@@ -512,7 +512,8 @@ class RuleTestWithOnlyFail {
   val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
     options = Options(
-      onlyFail = true
+      onlyFail = true,
+      captureType = RoborazziRule.CaptureType.Gif,
     )
   )
 
