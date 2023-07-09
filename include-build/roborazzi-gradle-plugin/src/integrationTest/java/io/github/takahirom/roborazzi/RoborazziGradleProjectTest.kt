@@ -26,7 +26,7 @@ class RoborazziGradleProjectTest {
   fun recordWithPropertiesAfterUnitTest() {
     RoborazziGradleProject(testProjectDir).apply {
       unitTest()
-      // Record task shouldn't skip even after unit test
+      // Record task shouldn't be skipped even after unit test
       recordWithSystemParameter()
 
       checkRecordedFileExists("$pathAndName.testCapture.png")
@@ -39,7 +39,7 @@ class RoborazziGradleProjectTest {
   fun recordAfterUnitTest() {
     RoborazziGradleProject(testProjectDir).apply {
       unitTest()
-      // Record task shouldn't skip even after unit test
+      // Record task shouldn't be skipped even after unit test
       record()
 
       checkRecordedFileExists("$pathAndName.testCapture.png")
