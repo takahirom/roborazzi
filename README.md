@@ -5,21 +5,34 @@
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10) and enables screenshot testing.📣
 
 ## Why Choose Roborazzi?
+
 ### Why is screenshot testing important?
-Screenshot testing is key to validate your app's appearance and functionality. It efficiently detects visual issues and tests the app as users would use it, making it easier to spot problems. It's quicker than writing many assert statements, ensuring your app looks right and behaves correctly.
+
+Screenshot testing is key to validate your app's appearance and functionality. It efficiently
+detects visual issues and tests the app as users would use it, making it easier to spot problems.
+It's quicker than writing many assert statements, ensuring your app looks right and behaves
+correctly.
 
 ### What are JVM tests and why test with JVM instead of on Android?
-JVM tests, also known as local tests, are placed in the test/ directory and are run on a developer's PC or CI environment. On the other hand, device tests, also known as Instrumentation tests, are written in the androidTest/ directory and are run on real devices or emulators. Device testing can result in frequent failures due to the device environment, leading to false negatives. These failures are often hard to reproduce, making them tough to resolve.
+
+JVM tests, also known as local tests, are placed in the test/ directory and are run on a developer's
+PC or CI environment. On the other hand, device tests, also known as Instrumentation tests, are
+written in the androidTest/ directory and are run on real devices or emulators. Device testing can
+result in frequent failures due to the device environment, leading to false negatives. These
+failures are often hard to reproduce, making them tough to resolve.
 
 ### Paparazzi and Roborazzi: A Comparison
-Paparazzi is a great tool for visualizing displays within the JVM. However, it's incompatible with Robolectric, which also mocks the Android framework.
 
-Roborazzi fills this gap. It integrates with Robolectric, allowing tests to run with Hilt and interact with components. Essentially, Roborazzi enhances Paparazzi's capabilities, providing a more efficient and reliable testing process by capturing screenshots with Robolectric.
+Paparazzi is a great tool for visualizing displays within the JVM. However, it's incompatible with
+Robolectric, which also mocks the Android framework.
+
+Roborazzi fills this gap. It integrates with Robolectric, allowing tests to run with Hilt and
+interact with components. Essentially, Roborazzi enhances Paparazzi's capabilities, providing a more
+efficient and reliable testing process by capturing screenshots with Robolectric.
 
 **Leveraging Roborazzi in Test Architecture: An Example**
 
 <img src="https://github.com/takahirom/roborazzi/assets/1386930/937a96a4-f637-4029-87e1-c1bb94abc8ae" width="320" />
-
 
 ## Try it out
 
@@ -159,7 +172,10 @@ The comparison image, saved as `[original]_compare.png`, is shown below:
 
 ![image](https://github.com/takahirom/roborazzi/assets/1386930/579199d5-8e17-4f51-b990-de603ca36251)
 
-This uses [JetNew from Compose Samples](https://github.com/android/compose-samples/tree/main/JetNews). You can check the pull request introducing Roborazzi to the compose-samples [here](https://github.com/takahirom/compose-samples/pull/1/files).
+This
+uses [JetNew from Compose Samples](https://github.com/android/compose-samples/tree/main/JetNews).
+You can check the pull request introducing Roborazzi to the
+compose-samples [here](https://github.com/takahirom/compose-samples/pull/1/files).
 
 ### Add dependencies
 
@@ -316,7 +332,6 @@ class RoborazziTest {
 fun test() {
 ```
 
-
 </td></tr>
 <tr><td>
 ✅ Night mode
@@ -347,7 +362,6 @@ fun test() {
 </td></tr>
 
 </table>
-
 
 ### Integrate to your GitHub Actions
 
@@ -469,68 +483,6 @@ Example of the comment
 
 <img src="https://user-images.githubusercontent.com/1386930/236480693-80483cde-53fe-4c04-ba1f-2352e14b5f15.png" width="600" />
 
-### Generate gif automatically
-
-```kotlin
-@Test
-fun captureRoboGifSample() {
-  onView(ViewMatchers.isRoot())
-    .captureRoboGif("build/test.gif") {
-      // launch
-      ActivityScenario.launch(MainActivity::class.java)
-      // move to next page
-      onView(withId(R.id.button_first))
-        .perform(click())
-      // back
-      pressBack()
-      // move to next page
-      onView(withId(R.id.button_first))
-        .perform(click())
-    }
-}
-```
-
-<img width="350" src="https://user-images.githubusercontent.com/1386930/226362212-35d34c9e-6df1-4671-8949-10fad7ad98c9.gif" />
-
-### Automatically generate gif with test rule
-
-> **Note**  
-> You **don't need to use RoborazziRule** if you're using captureRoboImage().
-
-With the JUnit test rule, you do not need to name the gif image,
-and if you prefer, you can output the gif image **only if the test fails**.
-
-This test will output this file.
-
-`build/outputs/roborazzi/com.github.takahirom.roborazzi.sample.RuleTestWithOnlyFail_captureRoboGifSampleFail.gif`
-
-```kotlin
-@RunWith(AndroidJUnit4::class)
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-class RuleTestWithOnlyFail {
-  @get:Rule
-  val roborazziRule = RoborazziRule(
-    captureRoot = onView(isRoot()),
-    options = Options(
-      onlyFail = true,
-      captureType = RoborazziRule.CaptureType.Gif,
-    )
-  )
-
-  @Test
-  fun captureRoboLastImageSampleFail() {
-    // launch
-    ActivityScenario.launch(MainActivity::class.java)
-    // move to next page
-    onView(withId(R.id.button_first))
-      .perform(click())
-    // should fail because the button does not exist
-    // Due to failure, the gif image will be saved in the outputs folder.
-    onView(withId(R.id.button_first))
-      .perform(click())
-  }
-}
-```
 
 ### Compose Support
 
@@ -596,64 +548,175 @@ class ComposeTest {
 
 ![com github takahirom roborazzi sample ComposeTest_composable](https://user-images.githubusercontent.com/1386930/226366224-b9950b60-26a2-489e-bc03-08bfb86c533a.gif)
 
-### RoborazziRule options
+
+### RoborazziRule (Optional) - Provide context for `captureRoboImage()`
+
+RoborazziRule is a JUnit test rule that provides some context for `captureRoboImage()`.
+This rule, while not mandatory, allows you to specify both the output directory path and the file
+name.
+
+The following code generates an output file
+named `**custom_outputDirectoryPath**/**custom_outputFileProvider**-com.github.takahirom.roborazzi.sample.RuleTestWithPath.captureRoboImage.png` :
+
+```kotlin
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class RuleTestWithPath {
+  @get:Rule
+  val roborazziRule = RoborazziRule(
+    options = Options(
+      outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_outputDirectoryPath",
+      outputFileProvider = { description, outputDirectory, fileExtension ->
+        File(
+          outputDirectory,
+          "custom_outputFileProvider-${description.testClass.name}.${description.methodName}.$fileExtension"
+        )
+      }
+    ),
+  )
+
+  @Test
+  fun captureRoboImage() {
+    launch(MainActivity::class.java)
+    onView(isRoot()).captureRoboImage()
+  }
+}
+```
+
+### Generate gif image
+
+```kotlin
+@Test
+fun captureRoboGifSample() {
+  onView(ViewMatchers.isRoot())
+    .captureRoboGif("build/test.gif") {
+      // launch
+      ActivityScenario.launch(MainActivity::class.java)
+      // move to next page
+      onView(withId(R.id.button_first))
+        .perform(click())
+      // back
+      pressBack()
+      // move to next page
+      onView(withId(R.id.button_first))
+        .perform(click())
+    }
+}
+```
+
+<img width="350" src="https://user-images.githubusercontent.com/1386930/226362212-35d34c9e-6df1-4671-8949-10fad7ad98c9.gif" />
+
+### Automatically generate gif with test rule
 
 > **Note**  
 > You **don't need to use RoborazziRule** if you're using captureRoboImage().
 
+With the JUnit test rule, you do not need to name the gif image,
+and if you prefer, you can output the gif image **only if the test fails**.
+
+This test will output this file.
+
+`build/outputs/roborazzi/com.github.takahirom.roborazzi.sample.RuleTestWithOnlyFail_captureRoboGifSampleFail.gif`
+
+```kotlin
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class RuleTestWithOnlyFail {
+  @get:Rule
+  val roborazziRule = RoborazziRule(
+    captureRoot = onView(isRoot()),
+    options = Options(
+      onlyFail = true,
+      captureType = RoborazziRule.CaptureType.Gif,
+    )
+  )
+
+  @Test
+  fun captureRoboLastImageSampleFail() {
+    // launch
+    ActivityScenario.launch(MainActivity::class.java)
+    // move to next page
+    onView(withId(R.id.button_first))
+      .perform(click())
+    // should fail because the button does not exist
+    // Due to failure, the gif image will be saved in the outputs folder.
+    onView(withId(R.id.button_first))
+      .perform(click())
+  }
+}
+```
+
+### RoborazziRule options
 
 You can use some RoborazziRule options
 
 ```kotlin
+/**
+ * This rule is a JUnit rule for roborazzi.
+ * This rule is optional. You can use [captureRoboImage] without this rule.
+ *
+ * This rule have two features.
+ * 1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for [captureRoboImage].
+ * 2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
+ *
+ * This rule is **optional**. You can use [captureRoboImage] without this rule.
+ */
 class RoborazziRule private constructor(
-  ...
+  private val captureRoot: CaptureRoot,
+  private val options: Options = Options()
 ) : TestWatcher() {
   /**
-   * If you add this annotation to the test, the test will be ignored by roborazzi
+   * If you add this annotation to the test, the test will be ignored by
+   * roborazzi's CaptureType.LastImage, CaptureType.AllImage and CaptureType.Gif.
    */
   annotation class Ignore
 
   data class Options(
-    val captureType: CaptureType = CaptureType.LastImage(),
-    /**
-     * capture only when the test fail
-     */
-    val onlyFail: Boolean = false,
+    val captureType: CaptureType = CaptureType.None,
     /**
      * output directory path
      */
-    val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
+    val outputDirectoryPath: String = provideRoborazziContext().outputDirectory,
+
+    val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
+      ?: defaultFileProvider,
+    val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   )
 
   sealed interface CaptureType {
     /**
-     * Do not generate images. Just provide the image path and run the test.
+     * Do not generate images. Just provide the image path to [captureRoboImage].
      */
-    @ExperimentalRoborazziApi
     object None : CaptureType
 
     /**
      * Generate last images for each test
      */
     data class LastImage(
-      val outputFileProvider: FileCreator = defaultFileCreator,
-      val roborazziOptions: RoborazziOptions = RoborazziOptions(),
+      /**
+       * capture only when the test fail
+       */
+      val onlyFail: Boolean = false,
     ) : CaptureType
 
     /**
      * Generate images for Each layout change like TestClass_method_0.png for each test
      */
     data class AllImage(
-      val outputFileProvider: FileCreator = defaultFileCreator,
-      val roborazziOptions: RoborazziOptions = RoborazziOptions(),
+      /**
+       * capture only when the test fail
+       */
+      val onlyFail: Boolean = false,
     ) : CaptureType
 
     /**
      * Generate gif images for each test
      */
     data class Gif(
-      val outputFileProvider: FileCreator = defaultFileCreator,
-      val roborazziOptions: RoborazziOptions = RoborazziOptions(),
+      /**
+       * capture only when the test fail
+       */
+      val onlyFail: Boolean = false,
     ) : CaptureType
   }
 ```
@@ -706,21 +769,21 @@ data class RoborazziOptions(
 
     companion object {
       operator fun invoke(): RoborazziCompareReporter {
-    ...
+        ...
       }
     }
 
     class JsonOutputRoborazziCompareReporter : RoborazziCompareReporter {
-    ...
+      ...
 
       override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
-    ...
+        ...
       }
     }
 
     class VerifyRoborazziCompareReporter : RoborazziCompareReporter {
       override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
-    ...
+        ...
       }
     }
   }
@@ -736,11 +799,11 @@ data class RoborazziOptions(
     Rgb565;
 
     fun toBitmapConfig(): Bitmap.Config {
-    ...
+      ...
     }
 
     fun toBufferedImageType(): Int {
-    ...
+      ...
     }
   }
 }

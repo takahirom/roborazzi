@@ -17,9 +17,12 @@ private val defaultFileProvider: FileProvider =
   }
 
 /**
+ * This rule is a JUnit rule for roborazzi.
+ * This rule is optional. You can use [captureRoboImage] without this rule.
+ *
  * This rule have two features.
- * 1. Capture screenshots for each test.
- * 2. Provide context such as [provideRoborazziContext] and [provideRoborazziOptions] etc for [captureRoboImage].
+ * 1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for [captureRoboImage].
+ * 2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
  *
  * This rule is **optional**. You can use [captureRoboImage] without this rule.
  */
@@ -139,7 +142,6 @@ class RoborazziRule private constructor(
     }
   }
 
-  @OptIn(ExperimentalRoborazziApi::class)
   private fun runTest(
     base: Statement,
     description: Description,
