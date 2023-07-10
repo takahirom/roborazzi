@@ -1,5 +1,7 @@
 package io.github.takahirom.roborazzi
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -17,6 +19,7 @@ class RoborazziGradleProjectTest {
     RoborazziGradleProject(testProjectDir).apply {
       record()
 
+      checkCompareFileNotExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
@@ -30,6 +33,7 @@ class RoborazziGradleProjectTest {
       // Record task shouldn't be skipped even after unit test
       recordWithSystemParameter()
 
+      checkCompareFileNotExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
@@ -43,6 +47,7 @@ class RoborazziGradleProjectTest {
       // Record task shouldn't be skipped even after unit test
       record()
 
+      checkCompareFileNotExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
@@ -54,8 +59,13 @@ class RoborazziGradleProjectTest {
     RoborazziGradleProject(testProjectDir).apply {
       record()
       changeScreen()
+      val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
+
       verifyAndFail()
 
+      val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
+      assertEquals(recordFileHash1, recordFileHash2)
+      checkCompareFileNotExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
@@ -69,6 +79,40 @@ class RoborazziGradleProjectTest {
       record()
       verify()
 
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+
+  @Test
+  fun verifyAndRecord_changeDetect() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
+      changeScreen()
+
+      verifyAndRecordAndFail()
+
+      val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
+      assertNotEquals(recordFileHash1, recordFileHash2)
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+
+  @Test
+  fun verifyAndRecord_nochange() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      verifyAndRecord()
+
+      checkCompareFileNotExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")

@@ -35,6 +35,17 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task, BuildType.BuildAndFail)
   }
 
+  fun verifyAndRecord(): BuildResult {
+    val task = "verifyAndRecordRoborazziDebug"
+    return runTask(task)
+  }
+
+  fun verifyAndRecordAndFail(): BuildResult {
+    val task = "verifyAndRecordRoborazziDebug"
+    return runTask(task, BuildType.BuildAndFail)
+  }
+
+
   fun compare(): BuildResult {
     val task = "compareRoborazziDebug"
     return runTask(task)
@@ -169,19 +180,40 @@ dependencies {
     }
   }
 
+  fun checkCompareFileNotExists() {
+    val recordedFile =
+      testProjectDir.root.resolve("app/build/test-results/roborazzi/compare-report.json")
+    assert(!recordedFile.exists()) {
+      "File exists: ${recordedFile.absolutePath}"
+    }
+  }
+
   fun checkCompareFileExists() {
-    val recordedFile = testProjectDir.root.resolve("app/build/test-results/roborazzi/compare-report.json")
-    assert(recordedFile.exists())
+    val recordedFile =
+      testProjectDir.root.resolve("app/build/test-results/roborazzi/compare-report.json")
+    assert(recordedFile.exists()) {
+      "File not exists: ${recordedFile.absolutePath}"
+    }
   }
 
   fun checkRecordedFileExists(path: String) {
     val recordedFile = testProjectDir.root.resolve(path)
-    assert(recordedFile.exists())
+    assert(recordedFile.exists()) {
+      "File not exists: $path"
+    }
   }
+
+  fun getFileHash(path: String): Int {
+    val recordedFile = testProjectDir.root.resolve(path)
+    return recordedFile.readBytes().contentHashCode()
+  }
+
 
   fun checkRecordedFileNotExists(path: String) {
     val recordedFile = testProjectDir.root.resolve(path)
-    assert(!recordedFile.exists())
+    assert(!recordedFile.exists()) {
+      "File exists: $path"
+    }
   }
 
   fun changeScreen() {
