@@ -8,7 +8,8 @@ class RoborazziGradleProjectTest {
 
   @get:Rule
   val testProjectDir = TemporaryFolder()
-  private val pathAndName =
+
+  private val screenshotAndName =
     "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest"
 
   @Test
@@ -16,9 +17,9 @@ class RoborazziGradleProjectTest {
     RoborazziGradleProject(testProjectDir).apply {
       record()
 
-      checkRecordedFileExists("$pathAndName.testCapture.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_compare.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_actual.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
     }
   }
 
@@ -29,9 +30,9 @@ class RoborazziGradleProjectTest {
       // Record task shouldn't be skipped even after unit test
       recordWithSystemParameter()
 
-      checkRecordedFileExists("$pathAndName.testCapture.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_compare.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_actual.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
     }
   }
 
@@ -42,9 +43,9 @@ class RoborazziGradleProjectTest {
       // Record task shouldn't be skipped even after unit test
       record()
 
-      checkRecordedFileExists("$pathAndName.testCapture.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_compare.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_actual.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
     }
   }
 
@@ -55,9 +56,9 @@ class RoborazziGradleProjectTest {
       changeScreen()
       verifyAndFail()
 
-      checkRecordedFileExists("$pathAndName.testCapture.png")
-      checkRecordedFileExists("$pathAndName.testCapture_compare.png")
-      checkRecordedFileExists("$pathAndName.testCapture_actual.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
     }
   }
 
@@ -68,9 +69,9 @@ class RoborazziGradleProjectTest {
       record()
       verify()
 
-      checkRecordedFileExists("$pathAndName.testCapture.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_compare.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_actual.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
     }
   }
 
@@ -81,9 +82,11 @@ class RoborazziGradleProjectTest {
       changeScreen()
       compare()
 
-      checkRecordedFileExists("$pathAndName.testCapture.png")
-      checkRecordedFileExists("$pathAndName.testCapture_compare.png")
-      checkRecordedFileExists("$pathAndName.testCapture_actual.png")
+      checkCompareFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
     }
   }
 
@@ -93,9 +96,10 @@ class RoborazziGradleProjectTest {
       record()
       compare()
 
-      checkRecordedFileExists("$pathAndName.testCapture.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_compare.png")
-      checkRecordedFileNotExists("$pathAndName.testCapture_actual.png")
+      checkCompareFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
     }
   }
 }

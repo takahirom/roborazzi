@@ -169,6 +169,11 @@ dependencies {
     }
   }
 
+  fun checkCompareFileExists() {
+    val recordedFile = testProjectDir.root.resolve("app/build/test-results/roborazzi/compare-report.json")
+    assert(recordedFile.exists())
+  }
+
   fun checkRecordedFileExists(path: String) {
     val recordedFile = testProjectDir.root.resolve(path)
     assert(recordedFile.exists())
