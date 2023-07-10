@@ -1,7 +1,9 @@
 plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
-  id "com.vanniktech.maven.publish"
+}
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
 }
 
 // TODO: Use build-logic
@@ -22,7 +24,7 @@ dependencies {
   compileOnly "androidx.compose.ui:ui-test"
   compileOnly "androidx.compose.ui:ui-test-junit4"
 
-  compileOnly "org.robolectric:robolectric:4.10"
+  compileOnly "org.robolectric:robolectric:4.10.3"
   implementation 'androidx.core:core-ktx:1.8.0'
   api "com.dropbox.differ:differ:0.0.1-alpha1"
 
@@ -32,5 +34,5 @@ dependencies {
   testImplementation "io.ktor:ktor-serialization-kotlinx-xml:2.3.0"
   testImplementation "com.squareup.okhttp3:okhttp:5.0.0-alpha.11"
   testImplementation "com.squareup.okhttp3:okhttp-coroutines:5.0.0-alpha.11"
-  testImplementation("org.apache.commons:commons-compress:1.23.0")
+  testImplementation "org.apache.commons:commons-compress:1.23.0"
 }

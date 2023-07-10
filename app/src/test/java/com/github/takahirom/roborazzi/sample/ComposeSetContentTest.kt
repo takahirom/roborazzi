@@ -43,7 +43,7 @@ class ComposeSetContentTest {
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = RoborazziRule.Options(
-      RoborazziRule.CaptureType.Gif
+      RoborazziRule.CaptureType.Gif()
     )
   )
 

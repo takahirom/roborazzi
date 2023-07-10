@@ -20,7 +20,7 @@ class RuleTest {
     @get:Rule
     val roborazziRule = RoborazziRule(
       captureRoot = onView(isRoot()),
-      options = RoborazziRule.Options(RoborazziRule.CaptureType.Gif)
+      options = RoborazziRule.Options(RoborazziRule.CaptureType.Gif())
     )
   @Test
   fun captureRoboGifSample() {

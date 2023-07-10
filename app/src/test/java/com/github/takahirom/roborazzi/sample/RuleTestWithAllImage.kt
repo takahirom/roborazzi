@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule.Options
+import com.github.takahirom.roborazzi.captureRoboImage
 import java.io.File
 import org.junit.Rule
 import org.junit.Test
@@ -20,13 +21,17 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTestWithAllImage {
   private var number = 0
+
   @get:Rule
   val roborazziRule = RoborazziRule(
-    onView(isRoot()),
-    Options(
-      captureType = CaptureType.AllImage,
-      outputFileProvider = { description, folder, fileExtension ->
-        File(folder, "${description.testClass.name}.${description.methodName}.${number++}.$fileExtension")
+    captureRoot = onView(isRoot()),
+    options = Options(
+      captureType = CaptureType.AllImage(),
+      outputFileProvider = { description, directory, fileExtension ->
+        File(
+          directory,
+          "custom-${description.testClass.name}.${description.methodName}.${number++}.$fileExtension"
+        )
       }
     ),
   )
@@ -43,5 +48,8 @@ class RuleTestWithAllImage {
     // move to next page
     onView(withId(R.id.button_first))
       .perform(click())
+
+    onView(isRoot())
+      .captureRoboImage()
   }
 }

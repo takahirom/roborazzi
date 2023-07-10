@@ -59,7 +59,10 @@ class RoborazziPlugin : Plugin<Project> {
         verifyVariants.configure { it.dependsOn(verifyTaskProvider) }
 
         val verifyAndRecordTaskProvider =
-          project.tasks.register("verifyAndRecordRoborazzi$variantSlug", RoborazziTask::class.java) {
+          project.tasks.register(
+            "verifyAndRecordRoborazzi$variantSlug",
+            RoborazziTask::class.java
+          ) {
             it.group = VERIFICATION_GROUP
           }
         verifyAndRecordVariants.configure { it.dependsOn(verifyAndRecordTaskProvider) }
@@ -78,27 +81,36 @@ class RoborazziPlugin : Plugin<Project> {
 
         val testTaskProvider = project.tasks.withType(Test::class.java)
           .matching { it.name == "test$testVariantSlug" }
+        testTaskProvider
           .configureEach { test ->
-    //        test.outputs.dir(reportOutputDir)
-    //        test.outputs.dir(snapshotOutputDir)
+            //        test.outputs.dir(reportOutputDir)
+            //        test.outputs.dir(snapshotOutputDir)
 
-              val roborazziProperties =
-                project.properties.filterKeys { it.startsWith("roborazzi") }
-              val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
-
-              test.doFirst {
-                test.systemProperties["roborazzi.test.record"] =
-                  isRecordRun.get() || isVerifyAndRecordRun.get()
-                test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
-                test.systemProperties["roborazzi.test.verify"] =
-                  isVerifyRun.get() || isVerifyAndRecordRun.get()
-                test.systemProperties.putAll(roborazziProperties)
-                if (isCompareRun.get()) {
-                  compareReportDir.deleteRecursively()
-                  compareReportDir.mkdirs()
-                }
+            val roborazziProperties =
+              project.properties.filterKeys { it.startsWith("roborazzi") }
+            val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
+            test.inputs.properties(
+              mapOf(
+                "isRecordRun" to isRecordRun,
+                "isVerifyRun" to isVerifyRun,
+                "isCompareRun" to isCompareRun,
+                "isVerifyAndRecordRun" to isVerifyAndRecordRun,
+                "roborazziProperties" to roborazziProperties,
+              )
+            )
+            test.doFirst {
+              test.systemProperties["roborazzi.test.record"] =
+                isRecordRun.get() || isVerifyAndRecordRun.get()
+              test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
+              test.systemProperties["roborazzi.test.verify"] =
+                isVerifyRun.get() || isVerifyAndRecordRun.get()
+              test.systemProperties.putAll(roborazziProperties)
+              if (isCompareRun.get()) {
+                compareReportDir.deleteRecursively()
+                compareReportDir.mkdirs()
               }
             }
+          }
 
         recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
         compareReportGenerateTaskProvider.configure { it.dependsOn(testTaskProvider) }
@@ -108,14 +120,17 @@ class RoborazziPlugin : Plugin<Project> {
     }
 
     project.pluginManager.withPlugin("com.android.application") {
-      project.extensions.getByType(ApplicationAndroidComponentsExtension::class.java).configureComponents()
+      project.extensions.getByType(ApplicationAndroidComponentsExtension::class.java)
+        .configureComponents()
     }
     project.pluginManager.withPlugin("com.android.library") {
-      project.extensions.getByType(LibraryAndroidComponentsExtension::class.java).configureComponents()
+      project.extensions.getByType(LibraryAndroidComponentsExtension::class.java)
+        .configureComponents()
     }
   }
 
-  private fun String.capitalizeUS() = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
+  private fun String.capitalizeUS() =
+    replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
 
   open class RoborazziTask : DefaultTask() {
     @Option(

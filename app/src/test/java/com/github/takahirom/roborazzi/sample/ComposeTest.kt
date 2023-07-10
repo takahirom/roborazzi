@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziRule
+import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -35,6 +37,7 @@ class ComposeTest {
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = RoborazziRule.Options(
+      captureType = RoborazziRule.CaptureType.LastImage(),
       roborazziOptions = RoborazziOptions(
         recordOptions = RoborazziOptions.RecordOptions(
           applyDeviceCrop = true,
@@ -76,5 +79,6 @@ class ComposeTest {
     }
     composeTestRule.onNodeWithText("221x221").assertIsDisplayed()
     composeTestRule.onNodeWithText("Round: true").assertIsDisplayed()
+    composeTestRule.onNode(isRoot()).captureRoboImage()
   }
 }

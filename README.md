@@ -4,33 +4,35 @@
 
 ## Roborazzi now supports [Robolectric Native Graphics (RNG)](https://github.com/robolectric/robolectric/releases/tag/robolectric-4.10) and enables screenshot testing.📣
 
-## Why we need Roborazzi?
+## Why Choose Roborazzi?
 
-### Why we need screenshot testing?
+### Why is screenshot testing important?
 
-Screenshot testing is important for checking how your app looks and works.
-It can catch visual issues and also check the overall flow of your app. It's like testing your app
-the same way your users would use it, making it easier to catch problems that they would actually
-face.
-Plus, it's a great way to spot changes - this can be easier and quicker than writing lots of assert
-statements. So, with screenshot testing, you're not just checking your app looks right, you're also
-making sure it behaves correctly and is user-friendly.
+Screenshot testing is key to validate your app's appearance and functionality. It efficiently
+detects visual issues and tests the app as users would use it, making it easier to spot problems.
+It's quicker than writing many assert statements, ensuring your app looks right and behaves
+correctly.
 
-### Why test with JVM instead of testing on Android?
+### What are JVM tests and why test with JVM instead of on Android?
 
-When testing on a device, tests can fail easily due to the device environment, animations, etc. This
-can result in false negatives, where tests fail due to issues with the device environment rather
-than the application code itself. These failures are often hard to reproduce and troubleshoot,
-making them difficult to fix.
+JVM tests, also known as local tests, are placed in the test/ directory and are run on a developer's
+PC or CI environment. On the other hand, device tests, also known as Instrumentation tests, are
+written in the androidTest/ directory and are run on real devices or emulators. Device testing can
+result in frequent failures due to the device environment, leading to false negatives. These
+failures are often hard to reproduce, making them tough to resolve.
 
-### Why not Paparazzi? Why Roborazzi?
+### Paparazzi and Roborazzi: A Comparison
 
-Paparazzi is a great tool to see the actual display in the JVM.  
-Paparazzi relies on LayoutLib, Android Studio's layout drawing tool, which is incompatible with
-Robolectric.
-This is because they both mock the Android framework.  
-To run tests with Hilt and actually click on components, you need Robolectric.
-Roborazzi is a tool that allows you to take screenshots with Robolectric.
+Paparazzi is a great tool for visualizing displays within the JVM. However, it's incompatible with
+Robolectric, which also mocks the Android framework.
+
+Roborazzi fills this gap. It integrates with Robolectric, allowing tests to run with Hilt and
+interact with components. Essentially, Roborazzi enhances Paparazzi's capabilities, providing a more
+efficient and reliable testing process by capturing screenshots with Robolectric.
+
+**Leveraging Roborazzi in Test Architecture: An Example**
+
+<img src="https://github.com/takahirom/roborazzi/assets/1386930/937a96a4-f637-4029-87e1-c1bb94abc8ae" width="320" />
 
 ## Try it out
 
@@ -166,7 +168,14 @@ baseline.
 
 </table>
 
-![image](https://user-images.githubusercontent.com/1386930/226360316-69080436-c273-469b-bc45-55d73bd99975.png)
+The comparison image, saved as `[original]_compare.png`, is shown below:
+
+![image](https://github.com/takahirom/roborazzi/assets/1386930/579199d5-8e17-4f51-b990-de603ca36251)
+
+This
+uses [JetNew from Compose Samples](https://github.com/android/compose-samples/tree/main/JetNews).
+You can check the pull request introducing Roborazzi to the
+compose-samples [here](https://github.com/takahirom/compose-samples/pull/1/files).
 
 ### Add dependencies
 
@@ -222,42 +231,137 @@ class ManualTest {
     composeTestRule.onNodeWithTag("MyComposeButton")
       .onParent()
       .captureRoboImage("build/compose.png")
-
-    // Capture small view on window
-    onView(withId(R.id.button_first))
-      .captureRoboImage("build/button.png")
-
-    // move to next page
-    onView(withId(R.id.button_first))
-      .perform(click())
-
-    val view: View = composeTestRule.activity.findViewById<View>(R.id.button_second)
-    // Capture view on window
-    view.captureRoboImage("build/manual_view_on_window.png")
-
-    val textView = TextView(composeTestRule.activity).apply {
-      text = "Hello View!"
-      setTextColor(android.graphics.Color.RED)
-    }
-    // Capture view not on window
-    textView.captureRoboImage("build/manual_view_without_window.png")
-
-    // Capture Jetpack Compose lambda
-    captureRoboImage("build/manual_compose.png") {
-      Text("Hello Compose!")
-    }
-
-    val bitmap: Bitmap = createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-      .apply {
-        applyCanvas {
-          drawColor(android.graphics.Color.YELLOW)
-        }
-      }
-    // Capture Bitmap
-    bitmap.captureRoboImage("build/manual_bitmap.png")
   }
 }
 ```
+
+Roborazzi supports the following APIs.
+
+<table>
+<tr><td>Capture</td><td>Code</td></tr>
+<tr><td>
+✅ Jetpack Compose's onNode()
+</td><td>
+
+```kotlin
+composeTestRule.onNodeWithTag("MyComposeButton")
+  .captureRoboImage()
+```
+
+</td></tr>
+<tr><td>
+✅ Espresso's onView()
+</td><td>
+
+```kotlin
+onView(ViewMatchers.isRoot())
+  .captureRoboImage()
+```
+
+```kotlin
+onView(withId(R.id.button_first))
+  .captureRoboImage()
+```
+
+</td></tr>
+<tr><td>
+✅ View
+</td><td>
+
+```kotlin
+val view: View = composeTestRule.activity.findViewById<View>(R.id.button_second)
+view.captureRoboImage()
+```
+
+</td></tr>
+
+<tr><td>
+✅ Jetpack Compose lambda
+
+</td><td>
+
+```kotlin
+captureRoboImage() {
+  Text("Hello Compose!")
+}
+```
+
+</td></tr>
+
+<tr><td>
+✅ Bitmap
+
+</td><td>
+
+```kotlin
+val bitmap: Bitmap = createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+  .apply {
+    applyCanvas {
+      drawColor(android.graphics.Color.YELLOW)
+    }
+  }
+bitmap.captureRoboImage()
+```
+
+</td></tr>
+
+</table>
+
+### Device configuration
+
+You can configure the device by using the `@Config` annotation and `RobolectricDeviceQualifiers`.
+
+<table>
+<tr><td>Configuration</td><td>Code</td></tr>
+<tr><td>
+✅ Predefined device configuration
+</td><td>
+
+You can change the device configuration by adding `@Config` to the class or method.
+
+```kotlin
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = RobolectricDeviceQualifiers.Pixel5)
+class RoborazziTest {
+```
+
+```kotlin
+@Test
+@Config(qualifiers = RobolectricDeviceQualifiers.Pixel5)
+fun test() {
+```
+
+</td></tr>
+<tr><td>
+✅ Night mode
+</td><td>
+
+```kotlin
+@Config(qualifiers = "+night")
+```
+
+</td></tr>
+<tr><td>
+✅ Locale
+</td><td>
+
+```kotlin
+@Config(qualifiers = "+ja")
+```
+
+</td></tr>
+<tr><td>
+✅ Screen size
+</td><td>
+
+```kotlin
+@Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
+```
+
+</td></tr>
+
+</table>
 
 ### Integrate to your GitHub Actions
 
@@ -379,7 +483,45 @@ Example of the comment
 
 <img src="https://user-images.githubusercontent.com/1386930/236480693-80483cde-53fe-4c04-ba1f-2352e14b5f15.png" width="600" />
 
-### Generate gif automatically
+## RoborazziRule (Optional)
+
+RoborazziRule is a JUnit rule for roborazzi.
+RoborazziRule is **optional**. You can use [captureRoboImage] without this rule.
+
+RoborazziRule have two features.
+
+1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for [captureRoboImage].
+2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
+
+For example, The following code generates an output file
+named `**custom_outputDirectoryPath**/**custom_outputFileProvider**-com.github.takahirom.roborazzi.sample.RuleTestWithPath.captureRoboImage.png` :
+
+```kotlin
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class RuleTestWithPath {
+  @get:Rule
+  val roborazziRule = RoborazziRule(
+    options = Options(
+      outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_outputDirectoryPath",
+      outputFileProvider = { description, outputDirectory, fileExtension ->
+        File(
+          outputDirectory,
+          "custom_outputFileProvider-${description.testClass.name}.${description.methodName}.$fileExtension"
+        )
+      }
+    ),
+  )
+
+  @Test
+  fun captureRoboImage() {
+    launch(MainActivity::class.java)
+    onView(isRoot()).captureRoboImage()
+  }
+}
+```
+
+### Generate gif image
 
 ```kotlin
 @Test
@@ -404,6 +546,9 @@ fun captureRoboGifSample() {
 
 ### Automatically generate gif with test rule
 
+> **Note**  
+> You **don't need to use RoborazziRule** if you're using captureRoboImage().
+
 With the JUnit test rule, you do not need to name the gif image,
 and if you prefer, you can output the gif image **only if the test fails**.
 
@@ -419,7 +564,8 @@ class RuleTestWithOnlyFail {
   val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
     options = Options(
-      onlyFail = true
+      onlyFail = true,
+      captureType = RoborazziRule.CaptureType.Gif,
     )
   )
 
@@ -438,7 +584,7 @@ class RuleTestWithOnlyFail {
 }
 ```
 
-### Compose Support
+### Automatically generate Jetpack Compose gif with test rule
 
 Test target
 
@@ -482,7 +628,7 @@ class ComposeTest {
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = RoborazziRule.Options(
-      RoborazziRule.CaptureType.Gif
+      RoborazziRule.CaptureType.Gif()
     )
   )
 
@@ -507,51 +653,80 @@ class ComposeTest {
 You can use some RoborazziRule options
 
 ```kotlin
+/**
+ * This rule is a JUnit rule for roborazzi.
+ * This rule is optional. You can use [captureRoboImage] without this rule.
+ *
+ * This rule have two features.
+ * 1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for [captureRoboImage].
+ * 2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
+ */
 class RoborazziRule private constructor(
-  ...
+  private val captureRoot: CaptureRoot,
+  private val options: Options = Options()
 ) : TestWatcher() {
   /**
-   * If you add this annotation to the test, the test will be ignored by roborazzi
+   * If you add this annotation to the test, the test will be ignored by
+   * roborazzi's CaptureType.LastImage, CaptureType.AllImage and CaptureType.Gif.
    */
   annotation class Ignore
 
   data class Options(
-    val captureType: CaptureType = CaptureType.Gif,
-    /**
-     * capture only when the test fail
-     */
-    val onlyFail: Boolean = false,
+    val captureType: CaptureType = CaptureType.None,
     /**
      * output directory path
      */
-    val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
-    val roborazziOptions: RoborazziOptions = RoborazziOptions(),
+    val outputDirectoryPath: String = provideRoborazziContext().outputDirectory,
+
+    val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
+      ?: defaultFileProvider,
+    val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   )
 
-  enum class CaptureType {
+  sealed interface CaptureType {
+    /**
+     * Do not generate images. Just provide the image path to [captureRoboImage].
+     */
+    object None : CaptureType
+
     /**
      * Generate last images for each test
      */
-    LastImage,
+    data class LastImage(
+      /**
+       * capture only when the test fail
+       */
+      val onlyFail: Boolean = false,
+    ) : CaptureType
 
     /**
-     * Generate images for each layout change such as TestClass_method_0.png for each test.
+     * Generate images for Each layout change like TestClass_method_0.png for each test
      */
-    AllImage,
+    data class AllImage(
+      /**
+       * capture only when the test fail
+       */
+      val onlyFail: Boolean = false,
+    ) : CaptureType
 
     /**
      * Generate gif images for each test
      */
-    Gif
+    data class Gif(
+      /**
+       * capture only when the test fail
+       */
+      val onlyFail: Boolean = false,
+    ) : CaptureType
   }
 ```
 
 ### Roborazzi options
 
-```
+```kotlin
 data class RoborazziOptions(
   val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
-  val verifyOptions: VerifyOptions = VerifyOptions(),
+  val compareOptions: CompareOptions = CompareOptions(),
   val recordOptions: RecordOptions = RecordOptions(),
 ) {
   sealed interface CaptureType {
@@ -562,24 +737,76 @@ data class RoborazziOptions(
       val basicSize: Int = 600,
       val depthSlideSize: Int = 30,
       val query: ((RoboComponent) -> Boolean)? = null,
-    ) : CaptureType
+      val explanation: ((RoboComponent) -> String?) = DefaultExplanation,
+    ) : CaptureType {
+      companion object {
+        val DefaultExplanation: ((RoboComponent) -> String) = {
+          it.text
+        }
+        val AccessibilityExplanation: ((RoboComponent) -> String) = {
+          it.accessibilityText
+        }
+      }
+    }
   }
 
-  data class VerifyOptions(
-    /**
-     * This value determines the threshold of pixel change at which the diff image is output or not.
-     * The value should be between 0 and 1
-     */
-    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean
+  data class CompareOptions(
+    val roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
+      roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+      /**
+       * This value determines the threshold of pixel change at which the diff image is output or not.
+       * The value should be between 0 and 1
+       */
       changeThreshold: Float = 0.01F,
-    ) : this(ThresholdValidator(changeThreshold))
+    ) : this(roborazziCompareReporter, ThresholdValidator(changeThreshold))
+  }
+
+  interface RoborazziCompareReporter {
+    fun report(compareReportCaptureResult: CompareReportCaptureResult)
+
+    companion object {
+      operator fun invoke(): RoborazziCompareReporter {
+        ...
+      }
+    }
+
+    class JsonOutputRoborazziCompareReporter : RoborazziCompareReporter {
+      ...
+
+      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
+        ...
+      }
+    }
+
+    class VerifyRoborazziCompareReporter : RoborazziCompareReporter {
+      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
+        ...
+      }
+    }
   }
 
   data class RecordOptions(
-    val resizeScale: Double = 1.0
+    val resizeScale: Double = roborazziDefaultResizeScale(),
+    val applyDeviceCrop: Boolean = false,
+    val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
   )
+
+  enum class PixelBitConfig {
+    Argb8888,
+    Rgb565;
+
+    fun toBitmapConfig(): Bitmap.Config {
+      ...
+    }
+
+    fun toBufferedImageType(): Int {
+      ...
+    }
+  }
+}
 ```
 
 ### Dump mode
