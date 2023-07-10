@@ -1,7 +1,8 @@
 package io.github.takahirom.roborazzi
 
-import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import java.util.Locale
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
@@ -24,99 +25,112 @@ class RoborazziPlugin : Plugin<Project> {
     val recordVariants = project.tasks.register("recordRoborazzi")
     val verifyAndRecordVariants = project.tasks.register("verifyAndRecordRoborazzi")
 
-    val hasLibraryPlugin = project.pluginManager.hasPlugin("com.android.library")
-    val variants = if (hasLibraryPlugin) {
-      (project.extensions.getByName("android") as LibraryExtension).libraryVariants
-    } else {
-      project.extensions.getByType(BaseAppModuleExtension::class.java)
-        .applicationVariants
-    }
-    variants.all { variant ->
-      val variantSlug = variant.name.capitalize(Locale.US)
+    fun AndroidComponentsExtension<*, *, *>.configureComponents() {
+      onVariants { variant ->
+        val unitTest = variant.unitTest ?: return@onVariants
+        val variantSlug = variant.name.capitalizeUS()
 
 //      val reportOutputDir = project.layout.buildDirectory.dir("reports/roborazzi")
 //      val snapshotOutputDir = project.layout.projectDirectory.dir("src/test/snapshots")
 
-      val testVariantSlug = variant.unitTestVariant.name.capitalize(Locale.US)
+        val testVariantSlug = unitTest.name.capitalizeUS()
 
-      val recordTaskProvider =
-        project.tasks.register("recordRoborazzi$variantSlug", RoborazziTask::class.java) {
-          it.group = VERIFICATION_GROUP
-        }
-      recordVariants.configure { it.dependsOn(recordTaskProvider) }
-
-      val compareReportGenerateTaskProvider =
-        project.tasks.register(
-          "compareRoborazzi$variantSlug",
-          CompareReportGenerateTask::class.java
-        ) {
-          it.group = VERIFICATION_GROUP
-          it.inputResultJsonsDir.set(project.file(RoborazziReportConst.compareReportDirPath))
-          it.outputJsonFile.set(project.file(RoborazziReportConst.compareSummaryReportFilePath))
-        }
-      compareVariants.configure { it.dependsOn(compareReportGenerateTaskProvider) }
-
-      val verifyTaskProvider =
-        project.tasks.register("verifyRoborazzi$variantSlug", RoborazziTask::class.java) {
-          it.group = VERIFICATION_GROUP
-        }
-      verifyVariants.configure { it.dependsOn(verifyTaskProvider) }
-
-      val verifyAndRecordTaskProvider =
-        project.tasks.register("verifyAndRecordRoborazzi$variantSlug", RoborazziTask::class.java) {
-          it.group = VERIFICATION_GROUP
-        }
-      verifyAndRecordVariants.configure { it.dependsOn(verifyAndRecordTaskProvider) }
-
-      val isRecordRun = project.objects.property(Boolean::class.java)
-      val isVerifyRun = project.objects.property(Boolean::class.java)
-      val isCompareRun = project.objects.property(Boolean::class.java)
-      val isVerifyAndRecordRun = project.objects.property(Boolean::class.java)
-
-      project.gradle.taskGraph.whenReady { graph ->
-        isRecordRun.set(recordTaskProvider.map { graph.hasTask(it) })
-        isVerifyRun.set(verifyTaskProvider.map { graph.hasTask(it) })
-        isVerifyAndRecordRun.set(verifyAndRecordTaskProvider.map { graph.hasTask(it) })
-        isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
-      }
-
-      val testTaskProvider = project.tasks.named("test$testVariantSlug", Test::class.java) { test ->
-//        test.outputs.dir(reportOutputDir)
-//        test.outputs.dir(snapshotOutputDir)
-
-        val roborazziProperties =
-          project.properties.filterKeys { it.startsWith("roborazzi") }
-        val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
-        test.inputs.properties(
-          mapOf(
-            "isRecordRun" to isRecordRun,
-            "isVerifyRun" to isVerifyRun,
-            "isCompareRun" to isCompareRun,
-            "isVerifyAndRecordRun" to isVerifyAndRecordRun,
-            "roborazziProperties" to roborazziProperties,
-          )
-        )
-
-        test.doFirst {
-          test.systemProperties["roborazzi.test.record"] =
-            isRecordRun.get() || isVerifyAndRecordRun.get()
-          test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
-          test.systemProperties["roborazzi.test.verify"] =
-            isVerifyRun.get() || isVerifyAndRecordRun.get()
-          test.systemProperties.putAll(roborazziProperties)
-          if (isCompareRun.get()) {
-            compareReportDir.deleteRecursively()
-            compareReportDir.mkdirs()
+        val recordTaskProvider =
+          project.tasks.register("recordRoborazzi$variantSlug", RoborazziTask::class.java) {
+            it.group = VERIFICATION_GROUP
           }
-        }
-      }
+        recordVariants.configure { it.dependsOn(recordTaskProvider) }
 
-      recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
-      compareReportGenerateTaskProvider.configure { it.dependsOn(testTaskProvider) }
-      verifyTaskProvider.configure { it.dependsOn(testTaskProvider) }
-      verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
+        val compareReportGenerateTaskProvider =
+          project.tasks.register(
+            "compareRoborazzi$variantSlug",
+            CompareReportGenerateTask::class.java
+          ) {
+            it.group = VERIFICATION_GROUP
+            it.inputResultJsonsDir.set(project.file(RoborazziReportConst.compareReportDirPath))
+            it.outputJsonFile.set(project.file(RoborazziReportConst.compareSummaryReportFilePath))
+          }
+        compareVariants.configure { it.dependsOn(compareReportGenerateTaskProvider) }
+
+        val verifyTaskProvider =
+          project.tasks.register("verifyRoborazzi$variantSlug", RoborazziTask::class.java) {
+            it.group = VERIFICATION_GROUP
+          }
+        verifyVariants.configure { it.dependsOn(verifyTaskProvider) }
+
+        val verifyAndRecordTaskProvider =
+          project.tasks.register(
+            "verifyAndRecordRoborazzi$variantSlug",
+            RoborazziTask::class.java
+          ) {
+            it.group = VERIFICATION_GROUP
+          }
+        verifyAndRecordVariants.configure { it.dependsOn(verifyAndRecordTaskProvider) }
+
+        val isRecordRun = project.objects.property(Boolean::class.java)
+        val isVerifyRun = project.objects.property(Boolean::class.java)
+        val isCompareRun = project.objects.property(Boolean::class.java)
+        val isVerifyAndRecordRun = project.objects.property(Boolean::class.java)
+
+        project.gradle.taskGraph.whenReady { graph ->
+          isRecordRun.set(recordTaskProvider.map { graph.hasTask(it) })
+          isVerifyRun.set(verifyTaskProvider.map { graph.hasTask(it) })
+          isVerifyAndRecordRun.set(verifyAndRecordTaskProvider.map { graph.hasTask(it) })
+          isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
+        }
+
+        val testTaskProvider = project.tasks.withType(Test::class.java)
+          .matching { it.name == "test$testVariantSlug" }
+        testTaskProvider
+          .configureEach { test ->
+            //        test.outputs.dir(reportOutputDir)
+            //        test.outputs.dir(snapshotOutputDir)
+
+            val roborazziProperties =
+              project.properties.filterKeys { it.startsWith("roborazzi") }
+            val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
+            test.inputs.properties(
+              mapOf(
+                "isRecordRun" to isRecordRun,
+                "isVerifyRun" to isVerifyRun,
+                "isCompareRun" to isCompareRun,
+                "isVerifyAndRecordRun" to isVerifyAndRecordRun,
+                "roborazziProperties" to roborazziProperties,
+              )
+            )
+            test.doFirst {
+              test.systemProperties["roborazzi.test.record"] =
+                isRecordRun.get() || isVerifyAndRecordRun.get()
+              test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
+              test.systemProperties["roborazzi.test.verify"] =
+                isVerifyRun.get() || isVerifyAndRecordRun.get()
+              test.systemProperties.putAll(roborazziProperties)
+              if (isCompareRun.get()) {
+                compareReportDir.deleteRecursively()
+                compareReportDir.mkdirs()
+              }
+            }
+          }
+
+        recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
+        compareReportGenerateTaskProvider.configure { it.dependsOn(testTaskProvider) }
+        verifyTaskProvider.configure { it.dependsOn(testTaskProvider) }
+        verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
+      }
+    }
+
+    project.pluginManager.withPlugin("com.android.application") {
+      project.extensions.getByType(ApplicationAndroidComponentsExtension::class.java)
+        .configureComponents()
+    }
+    project.pluginManager.withPlugin("com.android.library") {
+      project.extensions.getByType(LibraryAndroidComponentsExtension::class.java)
+        .configureComponents()
     }
   }
+
+  private fun String.capitalizeUS() =
+    replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
 
   open class RoborazziTask : DefaultTask() {
     @Option(
