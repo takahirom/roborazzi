@@ -6,6 +6,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
+/**
+ * Run this test with `cd include-build` and `./gradlew roborazzi-gradle-plugin:check`
+ */
 class RoborazziGradleProjectTest {
 
   @get:Rule
