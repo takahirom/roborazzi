@@ -99,12 +99,24 @@ class RoborazziPlugin : Plugin<Project> {
               )
             )
             test.doFirst {
+              val isTaskPresent =
+                isRecordRun.get() || isVerifyRun.get() || isCompareRun.get() || isVerifyAndRecordRun.get()
+              if (!isTaskPresent) {
+                test.systemProperties.putAll(roborazziProperties)
+                return@doFirst
+              }
+              // Apply other roborazzi properties except for the ones that
+              // start with "roborazzi.test"
+              test.systemProperties.putAll(
+                roborazziProperties.filter { (key, _) ->
+                  !key.startsWith("roborazzi.test")
+                }
+              )
               test.systemProperties["roborazzi.test.record"] =
                 isRecordRun.get() || isVerifyAndRecordRun.get()
               test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
               test.systemProperties["roborazzi.test.verify"] =
                 isVerifyRun.get() || isVerifyAndRecordRun.get()
-              test.systemProperties.putAll(roborazziProperties)
               if (isCompareRun.get()) {
                 compareReportDir.deleteRecursively()
                 compareReportDir.mkdirs()

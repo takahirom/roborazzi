@@ -20,6 +20,16 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task)
   }
 
+  fun recordWithScaleSize(): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.record.resizeScale=0.5"))
+  }
+
+  fun recordWithCompareParameter(): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.test.compare=true"))
+  }
+
   fun recordWithSystemParameter(): BuildResult {
     val task = "testDebugUnitTest"
     return runTask(task, additionalParameters = arrayOf("-Proborazzi.test.record=true"))

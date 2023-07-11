@@ -75,6 +75,35 @@ class RoborazziGradleProjectTest {
     }
   }
 
+  @Test
+  fun recordWithCompareParameter() {
+    RoborazziGradleProject(testProjectDir).apply {
+      recordWithCompareParameter()
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun recordWithSmallProperty() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
+
+      recordWithScaleSize()
+
+      val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
+      assertNotEquals(recordFileHash1, recordFileHash2)
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
 
   @Test
   fun verify_nochange() {
