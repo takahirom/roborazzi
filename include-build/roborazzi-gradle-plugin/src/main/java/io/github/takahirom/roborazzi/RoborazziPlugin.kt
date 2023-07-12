@@ -114,14 +114,14 @@ class RoborazziPlugin : Plugin<Project> {
                 test.systemProperties["roborazzi.test.verify"] =
                   isVerifyRun.get() || isVerifyAndRecordRun.get()
               }
-              if (test.systemProperties["roborazzi.test.compare"] as? Boolean == true) {
+              if (test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true) {
                 compareReportDir.deleteRecursively()
                 compareReportDir.mkdirs()
               }
             }
             // We don't use custom task action here because we want to run it even if the compare task runs first
             test.doLast {
-              val isCompare = test.systemProperties["roborazzi.test.compare"] as? Boolean == true
+              val isCompare = test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
               if (!isCompare) {
                 return@doLast
               }
