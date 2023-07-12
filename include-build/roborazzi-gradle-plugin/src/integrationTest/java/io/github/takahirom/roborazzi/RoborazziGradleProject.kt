@@ -78,7 +78,6 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
         task,
         "--stacktrace",
         "--info",
-        "--no-configuration-cache",
         *additionalParameters
       )
       .withPluginClasspath()
