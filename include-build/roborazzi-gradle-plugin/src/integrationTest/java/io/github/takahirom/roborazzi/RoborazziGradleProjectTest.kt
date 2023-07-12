@@ -167,7 +167,6 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun compareWithSystemParameter() {
-    println("start compareWithSystemParameter")
     RoborazziGradleProject(testProjectDir).apply {
       record()
       changeScreen()

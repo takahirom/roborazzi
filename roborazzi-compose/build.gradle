@@ -18,6 +18,9 @@ dependencies {
   def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
   implementation composeBom
 
+  implementation 'org.jetbrains.compose.ui:ui-test-junit4-desktop:1.4.0'
+  implementation 'org.jetbrains.compose.ui:ui-graphics-desktop:1.4.1'
+
   testImplementation "androidx.compose.runtime:runtime"
   compileOnly "androidx.compose.ui:ui"
   compileOnly "androidx.activity:activity-compose:1.7.1"
