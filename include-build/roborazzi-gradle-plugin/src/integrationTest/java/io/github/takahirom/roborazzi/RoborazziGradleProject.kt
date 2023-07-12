@@ -61,6 +61,11 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task)
   }
 
+  fun compareWithSystemParameter(): BuildResult {
+    val task = "testDebugUnitTest"
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.test.compare=true"))
+  }
+
   enum class BuildType {
     Build, BuildAndFail
   }
