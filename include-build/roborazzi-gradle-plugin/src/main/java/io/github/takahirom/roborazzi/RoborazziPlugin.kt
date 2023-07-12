@@ -119,7 +119,7 @@ class RoborazziPlugin : Plugin<Project> {
                 compareReportDir.mkdirs()
               }
             }
-            // We don't use custom task action here because we want to run it even if the compare task runs first
+            // We don't use custom task action here because we want to run it even if we use `-P` parameter
             test.doLast {
               val isCompare = test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
               if (!isCompare) {
