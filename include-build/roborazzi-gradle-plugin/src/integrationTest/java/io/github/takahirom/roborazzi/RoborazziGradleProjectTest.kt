@@ -160,6 +160,19 @@ class RoborazziGradleProjectTest {
 
       checkCompareFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun compareWithSystemParameter() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      compareWithSystemParameter()
+
+      checkCompareFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
