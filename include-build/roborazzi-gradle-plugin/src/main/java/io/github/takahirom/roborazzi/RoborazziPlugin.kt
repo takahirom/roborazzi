@@ -7,11 +7,6 @@ import java.util.Locale
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
@@ -44,11 +39,9 @@ class RoborazziPlugin : Plugin<Project> {
         val compareReportGenerateTaskProvider =
           project.tasks.register(
             "compareRoborazzi$variantSlug",
-            CompareReportGenerateTask::class.java
+            RoborazziTask::class.java
           ) {
             it.group = VERIFICATION_GROUP
-            it.inputResultJsonsDir.set(project.file(RoborazziReportConst.compareReportDirPath))
-            it.outputJsonFile.set(project.file(RoborazziReportConst.compareSummaryReportFilePath))
           }
         compareVariants.configure { it.dependsOn(compareReportGenerateTaskProvider) }
 
@@ -89,6 +82,10 @@ class RoborazziPlugin : Plugin<Project> {
             val roborazziProperties =
               project.properties.filterKeys { it.startsWith("roborazzi") }
             val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
+            val compareReportDirFileTree =
+              project.fileTree(RoborazziReportConst.compareReportDirPath)
+            val compareSummaryReportFile =
+              project.file(RoborazziReportConst.compareSummaryReportFilePath)
             test.inputs.properties(
               mapOf(
                 "isRecordRun" to isRecordRun,
@@ -122,6 +119,34 @@ class RoborazziPlugin : Plugin<Project> {
                 compareReportDir.mkdirs()
               }
             }
+            // We don't use custom task action here because we want to run it even if the compare task runs first
+            test.doLast {
+              val isCompare = test.systemProperties["roborazzi.test.compare"] as? Boolean == true
+              if (!isCompare) {
+                return@doLast
+              }
+              val results: List<CompareReportCaptureResult> = compareReportDirFileTree.mapNotNull {
+                if (it.name.endsWith(".json")) {
+                  CompareReportCaptureResult.fromJsonFile(it.path)
+                } else {
+                  null
+                }
+              }
+              println("Save report to ${compareSummaryReportFile.absolutePath} with results:${results.size}")
+
+              val reportResult = CompareReportResult(
+                summary = CompareSummary(
+                  total = results.size,
+                  added = results.count { it is CompareReportCaptureResult.Added },
+                  changed = results.count { it is CompareReportCaptureResult.Changed },
+                  unchanged = results.count { it is CompareReportCaptureResult.Unchanged }
+                ),
+                compareReportCaptureResults = results
+              )
+
+              val jsonResult = reportResult.toJson()
+              compareSummaryReportFile.writeText(jsonResult.toString())
+            }
           }
 
         recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
@@ -154,41 +179,6 @@ class RoborazziPlugin : Plugin<Project> {
         it.setTestNameIncludePatterns(testNamePattern)
       }
       return this
-    }
-  }
-
-  abstract class CompareReportGenerateTask : RoborazziTask() {
-
-    @get:InputDirectory
-    abstract val inputResultJsonsDir: DirectoryProperty
-
-    @get:OutputFile
-    abstract val outputJsonFile: RegularFileProperty
-
-    @TaskAction
-    fun doWork() {
-      val results: List<CompareReportCaptureResult> = inputResultJsonsDir.asFileTree.mapNotNull {
-        if (it.name.endsWith(".json")) {
-          CompareReportCaptureResult.fromJsonFile(it.path)
-        } else {
-          null
-        }
-      }
-      val reportFile = outputJsonFile.asFile.get()
-      println("Save report to ${reportFile.absolutePath} with results:${results.size}")
-
-      val reportResult = CompareReportResult(
-        summary = CompareSummary(
-          total = results.size,
-          added = results.count { it is CompareReportCaptureResult.Added },
-          changed = results.count { it is CompareReportCaptureResult.Changed },
-          unchanged = results.count { it is CompareReportCaptureResult.Unchanged }
-        ),
-        compareReportCaptureResults = results
-      )
-
-      val jsonResult = reportResult.toJson()
-      reportFile.writeText(jsonResult.toString())
     }
   }
 }
