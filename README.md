@@ -106,14 +106,22 @@ apply plugin: "io.github.takahirom.roborazzi"
 
 <table>
 <tr>
-<td> Gradle Command </td> <td> Description </td>
+<td> Use Roborazzi task </td> <td> Use default unit test task </td> <td> Description </td>
 </tr>
 <tr>
 <td>
 
-```sh
-./gradlew recordRoborazziDebug
-```
+`./gradlew recordRoborazziDebug`
+
+
+</td><td> 
+
+`./gradlew testDebugUnitTest` after adding `roborazzi.test.record=true` to your gradle.properties file.
+
+or
+
+`./gradlew testDebugUnitTest -Proborazzi.test.record=true`
+
 
 </td><td> 
 
@@ -124,9 +132,16 @@ Record a screenshot
 <tr>
 <td>
 
-```sh
-./gradlew compareRoborazziDebug
-```
+`./gradlew compareRoborazziDebug`
+
+</td><td> 
+
+
+`./gradlew testDebugUnitTest` after adding `roborazzi.test.compare=true` to your gradle.properties file.
+
+or
+
+`./gradlew testDebugUnitTest -Proborazzi.test.compare=true`
 
 </td><td>
 
@@ -144,6 +159,15 @@ be found under `build/test-results/roborazzi`.
 ./gradlew verifyRoborazziDebug
 ```
 
+</td><td> 
+
+
+`./gradlew testDebugUnitTest` after adding `roborazzi.test.verify=true` to your gradle.properties file.
+
+or
+
+`./gradlew testDebugUnitTest -Proborazzi.test.verify=true`
+
 </td><td>
 
 Validate changes made to an image. If there is any difference between the current image and the
@@ -157,6 +181,15 @@ saved one, the test will fail.
 ```sh
 ./gradlew verifyAndRecordRoborazziDebug
 ```
+
+</td><td> 
+
+
+`./gradlew testDebugUnitTest` after adding  `roborazzi.test.verify=true` and `roborazzi.test.record=true` to your gradle.properties file.
+
+or
+
+`./gradlew testDebugUnitTest -Proborazzi.test.verify=true -Proborazzi.test.record=true`
 
 </td><td>
 
