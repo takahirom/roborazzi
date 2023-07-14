@@ -155,9 +155,7 @@ be found under `build/test-results/roborazzi`.
 <tr>
 <td>
 
-```sh
-./gradlew verifyRoborazziDebug
-```
+`./gradlew verifyRoborazziDebug`
 
 </td><td> 
 
@@ -178,9 +176,7 @@ saved one, the test will fail.
 <tr>
 <td>
 
-```sh
-./gradlew verifyAndRecordRoborazziDebug
-```
+`./gradlew verifyAndRecordRoborazziDebug`
 
 </td><td> 
 
