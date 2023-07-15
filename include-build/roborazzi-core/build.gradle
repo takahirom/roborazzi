@@ -1,6 +1,8 @@
 plugins {
-  id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin
-  id "com.vanniktech.maven.publish"
+  id "org.jetbrains.kotlin.jvm"
+}
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
 }
 
 java {

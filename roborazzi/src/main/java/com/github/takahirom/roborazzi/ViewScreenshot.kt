@@ -13,7 +13,6 @@ import android.graphics.Rect
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.PixelCopy
 import android.view.SurfaceView
 import android.view.View
@@ -87,16 +86,24 @@ private fun View.generateBitmap(
   }
   val destBitmap = Bitmap.createBitmap(width, height, pixelBitConfig.toBitmapConfig())
   when {
-    Build.VERSION.SDK_INT < 26 -> generateBitmapFromDraw(destBitmap, bitmapFuture)
+    Build.VERSION.SDK_INT < 26 -> {
+      println(
+        "**Warning from Roborazzi**: Robolectric may not function properly under API 26, " +
+          "specifically it may fail to capture accurate screenshots. " +
+          "Please add @Config(sdk = [26]) or higher to your test class to ensure proper operation. " +
+          "For more details, please refer to https://github.com/takahirom/roborazzi/issues/114 ."
+      )
+      generateBitmapFromDraw(destBitmap, bitmapFuture)
+    }
+
     this is SurfaceView -> generateBitmapFromSurfaceViewPixelCopy(destBitmap, bitmapFuture)
     else -> {
       val window = getActivity()?.window
       if (window != null) {
         generateBitmapFromPixelCopy(window, destBitmap, bitmapFuture)
       } else {
-        Log.i(
-          "View.captureToImage",
-          "Could not find window for view. Falling back to View#draw instead of PixelCopy"
+        println(
+          "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy"
         )
         generateBitmapFromDraw(destBitmap, bitmapFuture)
       }

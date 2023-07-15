@@ -1,6 +1,7 @@
 package com.github.takahirom.roborazzi.sample
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.view.View
 import android.widget.TextView
 import androidx.compose.material3.Text
@@ -47,46 +48,81 @@ class ManualTest {
 
   @Test
   @Config(qualifiers = "+land")
-  fun captureRoboImageSample() {
-    // screen level image
+  fun captureScreenLevelImageWithEspresso() {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
+  }
 
-    // compose image
+  @Test
+  @Config(qualifiers = "+night")
+  fun captureScreenLevelNightWithEspresso() {
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage()
+  }
+  @Test
+  @Config(qualifiers = "+ja")
+  fun captureScreenLevelJapaneseWithEspresso() {
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage()
+  }
+
+  @Test
+  @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
+  fun captureScreenLevelTabletWithEspresso() {
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage()
+  }
+
+
+
+  @Test
+  fun captureComposeImage() {
     composeTestRule.onNodeWithTag("MyComposeButton")
       .onParent()
       .captureRoboImage()
+  }
 
-    // small component image
+  @Test
+  fun captureSmallComponentImage() {
     onView(withId(R.id.button_first))
       .captureRoboImage(
         filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_view_button.png",
         roborazziOptions = RoborazziOptions(recordOptions = RoborazziOptions.RecordOptions(0.5))
       )
+  }
 
-    // move to next page with Espresso
+  @Test
+  fun moveToNextPageWithEspresso() {
     onView(withId(R.id.button_first))
       .perform(click())
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
+  }
 
-    // View on window
-    composeTestRule.activity.findViewById<View>(R.id.button_second)
+  @Test
+  fun captureViewOnWindowImage() {
+    composeTestRule.activity.findViewById<View>(R.id.button_first)
       .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_on_window.png")
+  }
 
-    // View not on window
+  @Test
+  fun captureViewNotOnWindowImage() {
     TextView(composeTestRule.activity).apply {
       text = "Hello View!"
-      setTextColor(android.graphics.Color.RED)
+      setTextColor(Color.RED)
     }.captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png")
+  }
 
-    // Compose lambda
+  @Test
+  fun captureComposeLambdaImage() {
     captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_compose.png") {
       Text("Hello Compose!")
     }
+  }
 
-    // Bitmap
+  @Test
+  fun captureBitmapImage() {
     createBitmap(100, 100, Bitmap.Config.ARGB_8888)
       .apply {
         applyCanvas {
