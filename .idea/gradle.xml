@@ -33,6 +33,7 @@
             <option value="$PROJECT_DIR$/roborazzi-painter" />
           </set>
         </option>
+        <option name="resolveExternalAnnotations" value="false" />
       </GradleProjectSettings>
     </option>
   </component>

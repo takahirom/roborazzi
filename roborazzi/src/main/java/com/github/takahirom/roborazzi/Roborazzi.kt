@@ -15,7 +15,6 @@ import android.view.ViewTreeObserver
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.core.view.drawToBitmap
 import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoActivityResumedException

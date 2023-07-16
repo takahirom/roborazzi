@@ -18,7 +18,6 @@ import android.view.SurfaceView
 import android.view.View
 import android.view.Window
 import androidx.concurrent.futures.ResolvableFuture
-import androidx.core.graphics.withClip
 import kotlin.math.min
 
 
