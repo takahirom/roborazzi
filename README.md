@@ -514,12 +514,12 @@ Example of the comment
 
 ## RoborazziRule (Optional)
 
-RoborazziRule is a JUnit rule for roborazzi.
-RoborazziRule is **optional**. You can use [captureRoboImage] without this rule.
+RoborazziRule is a JUnit rule for Roborazzi.
+RoborazziRule is **optional**. You can use `captureRoboImage()` without this rule.
 
-RoborazziRule have two features.
+RoborazziRule has two features.
 
-1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for [captureRoboImage].
+1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for `captureRoboImage()`.
 2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
 
 For example, The following code generates an output file
