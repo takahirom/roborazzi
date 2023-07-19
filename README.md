@@ -545,6 +545,7 @@ class RuleTestWithPath {
   @Test
   fun captureRoboImage() {
     launch(MainActivity::class.java)
+    // The file will be saved using the rule's outputDirectoryPath and outputFileProvider
     onView(isRoot()).captureRoboImage()
   }
 }
