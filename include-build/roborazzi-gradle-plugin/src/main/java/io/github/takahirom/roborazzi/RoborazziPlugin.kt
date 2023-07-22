@@ -28,7 +28,7 @@ class RoborazziPlugin : Plugin<Project> {
     val outputDir = project.layout.projectDirectory.dir(defaultOutputDir)
     val outputDirExists = project.file(defaultOutputDir).exists()
     val generateOutputDirTaskProvider =
-      project.tasks.register<GenerateOutputDirRoborazziTask>(
+      project.tasks.register(
         "generateDefaultRoborazziOutputDir",
         GenerateOutputDirRoborazziTask::class.java
       ) {
@@ -104,7 +104,7 @@ class RoborazziPlugin : Plugin<Project> {
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
             test.dependsOn(generateOutputDirTaskProvider)
-            test.outputs.dir(defaultOutputDir)
+//            test.outputs.dir(defaultOutputDir)
 
             test.inputs.properties(
               mapOf(
