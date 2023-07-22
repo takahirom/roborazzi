@@ -108,6 +108,7 @@ class RoborazziPlugin : Plugin<Project> {
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
             test.inputs.files(generateOutputDirTaskProvider.flatMap { it.outputFiles })
+            test.outputs.dir(DEFAULT_OUTPUT_DIR)
 
             test.inputs.properties(
               mapOf(
@@ -148,6 +149,23 @@ class RoborazziPlugin : Plugin<Project> {
             test.doLast {
               val isCompare =
                 test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
+              val isVerify =
+                test.systemProperties["roborazzi.test.verify"]?.toString()?.toBoolean() == true
+              val isRun = isCompare || isVerify || test.systemProperties["roborazzi.test.record"]
+                ?.toString()?.toBoolean() == true
+              if (isRun) {
+                test.outputs.files.removeAll {
+                  if (!it.absolutePath.contains(DEFAULT_OUTPUT_DIR)) return@removeAll false
+                  val isImage = it.extension == "png" || it.extension == "gif"
+                  val endsWithCompare = it.nameWithoutExtension.endsWith("_compare") ||
+                    it.nameWithoutExtension.endsWith("_verify")
+                  if (isCompare || isVerify) {
+                    isImage && endsWithCompare
+                  } else {
+                    isImage && !endsWithCompare
+                  }
+                }
+              }
               if (!isCompare) {
                 return@doLast
               }
