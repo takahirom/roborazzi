@@ -7,6 +7,9 @@ import java.util.Locale
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
@@ -19,6 +22,17 @@ class RoborazziPlugin : Plugin<Project> {
     val compareVariants = project.tasks.register("compareRoborazzi")
     val recordVariants = project.tasks.register("recordRoborazzi")
     val verifyAndRecordVariants = project.tasks.register("verifyAndRecordRoborazzi")
+
+    // For fixing unexpected skip test
+    val defaultOutputDir = "build/outputs/roborazzi"
+    val generateOutputDirTaskProvider =
+      project.tasks.register<GenerateOutputDirRoborazziTask>(
+        "generateDefaultRoborazziOutputDir",
+        GenerateOutputDirRoborazziTask::class.java
+      ) {
+        it.group = VERIFICATION_GROUP
+        it.outputDir.set(project.layout.projectDirectory.dir(defaultOutputDir))
+      }
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
@@ -86,12 +100,9 @@ class RoborazziPlugin : Plugin<Project> {
               project.fileTree(RoborazziReportConst.compareReportDirPath)
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
-            // For fixing unexpected skip test
-            val defaultOutputDir = "build/outputs/roborazzi"
-            if (!project.file(defaultOutputDir).exists()) {
-              project.mkdir(defaultOutputDir)
-            }
-            test.inputs.dir(defaultOutputDir)
+            test.dependsOn(generateOutputDirTaskProvider)
+            test.outputs.dir(defaultOutputDir)
+
             test.inputs.properties(
               mapOf(
                 "isRecordRun" to isRecordRun,
@@ -177,6 +188,20 @@ class RoborazziPlugin : Plugin<Project> {
 
   private fun String.capitalizeUS() =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
+
+
+  abstract class GenerateOutputDirRoborazziTask : DefaultTask() {
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generateOutputDir() {
+      val outputDir = outputDir.get().asFile
+      if (!outputDir.exists()) {
+        outputDir.mkdirs()
+      }
+    }
+  }
 
   open class RoborazziTask : DefaultTask() {
     @Option(

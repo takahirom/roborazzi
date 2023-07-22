@@ -36,6 +36,38 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun recordWhenRemovedOutput() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      removeRoborazziOutputDir()
+      // should not be skipped even if tests and sources are not changed
+      // when output directory is removed
+      val output = record().output
+      assertNotSkipped(output)
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun recordWhenRunTwice() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      // should be skipped
+      val output = record().output
+      assertSkipped(output)
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
   fun recordWithPropertiesAfterUnitTest() {
     RoborazziGradleProject(testProjectDir).apply {
       unitTest()
