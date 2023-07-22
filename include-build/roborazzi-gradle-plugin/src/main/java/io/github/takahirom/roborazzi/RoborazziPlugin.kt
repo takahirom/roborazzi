@@ -103,8 +103,7 @@ class RoborazziPlugin : Plugin<Project> {
               project.fileTree(RoborazziReportConst.compareReportDirPath)
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
-            test.dependsOn(generateOutputDirTaskProvider)
-//            test.outputs.dir(defaultOutputDir)
+            test.inputs.dir(generateOutputDirTaskProvider.flatMap { it.outputDir })
 
             test.inputs.properties(
               mapOf(
