@@ -34,7 +34,9 @@ class RoborazziPlugin : Plugin<Project> {
         GenerateOutputDirRoborazziTask::class.java
       ) {
         it.group = VERIFICATION_GROUP
-        it.inputDir?.set(project.layout.projectDirectory.dir(defaultOutputDir))
+        if (project.file(defaultOutputDir).exists()) {
+          it.inputDir?.set(project.layout.projectDirectory.dir(defaultOutputDir))
+        }
         it.outputDir.set(project.layout.projectDirectory.dir(defaultOutputDir))
       }
 
