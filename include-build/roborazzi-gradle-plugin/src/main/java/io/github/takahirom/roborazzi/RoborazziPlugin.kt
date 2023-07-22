@@ -34,10 +34,8 @@ class RoborazziPlugin : Plugin<Project> {
         GenerateOutputDirRoborazziTask::class.java
       ) {
         it.group = VERIFICATION_GROUP
-        if (project.file(defaultOutputDir).exists()) {
-          it.inputDir?.set(project.layout.projectDirectory.dir(defaultOutputDir))
-        }
         it.outputDir.set(project.layout.projectDirectory.dir(defaultOutputDir))
+        it.onlyIf { !project.file(defaultOutputDir).exists() }
       }
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
@@ -197,10 +195,6 @@ class RoborazziPlugin : Plugin<Project> {
 
 
   abstract class GenerateOutputDirRoborazziTask : DefaultTask() {
-    @get:InputDirectory
-    @Optional
-    val inputDir: DirectoryProperty? = project.objects.directoryProperty()
-
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
