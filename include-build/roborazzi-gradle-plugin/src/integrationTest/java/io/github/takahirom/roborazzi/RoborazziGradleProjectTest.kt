@@ -56,9 +56,12 @@ class RoborazziGradleProjectTest {
   fun recordWhenRunTwice() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
-      // should be skipped
-      val output = record().output
-      assertSkipped(output)
+      // files are changed so should not be skipped
+      val output1 = record().output
+      assertNotSkipped(output1)
+      // files are not changed so should be skipped
+      val output2 = record().output
+      assertSkipped(output2)
 
       checkCompareFileNotExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
