@@ -290,16 +290,22 @@ data class RoborazziOptions(
 
   data class CompareOptions(
     val roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+    val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
       roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+      outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
       /**
        * This value determines the threshold of pixel change at which the diff image is output or not.
        * The value should be between 0 and 1
        */
       changeThreshold: Float = 0.01F,
-    ) : this(roborazziCompareReporter, ThresholdValidator(changeThreshold))
+    ) : this(
+      roborazziCompareReporter = roborazziCompareReporter,
+      outputDirectoryPath = outputDirectoryPath,
+      resultValidator = ThresholdValidator(changeThreshold)
+    )
   }
 
   interface RoborazziCompareReporter {

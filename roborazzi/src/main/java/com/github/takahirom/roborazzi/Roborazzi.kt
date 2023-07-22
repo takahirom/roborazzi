@@ -597,7 +597,7 @@ private fun processOutputImageAndReport(
 
     val result: CompareReportCaptureResult = if (changed) {
       val compareFile = File(
-        goaldenFile.parent,
+        roborazziOptions.compareOptions.outputDirectoryPath,
         goaldenFile.nameWithoutExtension + "_compare." + goaldenFile.extension
       )
       val compareCanvas = RoboCanvas.generateCompareCanvas(
@@ -618,7 +618,7 @@ private fun processOutputImageAndReport(
         goaldenFile
       } else {
         File(
-          goaldenFile.parent,
+          roborazziOptions.compareOptions.outputDirectoryPath,
           goaldenFile.nameWithoutExtension + "_actual." + goaldenFile.extension
         )
       }

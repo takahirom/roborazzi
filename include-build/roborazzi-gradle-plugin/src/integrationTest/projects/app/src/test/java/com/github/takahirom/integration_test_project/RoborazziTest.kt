@@ -5,6 +5,8 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.RoborazziOptions
+import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import org.robolectric.Shadows
@@ -32,5 +34,18 @@ class RoborazziTest {
     )
     ActivityScenario.launch(MainActivity::class.java)
     onView(ViewMatchers.isRoot()).captureRoboImage()
+  }
+
+  @Test
+  fun testCaptureWithCustomPath() {
+    ActivityScenario.launch(MainActivity::class.java)
+    onView(ViewMatchers.isRoot()).captureRoboImage(
+      filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/customdir/custom_file.png",
+      roborazziOptions = RoborazziOptions(
+        compareOptions = RoborazziOptions.CompareOptions(
+          outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_compare_outputDirectoryPath",
+        )
+      )
+    )
   }
 }

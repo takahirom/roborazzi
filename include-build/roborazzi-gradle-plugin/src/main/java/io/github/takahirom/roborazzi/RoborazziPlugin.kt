@@ -86,6 +86,12 @@ class RoborazziPlugin : Plugin<Project> {
               project.fileTree(RoborazziReportConst.compareReportDirPath)
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
+            // For fixing unexpected skip test
+            val defaultOutputDir = "build/outputs/roborazzi"
+            if (!project.file(defaultOutputDir).exists()) {
+              project.mkdir(defaultOutputDir)
+            }
+            test.inputs.dir(defaultOutputDir)
             test.inputs.properties(
               mapOf(
                 "isRecordRun" to isRecordRun,
@@ -114,14 +120,17 @@ class RoborazziPlugin : Plugin<Project> {
                 test.systemProperties["roborazzi.test.verify"] =
                   isVerifyRun.get() || isVerifyAndRecordRun.get()
               }
-              if (test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true) {
+              if (test.systemProperties["roborazzi.test.compare"]?.toString()
+                  ?.toBoolean() == true
+              ) {
                 compareReportDir.deleteRecursively()
                 compareReportDir.mkdirs()
               }
             }
             // We don't use custom task action here because we want to run it even if we use `-P` parameter
             test.doLast {
-              val isCompare = test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
+              val isCompare =
+                test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
               if (!isCompare) {
                 return@doLast
               }
