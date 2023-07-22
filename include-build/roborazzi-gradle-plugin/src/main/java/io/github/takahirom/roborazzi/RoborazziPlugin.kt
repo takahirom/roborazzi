@@ -26,7 +26,7 @@ class RoborazziPlugin : Plugin<Project> {
     // For fixing unexpected skip test
     val defaultOutputDir = "build/outputs/roborazzi"
     val outputDir = project.layout.projectDirectory.dir(defaultOutputDir)
-    val outputDirExits = project.file(defaultOutputDir).exists()
+    val outputDirExists = project.file(defaultOutputDir).exists()
     val generateOutputDirTaskProvider =
       project.tasks.register<GenerateOutputDirRoborazziTask>(
         "generateDefaultRoborazziOutputDir",
@@ -34,7 +34,7 @@ class RoborazziPlugin : Plugin<Project> {
       ) {
         it.group = VERIFICATION_GROUP
         it.outputDir.set(outputDir)
-        it.onlyIf { !outputDirExits }
+        it.onlyIf { !outputDirExists }
       }
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
