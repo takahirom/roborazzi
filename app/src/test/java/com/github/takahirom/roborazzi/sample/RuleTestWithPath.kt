@@ -30,7 +30,7 @@ class RuleTestWithPath {
       },
       roborazziOptions = RoborazziOptions(
         compareOptions = RoborazziOptions.CompareOptions(
-          outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_compare_outputDirectoryPatDEFAULT_ROBORAZZI_OUTPUT_DIR_PATHh",
+          outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_compare_outputDirectoryPath",
         )
       )
     ),
