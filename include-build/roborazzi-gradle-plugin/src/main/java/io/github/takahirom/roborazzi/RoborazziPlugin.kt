@@ -3,14 +3,11 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import java.io.File
 import java.util.Locale
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
@@ -28,14 +25,16 @@ class RoborazziPlugin : Plugin<Project> {
 
     // For fixing unexpected skip test
     val defaultOutputDir = "build/outputs/roborazzi"
+    val outputDir = project.layout.projectDirectory.dir(defaultOutputDir)
+    val outputDirExits = project.file(defaultOutputDir).exists()
     val generateOutputDirTaskProvider =
       project.tasks.register<GenerateOutputDirRoborazziTask>(
         "generateDefaultRoborazziOutputDir",
         GenerateOutputDirRoborazziTask::class.java
       ) {
         it.group = VERIFICATION_GROUP
-        it.outputDir.set(project.layout.projectDirectory.dir(defaultOutputDir))
-        it.onlyIf { !project.file(defaultOutputDir).exists() }
+        it.outputDir.set(outputDir)
+        it.onlyIf { !outputDirExits }
       }
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
