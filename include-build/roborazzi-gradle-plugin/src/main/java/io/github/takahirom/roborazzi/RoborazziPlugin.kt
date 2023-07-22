@@ -3,16 +3,23 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
+import java.io.File
 import java.util.Locale
+import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
+
+val DEFAULT_OUTPUT_DIR = "build/outputs/roborazzi"
 
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
@@ -24,17 +31,14 @@ class RoborazziPlugin : Plugin<Project> {
     val verifyAndRecordVariants = project.tasks.register("verifyAndRecordRoborazzi")
 
     // For fixing unexpected skip test
-    val defaultOutputDir = "build/outputs/roborazzi"
-    val outputDir = project.layout.projectDirectory.dir(defaultOutputDir)
-    val outputDirExists = project.file(defaultOutputDir).exists()
+    val outputDir = project.layout.projectDirectory.dir(DEFAULT_OUTPUT_DIR)
     val generateOutputDirTaskProvider =
       project.tasks.register(
         "generateDefaultRoborazziOutputDir",
         GenerateOutputDirRoborazziTask::class.java
       ) {
         it.group = VERIFICATION_GROUP
-        it.outputDir.set(outputDir)
-        it.onlyIf { !outputDirExists }
+        it.inputDir.set(outputDir)
       }
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
@@ -103,7 +107,7 @@ class RoborazziPlugin : Plugin<Project> {
               project.fileTree(RoborazziReportConst.compareReportDirPath)
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
-            test.inputs.dir(generateOutputDirTaskProvider.flatMap { it.outputDir })
+            test.inputs.files(generateOutputDirTaskProvider.flatMap { it.outputFiles })
 
             test.inputs.properties(
               mapOf(
@@ -192,15 +196,28 @@ class RoborazziPlugin : Plugin<Project> {
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
 
 
-  abstract class GenerateOutputDirRoborazziTask : DefaultTask() {
-    @get:OutputDirectory
-    abstract val outputDir: DirectoryProperty
+  abstract class GenerateOutputDirRoborazziTask @Inject constructor(objects: ObjectFactory) :
+    DefaultTask() {
+    @get:InputDirectory
+    val inputDir: DirectoryProperty = objects.directoryProperty()
+
+    @get:OutputFiles
+    val outputFiles: Provider<List<File>> = inputDir.map {
+      it.asFileTree.files
+        .filter { file ->
+          (
+            file.name.endsWith(".gif") ||
+              file.name.endsWith(".png")) &&
+            !file.nameWithoutExtension.endsWith("_compare") &&
+            !file.nameWithoutExtension.endsWith("_actual")
+        }
+    }
 
     @TaskAction
     fun generateOutputDir() {
-      val outputDir = outputDir.get().asFile
-      if (!outputDir.exists()) {
-        outputDir.mkdirs()
+      val inputDir = inputDir.get().asFile
+      if (!inputDir.exists()) {
+        inputDir.mkdirs()
       }
     }
   }
