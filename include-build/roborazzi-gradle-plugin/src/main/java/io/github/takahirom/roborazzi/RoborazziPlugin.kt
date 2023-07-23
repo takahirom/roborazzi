@@ -19,13 +19,14 @@ import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 
-private val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
-private val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
+private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
+private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 
-// Experimental API
+// This is Experimental API
+// This class can be changed without notice.
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
-  val tempDir: DirectoryProperty = objects.directoryProperty()
+  val testTaskOutputDir: DirectoryProperty = objects.directoryProperty()
 }
 
 @Suppress("unused")
@@ -43,7 +44,7 @@ class RoborazziPlugin : Plugin<Project> {
     val outputDir =
       extension.outputDir.convention(project.layout.buildDirectory.dir(DEFAULT_OUTPUT_DIR))
     val intermediateDir =
-      extension.tempDir.convention(project.layout.buildDirectory.dir(DEFAULT_TEMP_DIR))
+      extension.testTaskOutputDir.convention(project.layout.buildDirectory.dir(DEFAULT_TEMP_DIR))
 
     val restoreOutputDirRoborazziTaskProvider =
       project.tasks.register(
@@ -147,7 +148,7 @@ class RoborazziPlugin : Plugin<Project> {
                 it
               })
             }
-            test.outputs.dir(DEFAULT_TEMP_DIR)
+            test.outputs.dir(intermediateDir)
 
             test.inputs.properties(
               mapOf(
