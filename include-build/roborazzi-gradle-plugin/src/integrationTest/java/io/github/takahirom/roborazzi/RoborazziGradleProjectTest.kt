@@ -17,10 +17,51 @@ class RoborazziGradleProjectTest {
   private val screenshotAndName =
     "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest"
 
+  private val customReferenceScreenshotAndName =
+    "app/build/outputs/roborazzi/customdir/custom_file"
+  private val customCompareScreenshotAndName =
+    "app/build/outputs/roborazzi/custom_compare_outputDirectoryPath/custom_file"
+
+
   @Test
   fun record() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun recordWhenRemovedOutput() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      removeRoborazziOutputDir()
+      // should not be skipped even if tests and sources are not changed
+      // when output directory is removed
+      val output = record().output
+      assertNotSkipped(output)
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun recordWhenRunTwice() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      // files are changed so should not be skipped
+      val output1 = record().output
+      assertNotSkipped(output1)
+      // files are not changed so should be skipped
+      val output2 = record().output
+      assertSkipped(output2)
 
       checkCompareFileNotExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
@@ -190,6 +231,20 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun compareWithCustomPath() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      compare()
+
+      checkCompareFileExists()
+      checkRecordedFileExists("$customReferenceScreenshotAndName.png")
+      checkRecordedFileExists("${customCompareScreenshotAndName}_compare.png")
+      checkRecordedFileExists("${customCompareScreenshotAndName}_actual.png")
     }
   }
 }

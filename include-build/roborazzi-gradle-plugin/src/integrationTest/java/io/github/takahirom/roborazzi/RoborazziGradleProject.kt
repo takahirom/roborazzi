@@ -66,6 +66,19 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task, additionalParameters = arrayOf("-Proborazzi.test.compare=true"))
   }
 
+  fun removeRoborazziOutputDir() {
+    File(testProjectDir.root, "app/build/outputs/roborazzi").deleteRecursively()
+  }
+
+  fun assertNotSkipped(output: String) {
+    assert(output.contains("testDebugUnitTest' is not up-to-date because"))
+  }
+
+
+  fun assertSkipped(output: String) {
+    assert(output.contains("testDebugUnitTest UP-TO-DATE"))
+  }
+
   enum class BuildType {
     Build, BuildAndFail
   }

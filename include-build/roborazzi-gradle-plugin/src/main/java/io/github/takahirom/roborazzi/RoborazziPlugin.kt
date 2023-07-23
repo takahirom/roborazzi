@@ -3,27 +3,84 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import java.util.Locale
+import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
+
+private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
+private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
+
+/**
+ * Experimental API
+ * This class can be changed without notice.
+ */
+open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
+  val outputDir: DirectoryProperty = objects.directoryProperty()
+}
 
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 class RoborazziPlugin : Plugin<Project> {
   override fun apply(project: Project) {
+    val extension = project.extensions.create("roborazzi", RoborazziExtension::class.java)
+
     val verifyVariants = project.tasks.register("verifyRoborazzi")
     val compareVariants = project.tasks.register("compareRoborazzi")
     val recordVariants = project.tasks.register("recordRoborazzi")
     val verifyAndRecordVariants = project.tasks.register("verifyAndRecordRoborazzi")
 
+    // For fixing unexpected skip test
+    val outputDir =
+      extension.outputDir.convention(project.layout.buildDirectory.dir(DEFAULT_OUTPUT_DIR))
+    val testTaskOutputDir: DirectoryProperty = project.objects.directoryProperty()
+    val intermediateDir =
+      testTaskOutputDir.convention(project.layout.buildDirectory.dir(DEFAULT_TEMP_DIR))
+
+    val restoreOutputDirRoborazziTaskProvider =
+      project.tasks.register(
+        "restoreOutputDirRoborazzi",
+        RestoreOutputDirRoborazziTask::class.java
+      ) { task ->
+
+        task.inputDir.set(intermediateDir.map {
+          if (!it.asFile.exists()) {
+            it.asFile.mkdirs()
+          }
+          it
+        })
+        task.outputDir.set(outputDir)
+        task.onlyIf {
+          val outputDirFile = task.outputDir.asFile.get()
+          val inputDirFile = task.inputDir.asFile.get()
+          (outputDirFile.listFiles()?.isEmpty() ?: true)
+            && (inputDirFile.listFiles()?.isNotEmpty() ?: false)
+        }
+      }
+
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
         val unitTest = variant.unitTest ?: return@onVariants
         val variantSlug = variant.name.capitalizeUS()
+
+        val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
+        val intermediateDirForEachVariant =
+          testTaskOutputDirForEachVariant.convention(
+            project.layout.buildDirectory.dir(
+              DEFAULT_TEMP_DIR
+            )
+          )
 
 //      val reportOutputDir = project.layout.buildDirectory.dir("reports/roborazzi")
 //      val snapshotOutputDir = project.layout.projectDirectory.dir("src/test/snapshots")
@@ -76,16 +133,30 @@ class RoborazziPlugin : Plugin<Project> {
           .matching { it.name == "test$testVariantSlug" }
         testTaskProvider
           .configureEach { test ->
-            //        test.outputs.dir(reportOutputDir)
-            //        test.outputs.dir(snapshotOutputDir)
-
             val roborazziProperties =
-              project.properties.filterKeys { it.startsWith("roborazzi") }
+              project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
             val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
             val compareReportDirFileTree =
               project.fileTree(RoborazziReportConst.compareReportDirPath)
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
+            if (restoreOutputDirRoborazziTaskProvider.isPresent) {
+              test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
+                if (!it.outputDir.get().asFile.exists()) {
+                  it.outputDir.get().asFile.mkdirs()
+                }
+                it.outputDir
+              })
+            } else {
+              test.inputs.dir(outputDir.map {
+                if (!it.asFile.exists()) {
+                  it.asFile.mkdirs()
+                }
+                it
+              })
+            }
+            test.outputs.dir(intermediateDirForEachVariant)
+
             test.inputs.properties(
               mapOf(
                 "isRecordRun" to isRecordRun,
@@ -114,14 +185,28 @@ class RoborazziPlugin : Plugin<Project> {
                 test.systemProperties["roborazzi.test.verify"] =
                   isVerifyRun.get() || isVerifyAndRecordRun.get()
               }
-              if (test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true) {
+              if (test.systemProperties["roborazzi.test.compare"]?.toString()
+                  ?.toBoolean() == true
+              ) {
                 compareReportDir.deleteRecursively()
                 compareReportDir.mkdirs()
               }
             }
             // We don't use custom task action here because we want to run it even if we use `-P` parameter
             test.doLast {
-              val isCompare = test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
+              // Copy all files from outputDir to intermediateDir
+              // so that we can use Gradle's output caching
+              infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
+//              outputDir.get().asFileTree.forEach {
+//                println("Copy file ${it.absolutePath} to ${intermediateDir.get()}")
+//              }
+              outputDir.get().asFile.copyRecursively(
+                target = intermediateDir.get().asFile,
+                overwrite = true
+              )
+
+              val isCompare =
+                test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
               if (!isCompare) {
                 return@doLast
               }
@@ -132,7 +217,7 @@ class RoborazziPlugin : Plugin<Project> {
                   null
                 }
               }
-              println("Save report to ${compareSummaryReportFile.absolutePath} with results:${results.size}")
+              infoln("Save report to ${compareSummaryReportFile.absolutePath} with results:${results.size}")
 
               val reportResult = CompareReportResult(
                 summary = CompareSummary(
@@ -169,6 +254,24 @@ class RoborazziPlugin : Plugin<Project> {
   private fun String.capitalizeUS() =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
 
+
+  abstract class RestoreOutputDirRoborazziTask @Inject constructor(objects: ObjectFactory) :
+    DefaultTask() {
+    @get:InputDirectory
+    @Optional
+    val inputDir: DirectoryProperty = objects.directoryProperty()
+
+    @get:OutputDirectory
+    val outputDir: DirectoryProperty = objects.directoryProperty()
+
+    @TaskAction
+    fun copy() {
+      val outputDirFile = outputDir.get().asFile
+      if (outputDirFile.exists() && outputDirFile.listFiles().isNotEmpty()) return
+      inputDir.get().asFile.copyRecursively(outputDirFile)
+    }
+  }
+
   open class RoborazziTask : DefaultTask() {
     @Option(
       option = "tests",
@@ -182,3 +285,6 @@ class RoborazziPlugin : Plugin<Project> {
     }
   }
 }
+
+fun infoln(format: String) =
+  ThreadLoggingEnvironment.reportFormattedInfoToCurrentLogger(format)
