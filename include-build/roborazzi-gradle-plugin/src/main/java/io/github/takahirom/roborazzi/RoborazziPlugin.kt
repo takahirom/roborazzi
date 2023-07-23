@@ -19,8 +19,8 @@ import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 
-private val DEFAULT_OUTPUT_DIR = "build/outputs/roborazzi"
-private val DEFAULT_TEMP_DIR = "build/intermediates/roborazzi"
+private val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
+private val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 
 // Experimental API
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
@@ -59,8 +59,10 @@ class RoborazziPlugin : Plugin<Project> {
         })
         task.outputDir.set(outputDir)
         task.onlyIf {
-          (task.outputDir.asFile.get().listFiles()?.isEmpty() ?: true)
-            && (task.inputDir.asFile.get().listFiles()?.isNotEmpty() ?: false)
+          val outputDirFile = task.outputDir.asFile.get()
+          val inputDirFile = task.inputDir.asFile.get()
+          (outputDirFile.listFiles()?.isEmpty() ?: true)
+            && (inputDirFile.listFiles()?.isNotEmpty() ?: false)
         }
       }
 
@@ -187,8 +189,11 @@ class RoborazziPlugin : Plugin<Project> {
               // Copy all files from outputDir to intermediateDir
               // so that we can use Gradle's output caching
               infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
+//              outputDir.get().asFileTree.forEach {
+//                println("Copy file ${it.absolutePath} to ${intermediateDir.get()}")
+//              }
               outputDir.get().asFile.copyRecursively(
-                intermediateDir.get().asFile,
+                target = intermediateDir.get().asFile,
                 overwrite = true
               )
 
