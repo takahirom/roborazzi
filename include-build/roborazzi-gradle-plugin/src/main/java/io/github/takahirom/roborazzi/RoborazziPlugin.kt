@@ -35,24 +35,12 @@ class RoborazziPlugin : Plugin<Project> {
     val androidExtension = project.extensions.getByName("android") as BaseExtension
     val testSourceSets = androidExtension.sourceSets.getByName("test") as AndroidSourceSet
     testSourceSets.apply {
-      this.java.srcDir(DEFAULT_OUTPUT_DIR)
+      this.resources.srcDir(DEFAULT_OUTPUT_DIR)
     }
 
     // For fixing unexpected skip test
     val outputDir = project.layout.projectDirectory.dir(DEFAULT_OUTPUT_DIR)
     val intermediateDir = project.layout.projectDirectory.dir(DEFAULT_TEMP_DIR)
-    val generateOutputDirTaskProvider =
-      project.tasks.register(
-        "generateDefaultRoborazziOutputDir",
-        GenerateOutputDirRoborazziTask::class.java
-      ) {
-        it.group = VERIFICATION_GROUP
-        if (!outputDir.asFile.exists()) {
-          outputDir.asFile.mkdirs()
-        }
-        it.inputDir.set(outputDir)
-        it.outputDir.set(intermediateDir)
-      }
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
@@ -120,7 +108,7 @@ class RoborazziPlugin : Plugin<Project> {
               project.fileTree(RoborazziReportConst.compareReportDirPath)
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
-            test.inputs.files(generateOutputDirTaskProvider.flatMap { it.outputDir })
+            test.inputs.files(DEFAULT_OUTPUT_DIR)
             test.outputs.dir(DEFAULT_OUTPUT_DIR)
 
             test.inputs.properties(
@@ -211,23 +199,6 @@ class RoborazziPlugin : Plugin<Project> {
 
   private fun String.capitalizeUS() =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
-
-
-  abstract class GenerateOutputDirRoborazziTask @Inject constructor(objects: ObjectFactory) :
-    DefaultTask() {
-    @get:InputDirectory
-    @Optional
-    val inputDir: DirectoryProperty = objects.directoryProperty()
-
-    @get:OutputDirectory
-    val outputDir: DirectoryProperty = objects.directoryProperty()
-
-    @TaskAction
-    fun copy() {
-      outputDir.get().asFile.deleteRecursively()
-      inputDir.get().asFile.copyRecursively(outputDir.get().asFile)
-    }
-  }
 
   open class RoborazziTask : DefaultTask() {
     @Option(
