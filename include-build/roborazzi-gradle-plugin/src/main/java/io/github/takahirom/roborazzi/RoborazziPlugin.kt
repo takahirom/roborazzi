@@ -3,7 +3,7 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import java.util.Locale
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -22,11 +22,12 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
 private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 
-// This is Experimental API
-// This class can be changed without notice.
+/**
+ * Experimental API
+ * This class can be changed without notice.
+ */
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
-  val testTaskOutputDir: DirectoryProperty = objects.directoryProperty()
 }
 
 @Suppress("unused")
@@ -43,8 +44,9 @@ class RoborazziPlugin : Plugin<Project> {
     // For fixing unexpected skip test
     val outputDir =
       extension.outputDir.convention(project.layout.buildDirectory.dir(DEFAULT_OUTPUT_DIR))
+    val testTaskOutputDir: DirectoryProperty = project.objects.directoryProperty()
     val intermediateDir =
-      extension.testTaskOutputDir.convention(project.layout.buildDirectory.dir(DEFAULT_TEMP_DIR))
+      testTaskOutputDir.convention(project.layout.buildDirectory.dir(DEFAULT_TEMP_DIR))
 
     val restoreOutputDirRoborazziTaskProvider =
       project.tasks.register(
@@ -71,6 +73,14 @@ class RoborazziPlugin : Plugin<Project> {
       onVariants { variant ->
         val unitTest = variant.unitTest ?: return@onVariants
         val variantSlug = variant.name.capitalizeUS()
+
+        val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
+        val intermediateDirForEachVariant =
+          testTaskOutputDirForEachVariant.convention(
+            project.layout.buildDirectory.dir(
+              DEFAULT_TEMP_DIR
+            )
+          )
 
 //      val reportOutputDir = project.layout.buildDirectory.dir("reports/roborazzi")
 //      val snapshotOutputDir = project.layout.projectDirectory.dir("src/test/snapshots")
@@ -123,9 +133,6 @@ class RoborazziPlugin : Plugin<Project> {
           .matching { it.name == "test$testVariantSlug" }
         testTaskProvider
           .configureEach { test ->
-            //        test.outputs.dir(reportOutputDir)
-            //        test.outputs.dir(snapshotOutputDir)
-
             val roborazziProperties =
               project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
             val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
@@ -148,7 +155,7 @@ class RoborazziPlugin : Plugin<Project> {
                 it
               })
             }
-            test.outputs.dir(intermediateDir)
+            test.outputs.dir(intermediateDirForEachVariant)
 
             test.inputs.properties(
               mapOf(
@@ -210,7 +217,7 @@ class RoborazziPlugin : Plugin<Project> {
                   null
                 }
               }
-              println("Save report to ${compareSummaryReportFile.absolutePath} with results:${results.size}")
+              infoln("Save report to ${compareSummaryReportFile.absolutePath} with results:${results.size}")
 
               val reportResult = CompareReportResult(
                 summary = CompareSummary(
@@ -278,3 +285,6 @@ class RoborazziPlugin : Plugin<Project> {
     }
   }
 }
+
+fun infoln(format: String) =
+  ThreadLoggingEnvironment.reportFormattedInfoToCurrentLogger(format)
