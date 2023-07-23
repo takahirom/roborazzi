@@ -45,6 +45,6 @@ class RuleTestWithPath {
   @Test
   fun captureRoboImageWithPath() {
     launch(MainActivity::class.java)
-    onView(isRoot()).captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_file.png"
+    onView(isRoot()).captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_file.png")
   }
 }

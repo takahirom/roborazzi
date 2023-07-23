@@ -3,7 +3,7 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.android.build.gradle.internal.tasks.factory.letIfPresent
+import com.android.build.gradle.internal.cxx.logging.infoln
 import java.util.Locale
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -22,28 +22,41 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 private val DEFAULT_OUTPUT_DIR = "build/outputs/roborazzi"
 private val DEFAULT_TEMP_DIR = "build/intermediates/roborazzi"
 
+// Experimental API
+open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
+  val outputDir: DirectoryProperty = objects.directoryProperty()
+  val tempDir: DirectoryProperty = objects.directoryProperty()
+}
+
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 class RoborazziPlugin : Plugin<Project> {
   override fun apply(project: Project) {
+    val extension = project.extensions.create("roborazzi", RoborazziExtension::class.java)
+
     val verifyVariants = project.tasks.register("verifyRoborazzi")
     val compareVariants = project.tasks.register("compareRoborazzi")
     val recordVariants = project.tasks.register("recordRoborazzi")
     val verifyAndRecordVariants = project.tasks.register("verifyAndRecordRoborazzi")
 
     // For fixing unexpected skip test
-    val outputDir = project.layout.projectDirectory.dir(DEFAULT_OUTPUT_DIR)
-    val intermediateDir = project.layout.projectDirectory.dir(DEFAULT_TEMP_DIR)
+    val outputDir =
+      extension.outputDir.convention(project.layout.buildDirectory.dir(DEFAULT_OUTPUT_DIR))
+    val intermediateDir =
+      extension.tempDir.convention(project.layout.buildDirectory.dir(DEFAULT_TEMP_DIR))
 
     val restoreOutputDirRoborazziTaskProvider =
       project.tasks.register(
         "restoreOutputDirRoborazzi",
         RestoreOutputDirRoborazziTask::class.java
       ) { task ->
-        if (!intermediateDir.asFile.exists()) {
-          intermediateDir.asFile.mkdirs()
-        }
-        task.inputDir.set(intermediateDir)
+
+        task.inputDir.set(intermediateDir.map {
+          if (!it.asFile.exists()) {
+            it.asFile.mkdirs()
+          }
+          it
+        })
         task.outputDir.set(outputDir)
         task.onlyIf {
           (task.outputDir.asFile.get().listFiles()?.isEmpty() ?: true)
@@ -111,19 +124,26 @@ class RoborazziPlugin : Plugin<Project> {
             //        test.outputs.dir(snapshotOutputDir)
 
             val roborazziProperties =
-              project.properties.filterKeys { it.startsWith("roborazzi") }
+              project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
             val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
             val compareReportDirFileTree =
               project.fileTree(RoborazziReportConst.compareReportDirPath)
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
-            if (!outputDir.asFile.exists()) {
-              outputDir.asFile.mkdirs()
-            }
             if (restoreOutputDirRoborazziTaskProvider.isPresent) {
-              test.inputs.files(restoreOutputDirRoborazziTaskProvider.map { it.outputDir })
+              test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
+                if (!it.outputDir.get().asFile.exists()) {
+                  it.outputDir.get().asFile.mkdirs()
+                }
+                it.outputDir
+              })
             } else {
-              test.inputs.dir(outputDir)
+              test.inputs.dir(outputDir.map {
+                if (!it.asFile.exists()) {
+                  it.asFile.mkdirs()
+                }
+                it
+              })
             }
             test.outputs.dir(DEFAULT_TEMP_DIR)
 
@@ -136,14 +156,6 @@ class RoborazziPlugin : Plugin<Project> {
                 "roborazziProperties" to roborazziProperties,
               )
             )
-            restoreOutputDirRoborazziTaskProvider.letIfPresent {
-              test.inputs.properties(
-                mapOf(
-                  "taskInputDirPath" to restoreOutputDirRoborazziTaskProvider.map { it.outputDir.asFile.get().path },
-                  "taskOutputDirPath" to restoreOutputDirRoborazziTaskProvider.map { it.inputDir.asFile.get().path },
-                )
-              )
-            }
             test.doFirst {
               val isTaskPresent =
                 isRecordRun.get() || isVerifyRun.get() || isCompareRun.get() || isVerifyAndRecordRun.get()
@@ -174,19 +186,11 @@ class RoborazziPlugin : Plugin<Project> {
             test.doLast {
               // Copy all files from outputDir to intermediateDir
               // so that we can use Gradle's output caching
-              val inputDirectoryPath =
-                test.inputs.properties["taskInputDirPath"] as? String
-              val outputDirectoryPath =
-                test.inputs.properties["taskOutputDirPath"] as? String
-              val taskInputDir = test.inputs.files.firstOrNull {
-                it.path == inputDirectoryPath
-              }
-              val taskOutputDir = test.outputs.files.firstOrNull {
-                it.path == outputDirectoryPath
-              }
-              if (taskInputDir != null && taskOutputDir != null) {
-                taskInputDir.copyRecursively(taskOutputDir, overwrite = true)
-              }
+              infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
+              outputDir.get().asFile.copyRecursively(
+                intermediateDir.get().asFile,
+                overwrite = true
+              )
 
               val isCompare =
                 test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
