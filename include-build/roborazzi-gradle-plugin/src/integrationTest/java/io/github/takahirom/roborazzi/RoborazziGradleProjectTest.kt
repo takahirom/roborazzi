@@ -23,34 +23,34 @@ class RoborazziGradleProjectTest {
     "app/build/outputs/roborazzi/custom_compare_outputDirectoryPath/custom_file"
 
 
-//  @Test
-//  fun record() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun recordWhenRemovedOutput() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      removeRoborazziOutputDir()
-//      // should not be skipped even if tests and sources are not changed
-//      // when output directory is removed
-//      val output = record().output
-//      assertNotSkipped(output)
-//
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
+  @Test
+  fun record() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun recordWhenRemovedOutput() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      removeRoborazziOutputDir()
+      // should not be skipped even if tests and sources are not changed
+      // when output directory is removed
+      val output = record().output
+      assertNotSkipped(output)
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
 
   @Test
   fun recordWhenRunTwice() {
@@ -70,181 +70,181 @@ class RoborazziGradleProjectTest {
     }
   }
 
-//  @Test
-//  fun recordWithPropertiesAfterUnitTest() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      unitTest()
-//      // Record task shouldn't be skipped even after unit test
-//      recordWithSystemParameter()
-//
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun recordAfterUnitTest() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      unitTest()
-//      // Record task shouldn't be skipped even after unit test
-//      record()
-//
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun verify_changeDetect() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      changeScreen()
-//      val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
-//
-//      verifyAndFail()
-//
-//      val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
-//      assertEquals(recordFileHash1, recordFileHash2)
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun recordWithCompareParameter() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      recordWithCompareParameter()
-//
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun recordWithSmallProperty() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      changeScreen()
-//      val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
-//
-//      recordWithScaleSize()
-//
-//      val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
-//      assertNotEquals(recordFileHash1, recordFileHash2)
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun verify_nochange() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      verify()
-//
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//
-//  @Test
-//  fun verifyAndRecord_changeDetect() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
-//      changeScreen()
-//
-//      verifyAndRecordAndFail()
-//
-//      val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
-//      assertNotEquals(recordFileHash1, recordFileHash2)
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//
-//  @Test
-//  fun verifyAndRecord_nochange() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      verifyAndRecord()
-//
-//      checkCompareFileNotExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun compare() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      changeScreen()
-//      compare()
-//
-//      checkCompareFileExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun compareWithSystemParameter() {
-//    println("start compareWithSystemParameter")
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      changeScreen()
-//      compareWithSystemParameter()
-//
-//      checkCompareFileExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun compare_nochange() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      compare()
-//
-//      checkCompareFileExists()
-//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
-//      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
-//    }
-//  }
-//
-//  @Test
-//  fun compareWithCustomPath() {
-//    RoborazziGradleProject(testProjectDir).apply {
-//      record()
-//      changeScreen()
-//      compare()
-//
-//      checkCompareFileExists()
-//      checkRecordedFileExists("$customReferenceScreenshotAndName.png")
-//      checkRecordedFileExists("${customCompareScreenshotAndName}_compare.png")
-//      checkRecordedFileExists("${customCompareScreenshotAndName}_actual.png")
-//    }
-//  }
+  @Test
+  fun recordWithPropertiesAfterUnitTest() {
+    RoborazziGradleProject(testProjectDir).apply {
+      unitTest()
+      // Record task shouldn't be skipped even after unit test
+      recordWithSystemParameter()
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun recordAfterUnitTest() {
+    RoborazziGradleProject(testProjectDir).apply {
+      unitTest()
+      // Record task shouldn't be skipped even after unit test
+      record()
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun verify_changeDetect() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
+
+      verifyAndFail()
+
+      val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
+      assertEquals(recordFileHash1, recordFileHash2)
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun recordWithCompareParameter() {
+    RoborazziGradleProject(testProjectDir).apply {
+      recordWithCompareParameter()
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun recordWithSmallProperty() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
+
+      recordWithScaleSize()
+
+      val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
+      assertNotEquals(recordFileHash1, recordFileHash2)
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun verify_nochange() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      verify()
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+
+  @Test
+  fun verifyAndRecord_changeDetect() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
+      changeScreen()
+
+      verifyAndRecordAndFail()
+
+      val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
+      assertNotEquals(recordFileHash1, recordFileHash2)
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+
+  @Test
+  fun verifyAndRecord_nochange() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      verifyAndRecord()
+
+      checkCompareFileNotExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun compare() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      compare()
+
+      checkCompareFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun compareWithSystemParameter() {
+    println("start compareWithSystemParameter")
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      compareWithSystemParameter()
+
+      checkCompareFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun compare_nochange() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      compare()
+
+      checkCompareFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun compareWithCustomPath() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      compare()
+
+      checkCompareFileExists()
+      checkRecordedFileExists("$customReferenceScreenshotAndName.png")
+      checkRecordedFileExists("${customCompareScreenshotAndName}_compare.png")
+      checkRecordedFileExists("${customCompareScreenshotAndName}_actual.png")
+    }
+  }
 }
