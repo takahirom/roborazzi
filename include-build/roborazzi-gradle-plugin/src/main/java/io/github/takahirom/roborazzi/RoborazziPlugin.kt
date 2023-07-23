@@ -39,14 +39,15 @@ class RoborazziPlugin : Plugin<Project> {
       project.tasks.register(
         "restoreOutputDirRoborazzi",
         RestoreOutputDirRoborazziTask::class.java
-      ) {
+      ) { task ->
         if (!intermediateDir.asFile.exists()) {
           intermediateDir.asFile.mkdirs()
         }
-        it.inputDir.set(intermediateDir)
-        it.outputDir.set(outputDir)
-        it.onlyIf {
-          outputDir.asFile.listFiles().isEmpty() && intermediateDir.asFile.exists()
+        task.inputDir.set(intermediateDir)
+        task.outputDir.set(outputDir)
+        task.onlyIf {
+          (task.outputDir.asFile.get().listFiles()?.isEmpty() ?: true)
+            && (task.inputDir.asFile.get().listFiles()?.isNotEmpty() ?: false)
         }
       }
 
@@ -119,7 +120,11 @@ class RoborazziPlugin : Plugin<Project> {
             if (!outputDir.asFile.exists()) {
               outputDir.asFile.mkdirs()
             }
-            test.inputs.files(restoreOutputDirRoborazziTaskProvider.map { it.outputDir })
+            if (restoreOutputDirRoborazziTaskProvider.isPresent) {
+              test.inputs.files(restoreOutputDirRoborazziTaskProvider.map { it.outputDir })
+            } else {
+              test.inputs.dir(outputDir)
+            }
             test.outputs.dir(DEFAULT_TEMP_DIR)
 
             test.inputs.properties(
