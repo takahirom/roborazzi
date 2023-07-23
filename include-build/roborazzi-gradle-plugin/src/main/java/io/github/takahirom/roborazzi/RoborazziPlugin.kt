@@ -32,12 +32,6 @@ class RoborazziPlugin : Plugin<Project> {
     val recordVariants = project.tasks.register("recordRoborazzi")
     val verifyAndRecordVariants = project.tasks.register("verifyAndRecordRoborazzi")
 
-    val androidExtension = project.extensions.getByName("android") as BaseExtension
-    val testSourceSets = androidExtension.sourceSets.getByName("test") as AndroidSourceSet
-    testSourceSets.apply {
-      this.resources.srcDir(DEFAULT_OUTPUT_DIR)
-    }
-
     // For fixing unexpected skip test
     val outputDir = project.layout.projectDirectory.dir(DEFAULT_OUTPUT_DIR)
     val intermediateDir = project.layout.projectDirectory.dir(DEFAULT_TEMP_DIR)
@@ -108,8 +102,11 @@ class RoborazziPlugin : Plugin<Project> {
               project.fileTree(RoborazziReportConst.compareReportDirPath)
             val compareSummaryReportFile =
               project.file(RoborazziReportConst.compareSummaryReportFilePath)
+            if (!outputDir.asFile.exists()) {
+              outputDir.asFile.mkdirs()
+            }
             test.inputs.files(DEFAULT_OUTPUT_DIR)
-            test.outputs.dir(DEFAULT_OUTPUT_DIR)
+            test.outputs.dir(DEFAULT_TEMP_DIR)
 
             test.inputs.properties(
               mapOf(
@@ -148,6 +145,16 @@ class RoborazziPlugin : Plugin<Project> {
             }
             // We don't use custom task action here because we want to run it even if we use `-P` parameter
             test.doLast {
+              // Copy all files from outputDir to intermediateDir
+              // so that we can use Gradle's output caching
+              val outputDirFileTree = outputDir.asFileTree
+              outputDirFileTree.forEach { file ->
+                val relativePath = file.relativeTo(outputDir.asFile).path
+                val outputFile = intermediateDir.file(relativePath)
+                outputFile.asFile.parentFile.mkdirs()
+                file.copyTo(outputFile.asFile, overwrite = true)
+              }
+
               val isCompare =
                 test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
               if (!isCompare) {
@@ -192,9 +199,6 @@ class RoborazziPlugin : Plugin<Project> {
       project.extensions.getByType(LibraryAndroidComponentsExtension::class.java)
         .configureComponents()
     }
-
-    println("mysourcesets:" + androidExtension.sourceSets.map { it.javaClass.toString() + " name:" + it.name + ":" + it.java + " " + it.kotlin }
-      .joinToString("\n---\n"))
   }
 
   private fun String.capitalizeUS() =
