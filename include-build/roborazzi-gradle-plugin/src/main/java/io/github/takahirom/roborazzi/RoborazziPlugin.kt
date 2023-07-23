@@ -1,10 +1,8 @@
 package io.github.takahirom.roborazzi
 
-import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.android.build.gradle.BaseExtension
 import java.util.Locale
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -20,8 +18,8 @@ import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 
-val DEFAULT_OUTPUT_DIR = "build/outputs/roborazzi"
-val DEFAULT_TEMP_DIR = "build/intermediates/roborazzi"
+private val DEFAULT_OUTPUT_DIR = "build/outputs/roborazzi"
+private val DEFAULT_TEMP_DIR = "build/intermediates/roborazzi"
 
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
@@ -35,6 +33,15 @@ class RoborazziPlugin : Plugin<Project> {
     // For fixing unexpected skip test
     val outputDir = project.layout.projectDirectory.dir(DEFAULT_OUTPUT_DIR)
     val intermediateDir = project.layout.projectDirectory.dir(DEFAULT_TEMP_DIR)
+
+    val restoreOutputDirRoborazziTaskProvider =
+      project.tasks.register("restoreOutputDirRoborazzi", RestoreOutputDirRoborazziTask::class.java) {
+        if (!intermediateDir.asFile.exists()) {
+          intermediateDir.asFile.mkdirs()
+        }
+        it.inputDir.set(intermediateDir)
+        it.outputDir.set(outputDir)
+      }
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
@@ -105,7 +112,7 @@ class RoborazziPlugin : Plugin<Project> {
             if (!outputDir.asFile.exists()) {
               outputDir.asFile.mkdirs()
             }
-            test.inputs.files(DEFAULT_OUTPUT_DIR)
+            test.inputs.files(restoreOutputDirRoborazziTaskProvider.map { it.outputDir })
             test.outputs.dir(DEFAULT_TEMP_DIR)
 
             test.inputs.properties(
@@ -203,6 +210,24 @@ class RoborazziPlugin : Plugin<Project> {
 
   private fun String.capitalizeUS() =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
+
+
+  abstract class RestoreOutputDirRoborazziTask @Inject constructor(objects: ObjectFactory) :
+    DefaultTask() {
+    @get:InputDirectory
+    @Optional
+    val inputDir: DirectoryProperty = objects.directoryProperty()
+
+    @get:OutputDirectory
+    val outputDir: DirectoryProperty = objects.directoryProperty()
+
+    @TaskAction
+    fun copy() {
+      val outputDirFile = outputDir.get().asFile
+      if(outputDirFile.exists() && outputDirFile.listFiles().isNotEmpty()) return
+      inputDir.get().asFile.copyRecursively(outputDirFile)
+    }
+  }
 
   open class RoborazziTask : DefaultTask() {
     @Option(

@@ -68,7 +68,6 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
 
   fun removeRoborazziOutputDir() {
     File(testProjectDir.root, "app/build/outputs/roborazzi").deleteRecursively()
-    File(testProjectDir.root, "app/build/intermediates/roborazzi").deleteRecursively()
   }
 
   fun assertNotSkipped(output: String) {
