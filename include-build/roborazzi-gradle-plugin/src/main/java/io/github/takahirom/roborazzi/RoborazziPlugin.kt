@@ -32,6 +32,12 @@ class RoborazziPlugin : Plugin<Project> {
     val recordVariants = project.tasks.register("recordRoborazzi")
     val verifyAndRecordVariants = project.tasks.register("verifyAndRecordRoborazzi")
 
+    val androidExtension = project.extensions.getByName("android") as BaseExtension
+    val testSourceSets = androidExtension.sourceSets.getByName("test") as AndroidSourceSet
+    testSourceSets.apply {
+      this.java.srcDir(DEFAULT_OUTPUT_DIR)
+    }
+
     // For fixing unexpected skip test
     val outputDir = project.layout.projectDirectory.dir(DEFAULT_OUTPUT_DIR)
     val intermediateDir = project.layout.projectDirectory.dir(DEFAULT_TEMP_DIR)
@@ -199,10 +205,6 @@ class RoborazziPlugin : Plugin<Project> {
         .configureComponents()
     }
 
-    val androidExtension = project.extensions.getByName("android") as BaseExtension
-    (androidExtension.sourceSets.getByName("test") as AndroidSourceSet).apply {
-      this.resources.srcDir(DEFAULT_OUTPUT_DIR)
-    }
     println("mysourcesets:" + androidExtension.sourceSets.map { it.javaClass.toString() + " name:" + it.name + ":" + it.java + " " + it.kotlin }
       .joinToString("\n---\n"))
   }
