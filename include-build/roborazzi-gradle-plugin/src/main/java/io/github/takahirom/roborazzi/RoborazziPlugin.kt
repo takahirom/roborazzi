@@ -1,8 +1,10 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
+import com.android.build.gradle.BaseExtension
 import java.util.Locale
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -196,6 +198,13 @@ class RoborazziPlugin : Plugin<Project> {
       project.extensions.getByType(LibraryAndroidComponentsExtension::class.java)
         .configureComponents()
     }
+
+    val androidExtension = project.extensions.getByName("android") as BaseExtension
+    (androidExtension.sourceSets.getByName("test") as AndroidSourceSet).apply {
+      this.resources.srcDir(DEFAULT_OUTPUT_DIR)
+    }
+    println("mysourcesets:" + androidExtension.sourceSets.map { it.javaClass.toString() + " name:" + it.name + ":" + it.java + " " + it.kotlin }
+      .joinToString("\n---\n"))
   }
 
   private fun String.capitalizeUS() =
