@@ -3,6 +3,7 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
+import com.android.build.gradle.internal.tasks.factory.letIfPresent
 import java.util.Locale
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -35,12 +36,18 @@ class RoborazziPlugin : Plugin<Project> {
     val intermediateDir = project.layout.projectDirectory.dir(DEFAULT_TEMP_DIR)
 
     val restoreOutputDirRoborazziTaskProvider =
-      project.tasks.register("restoreOutputDirRoborazzi", RestoreOutputDirRoborazziTask::class.java) {
+      project.tasks.register(
+        "restoreOutputDirRoborazzi",
+        RestoreOutputDirRoborazziTask::class.java
+      ) {
         if (!intermediateDir.asFile.exists()) {
           intermediateDir.asFile.mkdirs()
         }
         it.inputDir.set(intermediateDir)
         it.outputDir.set(outputDir)
+        it.onlyIf {
+          outputDir.asFile.listFiles().isEmpty() && intermediateDir.asFile.exists()
+        }
       }
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
@@ -124,6 +131,14 @@ class RoborazziPlugin : Plugin<Project> {
                 "roborazziProperties" to roborazziProperties,
               )
             )
+            restoreOutputDirRoborazziTaskProvider.letIfPresent {
+              test.inputs.properties(
+                mapOf(
+                  "taskInputDirPath" to restoreOutputDirRoborazziTaskProvider.map { it.outputDir.asFile.get().path },
+                  "taskOutputDirPath" to restoreOutputDirRoborazziTaskProvider.map { it.inputDir.asFile.get().path },
+                )
+              )
+            }
             test.doFirst {
               val isTaskPresent =
                 isRecordRun.get() || isVerifyRun.get() || isCompareRun.get() || isVerifyAndRecordRun.get()
@@ -154,12 +169,18 @@ class RoborazziPlugin : Plugin<Project> {
             test.doLast {
               // Copy all files from outputDir to intermediateDir
               // so that we can use Gradle's output caching
-              val outputDirFileTree = outputDir.asFileTree
-              outputDirFileTree.forEach { file ->
-                val relativePath = file.relativeTo(outputDir.asFile).path
-                val outputFile = intermediateDir.file(relativePath)
-                outputFile.asFile.parentFile.mkdirs()
-                file.copyTo(outputFile.asFile, overwrite = true)
+              val inputDirectoryPath =
+                test.inputs.properties["taskInputDirPath"] as? String
+              val outputDirectoryPath =
+                test.inputs.properties["taskOutputDirPath"] as? String
+              val taskInputDir = test.inputs.files.firstOrNull {
+                it.path == inputDirectoryPath
+              }
+              val taskOutputDir = test.outputs.files.firstOrNull {
+                it.path == outputDirectoryPath
+              }
+              if (taskInputDir != null && taskOutputDir != null) {
+                taskInputDir.copyRecursively(taskOutputDir, overwrite = true)
               }
 
               val isCompare =
@@ -224,7 +245,7 @@ class RoborazziPlugin : Plugin<Project> {
     @TaskAction
     fun copy() {
       val outputDirFile = outputDir.get().asFile
-      if(outputDirFile.exists() && outputDirFile.listFiles().isNotEmpty()) return
+      if (outputDirFile.exists() && outputDirFile.listFiles().isNotEmpty()) return
       inputDir.get().asFile.copyRecursively(outputDirFile)
     }
   }
