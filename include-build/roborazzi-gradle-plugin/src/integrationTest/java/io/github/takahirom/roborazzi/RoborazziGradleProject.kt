@@ -70,6 +70,11 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     File(testProjectDir.root, "app/build/outputs/roborazzi").deleteRecursively()
   }
 
+  fun removeRoborazziAndIntermediateOutputDir() {
+    File(testProjectDir.root, "app/build/outputs/roborazzi").deleteRecursively()
+    File(testProjectDir.root, "app/build/intermediates/roborazzi").deleteRecursively()
+  }
+
   fun assertNotSkipped(output: String) {
     assert(output.contains("testDebugUnitTest' is not up-to-date because"))
   }
@@ -95,6 +100,7 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
       .withArguments(
         task,
         "--stacktrace",
+        "--build-cache",
         "--info",
         *additionalParameters
       )
@@ -116,7 +122,7 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
           it.build()
         }
       }
-    println(testProjectDir.root.resolve("app/output/roborazzi/").listFiles())
+    println("app/output/roborazzi/ list files:"+testProjectDir.root.resolve("app/output/roborazzi/").listFiles())
     return buildResult
   }
 

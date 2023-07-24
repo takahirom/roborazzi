@@ -11,6 +11,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -68,6 +69,17 @@ class RoborazziPlugin : Plugin<Project> {
             && (inputDirFile.listFiles()?.isNotEmpty() ?: false)
         }
       }
+
+    fun isAnyTaskRun(
+      isRecordRun: Property<Boolean>,
+      isVerifyRun: Property<Boolean>,
+      isVerifyAndRecordRun: Property<Boolean>,
+      isCompareRun: Property<Boolean>
+    ) = isRecordRun.get() || isVerifyRun.get() || isVerifyAndRecordRun.get() || isCompareRun.get()
+
+    fun hasRoborazziTaskProperty(roborazziProperties: Map<String, Any?>): Boolean {
+      return roborazziProperties["roborazzi.test.record"] == "true" || roborazziProperties["roborazzi.test.verify"] == "true" || roborazziProperties["roborazzi.test.compare"] == "true"
+    }
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
@@ -166,9 +178,14 @@ class RoborazziPlugin : Plugin<Project> {
                 "roborazziProperties" to roborazziProperties,
               )
             )
+            test.outputs.doNotCacheIf("Run Roborazzi tests if roborazzi output dir is empty") {
+              (isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
+                || hasRoborazziTaskProperty(roborazziProperties))
+                && outputDir.get().asFile.listFiles()?.isEmpty() ?: true
+            }
             test.doFirst {
               val isTaskPresent =
-                isRecordRun.get() || isVerifyRun.get() || isCompareRun.get() || isVerifyAndRecordRun.get()
+                isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
               if (!isTaskPresent) {
                 test.systemProperties.putAll(roborazziProperties)
               } else {
