@@ -703,7 +703,8 @@ internal fun capture(
     )
 
     is RoborazziOptions.CaptureType.Screenshot -> {
-      val image = rootComponent.image!!
+      val image = rootComponent.image
+        ?: throw IllegalStateException("Unable to find the image of the target root component. Does the rendering element exist?")
       onCanvas(
         RoboCanvas(
           width = image.width,
