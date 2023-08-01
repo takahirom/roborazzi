@@ -161,7 +161,7 @@ class RoborazziGradleProjectTest {
       verifyAndFail().shouldHaveDoesntExistsCapture()
 
       checkCompareFileNotExists()
-      checkRecordedFileExists("$addedScreenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$addedScreenshotAndName.testCapture.png")
       checkRecordedFileExists("$addedScreenshotAndName.testCapture_compare.png")
       checkRecordedFileExists("$addedScreenshotAndName.testCapture_actual.png")
     }
