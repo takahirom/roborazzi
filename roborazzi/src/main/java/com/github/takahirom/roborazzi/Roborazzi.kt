@@ -638,6 +638,7 @@ private fun processOutputImageAndReport(
         CompareReportCaptureResult.Added(
           compareFile = compareFile,
           actualFile = actualFile,
+          goldenFile = goaldenFile,
           timestampNs = System.nanoTime(),
         )
       }

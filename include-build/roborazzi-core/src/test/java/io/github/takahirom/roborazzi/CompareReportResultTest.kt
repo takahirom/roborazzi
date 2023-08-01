@@ -14,6 +14,7 @@ class CompareReportResultTest {
       CompareReportCaptureResult.Added(
         compareFile = File("/compare_file"),
         actualFile = File("/actual_file"),
+        goldenFile = File("/golden_file"),
         timestampNs = 123456789,
       ),
       CompareReportCaptureResult.Changed(
