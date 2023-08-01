@@ -94,12 +94,12 @@ data class RoborazziOptions(
         when (compareReportCaptureResult) {
           is CompareReportCaptureResult.Added -> throw AssertionError(
             "Roborazzi: The original file(${compareReportCaptureResult.goldenFile.absolutePath}) was not found.\n" +
-              "See actual image at ${compareReportCaptureResult.actualFile.absolutePath}"
+              "See the actual image at ${compareReportCaptureResult.actualFile.absolutePath}"
           )
 
           is CompareReportCaptureResult.Changed -> throw AssertionError(
             "Roborazzi: ${compareReportCaptureResult.goldenFile.absolutePath} is changed.\n" +
-              "See compare image at ${compareReportCaptureResult.compareFile.absolutePath}"
+              "See the compare image at ${compareReportCaptureResult.compareFile.absolutePath}"
           )
 
           is CompareReportCaptureResult.Unchanged -> {
