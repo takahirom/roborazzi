@@ -284,7 +284,7 @@ dependencies {
 
   fun addTest() {
     val originalFileText =
-      testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project/RoborazziTest.k")
+      testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project/RoborazziTest.kt")
         .readText()
     val file =
       testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project/AddedRoborazziTest.kt")
