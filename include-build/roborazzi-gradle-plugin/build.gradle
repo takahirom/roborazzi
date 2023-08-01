@@ -53,6 +53,12 @@ testing {
         all {
           testTask.configure {
             shouldRunAfter(test)
+            testLogging {
+              events "failed", "standardError"
+              showStandardStreams = true
+              showStackTraces = true
+              exceptionFormat = 'full'
+            }
           }
         }
       }
