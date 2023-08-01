@@ -26,6 +26,15 @@ sourceSets {
   main.java.srcDir 'src/generated/kotlin'
 }
 
+test {
+  testLogging {
+    events "passed", "skipped", "failed", "standardOut", "standardError"
+    showStandardStreams = true
+    showStackTraces = true
+    exceptionFormat = 'full'
+  }
+}
+
 
 testing {
   suites {
