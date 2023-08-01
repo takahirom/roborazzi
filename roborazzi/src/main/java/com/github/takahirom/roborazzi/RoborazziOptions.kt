@@ -8,19 +8,19 @@ import java.io.File
 import java.io.FileWriter
 
 data class RoborazziOptions(
-    val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
-    val compareOptions: CompareOptions = CompareOptions(),
-    val recordOptions: RecordOptions = RecordOptions(),
+  val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
+  val compareOptions: CompareOptions = CompareOptions(),
+  val recordOptions: RecordOptions = RecordOptions(),
 ) {
   sealed interface CaptureType {
     class Screenshot : CaptureType
 
     data class Dump(
-        val takeScreenShot: Boolean = isNativeGraphicsEnabled(),
-        val basicSize: Int = 600,
-        val depthSlideSize: Int = 30,
-        val query: ((RoboComponent) -> Boolean)? = null,
-        val explanation: ((RoboComponent) -> String?) = DefaultExplanation,
+      val takeScreenShot: Boolean = isNativeGraphicsEnabled(),
+      val basicSize: Int = 600,
+      val depthSlideSize: Int = 30,
+      val query: ((RoboComponent) -> Boolean)? = null,
+      val explanation: ((RoboComponent) -> String?) = DefaultExplanation,
     ) : CaptureType {
       companion object {
         val DefaultExplanation: ((RoboComponent) -> String) = {
@@ -35,14 +35,14 @@ data class RoborazziOptions(
   }
 
   data class CompareOptions(
-      val roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
-      val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
-      val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
+    val roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+    val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
+    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
-        roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
-        outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
-        /**
+      roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+      outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
+      /**
        * This value determines the threshold of pixel change at which the diff image is output or not.
        * The value should be between 0 and 1
        */
@@ -110,9 +110,9 @@ data class RoborazziOptions(
   }
 
   data class RecordOptions(
-      val resizeScale: Double = roborazziDefaultResizeScale(),
-      val applyDeviceCrop: Boolean = false,
-      val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
+    val resizeScale: Double = roborazziDefaultResizeScale(),
+    val applyDeviceCrop: Boolean = false,
+    val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
   )
 
   enum class PixelBitConfig {
