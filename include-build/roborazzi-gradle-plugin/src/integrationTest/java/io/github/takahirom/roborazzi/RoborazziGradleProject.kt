@@ -45,6 +45,14 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task, BuildType.BuildAndFail)
   }
 
+  fun BuildResult.shouldDetectChangedPngCapture() {
+    assert(output.contains("png is changed"))
+  }
+
+  fun BuildResult.shouldDetectNonExistentPngCapture() {
+    assert(output.contains(".png) was not found."))
+  }
+
   fun verifyAndRecord(): BuildResult {
     val task = "verifyAndRecordRoborazziDebug"
     return runTask(task)
@@ -122,7 +130,10 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
           it.build()
         }
       }
-    println("app/output/roborazzi/ list files:"+testProjectDir.root.resolve("app/output/roborazzi/").listFiles())
+    println(
+      "app/output/roborazzi/ list files:" + testProjectDir.root.resolve("app/output/roborazzi/")
+        .listFiles()
+    )
     return buildResult
   }
 
@@ -269,6 +280,15 @@ dependencies {
         )
       }"""
     )
+  }
+
+  fun addTest() {
+    val originalFileText =
+      testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project/RoborazziTest.kt")
+        .readText()
+    val file =
+      testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project/AddedRoborazziTest.kt")
+    file.writeText(originalFileText.replace("RoborazziTest", "AddedRoborazziTest"))
   }
 
   val appBuildFile = AppBuildFile(testProjectDir)

@@ -14,14 +14,15 @@ sealed interface CompareReportCaptureResult {
   data class Added(
     override val compareFile: File,
     override val actualFile: File,
+    override val goldenFile: File,
     override val timestampNs: Long,
   ) : CompareReportCaptureResult {
-    override val goldenFile: File? get() = null
     override fun toJson(): JSONObject {
       val json = JSONObject()
       json.put("type", "added")
       json.put("compare_file_path", compareFile.absolutePath)
       json.put("actual_file_path", actualFile.absolutePath)
+      json.put("golden_file_path", goldenFile.absolutePath)
       json.put("timestamp", timestampNs)
       return json
     }
@@ -92,6 +93,7 @@ sealed interface CompareReportCaptureResult {
           compareFile = compareFile!!,
           actualFile = actualFile!!,
           timestampNs = timestampNs,
+          goldenFile = goldenFile!!,
         )
 
         else -> throw IllegalArgumentException("Unknown type $type")

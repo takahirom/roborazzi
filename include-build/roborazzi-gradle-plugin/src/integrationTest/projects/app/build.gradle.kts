@@ -48,8 +48,9 @@ android {
     unitTests.all {
       testLogging {
         events "passed", "skipped", "failed", "standardOut", "standardError"
-        outputs.upToDateWhen {false}
         showStandardStreams = true
+        showStackTraces = true
+        exceptionFormat = TestExceptionFormat.FULL
       }
     }
   }

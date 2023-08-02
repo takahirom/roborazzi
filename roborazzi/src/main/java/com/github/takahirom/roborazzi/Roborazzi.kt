@@ -98,7 +98,7 @@ fun ViewInteraction.captureRoboImage(
   perform(ImageCaptureViewAction(roborazziOptions) { canvas ->
     processOutputImageAndReport(
       canvas = canvas,
-      goaldenFile = file,
+      goldenFile = file,
       roborazziOptions = roborazziOptions
     )
     canvas.release()
@@ -185,7 +185,7 @@ fun Bitmap.captureRoboImage(
   }
   processOutputImageAndReport(
     canvas = canvas,
-    goaldenFile = file,
+    goldenFile = file,
     roborazziOptions = roborazziOptions
   )
   canvas.release()
@@ -273,7 +273,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   ) { canvas ->
     processOutputImageAndReport(
       canvas = canvas,
-      goaldenFile = file,
+      goldenFile = file,
       roborazziOptions = roborazziOptions
     )
     canvas.release()
@@ -455,7 +455,7 @@ private fun saveLastImage(
   }
   processOutputImageAndReport(
     canvas = roboCanvas,
-    goaldenFile = file,
+    goldenFile = file,
     roborazziOptions = roborazziOptions
   )
 }
@@ -552,7 +552,7 @@ private fun saveAllImage(
   canvases.forEachIndexed { index, canvas ->
     processOutputImageAndReport(
       canvas = canvas,
-      goaldenFile = fileCreator(index.toString()),
+      goldenFile = fileCreator(index.toString()),
       roborazziOptions = roborazziOptions
     )
   }
@@ -560,12 +560,12 @@ private fun saveAllImage(
 
 private fun processOutputImageAndReport(
   canvas: RoboCanvas,
-  goaldenFile: File,
+  goldenFile: File,
   roborazziOptions: RoborazziOptions
 ) {
   val forbiddenFileSuffixes = listOf("_compare", "_actual")
   forbiddenFileSuffixes.forEach {
-    if (goaldenFile.nameWithoutExtension.endsWith(it)) {
+    if (goldenFile.nameWithoutExtension.endsWith(it)) {
       throw IllegalArgumentException("The file name should not end with $it because it is reserved for Roborazzi")
     }
   }
@@ -574,8 +574,8 @@ private fun processOutputImageAndReport(
   if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
     val width = (canvas.croppedWidth * resizeScale).toInt()
     val height = (canvas.croppedHeight * resizeScale).toInt()
-    val goldenRoboCanvas = if (goaldenFile.exists()) {
-      RoboCanvas.load(goaldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
+    val goldenRoboCanvas = if (goldenFile.exists()) {
+      RoboCanvas.load(goldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
     } else {
       RoboCanvas(
         width = width,
@@ -588,17 +588,17 @@ private fun processOutputImageAndReport(
       val comparisonResult: ImageComparator.ComparisonResult =
         canvas.differ(goldenRoboCanvas, resizeScale)
       val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
-      log("${goaldenFile.name} The differ result :$comparisonResult changed:$changed")
+      log("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
-      log("${goaldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
+      log("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
       true
     }
 
     val result: CompareReportCaptureResult = if (changed) {
       val compareFile = File(
         roborazziOptions.compareOptions.outputDirectoryPath,
-        goaldenFile.nameWithoutExtension + "_compare." + goaldenFile.extension
+        goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
       )
       val compareCanvas = RoboCanvas.generateCompareCanvas(
         goldenCanvas = goldenRoboCanvas,
@@ -615,11 +615,11 @@ private fun processOutputImageAndReport(
 
       val actualFile = if (roborazziRecordingEnabled()) {
         // If record option is enabled, we should save the actual file as the golden file.
-        goaldenFile
+        goldenFile
       } else {
         File(
           roborazziOptions.compareOptions.outputDirectoryPath,
-          goaldenFile.nameWithoutExtension + "_actual." + goaldenFile.extension
+          goldenFile.nameWithoutExtension + "_actual." + goldenFile.extension
         )
       }
       canvas
@@ -627,30 +627,41 @@ private fun processOutputImageAndReport(
           file = actualFile,
           resizeScale = resizeScale
         )
-      if (goaldenFile.exists()) {
+      if (goldenFile.exists()) {
         CompareReportCaptureResult.Changed(
           compareFile = compareFile,
           actualFile = actualFile,
-          goldenFile = goaldenFile,
+          goldenFile = goldenFile,
           timestampNs = System.nanoTime(),
         )
       } else {
         CompareReportCaptureResult.Added(
           compareFile = compareFile,
           actualFile = actualFile,
+          goldenFile = goldenFile,
           timestampNs = System.nanoTime(),
         )
       }
     } else {
       CompareReportCaptureResult.Unchanged(
-        goldenFile = goaldenFile,
+        goldenFile = goldenFile,
         timestampNs = System.nanoTime(),
       )
+    }
+    debugLog {
+      "processOutputImageAndReport: \n" +
+        "  goldenFile: $goldenFile\n" +
+        "  changed: $changed\n" +
+        "  result: $result\n"
     }
     roborazziOptions.compareOptions.roborazziCompareReporter.report(result)
   } else {
     // roborazzi.record is checked before
-    canvas.save(goaldenFile, resizeScale)
+    canvas.save(goldenFile, resizeScale)
+    debugLog {
+      "processOutputImageAndReport: \n" +
+        "  goldenFile: $goldenFile\n"
+    }
   }
 }
 

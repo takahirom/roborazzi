@@ -22,6 +22,8 @@ class RoborazziGradleProjectTest {
   private val customCompareScreenshotAndName =
     "app/build/outputs/roborazzi/custom_compare_outputDirectoryPath/custom_file"
 
+  private val addedScreenshotAndName =
+    "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.AddedRoborazziTest"
 
   @Test
   fun record() {
@@ -138,7 +140,7 @@ class RoborazziGradleProjectTest {
       changeScreen()
       val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
 
-      verifyAndFail()
+      verifyAndFail().shouldDetectChangedPngCapture()
 
       val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
       assertEquals(recordFileHash1, recordFileHash2)
@@ -146,6 +148,22 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+
+  @Test
+  fun verify_addDetect() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      addTest()
+
+      verifyAndFail().shouldDetectNonExistentPngCapture()
+
+      checkCompareFileNotExists()
+      checkRecordedFileNotExists("$addedScreenshotAndName.testCapture.png")
+      checkRecordedFileExists("$addedScreenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$addedScreenshotAndName.testCapture_actual.png")
     }
   }
 
