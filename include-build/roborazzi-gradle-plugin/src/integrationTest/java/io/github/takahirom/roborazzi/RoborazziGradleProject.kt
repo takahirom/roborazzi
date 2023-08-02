@@ -45,11 +45,11 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task, BuildType.BuildAndFail)
   }
 
-  fun BuildResult.shouldHaveChangedCapture() {
+  fun BuildResult.shouldDetectChangedPngCapture() {
     assert(output.contains("png is changed"))
   }
 
-  fun BuildResult.shouldHaveDoesntExistsCapture() {
+  fun BuildResult.shouldDetectNonExistentPngCapture() {
     assert(output.contains(".png) was not found."))
   }
 

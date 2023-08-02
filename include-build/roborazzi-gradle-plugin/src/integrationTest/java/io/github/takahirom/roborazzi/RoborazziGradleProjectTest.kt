@@ -140,7 +140,7 @@ class RoborazziGradleProjectTest {
       changeScreen()
       val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
 
-      verifyAndFail().shouldHaveChangedCapture()
+      verifyAndFail().shouldDetectChangedPngCapture()
 
       val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
       assertEquals(recordFileHash1, recordFileHash2)
@@ -158,7 +158,7 @@ class RoborazziGradleProjectTest {
       record()
       addTest()
 
-      verifyAndFail().shouldHaveDoesntExistsCapture()
+      verifyAndFail().shouldDetectNonExistentPngCapture()
 
       checkCompareFileNotExists()
       checkRecordedFileNotExists("$addedScreenshotAndName.testCapture.png")
