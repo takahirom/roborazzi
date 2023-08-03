@@ -26,11 +26,11 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
     nodeBounds.right.roundToInt(),
     nodeBounds.bottom.roundToInt()
   )
-  return view.fetchImage(recordOptions = recordOptions)?.crop(nodeBoundsRect)
+  return view.fetchImage(recordOptions = recordOptions)?.crop(nodeBoundsRect, recordOptions)
 }
 
 
-fun Bitmap.crop(rect: Rect): Bitmap? {
+fun Bitmap.crop(rect: Rect, recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
   if (rect.width() > this.width || rect.height() > this.height) {
     return this
   }
@@ -40,7 +40,7 @@ fun Bitmap.crop(rect: Rect): Bitmap? {
   if (rect.width() == this.width && rect.height() == this.height) {
     return this
   }
-  val croppedBitmap = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888)
+  val croppedBitmap = Bitmap.createBitmap(rect.width(), rect.height(), recordOptions.pixelBitConfig.toBitmapConfig())
 
   val canvas = Canvas(croppedBitmap)
   canvas.drawBitmap(this, -rect.left.toFloat(), -rect.top.toFloat(), null)
