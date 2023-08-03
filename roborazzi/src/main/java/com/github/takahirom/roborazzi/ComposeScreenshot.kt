@@ -31,6 +31,15 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
 
 
 fun Bitmap.crop(rect: Rect): Bitmap? {
+  if (rect.width() > this.width || rect.height() > this.height) {
+    return this
+  }
+  if (rect.width() == 0 || rect.height() == 0) {
+    return null
+  }
+  if (rect.width() == this.width && rect.height() == this.height) {
+    return this
+  }
   val croppedBitmap = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888)
 
   val canvas = Canvas(croppedBitmap)
