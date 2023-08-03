@@ -31,9 +31,6 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
 
 
 fun Bitmap.crop(rect: Rect, recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
-  if (rect.width() > this.width && rect.height() > this.height) {
-    return this
-  }
   if (rect.width() == 0 || rect.height() == 0) {
     return null
   }
