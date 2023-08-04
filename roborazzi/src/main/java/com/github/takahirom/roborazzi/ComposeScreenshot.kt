@@ -34,10 +34,14 @@ fun Bitmap.crop(rect: Rect, recordOptions: RoborazziOptions.RecordOptions): Bitm
   if (rect.width() == 0 || rect.height() == 0) {
     return null
   }
-  if (rect.width() == this.width && rect.height() == this.height) {
+  if (
+    rect.left == 0 && rect.top == 0 &&
+    rect.width() == this.width && rect.height() == this.height
+  ) {
     return this
   }
-  val croppedBitmap = Bitmap.createBitmap(rect.width(), rect.height(), recordOptions.pixelBitConfig.toBitmapConfig())
+  val croppedBitmap =
+    Bitmap.createBitmap(rect.width(), rect.height(), recordOptions.pixelBitConfig.toBitmapConfig())
 
   val canvas = Canvas(croppedBitmap)
   canvas.drawBitmap(this, -rect.left.toFloat(), -rect.top.toFloat(), null)
