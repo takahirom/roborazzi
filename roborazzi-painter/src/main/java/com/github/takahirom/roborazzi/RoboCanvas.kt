@@ -48,7 +48,7 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: In
     consumeEmptyPoints(r)
   }
 
-  internal fun drawImage(image: BufferedImage) {
+  fun drawImage(image: BufferedImage) {
     bufferedImage.graphics { graphics2D ->
       graphics2D.drawImage(
         image,
@@ -192,8 +192,12 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: In
   fun save(file: File, resizeScale: Double) {
     drawPendingDraw()
     val directory = file.parentFile
-    if (!directory.exists()) {
-      directory.mkdirs()
+    try {
+      if (!directory.exists()) {
+        directory.mkdirs()
+      }
+    } catch (e: Exception) {
+      // ignore
     }
     ImageIO.write(
       croppedImage.scale(resizeScale),
