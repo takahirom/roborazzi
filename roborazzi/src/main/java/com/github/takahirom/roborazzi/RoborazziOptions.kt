@@ -6,6 +6,8 @@ import io.github.takahirom.roborazzi.CompareReportCaptureResult
 import io.github.takahirom.roborazzi.RoborazziReportConst
 import java.io.File
 import java.io.FileWriter
+import org.robolectric.annotation.GraphicsMode
+import org.robolectric.config.ConfigurationRegistry
 
 data class RoborazziOptions(
   val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
@@ -149,4 +151,11 @@ data class RoborazziOptions(
       true
     }
   }
+}
+
+internal fun isNativeGraphicsEnabled() = try {
+  Class.forName("org.robolectric.annotation.GraphicsMode")
+  ConfigurationRegistry.get(GraphicsMode.Mode::class.java) == GraphicsMode.Mode.NATIVE
+} catch (e: ClassNotFoundException) {
+  false
 }
