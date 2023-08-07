@@ -1,8 +1,11 @@
 plugins {
   id "org.jetbrains.kotlin.jvm"
-  id "com.vanniktech.maven.publish"
   id 'jvm-test-suite'
 }
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
+}
+
 apply plugin: 'java-gradle-plugin'
 
 java {
@@ -19,7 +22,8 @@ dependencies {
   implementation project(':roborazzi-core')
   implementation 'org.json:json:20220924'
   integrationTestDepImplementation "com.android.tools.build:gradle:7.3.1"
-  integrationTestDepImplementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20"
+  integrationTestDepImplementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20"
+  integrationTestDepImplementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
 }
 
 sourceSets {
@@ -36,35 +40,35 @@ test {
 }
 
 
-testing {
-  suites {
-    integrationTest(JvmTestSuite) {
-      useJUnit()
-      sources.kotlin.srcDirs = ["src/integrationTest/java"]
-      sources.java.srcDirs = ["src/integrationTest/java"]
-      dependencies {
-        implementation project()
-        implementation gradleTestKit()
-        implementation "junit:junit:4.13.2"
-        implementation 'com.android.tools.build:gradle:7.3.1'
-      }
+testing.suites {
+  integrationTest(JvmTestSuite) {
+    useJUnit()
+    sources.kotlin.srcDirs = ["src/integrationTest/java"]
+    sources.java.srcDirs = ["src/integrationTest/java"]
+    dependencies {
+//      implementation project()
+      implementation gradleTestKit()
+      implementation "junit:junit:4.13.2"
+      implementation 'com.android.tools.build:gradle:7.3.1'
+      implementation 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
+      implementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
+    }
 
-      targets {
-        all {
-          testTask.configure {
-            shouldRunAfter(test)
-            testLogging {
-              events "failed", "standardError"
-              showStandardStreams = true
-              showStackTraces = true
-              exceptionFormat = 'full'
-            }
+    targets {
+      all {
+        testTask.configure {
+          shouldRunAfter(test)
+          testLogging {
+            events "failed", "standardError"
+            showStandardStreams = true
+            showStackTraces = true
+            exceptionFormat = 'full'
           }
         }
       }
-      tasks.withType(PluginUnderTestMetadata.class).named("pluginUnderTestMetadata").configure {
-        it.pluginClasspath.from(integrationTestDep.runtimeClasspath)
-      }
+    }
+    tasks.withType(PluginUnderTestMetadata.class).named("pluginUnderTestMetadata").configure {
+      it.pluginClasspath.from(integrationTestDep.runtimeClasspath)
     }
   }
 }

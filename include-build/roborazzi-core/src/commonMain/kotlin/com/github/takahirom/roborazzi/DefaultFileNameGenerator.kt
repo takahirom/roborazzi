@@ -40,6 +40,12 @@ object DefaultFileNameGenerator {
     return "$dir/${generateName()}.$extension"
   }
 
+  val jupiterTestAnnotationOrNull = try {
+    Class.forName("org.junit.jupiter.api.Test") as Class<Annotation>
+  } catch (e: ClassNotFoundException) {
+    null
+  }
+
   private fun generateName(): String {
     // Find test method name
     val allStackTraces = Thread.getAllStackTraces()
@@ -48,15 +54,18 @@ object DefaultFileNameGenerator {
       // https://github.com/robolectric/robolectric/blob/40832ada4a0651ecbb0151ebed2c99e9d1d71032/robolectric/src/main/java/org/robolectric/internal/AndroidSandbox.java#L67
       .filterKeys {
         it.name.contains("Main Thread")
-                ||it.name.contains("Test worker")
+          || it.name.contains("Test worker")
       }
     val traceElements = filteredTracces
       .flatMap { it.value.toList() }
     val stackTraceElement = traceElements
       .firstOrNull {
         try {
-          Class.forName(it.className).getMethod(it.methodName)
-            .getAnnotation(Test::class.java) != null
+          val method = Class.forName(it.className).getMethod(it.methodName)
+          method
+            .getAnnotation(Test::class.java) != null ||
+            (jupiterTestAnnotationOrNull != null && (method
+              .getAnnotation(jupiterTestAnnotationOrNull) as? Annotation) != null)
         } catch (e: NoClassDefFoundError) {
           false
         } catch (e: Exception) {

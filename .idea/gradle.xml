@@ -23,6 +23,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/app-compose-desktop" />
             <option value="$PROJECT_DIR$/app-without-compose" />
             <option value="$PROJECT_DIR$/include-build" />
             <option value="$PROJECT_DIR$/include-build/roborazzi-core" />
@@ -32,15 +33,6 @@
             <option value="$PROJECT_DIR$/roborazzi-desktop" />
             <option value="$PROJECT_DIR$/roborazzi-junit-rule" />
             <option value="$PROJECT_DIR$/roborazzi-painter" />
-          </set>
-        </option>
-      </GradleProjectSettings>
-      <GradleProjectSettings>
-        <option name="externalProjectPath" value="$PROJECT_DIR$/app-compose-desktop" />
-        <option name="gradleJvm" value="17" />
-        <option name="modules">
-          <set>
-            <option value="$PROJECT_DIR$/app-compose-desktop" />
           </set>
         </option>
       </GradleProjectSettings>

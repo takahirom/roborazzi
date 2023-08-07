@@ -18,7 +18,7 @@ kotlin {
         implementation(compose.desktop.currentOs)
         implementation(project(":roborazzi-painter"))
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-        implementation 'org.jetbrains.compose.ui:ui-test-junit4-desktop:1.4.3'
+        api 'org.jetbrains.compose.ui:ui-test-junit4-desktop:1.4.3'
         implementation 'org.jetbrains.compose.ui:ui-graphics-desktop:1.4.3'
       }
     }
