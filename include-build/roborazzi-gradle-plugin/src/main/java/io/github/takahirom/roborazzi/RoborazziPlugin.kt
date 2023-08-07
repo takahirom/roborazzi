@@ -4,6 +4,10 @@ import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
+import com.github.takahirom.roborazzi.CompareReportCaptureResult
+import com.github.takahirom.roborazzi.CompareReportResult
+import com.github.takahirom.roborazzi.CompareSummary
+import com.github.takahirom.roborazzi.RoborazziReportConst
 import java.util.Locale
 import javax.inject.Inject
 import org.gradle.api.DefaultTask

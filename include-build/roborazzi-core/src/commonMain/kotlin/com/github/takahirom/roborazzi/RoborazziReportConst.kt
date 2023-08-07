@@ -1,4 +1,4 @@
-package io.github.takahirom.roborazzi
+package com.github.takahirom.roborazzi
 
 object RoborazziReportConst {
   const val compareSummaryReportFilePath = "build/test-results/roborazzi/compare-report.json"

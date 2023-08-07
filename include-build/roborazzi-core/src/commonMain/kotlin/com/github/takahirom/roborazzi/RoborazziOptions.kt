@@ -1,39 +1,72 @@
 package com.github.takahirom.roborazzi
 
-import android.graphics.Bitmap
 import com.dropbox.differ.ImageComparator
-import io.github.takahirom.roborazzi.CompareReportCaptureResult
-import io.github.takahirom.roborazzi.RoborazziReportConst
+import com.github.takahirom.roborazzi.DefaultFileNameGenerator
+import com.github.takahirom.roborazzi.ThresholdValidator
+import com.github.takahirom.roborazzi.debugLog
 import java.io.File
 import java.io.FileWriter
-import org.robolectric.annotation.GraphicsMode
-import org.robolectric.config.ConfigurationRegistry
+
+const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
+var ROBORAZZI_DEBUG = false
+fun roborazziEnabled(): Boolean {
+  val isEnabled = roborazziRecordingEnabled() ||
+    roborazziCompareEnabled() ||
+    roborazziVerifyEnabled()
+  debugLog {
+    "roborazziEnabled: $isEnabled \n" +
+      "roborazziRecordingEnabled(): ${roborazziRecordingEnabled()}\n" +
+      "roborazziCompareEnabled(): ${roborazziCompareEnabled()}\n" +
+      "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n" +
+      "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
+      "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n" +
+      "RoborazziContext: ${provideRoborazziContext()}\n"
+  }
+  return isEnabled
+}
+
+fun roborazziCompareEnabled(): Boolean {
+  return System.getProperty("roborazzi.test.compare") == "true"
+}
+
+fun roborazziVerifyEnabled(): Boolean {
+  return System.getProperty("roborazzi.test.verify") == "true"
+}
+
+fun roborazziRecordingEnabled(): Boolean {
+  return System.getProperty("roborazzi.test.record") == "true"
+}
+
+fun roborazziDefaultResizeScale(): Double {
+  return checkNotNull(System.getProperty("roborazzi.record.resizeScale", "1.0")).toDouble()
+}
+
+fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStrategy {
+  return DefaultFileNameGenerator.DefaultNamingStrategy
+    .fromOptionName(
+      optionName = checkNotNull(
+        System.getProperty(
+          "roborazzi.record.namingStrategy",
+          DefaultFileNameGenerator.DefaultNamingStrategy.TestPackageAndClassAndMethod.optionName
+        )
+      )
+    )
+}
 
 data class RoborazziOptions(
-  val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
+  val captureType: CaptureType = if (canScreenshot()) CaptureType.Screenshot() else defaultCaptureType(),
   val compareOptions: CompareOptions = CompareOptions(),
   val recordOptions: RecordOptions = RecordOptions(),
 ) {
-  sealed interface CaptureType {
-    class Screenshot : CaptureType
-
-    data class Dump(
-      val takeScreenShot: Boolean = isNativeGraphicsEnabled(),
-      val basicSize: Int = 600,
-      val depthSlideSize: Int = 30,
-      val query: ((RoboComponent) -> Boolean)? = null,
-      val explanation: ((RoboComponent) -> String?) = DefaultExplanation,
-    ) : CaptureType {
-      companion object {
-        val DefaultExplanation: ((RoboComponent) -> String) = {
-          it.text
-        }
-        val AccessibilityExplanation: ((RoboComponent) -> String) = {
-          it.accessibilityText
-        }
-
+  interface CaptureType {
+    class Screenshot : CaptureType {
+      override fun shouldTakeScreenshot(): kotlin.Boolean {
+        return true
       }
     }
+
+    fun shouldTakeScreenshot(): Boolean
+
   }
 
   data class CompareOptions(
@@ -121,13 +154,6 @@ data class RoborazziOptions(
     Argb8888,
     Rgb565;
 
-    fun toBitmapConfig(): Bitmap.Config {
-      return when (this) {
-        Argb8888 -> Bitmap.Config.ARGB_8888
-        Rgb565 -> Bitmap.Config.RGB_565
-      }
-    }
-
     fun toBufferedImageType(): Int {
       return when (this) {
         Argb8888 -> 2 // BufferedImage.TYPE_INT_ARGB
@@ -136,26 +162,9 @@ data class RoborazziOptions(
     }
   }
 
-  internal val shouldTakeBitmap: Boolean = when (captureType) {
-    is CaptureType.Dump -> {
-      if (captureType.takeScreenShot && !isNativeGraphicsEnabled()) {
-        throw IllegalArgumentException("Please update Robolectric Robolectric 4.10 Alpha 1 and Add @GraphicsMode(GraphicsMode.Mode.NATIVE) or use takeScreenShot = false")
-      }
-      captureType.takeScreenShot
-    }
-
-    is CaptureType.Screenshot -> {
-      if (!isNativeGraphicsEnabled()) {
-        throw IllegalArgumentException("Please update Robolectric Robolectric 4.10 Alpha 1 and Add @GraphicsMode(GraphicsMode.Mode.NATIVE) or use CaptureType.Dump")
-      }
-      true
-    }
-  }
+  internal val shouldTakeBitmap: Boolean = captureType.shouldTakeScreenshot()
 }
 
-internal fun isNativeGraphicsEnabled() = try {
-  Class.forName("org.robolectric.annotation.GraphicsMode")
-  ConfigurationRegistry.get(GraphicsMode.Mode::class.java) == GraphicsMode.Mode.NATIVE
-} catch (e: ClassNotFoundException) {
-  false
-}
+expect fun canScreenshot(): Boolean
+
+expect fun defaultCaptureType(): RoborazziOptions.CaptureType

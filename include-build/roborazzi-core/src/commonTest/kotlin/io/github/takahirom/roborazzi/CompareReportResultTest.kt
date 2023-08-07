@@ -1,5 +1,8 @@
 package io.github.takahirom.roborazzi
 
+import com.github.takahirom.roborazzi.CompareReportCaptureResult
+import com.github.takahirom.roborazzi.CompareReportResult
+import com.github.takahirom.roborazzi.CompareSummary
 import java.io.File
 import org.json.JSONObject
 import org.junit.Assert.assertEquals

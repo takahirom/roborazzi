@@ -9,7 +9,6 @@ class RoborazziDesktopTest {
   @Test
   fun testJsonSerialization() {
     captureRoboImage(
-      file = File("test.png"),
       content = {
         Text("Hello")
       }

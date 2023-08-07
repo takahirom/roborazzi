@@ -17,12 +17,12 @@ import java.io.File
 import javax.imageio.ImageIO
 
 
-class RoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: Int) {
+class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: Int): RoboCanvas {
   private val bufferedImage = BufferedImage(width, height, bufferedImageType)
-  val width: Int get() = bufferedImage.width
-  val height: Int get() = bufferedImage.height
-  val croppedWidth: Int get() = croppedImage.width
-  val croppedHeight: Int get() = croppedImage.height
+  override val width: Int get() = bufferedImage.width
+  override val height: Int get() = bufferedImage.height
+  override val croppedWidth: Int get() = croppedImage.width
+  override val croppedHeight: Int get() = croppedImage.height
   private var rightBottomPoint = if (filled) width to height else 0 to 0
   private fun updateRightBottom(x: Int, y: Int) {
     rightBottomPoint = maxOf(x, rightBottomPoint.first) to maxOf(y, rightBottomPoint.second)
@@ -189,7 +189,7 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: In
     pendingDrawList.add(pendingDraw)
   }
 
-  fun save(file: File, resizeScale: Double) {
+  override fun save(file: File, resizeScale: Double) {
     drawPendingDraw()
     val directory = file.parentFile
     try {
@@ -206,7 +206,8 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: In
     )
   }
 
-  fun differ(other: RoboCanvas, resizeScale: Double): ImageComparator.ComparisonResult {
+  override fun differ(other: RoboCanvas, resizeScale: Double): ImageComparator.ComparisonResult {
+    other as AwtRoboCanvas
     val otherImage = other.bufferedImage
     val simpleImageComparator = SimpleImageComparator(maxDistance = 0.007F)
     return simpleImageComparator.compare(
@@ -229,23 +230,23 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: In
     }
   }
 
-  fun release() {
+  override fun release() {
     bufferedImage.flush()
     croppedImage.flush()
     textCache.clear()
   }
 
   companion object {
-    fun load(file: File, bufferedImageType: Int): RoboCanvas {
+    fun load(file: File, bufferedImageType: Int): AwtRoboCanvas {
       val loadedImage: BufferedImage = ImageIO.read(file)
-      val roboCanvas = RoboCanvas(
+      val awtRoboCanvas = AwtRoboCanvas(
         loadedImage.width,
         height = loadedImage.height,
         filled = true,
         bufferedImageType = bufferedImageType
       )
-      roboCanvas.drawImage(loadedImage)
-      return roboCanvas
+      awtRoboCanvas.drawImage(loadedImage)
+      return awtRoboCanvas
     }
 
     const val TRANSPARENT_NONE = 0xFF shl 56
@@ -254,11 +255,11 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: In
     const val TRANSPARENT_STRONG = 0x66 shl 56
 
     fun generateCompareCanvas(
-      goldenCanvas: RoboCanvas,
-      newCanvas: RoboCanvas,
+      goldenCanvas: AwtRoboCanvas,
+      newCanvas: AwtRoboCanvas,
       newCanvasResize: Double,
       bufferedImageType: Int
-    ): RoboCanvas {
+    ): AwtRoboCanvas {
       newCanvas.drawPendingDraw()
       val image1 = goldenCanvas.bufferedImage
       val image2 = newCanvas.bufferedImage.scale(newCanvasResize)
@@ -273,7 +274,7 @@ class RoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: In
       g.drawImage(diff, image1.width, 0, null)
       g.drawImage(image2, image1.width + diff.width, 0, null)
       g.dispose()
-      return RoboCanvas(
+      return AwtRoboCanvas(
         width = width,
         height = height,
         filled = true,

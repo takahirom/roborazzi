@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="roborazzi-desktop-jvm">
+    <output-path>$PROJECT_DIR$/roborazzi-desktop/build/libs</output-path>
+    <root id="archive" name="roborazzi-desktop-jvm.jar">
+      <element id="module-output" name="roborazzi.roborazzi-desktop.jvmMain" />
+    </root>
+  </artifact>
+</component>

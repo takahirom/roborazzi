@@ -16,19 +16,6 @@ import androidx.test.espresso.util.HumanReadables
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.config.ConfigurationRegistry
 
-internal val colors = listOf(
-  0x3F9101,
-  0x0E4A8E,
-  0xBCBF01,
-  0xBC0BA2,
-  0x61AA0D,
-  0x3D017A,
-  0xD6A60A,
-  0x7710A3,
-  0xA502CE,
-  0xeb5a00
-)
-
 enum class Visibility {
   Visible, Gone, Invisible;
 }
@@ -243,22 +230,17 @@ fun withComposeTestTag(testTag: String): (RoboComponent) -> Boolean {
   }
 }
 
-internal fun isNativeGraphicsEnabled() = try {
-  Class.forName("org.robolectric.annotation.GraphicsMode")
-  ConfigurationRegistry.get(GraphicsMode.Mode::class.java) == GraphicsMode.Mode.NATIVE
-} catch (e: ClassNotFoundException) {
-  false
-}
-
 internal val RoborazziOptions.CaptureType.roboComponentChildVisitor: (Any, RoborazziOptions) -> List<RoboComponent>
   get() {
     return when (this) {
-      is RoborazziOptions.CaptureType.Dump -> RoboComponent.defaultChildVisitor
+      is Dump -> RoboComponent.defaultChildVisitor
       is RoborazziOptions.CaptureType.Screenshot -> { _, _ -> listOf() }
+      else -> { _, _ -> listOf() }
     }
   }
 
-internal sealed interface QueryResult {
+@InternalRoborazziApi
+sealed interface QueryResult {
   object Disabled : QueryResult
   data class Enabled(val matched: Boolean) : QueryResult
 

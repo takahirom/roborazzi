@@ -14,6 +14,7 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.test.InternalTestApi
 import androidx.compose.ui.window.DialogWindowProvider
 import kotlin.math.roundToInt
+import com.github.takahirom.roborazzi.toBitmapConfig
 
 fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
   val node = this

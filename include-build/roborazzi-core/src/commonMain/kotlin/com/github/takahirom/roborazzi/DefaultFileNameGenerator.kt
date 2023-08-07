@@ -1,5 +1,6 @@
 package com.github.takahirom.roborazzi
 
+import com.github.takahirom.roborazzi.roborazziDefaultNamingStrategy
 import java.io.File
 import org.junit.Test
 import org.junit.runner.Description
@@ -26,16 +27,16 @@ object DefaultFileNameGenerator {
   @InternalRoborazziApi
   fun generateFilePath(extension: String): String {
     val roborazziContext = provideRoborazziContext()
-    val fileCreator = roborazziContext.fileProvider
-    val description = roborazziContext.description
+    val fileCreator = RoborazziContext.fileProvider
+    val description = RoborazziContext.description
     if (fileCreator != null && description != null) {
       return fileCreator(
         description,
-        File(roborazziContext.outputDirectory),
+        File(RoborazziContext.outputDirectory),
         extension
       ).absolutePath
     }
-    val dir = roborazziContext.outputDirectory
+    val dir = RoborazziContext.outputDirectory
     return "$dir/${generateName()}.$extension"
   }
 
@@ -45,7 +46,10 @@ object DefaultFileNameGenerator {
     val filteredTracces = allStackTraces
       // The Thread Name is come from here
       // https://github.com/robolectric/robolectric/blob/40832ada4a0651ecbb0151ebed2c99e9d1d71032/robolectric/src/main/java/org/robolectric/internal/AndroidSandbox.java#L67
-      .filterKeys { it.name.contains("Main Thread") }
+      .filterKeys {
+        it.name.contains("Main Thread")
+                ||it.name.contains("Test worker")
+      }
     val traceElements = filteredTracces
       .flatMap { it.value.toList() }
     val stackTraceElement = traceElements

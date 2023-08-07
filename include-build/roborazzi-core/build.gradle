@@ -20,6 +20,8 @@ kotlin {
     commonMain {
       dependencies {
         compileOnly 'org.json:json:20220924'
+        api "com.dropbox.differ:differ:0.0.1-alpha1"
+        implementation 'junit:junit:4.13.2'
       }
     }
     commonTest {
@@ -36,6 +38,18 @@ kotlin {
     }
     jvmTest {
       dependencies {
+      }
+    }
+
+    androidMain {
+      dependencies {
+        def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
+        implementation composeBom
+        compileOnly "org.robolectric:robolectric:4.10.3"
+        compileOnly "androidx.compose.ui:ui-test"
+        compileOnly "androidx.compose.ui:ui-test-junit4"
+        api 'androidx.test.espresso:espresso-core:3.5.1'
+        implementation 'androidx.core:core-ktx:1.8.0'
       }
     }
   }

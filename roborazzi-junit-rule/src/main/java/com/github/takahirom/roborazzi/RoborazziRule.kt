@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.ViewInteraction
+import io.github.takahirom.roborazzi.*
 import java.io.File
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description

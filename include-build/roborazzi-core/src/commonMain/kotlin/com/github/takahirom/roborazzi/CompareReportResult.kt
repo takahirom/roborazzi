@@ -1,4 +1,4 @@
-package io.github.takahirom.roborazzi
+package com.github.takahirom.roborazzi
 
 import java.io.File
 import org.json.JSONArray

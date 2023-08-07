@@ -11,6 +11,9 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        // Please see settings.gradle
+        api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
+
         implementation(compose.runtime)
         implementation(compose.desktop.currentOs)
         implementation(project(":roborazzi-painter"))
