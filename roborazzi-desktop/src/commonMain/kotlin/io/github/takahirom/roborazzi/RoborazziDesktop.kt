@@ -1,28 +1,10 @@
 package io.github.takahirom.roborazzi
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toAwtImage
-import androidx.compose.ui.test.DesktopComposeUiTest
-import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.runDesktopComposeUiTest
 import com.github.takahirom.roborazzi.*
 import java.awt.image.BufferedImage
 import java.io.File
-
-@OptIn(ExperimentalTestApi::class)
-fun captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  test: DesktopComposeUiTest.() -> Unit = {},
-  content: @Composable () -> Unit,
-) {
-  captureRoboImage(
-    file = File(filePath),
-    test = test,
-    content = content
-  )
-}
 
 fun ImageBitmap.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
