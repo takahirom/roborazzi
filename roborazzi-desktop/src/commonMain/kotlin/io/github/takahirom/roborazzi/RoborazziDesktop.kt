@@ -24,23 +24,13 @@ fun captureRoboImage(
   )
 }
 
-@OptIn(ExperimentalTestApi::class)
-fun captureRoboImage(
-  file: File,
-  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  test: DesktopComposeUiTest.() -> Unit = {},
-  content: @Composable () -> Unit,
-) = runDesktopComposeUiTest() {
-  setContent(content)
-  test()
-  val rawImage = captureToImage()
-  rawImage.captureRoboImage(file, roborazziOptions)
-}
-
 fun ImageBitmap.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
+  if (!roborazziEnabled()) {
+    return
+  }
   captureRoboImage(
     file = File(filePath),
     roborazziOptions = roborazziOptions
@@ -51,6 +41,9 @@ fun ImageBitmap.captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions
 ) {
+  if (!roborazziEnabled()) {
+    return
+  }
   val awtImage = this.toAwtImage()
   val canvas = AwtRoboCanvas(
     width = awtImage.width,
@@ -91,10 +84,10 @@ fun processOutputImageAndReportWithDefaults(
     },
     generateCompareCanvas = { actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        this as AwtRoboCanvas,
-        actualCanvas as AwtRoboCanvas,
-        resizeScale,
-        bufferedImageType
+        goldenCanvas = this as AwtRoboCanvas,
+        newCanvas = actualCanvas as AwtRoboCanvas,
+        newCanvasResize = resizeScale,
+        bufferedImageType = bufferedImageType
       )
     }
   )

@@ -11,6 +11,10 @@ fun processOutputImageAndReport(
   canvasFromFile: (File, Int) -> RoboCanvas,
   generateCompareCanvas: RoboCanvas.(RoboCanvas, Double, Int) -> RoboCanvas,
 ) {
+  debugLog {
+    "processOutputImageAndReport(): " +
+      "goldenFile:${goldenFile.absolutePath}"
+  }
   val forbiddenFileSuffixes = listOf("_compare", "_actual")
   forbiddenFileSuffixes.forEach {
     if (goldenFile.nameWithoutExtension.endsWith(it)) {
@@ -58,6 +62,10 @@ fun processOutputImageAndReport(
           file = compareFile,
           resizeScale = resizeScale
         )
+      debugLog {
+        "processOutputImageAndReport(): compareCanvas is saved " +
+          "compareFile:${compareFile.absolutePath}"
+      }
       compareCanvas.release()
 
       val actualFile = if (roborazziRecordingEnabled()) {
@@ -74,6 +82,10 @@ fun processOutputImageAndReport(
           file = actualFile,
           resizeScale = resizeScale
         )
+      debugLog {
+        "processOutputImageAndReport(): actualCanvas is saved " +
+          "actualFile:${actualFile.absolutePath}"
+      }
       if (goldenFile.exists()) {
         CompareReportCaptureResult.Changed(
           compareFile = compareFile,
@@ -107,7 +119,7 @@ fun processOutputImageAndReport(
     canvas.save(goldenFile, resizeScale)
     debugLog {
       "processOutputImageAndReport: \n" +
-        "  goldenFile: $goldenFile\n"
+        " record goldenFile: $goldenFile\n"
     }
   }
 }
