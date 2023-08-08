@@ -13,18 +13,28 @@ java {
 }
 
 kotlin {
+  targetHierarchy.custom {
+    it.common {
+      it.group("commonJvm") {
+        it.withAndroidTarget()
+        it.withJvm()
+      }
+    }
+  }
+
   jvm("desktop")
-  android()
+  androidTarget()
 
   sourceSets {
     commonMain {
+    }
+    commonJvmMain {
       dependencies {
-        compileOnly 'org.json:json:20220924'
         api "com.dropbox.differ:differ:0.0.1-alpha1"
         implementation 'junit:junit:4.13.2'
       }
     }
-    commonTest {
+    commonJvmTest {
       dependencies {
         implementation("org.jetbrains.kotlin:kotlin-test")
         implementation("org.jetbrains.kotlin:kotlin-test-junit")
@@ -32,11 +42,12 @@ kotlin {
         implementation 'junit:junit:4.13.2'
       }
     }
-    jvmMain {
+    desktopMain {
       dependencies {
+        compileOnly 'org.json:json:20220924'
       }
     }
-    jvmTest {
+    desktopTest {
       dependencies {
       }
     }
@@ -52,6 +63,7 @@ kotlin {
         implementation 'androidx.core:core-ktx:1.8.0'
       }
     }
+
   }
 }
 
@@ -68,9 +80,6 @@ android {
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
-  }
-  kotlinOptions {
-    jvmTarget = '1.8'
   }
   buildFeatures {
   }
