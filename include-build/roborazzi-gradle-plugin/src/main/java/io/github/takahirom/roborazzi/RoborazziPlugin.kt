@@ -276,7 +276,7 @@ class RoborazziPlugin : Plugin<Project> {
         .configureComponents()
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
-      configureRoborazziTasks("Default", "")
+      configureRoborazziTasks("Jvm", "")
     }
   }
 
