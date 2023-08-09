@@ -27,16 +27,16 @@ object DefaultFileNameGenerator {
   @InternalRoborazziApi
   fun generateFilePath(extension: String): String {
     val roborazziContext = provideRoborazziContext()
-    val fileCreator = RoborazziContext.fileProvider
-    val description = RoborazziContext.description
+    val fileCreator = roborazziContext.fileProvider
+    val description = roborazziContext.description
     if (fileCreator != null && description != null) {
       return fileCreator(
         description,
-        File(RoborazziContext.outputDirectory),
+        File(roborazziContext.outputDirectory),
         extension
       ).absolutePath
     }
-    val dir = RoborazziContext.outputDirectory
+    val dir = roborazziContext.outputDirectory
     return "$dir/${generateName()}.$extension"
   }
 

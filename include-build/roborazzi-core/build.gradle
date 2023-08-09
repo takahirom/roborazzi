@@ -22,7 +22,7 @@ kotlin {
     }
   }
 
-  jvm("desktop")
+  jvm()
   androidTarget()
 
   sourceSets {
@@ -42,12 +42,12 @@ kotlin {
         implementation 'junit:junit:4.13.2'
       }
     }
-    desktopMain {
+    jvmMain {
       dependencies {
         implementation 'org.json:json:20220924'
       }
     }
-    desktopTest {
+    jvmTest {
       dependencies {
       }
     }
@@ -64,6 +64,13 @@ kotlin {
       }
     }
 
+  }
+  sourceSets.all {
+    it.languageSettings {
+      progressiveMode = true
+      optIn("com.github.takahirom.roborazzi.InternalRoborazziApi")
+      optIn("com.github.takahirom.roborazzi.ExperimentalRoborazziApi")
+    }
   }
 }
 
