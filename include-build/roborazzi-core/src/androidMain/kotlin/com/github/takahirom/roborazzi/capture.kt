@@ -13,8 +13,6 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.test.espresso.util.HumanReadables
-import org.robolectric.annotation.GraphicsMode
-import org.robolectric.config.ConfigurationRegistry
 
 enum class Visibility {
   Visible, Gone, Invisible;

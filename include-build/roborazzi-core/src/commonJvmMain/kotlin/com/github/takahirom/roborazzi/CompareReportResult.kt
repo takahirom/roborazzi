@@ -57,8 +57,8 @@ data class CompareReportResult(
       val resultsArray = jsonObject.getJSONArray("results")
       val compareReportCaptureResults = mutableListOf<CompareReportCaptureResult>()
       for (i in 0 until resultsArray.length()) {
-            val resultJson = resultsArray.getJSONObject(i)
-            compareReportCaptureResults.add(CompareReportCaptureResult.fromJson(resultJson))
+        val resultJson = resultsArray.getJSONObject(i)
+        compareReportCaptureResults.add(CompareReportCaptureResult.fromJson(resultJson))
       }
       return CompareReportResult(summary, compareReportCaptureResults)
     }

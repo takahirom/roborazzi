@@ -130,7 +130,7 @@ class ManualTest {
       .captureRoboImage(
         filePath = filePath,
         roborazziOptions = RoborazziOptions(
-          captureType = Dump(query = withViewId(R.id.textview_first))
+          captureType = RoborazziOptions.CaptureType.Dump(query = withViewId(R.id.textview_first))
         )
       )
 
@@ -145,7 +145,7 @@ class ManualTest {
       .captureRoboImage(
         filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose.png",
         roborazziOptions = RoborazziOptions(
-          captureType = Dump(
+          captureType = RoborazziOptions.CaptureType.Dump(
             query = withComposeTestTag("child:0"),
           ),
           compareOptions = RoborazziOptions.CompareOptions { result: ImageComparator.ComparisonResult -> result.pixelDifferences < 1 }
@@ -156,7 +156,7 @@ class ManualTest {
       .captureRoboImage(
         filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose_custom.png",
         roborazziOptions = RoborazziOptions(
-          captureType = Dump(
+          captureType = RoborazziOptions.CaptureType.Dump(
             query = { roboComponent ->
               when (roboComponent) {
                 is RoboComponent.Compose -> roboComponent.testTag?.startsWith("child") == true
@@ -171,7 +171,7 @@ class ManualTest {
       .captureRoboImage(
         filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_a11y_dump.png",
         roborazziOptions = RoborazziOptions(
-          captureType = Dump(
+          captureType = RoborazziOptions.CaptureType.Dump(
             explanation = Dump.AccessibilityExplanation,
           )
         )

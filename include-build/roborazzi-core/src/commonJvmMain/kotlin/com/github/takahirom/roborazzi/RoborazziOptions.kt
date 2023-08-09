@@ -67,6 +67,7 @@ data class RoborazziOptions(
 
     fun shouldTakeScreenshot(): Boolean
 
+    companion object
   }
 
   data class CompareOptions(
