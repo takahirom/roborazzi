@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="11" />
+    <bytecodeTargetLevel target="11">
+      <module name="roborazzi-include-build" target="17" />
+      <module name="roborazzi-include-build.main" target="17" />
+      <module name="roborazzi-include-build.test" target="17" />
+      <module name="roborazzi.app-compose-desktop" target="17" />
+      <module name="roborazzi.app-compose-desktop.main" target="17" />
+      <module name="roborazzi.app-compose-desktop.test" target="17" />
+      <module name="roborazzi.roborazzi" target="17" />
+      <module name="roborazzi.roborazzi-compose" target="17" />
+      <module name="roborazzi.roborazzi-junit-rule" target="17" />
+      <module name="roborazzi.roborazzi-painter" target="17" />
+      <module name="roborazzi.roborazzi-painter.main" target="17" />
+      <module name="roborazzi.roborazzi-painter.test" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
