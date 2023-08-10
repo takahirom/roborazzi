@@ -16,7 +16,6 @@ fun RoborazziOptions.CaptureType.Companion.Dump(
   explanation = explanation,
 )
 
-@InternalRoborazziApi
 data class Dump(
   val takeScreenShot: Boolean,
   val basicSize: Int,
