@@ -23,7 +23,10 @@ fun App() {
       onClick = {
         text = "Hello, Desktop!"
       }) {
-      Text(text)
+      Text(
+        style = MaterialTheme.typography.h2,
+        text = text
+      )
     }
   }
 }

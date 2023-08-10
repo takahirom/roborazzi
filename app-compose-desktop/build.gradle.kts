@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm")
@@ -18,7 +19,7 @@ dependencies {
   // (in a separate module for demo project and in testMain).
   // With compose.desktop.common you will also lose @Preview functionality
   implementation(compose.desktop.currentOs)
-  testImplementation(project(":roborazzi-desktop"))
+  testImplementation(project(":roborazzi-compose-desktop"))
 
   testImplementation(kotlin("test"))
 }
@@ -32,5 +33,12 @@ compose.desktop {
       packageName = "app-compose-desktop"
       packageVersion = "1.0.0"
     }
+  }
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+  kotlinOptions {
+    incremental = false
+    freeCompilerArgs += "-Xcontext-receivers"
   }
 }

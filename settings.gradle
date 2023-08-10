@@ -18,7 +18,7 @@ include ':app-without-compose'
 include ':roborazzi'
 include ':app-compose-desktop'
 include ':roborazzi-junit-rule'
-include ':roborazzi-desktop'
+include ':roborazzi-compose-desktop'
 include ':roborazzi-compose'
 include ':roborazzi-painter'
 

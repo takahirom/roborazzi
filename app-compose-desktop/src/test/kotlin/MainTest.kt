@@ -16,11 +16,11 @@ class MainTest {
       val roborazziOptions = RoborazziOptions(
         compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0F)
       )
-      onNode(isRoot())
-        .captureToImage().captureRoboImage(roborazziOptions = roborazziOptions)
+      onNode(isRoot()).captureRoboImage(roborazziOptions = roborazziOptions)
+
       onNodeWithTag("button").performClick()
 
-      onNode(isRoot()).captureToImage().captureRoboImage(roborazziOptions = roborazziOptions)
+      onNode(isRoot()).captureRoboImage(roborazziOptions = roborazziOptions)
     }
   }
 }
