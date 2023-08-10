@@ -16,14 +16,14 @@ kotlin {
   targetHierarchy.custom {
     it.common {
       it.group("commonJvm") {
-        it.withAndroidTarget()
+        it.withAndroid()
         it.withJvm()
       }
     }
   }
 
   jvm()
-  androidTarget()
+  android()
 
   sourceSets {
     commonMain {
