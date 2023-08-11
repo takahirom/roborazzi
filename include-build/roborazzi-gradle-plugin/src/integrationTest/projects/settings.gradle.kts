@@ -30,4 +30,3 @@ includeBuild(roborazziIncludeBuildRootPath) {
     substitute(module("io.github.takahirom.roborazzi:roborazzi-gradle-plugin")).using(project(":roborazzi-gradle-plugin"))
   }
 }
- 

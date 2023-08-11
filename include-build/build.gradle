@@ -1,5 +1,6 @@
 plugins {
   id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin
+  id 'com.android.library' version libs.versions.agp apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
 }
 

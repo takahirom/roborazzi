@@ -6,6 +6,9 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 }
 
 dependencies {
+  // Please see settings.gradle
+  api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
+
   compileOnly "org.robolectric:android-all:Q-robolectric-5415296"
   api "com.dropbox.differ:differ:0.0.1-alpha1"
 }

@@ -6,11 +6,24 @@ import android.graphics.Rect
 import android.text.TextPaint
 import kotlin.math.abs
 
+internal val colors = listOf(
+  0x3F9101,
+  0x0E4A8E,
+  0xBCBF01,
+  0xBC0BA2,
+  0x61AA0D,
+  0x3D017A,
+  0xD6A60A,
+  0x7710A3,
+  0xA502CE,
+  0xeb5a00
+)
+
 internal fun captureDump(
   rootComponent: RoboComponent,
-  dumpOptions: RoborazziOptions.CaptureType.Dump,
+  dumpOptions: Dump,
   recordOptions: RoborazziOptions.RecordOptions,
-  onCanvas: (RoboCanvas) -> Unit
+  onCanvas: (AwtRoboCanvas) -> Unit
 ) {
   val start = System.currentTimeMillis()
   val basicSize = dumpOptions.basicSize
@@ -19,7 +32,7 @@ internal fun captureDump(
   val deepestDepth = rootComponent.depth()
   val componentCount = rootComponent.countOfComponent()
 
-  val canvas = RoboCanvas(
+  val canvas = AwtRoboCanvas(
     width = rootComponent.rect.right + basicSize + deepestDepth * depthSlide + componentCount * 20,
     height = rootComponent.rect.bottom + basicSize + deepestDepth * depthSlide + componentCount * 20,
     filled = false,
@@ -46,9 +59,9 @@ internal fun captureDump(
       fun Int.overrideByQuery(queryResult: QueryResult): Int = when (queryResult) {
         QueryResult.Disabled -> this
         is QueryResult.Enabled -> if (queryResult.matched) {
-          RoboCanvas.TRANSPARENT_BIT
+          AwtRoboCanvas.TRANSPARENT_BIT
         } else {
-          RoboCanvas.TRANSPARENT_STRONG
+          AwtRoboCanvas.TRANSPARENT_STRONG
         }
       }
       canvas.addBaseDraw {
@@ -61,9 +74,9 @@ internal fun captureDump(
         )
         val boxColor = colors[depth % colors.size]
         val boxAlpha = when (component.visibility) {
-          Visibility.Visible -> RoboCanvas.TRANSPARENT_BIT.overrideByQuery(queryResult) // alpha EE / FF
-          Visibility.Invisible -> RoboCanvas.TRANSPARENT_MEDIUM.overrideByQuery(queryResult)  // alpha BB / FF
-          Visibility.Gone -> RoboCanvas.TRANSPARENT_STRONG.overrideByQuery(queryResult) // alpha 88 / FF
+          Visibility.Visible -> AwtRoboCanvas.TRANSPARENT_BIT.overrideByQuery(queryResult) // alpha EE / FF
+          Visibility.Invisible -> AwtRoboCanvas.TRANSPARENT_MEDIUM.overrideByQuery(queryResult)  // alpha BB / FF
+          Visibility.Gone -> AwtRoboCanvas.TRANSPARENT_STRONG.overrideByQuery(queryResult) // alpha 88 / FF
         }
 
         val alphaBoxColor = boxColor + boxAlpha
@@ -127,9 +140,9 @@ internal fun captureDump(
             texts,
             textPaint.apply {
               color = if (isColorBright(alphaBoxColor)) {
-                Color.BLACK - RoboCanvas.TRANSPARENT_NONE + boxAlpha
+                Color.BLACK - AwtRoboCanvas.TRANSPARENT_NONE + boxAlpha
               } else {
-                Color.WHITE - RoboCanvas.TRANSPARENT_NONE + boxAlpha
+                Color.WHITE - AwtRoboCanvas.TRANSPARENT_NONE + boxAlpha
               }
             }
           )
@@ -157,7 +170,7 @@ fun isColorBright(color: Int): Boolean {
 }
 
 fun findTextPoint(
-  canvas: RoboCanvas,
+  canvas: AwtRoboCanvas,
   centerX: Int,
   centerY: Int,
   width: Int,

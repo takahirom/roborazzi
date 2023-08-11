@@ -1,6 +1,9 @@
 plugins {
   id 'com.android.application' version libs.versions.agp apply false
   id 'com.android.library' version libs.versions.agp apply false
+  id 'org.jetbrains.kotlin.multiplatform' version libs.versions.kotlin apply false
+  id 'org.jetbrains.compose' version "1.4.3" apply false
+
   id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
   // Just for Gradle Build, included build will be applied

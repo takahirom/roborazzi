@@ -1,5 +1,6 @@
 plugins {
-  id "org.jetbrains.kotlin.jvm"
+  id "org.jetbrains.kotlin.multiplatform"
+  id "com.android.library"
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
@@ -11,11 +12,94 @@ java {
   }
 }
 
+kotlin {
+  targetHierarchy.custom {
+    it.common {
+      it.group("commonJvm") {
+        it.withAndroid()
+        it.withJvm()
+      }
+    }
+  }
+
+  jvm()
+  android()
+
+  sourceSets {
+    commonMain {
+    }
+    commonJvmMain {
+      dependencies {
+        compileOnly 'org.json:json:20220924'
+        api "com.dropbox.differ:differ:0.0.1-alpha1"
+        implementation 'junit:junit:4.13.2'
+      }
+    }
+    commonJvmTest {
+      dependencies {
+        implementation("org.jetbrains.kotlin:kotlin-test")
+        implementation("org.jetbrains.kotlin:kotlin-test-junit")
+        implementation 'junit:junit:4.13.2'
+      }
+    }
+    jvmMain {
+      dependencies {
+        implementation 'org.json:json:20220924'
+      }
+    }
+    jvmTest {
+      dependencies {
+      }
+    }
+
+    androidMain {
+      dependencies {
+        def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
+        implementation composeBom
+        compileOnly "org.robolectric:robolectric:4.10.3"
+        compileOnly "androidx.compose.ui:ui-test"
+        compileOnly "androidx.compose.ui:ui-test-junit4"
+        api 'androidx.test.espresso:espresso-core:3.5.1'
+        implementation 'androidx.core:core-ktx:1.8.0'
+      }
+    }
+
+  }
+  sourceSets.all {
+    it.languageSettings {
+      progressiveMode = true
+      optIn("com.github.takahirom.roborazzi.InternalRoborazziApi")
+      optIn("com.github.takahirom.roborazzi.ExperimentalRoborazziApi")
+    }
+  }
+}
+
+android {
+  namespace 'com.github.takahirom.roborazzi.core'
+  compileSdk 33
+
+  defaultConfig {
+    minSdk 21
+    targetSdk 32
+
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+  buildFeatures {
+  }
+  testOptions {
+    unitTests {
+      includeAndroidResources = true
+    }
+  }
+}
+
+
 dependencies {
   compileOnly gradleApi()
-  compileOnly 'org.json:json:20220924'
-  testImplementation 'org.json:json:20220924'
-  testImplementation 'junit:junit:4.13.2'
 }
 
 sourceSets {

@@ -24,60 +24,11 @@ import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dropbox.differ.ImageComparator
-import io.github.takahirom.roborazzi.CompareReportCaptureResult
 import java.io.File
 import java.util.Locale
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
-
-
-const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
-var ROBORAZZI_DEBUG = false
-
-fun roborazziEnabled(): Boolean {
-  val isEnabled = roborazziRecordingEnabled() ||
-    roborazziCompareEnabled() ||
-    roborazziVerifyEnabled()
-  debugLog {
-    "roborazziEnabled: $isEnabled \n" +
-      "roborazziRecordingEnabled(): ${roborazziRecordingEnabled()}\n" +
-      "roborazziCompareEnabled(): ${roborazziCompareEnabled()}\n" +
-      "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n" +
-      "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
-      "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n" +
-      "RoborazziContext: ${provideRoborazziContext()}\n"
-  }
-  return isEnabled
-}
-
-fun roborazziCompareEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.compare") == "true"
-}
-
-fun roborazziVerifyEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.verify") == "true"
-}
-
-fun roborazziRecordingEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.record") == "true"
-}
-
-fun roborazziDefaultResizeScale(): Double {
-  return checkNotNull(System.getProperty("roborazzi.record.resizeScale", "1.0")).toDouble()
-}
-
-fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStrategy {
-  return DefaultFileNameGenerator.DefaultNamingStrategy
-    .fromOptionName(
-      optionName = checkNotNull(
-        System.getProperty(
-          "roborazzi.record.namingStrategy",
-          DefaultFileNameGenerator.DefaultNamingStrategy.TestPackageAndClassAndMethod.optionName
-        )
-      )
-    )
-}
 
 fun ViewInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
@@ -96,7 +47,7 @@ fun ViewInteraction.captureRoboImage(
 ) {
   if (!roborazziEnabled()) return
   perform(ImageCaptureViewAction(roborazziOptions) { canvas ->
-    processOutputImageAndReport(
+    processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
       roborazziOptions = roborazziOptions
@@ -175,7 +126,7 @@ fun Bitmap.captureRoboImage(
 ) {
   if (!roborazziEnabled()) return
   val image = this
-  val canvas = RoboCanvas(
+  val canvas = AwtRoboCanvas(
     width = image.width,
     height = image.height,
     filled = true,
@@ -183,7 +134,7 @@ fun Bitmap.captureRoboImage(
   ).apply {
     drawImage(Rect(0, 0, image.width, image.height), image)
   }
-  processOutputImageAndReport(
+  processOutputImageAndReportWithDefaults(
     canvas = canvas,
     goldenFile = file,
     roborazziOptions = roborazziOptions
@@ -271,7 +222,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
     ),
     roborazziOptions = roborazziOptions,
   ) { canvas ->
-    processOutputImageAndReport(
+    processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
       roborazziOptions = roborazziOptions
@@ -327,7 +278,7 @@ fun ViewInteraction.captureAndroidView(
 ): CaptureResult {
   var removeListener = {}
 
-  val canvases = mutableListOf<RoboCanvas>()
+  val canvases = mutableListOf<AwtRoboCanvas>()
 
   val handler = Handler(Looper.getMainLooper())
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
@@ -425,8 +376,8 @@ fun ViewInteraction.captureAndroidView(
   )
 }
 
-private fun MutableList<RoboCanvas>.addIfChanged(
-  next: RoboCanvas,
+private fun MutableList<AwtRoboCanvas>.addIfChanged(
+  next: AwtRoboCanvas,
   roborazziOptions: RoborazziOptions
 ) {
   val prev = this.lastOrNull() ?: run {
@@ -444,7 +395,7 @@ private fun MutableList<RoboCanvas>.addIfChanged(
 }
 
 private fun saveLastImage(
-  canvases: MutableList<RoboCanvas>,
+  canvases: MutableList<AwtRoboCanvas>,
   file: File,
   roborazziOptions: RoborazziOptions,
 ) {
@@ -453,7 +404,7 @@ private fun saveLastImage(
     println("Roborazzi could not capture for this test")
     return
   }
-  processOutputImageAndReport(
+  processOutputImageAndReportWithDefaults(
     canvas = roboCanvas,
     goldenFile = file,
     roborazziOptions = roborazziOptions
@@ -466,7 +417,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ): CaptureResult {
-  val canvases = mutableListOf<RoboCanvas>()
+  val canvases = mutableListOf<AwtRoboCanvas>()
 
   val capture = {
     capture(
@@ -525,7 +476,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
 
 private fun saveGif(
   file: File,
-  canvases: MutableList<RoboCanvas>,
+  canvases: MutableList<AwtRoboCanvas>,
   roborazziOptions: RoborazziOptions,
 ) {
   val e = AnimatedGifEncoder()
@@ -546,11 +497,11 @@ private fun saveGif(
 
 private fun saveAllImage(
   fileCreator: (String) -> File,
-  canvases: MutableList<RoboCanvas>,
+  canvases: MutableList<AwtRoboCanvas>,
   roborazziOptions: RoborazziOptions,
 ) {
   canvases.forEachIndexed { index, canvas ->
-    processOutputImageAndReport(
+    processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = fileCreator(index.toString()),
       roborazziOptions = roborazziOptions
@@ -558,126 +509,9 @@ private fun saveAllImage(
   }
 }
 
-private fun processOutputImageAndReport(
-  canvas: RoboCanvas,
-  goldenFile: File,
-  roborazziOptions: RoborazziOptions
-) {
-  val forbiddenFileSuffixes = listOf("_compare", "_actual")
-  forbiddenFileSuffixes.forEach {
-    if (goldenFile.nameWithoutExtension.endsWith(it)) {
-      throw IllegalArgumentException("The file name should not end with $it because it is reserved for Roborazzi")
-    }
-  }
-  val recordOptions = roborazziOptions.recordOptions
-  val resizeScale = recordOptions.resizeScale
-  if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
-    val width = (canvas.croppedWidth * resizeScale).toInt()
-    val height = (canvas.croppedHeight * resizeScale).toInt()
-    val goldenRoboCanvas = if (goldenFile.exists()) {
-      RoboCanvas.load(goldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
-    } else {
-      RoboCanvas(
-        width = width,
-        height = height,
-        filled = true,
-        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
-      )
-    }
-    val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
-      val comparisonResult: ImageComparator.ComparisonResult =
-        canvas.differ(goldenRoboCanvas, resizeScale)
-      val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
-      log("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
-      changed
-    } else {
-      log("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
-      true
-    }
-
-    val result: CompareReportCaptureResult = if (changed) {
-      val compareFile = File(
-        roborazziOptions.compareOptions.outputDirectoryPath,
-        goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
-      )
-      val compareCanvas = RoboCanvas.generateCompareCanvas(
-        goldenCanvas = goldenRoboCanvas,
-        newCanvas = canvas,
-        newCanvasResize = resizeScale,
-        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
-      )
-      compareCanvas
-        .save(
-          file = compareFile,
-          resizeScale = resizeScale
-        )
-      compareCanvas.release()
-
-      val actualFile = if (roborazziRecordingEnabled()) {
-        // If record option is enabled, we should save the actual file as the golden file.
-        goldenFile
-      } else {
-        File(
-          roborazziOptions.compareOptions.outputDirectoryPath,
-          goldenFile.nameWithoutExtension + "_actual." + goldenFile.extension
-        )
-      }
-      canvas
-        .save(
-          file = actualFile,
-          resizeScale = resizeScale
-        )
-      if (goldenFile.exists()) {
-        CompareReportCaptureResult.Changed(
-          compareFile = compareFile,
-          actualFile = actualFile,
-          goldenFile = goldenFile,
-          timestampNs = System.nanoTime(),
-        )
-      } else {
-        CompareReportCaptureResult.Added(
-          compareFile = compareFile,
-          actualFile = actualFile,
-          goldenFile = goldenFile,
-          timestampNs = System.nanoTime(),
-        )
-      }
-    } else {
-      CompareReportCaptureResult.Unchanged(
-        goldenFile = goldenFile,
-        timestampNs = System.nanoTime(),
-      )
-    }
-    debugLog {
-      "processOutputImageAndReport: \n" +
-        "  goldenFile: $goldenFile\n" +
-        "  changed: $changed\n" +
-        "  result: $result\n"
-    }
-    roborazziOptions.compareOptions.roborazziCompareReporter.report(result)
-  } else {
-    // roborazzi.record is checked before
-    canvas.save(goldenFile, resizeScale)
-    debugLog {
-      "processOutputImageAndReport: \n" +
-        "  goldenFile: $goldenFile\n"
-    }
-  }
-}
-
-private fun log(message: String) {
-  println("Roborazzi: $message")
-}
-
-private inline fun debugLog(crossinline message: () -> String) {
-  if (ROBORAZZI_DEBUG) {
-    println("Roborazzi Debug: ${message()}")
-  }
-}
-
 private class ImageCaptureViewAction(
   val roborazziOptions: RoborazziOptions,
-  val saveAction: (RoboCanvas) -> Unit
+  val saveAction: (AwtRoboCanvas) -> Unit
 ) :
   ViewAction {
   override fun getConstraints(): Matcher<View> {
@@ -703,12 +537,12 @@ private class ImageCaptureViewAction(
 internal fun capture(
   rootComponent: RoboComponent,
   roborazziOptions: RoborazziOptions,
-  onCanvas: (RoboCanvas) -> Unit
+  onCanvas: (AwtRoboCanvas) -> Unit
 ) {
   when (roborazziOptions.captureType) {
-    is RoborazziOptions.CaptureType.Dump -> captureDump(
+    is Dump -> captureDump(
       rootComponent = rootComponent,
-      dumpOptions = roborazziOptions.captureType,
+      dumpOptions = roborazziOptions.captureType as Dump,
       recordOptions = roborazziOptions.recordOptions,
       onCanvas = onCanvas
     )
@@ -717,7 +551,7 @@ internal fun capture(
       val image = rootComponent.image
         ?: throw IllegalStateException("Unable to find the image of the target root component. Does the rendering element exist?")
       onCanvas(
-        RoboCanvas(
+        AwtRoboCanvas(
           width = image.width,
           height = image.height,
           filled = true,
@@ -728,4 +562,36 @@ internal fun capture(
       )
     }
   }
+}
+
+
+fun processOutputImageAndReportWithDefaults(
+  canvas: RoboCanvas,
+  goldenFile: File,
+  roborazziOptions: RoborazziOptions,
+) {
+  processOutputImageAndReport(
+    canvas = canvas,
+    goldenFile = goldenFile,
+    roborazziOptions = roborazziOptions,
+    canvasFactory = { width, height, filled, bufferedImageType ->
+      AwtRoboCanvas(
+        width = width,
+        height = height,
+        filled = filled,
+        bufferedImageType = bufferedImageType
+      )
+    },
+    canvasFromFile = { file, bufferedImageType ->
+      AwtRoboCanvas.load(file, bufferedImageType)
+    },
+    generateCompareCanvas = { actualCanvas, resizeScale, bufferedImageType ->
+      AwtRoboCanvas.generateCompareCanvas(
+        this as AwtRoboCanvas,
+        actualCanvas as AwtRoboCanvas,
+        resizeScale,
+        bufferedImageType
+      )
+    }
+  )
 }

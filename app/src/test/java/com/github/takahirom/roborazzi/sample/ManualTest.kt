@@ -19,16 +19,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
-import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
-import com.github.takahirom.roborazzi.RoboComponent
-import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
-import com.github.takahirom.roborazzi.RoborazziOptions
-import com.github.takahirom.roborazzi.captureRoboAllImage
-import com.github.takahirom.roborazzi.captureRoboGif
-import com.github.takahirom.roborazzi.captureRoboImage
-import com.github.takahirom.roborazzi.captureRoboLastImage
-import com.github.takahirom.roborazzi.withComposeTestTag
-import com.github.takahirom.roborazzi.withViewId
+import com.github.takahirom.roborazzi.*
 import java.io.File
 import org.junit.Rule
 import org.junit.Test
@@ -181,7 +172,7 @@ class ManualTest {
         filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_a11y_dump.png",
         roborazziOptions = RoborazziOptions(
           captureType = RoborazziOptions.CaptureType.Dump(
-            explanation = RoborazziOptions.CaptureType.Dump.AccessibilityExplanation,
+            explanation = Dump.AccessibilityExplanation,
           )
         )
       )

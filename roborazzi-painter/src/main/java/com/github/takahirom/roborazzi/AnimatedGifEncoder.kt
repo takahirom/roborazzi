@@ -127,7 +127,7 @@ class AnimatedGifEncoder {
    * BufferedImage containing frame to write.
    * @return true if successful.
    */
-  fun addFrame(canvas: RoboCanvas, resizeImage: Double): Boolean {
+  fun addFrame(canvas: AwtRoboCanvas, resizeImage: Double): Boolean {
     val im = canvas.outputImage(resizeImage)
     if (im == null || !started) {
       return false
