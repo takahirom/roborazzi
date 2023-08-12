@@ -859,14 +859,6 @@ plugins {
 }
 
   ...
-
-// Roborazzi Desktop support uses Context Receivers
-tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    freeCompilerArgs += "-Xcontext-receivers"
-  }
-}
-
 kotlin {
   // You can use your source set name
   jvm("desktop")
@@ -878,6 +870,15 @@ kotlin {
         implementation(kotlin("test"))
       }
     }
+...
+}
+...
+// Roborazzi Desktop support uses Context Receivers
+tasks.withType<KotlinCompile>().configureEach {
+  kotlinOptions {
+    freeCompilerArgs += "-Xcontext-receivers"
+  }
+}
 ```
 
 Test target Composable function
