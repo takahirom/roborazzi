@@ -13,7 +13,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 
 @Composable
-@Preview
 fun App() {
   var text by remember { mutableStateOf("Hello, World!") }
 
@@ -21,7 +20,7 @@ fun App() {
     Button(
       modifier = Modifier.testTag("button"),
       onClick = {
-        text = "Hello, Desktop!"
+        text = "Hello, Desktop with Roborazzi!"
       }) {
       Text(
         style = MaterialTheme.typography.h2,
