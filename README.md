@@ -849,6 +849,8 @@ If you are having trouble debugging your test, try Dump mode as follows.
 
 Roborazzi supports Compose Desktop. You can use Roborazzi with Compose Desktop as follows:
 
+Gradle settings
+
 ```kotlin
 plugins {
   kotlin("multiplatform")
@@ -878,6 +880,29 @@ kotlin {
     }
 ```
 
+Test target Composable function
+
+```kotlin
+@Composable
+fun App() {
+  var text by remember { mutableStateOf("Hello, World!") }
+
+  MaterialTheme {
+    Button(
+      modifier = Modifier.testTag("button"),
+      onClick = {
+        text = "Hello, Desktop!"
+      }) {
+      Text(
+        style = MaterialTheme.typography.h2,
+        text = text
+      )
+    }
+  }
+}
+```
+
+Test with Roborazzi
 
 ```kotlin
 class MainKmpTest {
