@@ -9,7 +9,13 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 }
 
 kotlin {
-  jvm("desktop")
+  jvm("desktop") {
+    compilations
+      .named("main")
+    .configure { compilation ->
+      compilation.kotlinOptions.freeCompilerArgs  += "-Xcontext-receivers"
+    }
+  }
   sourceSets {
     commonMain {
       dependencies {
@@ -33,12 +39,10 @@ kotlin {
       }
     }
     jvmMain {
-      dependencies {
-      }
+      dependencies {}
     }
     jvmTest {
-      dependencies {
-      }
+      dependencies {}
     }
   }
 }
@@ -47,11 +51,4 @@ java {
   toolchain {
     languageVersion.set(JavaLanguageVersion.of(11))
   }
-}
-
-tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions {
-        incremental = false
-        freeCompilerArgs += "-Xcontext-receivers"
-    }
 }
