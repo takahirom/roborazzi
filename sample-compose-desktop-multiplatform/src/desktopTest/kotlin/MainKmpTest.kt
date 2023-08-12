@@ -16,11 +16,11 @@ class MainKmpTest {
       val roborazziOptions = RoborazziOptions(
         compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0F)
       )
-      onNode(isRoot()).captureRoboImage(roborazziOptions = roborazziOptions)
+      onRoot().captureRoboImage(roborazziOptions = roborazziOptions)
 
       onNodeWithTag("button").performClick()
 
-      onNode(isRoot()).captureRoboImage(roborazziOptions = roborazziOptions)
+      onRoot().captureRoboImage(roborazziOptions = roborazziOptions)
     }
   }
 }

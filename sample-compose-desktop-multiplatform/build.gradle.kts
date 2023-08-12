@@ -11,7 +11,7 @@ group = "com.github.takahirom.roborazzi.compose.desktop.kmp.sample"
 version = "1.0-SNAPSHOT"
 
 kotlin {
-  jvm("desktop") {}
+  jvm("desktop")
   sourceSets {
     val desktopMain by getting {
       dependencies {
