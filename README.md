@@ -858,7 +858,6 @@ plugins {
   id("io.github.takahirom.roborazzi")
 }
 
-  ...
 kotlin {
   // You can use your source set name
   jvm("desktop")
@@ -870,9 +869,8 @@ kotlin {
         implementation(kotlin("test"))
       }
     }
-...
-}
-...
+  ...
+
 // Roborazzi Desktop support uses Context Receivers
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
@@ -914,7 +912,12 @@ class MainKmpTest {
       App()
     }
     val roborazziOptions = RoborazziOptions(
-      compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0F)
+      recordOptions = RoborazziOptions.RecordOptions(
+        resizeScale = 0.5
+      ),
+      compareOptions = RoborazziOptions.CompareOptions(
+        changeThreshold = 0F
+      )
     )
     onRoot().captureRoboImage(roborazziOptions = roborazziOptions)
 
@@ -939,6 +942,11 @@ Then, you can run the Gradle tasks for Desktop Support, just like you do for And
 ```
 
 If you use the Kotlin JVM plugin, the task will be `recordRoborazzi**Jvm**`.
+
+The sample image
+
+![MainJvmTest test](https://github.com/takahirom/roborazzi/assets/1386930/41287c29-26ae-4539-b387-de570ae3f2b3)
+![MainJvmTest test_2](https://github.com/takahirom/roborazzi/assets/1386930/2edc828c-6fd8-4a9a-8f3d-b0e7baa85f0d)
 
 ### LICENSE
 
