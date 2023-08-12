@@ -23,6 +23,8 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
 private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
@@ -281,15 +283,16 @@ class RoborazziPlugin : Plugin<Project> {
       configureRoborazziTasks("Jvm", "test")
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
-      project.tasks.whenTaskAdded { task ->
-        // Is there a better way to detect KotlinJvmTest task?
-        if (task::class.java.name.contains("KotlinJvmTest")) {
-          if (task.name == "test") {
-            // e.g. test -> recordRoborazziJvm
-            configureRoborazziTasks("Jvm", task.name)
-          } else {
+      val kotlinMppExtension = checkNotNull(
+        project.extensions.findByType(
+          KotlinMultiplatformExtension::class.java
+        )
+      ) { "Kotlin multiplatform plugin not applied!" }
+      kotlinMppExtension.targets.all { target ->
+        if (target is KotlinJvmTarget) {
+          target.testRuns.all { testRun ->
             // e.g. desktopTest -> recordRoborazziDesktop
-            configureRoborazziTasks(task.name.capitalizeUS().removeSuffix("Test"), task.name)
+            configureRoborazziTasks(target.name.capitalizeUS(), testRun.executionTask.name)
           }
         }
       }
@@ -298,7 +301,6 @@ class RoborazziPlugin : Plugin<Project> {
 
   private fun String.capitalizeUS() =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
-
 
   abstract class RestoreOutputDirRoborazziTask @Inject constructor(objects: ObjectFactory) :
     DefaultTask() {
