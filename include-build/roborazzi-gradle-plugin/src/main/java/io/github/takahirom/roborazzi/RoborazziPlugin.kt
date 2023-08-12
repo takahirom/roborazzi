@@ -85,7 +85,7 @@ class RoborazziPlugin : Plugin<Project> {
       return roborazziProperties["roborazzi.test.record"] == "true" || roborazziProperties["roborazzi.test.verify"] == "true" || roborazziProperties["roborazzi.test.compare"] == "true"
     }
 
-    fun configureRoborazziTasks(variantSlug: String, testVariantSlug: String) {
+    fun configureRoborazziTasks(variantSlug: String, testTaskName: String) {
       val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
       val intermediateDirForEachVariant =
         testTaskOutputDirForEachVariant.convention(
@@ -141,7 +141,7 @@ class RoborazziPlugin : Plugin<Project> {
 
       val testTaskProvider = project.tasks.withType(Test::class.java)
         .matching {
-          it.name == "test$testVariantSlug"
+          it.name == testTaskName
         }
       testTaskProvider
         .configureEach { test ->
@@ -214,9 +214,9 @@ class RoborazziPlugin : Plugin<Project> {
             // Copy all files from outputDir to intermediateDir
             // so that we can use Gradle's output caching
             infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
-    //              outputDir.get().asFileTree.forEach {
-    //                println("Copy file ${it.absolutePath} to ${intermediateDir.get()}")
-    //              }
+            // outputDir.get().asFileTree.forEach {
+            //   println("Copy file ${it.absolutePath} to ${intermediateDir.get()}")
+            // }
             outputDir.get().asFile.copyRecursively(
               target = intermediateDir.get().asFile,
               overwrite = true
@@ -263,7 +263,8 @@ class RoborazziPlugin : Plugin<Project> {
         val variantSlug = variant.name.capitalizeUS()
         val testVariantSlug = unitTest.name.capitalizeUS()
 
-        configureRoborazziTasks(variantSlug, testVariantSlug)
+        // e.g. testDebugUnitTest -> recordRoborazziDebug
+        configureRoborazziTasks(variantSlug, "test$testVariantSlug")
       }
     }
 
@@ -276,7 +277,22 @@ class RoborazziPlugin : Plugin<Project> {
         .configureComponents()
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
-      configureRoborazziTasks("Jvm", "")
+      // e.g. test -> recordRoborazziJvm
+      configureRoborazziTasks("Jvm", "test")
+    }
+    project.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
+      project.tasks.whenTaskAdded { task ->
+        // Is there a better way to detect KotlinJvmTest task?
+        if (task::class.java.name.contains("KotlinJvmTest")) {
+          if (task.name == "test") {
+            // e.g. test -> recordRoborazziJvm
+            configureRoborazziTasks("Jvm", task.name)
+          } else {
+            // e.g. desktopTest -> recordRoborazziDesktop
+            configureRoborazziTasks(task.name.capitalizeUS().removeSuffix("Test"), task.name)
+          }
+        }
+      }
     }
   }
 

@@ -13,14 +13,16 @@ dependencyResolutionManagement {
   }
 }
 rootProject.name = "roborazzi"
-include ':app'
-include ':app-without-compose'
 include ':roborazzi'
-include ':app-compose-desktop'
 include ':roborazzi-junit-rule'
 include ':roborazzi-compose-desktop'
 include ':roborazzi-compose'
 include ':roborazzi-painter'
+
+include ':sample-android'
+include ':sample-android-without-compose'
+include ':sample-compose-desktop-multiplatform'
+include ':sample-compose-desktop-jvm'
 
 includeBuild("include-build") {
   dependencySubstitution {

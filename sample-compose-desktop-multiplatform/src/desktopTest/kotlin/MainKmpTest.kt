@@ -4,7 +4,7 @@ import com.github.takahirom.roborazzi.RoborazziOptions
 import io.github.takahirom.roborazzi.captureRoboImage
 import kotlin.test.Test
 
-class MainTest {
+class MainKmpTest {
   @OptIn(ExperimentalTestApi::class)
   @Test
   fun test() {

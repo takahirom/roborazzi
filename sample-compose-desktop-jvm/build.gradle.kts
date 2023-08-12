@@ -7,7 +7,7 @@ plugins {
   id("io.github.takahirom.roborazzi")
 }
 
-group = "com.github.takahirom.roborazzi.compose.desktop.sample"
+group = "com.github.takahirom.roborazzi.compose.desktop.jvm.sample"
 version = "1.0-SNAPSHOT"
 tasks.test {
   useJUnitPlatform()
