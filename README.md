@@ -924,7 +924,7 @@ class MainKmpTest {
 }
 ```
 
-Then, you can run the Gradle tasks for Android Support:
+Then, you can run the Gradle tasks for Desktop Support, just like you do for Android Support.
 
 ```
 ./gradlew recordRoborazzi[SourceSet]
@@ -936,6 +936,8 @@ Then, you can run the Gradle tasks for Android Support:
 ./gradlew verifyRoborazziDesktop
 ...
 ```
+
+If you use the Kotlin JVM plugin, the task will be `recordRoborazzi**Jvm**`.
 
 ### LICENSE
 
