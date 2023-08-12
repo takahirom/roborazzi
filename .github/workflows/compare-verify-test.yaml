@@ -35,7 +35,7 @@ jobs:
           echo '<resources>
             <string name="first_fragment_label">Hello! This is compare test screen! Compare me!</string>
             <string name="hello_first_fragment">Compare Hello first fragment</string>
-          </resources>' > app/src/main/res/values/strings_for_test.xml
+          </resources>' > sample-android/src/main/res/values/strings_for_test.xml
           ./gradlew sample-android:compareRoborazziDebug --stacktrace
           # Check if there are difference with sample-android/build/outputs/roborazzi/test_compare.png
           find sample-android/build/outputs/roborazzi
@@ -55,7 +55,7 @@ jobs:
           echo '<resources>
             <string name="first_fragment_label">Hello! This is verify test screen! Verify me!</string>
             <string name="hello_first_fragment">Verify Hello first fragment</string>
-          </resources>' > app/src/main/res/values/strings_for_test.xml
+          </resources>' > sample-android/src/main/res/values/strings_for_test.xml
           ./gradlew sample-android:verifyRoborazziDebug --stacktrace
 
       - name: Run shell script on Gradle failure
