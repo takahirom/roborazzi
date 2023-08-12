@@ -26,7 +26,7 @@ jobs:
       - uses: dawidd6/action-download-artifact@v2
         with:
           name: screenshot
-          path: app/build/outputs/roborazzi
+          path: sample-android/build/outputs/roborazzi
           workflow: StoreScreenshot.yml
           branch: main
 
@@ -35,11 +35,11 @@ jobs:
           echo '<resources>
             <string name="first_fragment_label">Hello! This is compare test screen! Compare me!</string>
             <string name="hello_first_fragment">Compare Hello first fragment</string>
-          </resources>' > app/src/main/res/values/strings_for_test.xml
-          ./gradlew app:compareRoborazziDebug --stacktrace
-          # Check if there are difference with app/build/outputs/roborazzi/test_compare.png
-          find app/build/outputs/roborazzi
-          file_path="app/build/outputs/roborazzi/com.github.takahirom.roborazzi.sample.ManualTest.captureScreenLevelImageWithEspresso_compare.png"
+          </resources>' > sample-android/src/main/res/values/strings_for_test.xml
+          ./gradlew sample-android:compareRoborazziDebug --stacktrace
+          # Check if there are difference with sample-android/build/outputs/roborazzi/test_compare.png
+          find sample-android/build/outputs/roborazzi
+          file_path="sample-android/build/outputs/roborazzi/com.github.takahirom.roborazzi.sample.ManualTest.captureScreenLevelImageWithEspresso_compare.png"
           if [ ! -f "$file_path" ]; then
             echo "Error: File $file_path not found."
            exit 1
@@ -55,8 +55,8 @@ jobs:
           echo '<resources>
             <string name="first_fragment_label">Hello! This is verify test screen! Verify me!</string>
             <string name="hello_first_fragment">Verify Hello first fragment</string>
-          </resources>' > app/src/main/res/values/strings_for_test.xml
-          ./gradlew app:verifyRoborazziDebug --stacktrace
+          </resources>' > sample-android/src/main/res/values/strings_for_test.xml
+          ./gradlew sample-android:verifyRoborazziDebug --stacktrace
 
       - name: Run shell script on Gradle failure
         if: steps.verify-test.outcome == 'success'
@@ -68,19 +68,19 @@ jobs:
         if: ${{ always() }}
         with:
           name: screenshot-diff
-          path: app/build/outputs/roborazzi
+          path: sample-android/build/outputs/roborazzi
           retention-days: 30
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: screenshot-diff-reports
-          path: app/build/reports
+          path: sample-android/build/reports
           retention-days: 30
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: screenshot-diff-test-results
-          path: app/build/test-results
+          path: sample-android/build/test-results
           retention-days: 30

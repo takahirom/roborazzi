@@ -4,7 +4,7 @@ import com.github.takahirom.roborazzi.RoborazziOptions
 import io.github.takahirom.roborazzi.captureRoboImage
 import kotlin.test.Test
 
-class MainTest {
+class MainJvmTest {
   @OptIn(ExperimentalTestApi::class)
   @Test
   fun test() {
@@ -16,11 +16,11 @@ class MainTest {
       val roborazziOptions = RoborazziOptions(
         compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0F)
       )
-      onNode(isRoot()).captureRoboImage(roborazziOptions = roborazziOptions)
+      onRoot().captureRoboImage(roborazziOptions = roborazziOptions)
 
       onNodeWithTag("button").performClick()
 
-      onNode(isRoot()).captureRoboImage(roborazziOptions = roborazziOptions)
+      onRoot().captureRoboImage(roborazziOptions = roborazziOptions)
     }
   }
 }

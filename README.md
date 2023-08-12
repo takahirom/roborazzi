@@ -845,6 +845,73 @@ If you are having trouble debugging your test, try Dump mode as follows.
 
 ![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
 
+### Experimental feature: Compose Desktop support
+
+Roborazzi supports Compose Desktop. You can use Roborazzi with Compose Desktop as follows:
+
+```kotlin
+plugins {
+  kotlin("multiplatform")
+  id("org.jetbrains.compose")
+  id("io.github.takahirom.roborazzi")
+}
+
+  ...
+
+// Roborazzi Desktop support uses Context Receivers
+tasks.withType<KotlinCompile>().configureEach {
+  kotlinOptions {
+    freeCompilerArgs += "-Xcontext-receivers"
+  }
+}
+
+kotlin {
+  // You can use your source set name
+  jvm("desktop")
+  sourceSets {
+    ...
+    val desktopTest by getting {
+      dependencies {
+        implementation(project("io.github.takahirom.roborazzi:roborazzi-compose-desktop:[1.6.0-alpha-2 or higher]"))
+        implementation(kotlin("test"))
+      }
+    }
+```
+
+
+```kotlin
+class MainKmpTest {
+  @OptIn(ExperimentalTestApi::class)
+  @Test
+  fun test() = runDesktopComposeUiTest {
+    setContent {
+      App()
+    }
+    val roborazziOptions = RoborazziOptions(
+      compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0F)
+    )
+    onRoot().captureRoboImage(roborazziOptions = roborazziOptions)
+
+    onNodeWithTag("button").performClick()
+
+    onRoot().captureRoboImage(roborazziOptions = roborazziOptions)
+  }
+}
+```
+
+Then, you can run the Gradle tasks for Android Support:
+
+```
+./gradlew recordRoborazzi[SourceSet]
+```
+
+```
+./gradlew recordRoborazziDesktop
+./gradlew compareRoborazziDesktop
+./gradlew verifyRoborazziDesktop
+...
+```
+
 ### LICENSE
 
 ```
