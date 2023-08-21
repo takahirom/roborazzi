@@ -34,6 +34,11 @@ efficient and reliable testing process by capturing screenshots with Robolectric
 
 <img src="https://github.com/takahirom/roborazzi/assets/1386930/937a96a4-f637-4029-87e1-c1bb94abc8ae" width="320" />
 
+
+**Integrating Roborazzi into the Architecture: An Example from DroidKaigi 2023 App**
+
+In the DroidKaigi 2023 app, Roborazzi was introduced from the early stages of development as part of the architectural design. This integration allowed the team to verify changes throughout the development process. The specific architectural decisions and how they were implemented can be found [README](https://github.com/DroidKaigi/conference-app-2023#screenshot-testing-with-robolectric-native-graphics-rng-and-roborazzi).
+
 ## Try it out
 
 Available on Maven Central.
