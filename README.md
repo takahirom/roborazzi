@@ -252,7 +252,7 @@ class ManualTest {
   fun captureRoboImageSample() {
     // Tips: You can use Robolectric with Espresso API
     // launch
-    ActivitySenario.launch(MainActivity::class.java)
+    ActivityScenario.launch(MainActivity::class.java)
 
     // Capture screen
     onView(ViewMatchers.isRoot())
