@@ -953,6 +953,60 @@ The sample image
 ![MainJvmTest test](https://github.com/takahirom/roborazzi/assets/1386930/41287c29-26ae-4539-b387-de570ae3f2b3)
 ![MainJvmTest test_2](https://github.com/takahirom/roborazzi/assets/1386930/2edc828c-6fd8-4a9a-8f3d-b0e7baa85f0d)
 
+# FAQ
+
+### Q: How can I run only screenshot tests in Roborazzi?
+
+**A:** To run only screenshot tests, you can configure your project with the following:
+
+```groovy
+android {
+    testOptions {
+        unitTests {
+            all {
+                // -Pscreenshot to filter screenshot tests
+                it.useJUnit {
+                    if (project.hasProperty("screenshot")) {
+                        includeCategories("io.github.takahirom.roborazzi.testing.category.ScreenshotTests")
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+Include the `-Pscreenshot` property, and only the screenshot tests will be run.
+
+Note: This feature is not provided in the Roborazzi library itself, to keep it simple and utilize JUnit's built-in features for test filtering.
+
+### Q: I'm seeing an optimization warning related to Java lambdas in Gradle. What can I do?
+
+**A:** This warning may occur with Gradle 7.5. Upgrade to Gradle 7.6.2 to resolve this issue. Change the distribution URL in `gradle-wrapper.properties`:
+
+```diff
+-distributionUrl=https\://services.gradle.org/distributions/gradle-7.5-bin.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.2-bin.zip
+```
+
+Certainly! Here's a formatted FAQ entry that includes both the question and the answer:
+
+### Q: My screenshot tests are not capturing images. What could be the issue?
+
+**A:** If your screenshot tests are not capturing images, there may be several patterns that are causing this issue. Please follow these troubleshooting steps:
+
+- **Enable Debugging**: Set `ROBORAZZI_DEBUG = true` to see logs.
+- **Check Plugin**: Ensure that the plugin is properly applied.
+- **Run Task**: Verify that the `recordRoborazziDebug` task is running.
+- **Call Method**: Confirm that `captureRoboImage()` is being called.
+
+By following these steps, you should be able to identify and resolve the issue causing the screenshot tests to not capture images.
+
+### Q: Can I run Roborazzi with Bazel?
+
+**A:** As of now, there is no direct support for running Roborazzi with Bazel. However, it is possible to do so. Please refer to the following comment for more details:
+[Roborazzi Bazel Support Comment](https://github.com/takahirom/roborazzi/issues/63#issuecomment-1531990825)
+
 ### LICENSE
 
 ```
