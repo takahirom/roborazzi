@@ -980,17 +980,6 @@ Include the `-Pscreenshot` property, and only the screenshot tests will be run.
 
 Note: This feature is not provided in the Roborazzi library itself, to keep it simple and utilize JUnit's built-in features for test filtering.
 
-### Q: I'm seeing an optimization warning related to Java lambdas in Gradle. What can I do?
-
-**A:** This warning may occur with Gradle 7.5. Upgrade to Gradle 7.6.2 to resolve this issue. Change the distribution URL in `gradle-wrapper.properties`:
-
-```diff
--distributionUrl=https\://services.gradle.org/distributions/gradle-7.5-bin.zip
-+distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.2-bin.zip
-```
-
-Certainly! Here's a formatted FAQ entry that includes both the question and the answer:
-
 ### Q: My screenshot tests are not capturing images. What could be the issue?
 
 **A:** If your screenshot tests are not capturing images, there may be several patterns that are causing this issue. Please follow these troubleshooting steps:
@@ -1001,6 +990,15 @@ Certainly! Here's a formatted FAQ entry that includes both the question and the 
 - **Call Method**: Confirm that `captureRoboImage()` is being called.
 
 By following these steps, you should be able to identify and resolve the issue causing the screenshot tests to not capture images.
+
+### Q: I'm seeing an optimization warning related to Java lambdas in Gradle. What can I do?
+
+**A:** This warning may occur with Gradle 7.5. Upgrade to Gradle 7.6.2 to resolve this issue. Change the distribution URL in `gradle-wrapper.properties`:
+
+```diff
+-distributionUrl=https\://services.gradle.org/distributions/gradle-7.5-bin.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.2-bin.zip
+```
 
 ### Q: Can I run Roborazzi with Bazel?
 
