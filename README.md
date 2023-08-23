@@ -955,7 +955,7 @@ The sample image
 
 # FAQ
 
-### Q: How can I run only screenshot tests in Roborazzi?
+### Q: How can I run only screenshot tests using Roborazzi?
 
 **A:** To run only screenshot tests, you can configure your project with the following:
 
@@ -979,6 +979,23 @@ android {
 Include the `-Pscreenshot` property, and only the screenshot tests will be run.
 
 Note: This feature is not provided in the Roborazzi library itself, to keep it simple and utilize JUnit's built-in features for test filtering.
+
+You can also annotate your tests like this:
+
+```kotlin
+/**
+ * You can filter ScreenshotTests using -Pscreenshot parameter
+ */
+interface ScreenshotTests
+
+@Test
+@Category(ScreenshotTests::class)
+fun checkLaunchShot() {
+  onRoot().captureRoboImage(roborazziOptions = roborazziOptions)
+}
+```
+
+This allows you to create a category of screenshot tests and filter them using the `-Pscreenshot` property, thus making it easier to run only those specific tests.
 
 ### Q: My screenshot tests are not capturing images. What could be the issue?
 
