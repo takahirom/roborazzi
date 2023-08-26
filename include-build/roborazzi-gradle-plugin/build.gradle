@@ -24,7 +24,7 @@ dependencies {
   implementation 'org.json:json:20220924'
   integrationTestDepImplementation "com.android.tools.build:gradle:7.3.1"
   integrationTestDepImplementation "org.jetbrains.kotlin:kotlin-gradle-plugin:" + libs.versions.kotlin.get()
-  integrationTestDepImplementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
+  integrationTestDepImplementation "org.jetbrains.compose:compose-gradle-plugin:" + libs.versions.composeMultiplatform.get()
 }
 
 sourceSets {
@@ -52,7 +52,7 @@ testing.suites {
       implementation "junit:junit:4.13.2"
       implementation 'com.android.tools.build:gradle:7.3.1'
       implementation 'org.jetbrains.kotlin:kotlin-gradle-plugin:' + libs.versions.kotlin.get()
-      implementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
+      implementation 'org.jetbrains.compose:compose-gradle-plugin:' + libs.versions.composeMultiplatform.get()
     }
 
     targets {
