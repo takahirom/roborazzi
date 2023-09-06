@@ -32,7 +32,7 @@ import org.hamcrest.core.IsEqual
 import org.robolectric.util.Logger
 
 fun ViewInteraction.captureRoboImage(
-  isDisplayFilePathLog: Boolean,
+  isDisplayFilePathLog: Boolean = false,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
@@ -62,7 +62,7 @@ fun ViewInteraction.captureRoboImage(
 }
 
 fun View.captureRoboImage(
-  isDisplayFilePathLog: Boolean,
+  isDisplayFilePathLog: Boolean = false,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
@@ -119,7 +119,7 @@ fun View.captureRoboImage(
 }
 
 fun Bitmap.captureRoboImage(
-  isDisplayFilePathLog: Boolean,
+  isDisplayFilePathLog: Boolean = false,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
@@ -156,7 +156,7 @@ fun Bitmap.captureRoboImage(
 }
 
 fun ViewInteraction.captureRoboGif(
-  isDisplayFilePathLog: Boolean,
+  isDisplayFilePathLog: Boolean = false,
   filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
@@ -184,7 +184,7 @@ fun ViewInteraction.captureRoboGif(
 }
 
 fun ViewInteraction.captureRoboLastImage(
-  isDisplayFilePathLog: Boolean,
+  isDisplayFilePathLog: Boolean = false,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
@@ -224,7 +224,7 @@ fun ViewInteraction.captureRoboAllImage(
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
-  isDisplayFilePathLog: Boolean,
+  isDisplayFilePathLog: Boolean = false,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
@@ -258,7 +258,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
 
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
-  isDisplayFilePathLog: Boolean,
+  isDisplayFilePathLog: Boolean = false,
   filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
