@@ -29,12 +29,17 @@ import java.util.Locale
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
+import org.robolectric.util.Logger
 
 fun ViewInteraction.captureRoboImage(
+  isDisplayFilePathLog: Boolean,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
+  if (isDisplayFilePathLog) {
+    Logger.debug("filePath:$filePath")
+  }
   captureRoboImage(
     file = File(filePath),
     roborazziOptions = roborazziOptions
@@ -57,10 +62,14 @@ fun ViewInteraction.captureRoboImage(
 }
 
 fun View.captureRoboImage(
+  isDisplayFilePathLog: Boolean,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
+  if (isDisplayFilePathLog) {
+    Logger.debug("filePath:$filePath")
+  }
   captureRoboImage(
     file = File(filePath),
     roborazziOptions = roborazziOptions
@@ -110,10 +119,14 @@ fun View.captureRoboImage(
 }
 
 fun Bitmap.captureRoboImage(
+  isDisplayFilePathLog: Boolean,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
+  if (isDisplayFilePathLog) {
+    Logger.debug("filePath:$filePath")
+  }
   captureRoboImage(
     file = File(filePath),
     roborazziOptions = roborazziOptions
@@ -143,12 +156,16 @@ fun Bitmap.captureRoboImage(
 }
 
 fun ViewInteraction.captureRoboGif(
+  isDisplayFilePathLog: Boolean,
   filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
+  if (isDisplayFilePathLog) {
+    Logger.debug("filePath:$filePath")
+  }
   captureRoboGif(File(filePath), roborazziOptions, block)
 }
 
@@ -167,11 +184,15 @@ fun ViewInteraction.captureRoboGif(
 }
 
 fun ViewInteraction.captureRoboLastImage(
+  isDisplayFilePathLog: Boolean,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   if (!roborazziEnabled()) return
+  if (isDisplayFilePathLog) {
+    Logger.debug("filePath:$filePath")
+  }
   captureRoboLastImage(File(filePath), roborazziOptions, block)
 }
 
@@ -203,10 +224,14 @@ fun ViewInteraction.captureRoboAllImage(
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
+  isDisplayFilePathLog: Boolean,
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
+  if (isDisplayFilePathLog) {
+    Logger.debug("filePath:$filePath")
+  }
   captureRoboImage(File(filePath), roborazziOptions)
 }
 
@@ -233,12 +258,16 @@ fun SemanticsNodeInteraction.captureRoboImage(
 
 fun SemanticsNodeInteraction.captureRoboGif(
   composeRule: AndroidComposeTestRule<*, *>,
+  isDisplayFilePathLog: Boolean,
   filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
+  if (isDisplayFilePathLog) {
+    Logger.debug("filePath:$filePath")
+  }
   captureComposeNode(
     composeRule = composeRule,
     roborazziOptions = roborazziOptions,
