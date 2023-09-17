@@ -2,7 +2,7 @@ package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
-import com.github.takahirom.roborazzi.CompareSummary
+import com.github.takahirom.roborazzi.ResultSummary
 import java.io.File
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -12,7 +12,7 @@ class CaptureResultTest {
 
   @Test
   fun testJsonSerialization() {
-    val summary = CompareSummary(10, 2, 3, 5)
+    val summary = ResultSummary(10, 2, 3, 5)
     val captureResults = listOf(
       CaptureResult.Added(
         compareFile = File("/compare_file"),

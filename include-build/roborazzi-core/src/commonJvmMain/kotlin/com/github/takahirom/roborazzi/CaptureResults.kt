@@ -1,37 +1,11 @@
 package com.github.takahirom.roborazzi
 
-import java.io.File
 import org.json.JSONArray
 import org.json.JSONObject
-
-data class CompareSummary(
-  val total: Int,
-  val added: Int,
-  val changed: Int,
-  val unchanged: Int
-) {
-  fun toJson(): JSONObject {
-    val json = JSONObject()
-    json.put("total", total)
-    json.put("added", added)
-    json.put("changed", changed)
-    json.put("unchanged", unchanged)
-    return json
-  }
-
-  companion object {
-    fun fromJson(jsonObject: JSONObject): CompareSummary {
-      val total = jsonObject.getInt("total")
-      val added = jsonObject.getInt("added")
-      val changed = jsonObject.getInt("changed")
-      val unchanged = jsonObject.getInt("unchanged")
-      return CompareSummary(total, added, changed, unchanged)
-    }
-  }
-}
+import java.io.File
 
 data class CaptureResults(
-  val summary: CompareSummary,
+  val summary: ResultSummary,
   val captureResults: List<CaptureResult>
 ) {
   fun toJson(): JSONObject {
@@ -53,7 +27,7 @@ data class CaptureResults(
     }
 
     fun fromJson(jsonObject: JSONObject): CaptureResults {
-      val summary = CompareSummary.fromJson(jsonObject.getJSONObject("summary"))
+      val summary = ResultSummary.fromJson(jsonObject.getJSONObject("summary"))
       val resultsArray = jsonObject.getJSONArray("results")
       val captureResults = mutableListOf<CaptureResult>()
       for (i in 0 until resultsArray.length()) {

@@ -6,7 +6,7 @@ import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
-import com.github.takahirom.roborazzi.CompareSummary
+import com.github.takahirom.roborazzi.ResultSummary
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import java.util.Locale
 import javax.inject.Inject
@@ -239,7 +239,7 @@ class RoborazziPlugin : Plugin<Project> {
             infoln("Save result to ${resultsSummaryFile.absolutePath} with results:${results.size}")
 
             val roborazziResult = CaptureResults(
-              summary = CompareSummary(
+              summary = ResultSummary(
                 total = results.size,
                 added = results.count { it is CaptureResult.Added },
                 changed = results.count { it is CaptureResult.Changed },
