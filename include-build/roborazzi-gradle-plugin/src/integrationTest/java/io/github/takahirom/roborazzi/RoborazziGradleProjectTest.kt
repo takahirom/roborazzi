@@ -114,7 +114,8 @@ class RoborazziGradleProjectTest {
     RoborazziGradleProject(testProjectDir).apply {
       unitTest()
       // Record task shouldn't be skipped even after unit test
-      recordWithSystemParameter()
+      val recordWithSystemParameter = recordWithSystemParameter()
+      assertNotSkipped(recordWithSystemParameter.output)
 
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")

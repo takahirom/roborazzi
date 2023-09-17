@@ -213,9 +213,10 @@ class RoborazziPlugin : Plugin<Project> {
           }
           // We don't use custom task action here because we want to run it even if we use `-P` parameter
           test.doLast {
-            val isTaskPresent =
-              isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
-            if (!isTaskPresent) {
+            val isRoborazziRun =
+              (isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
+                || hasRoborazziTaskProperty(roborazziProperties))
+            if (!isRoborazziRun) {
               return@doLast
             }
             // Copy all files from outputDir to intermediateDir
