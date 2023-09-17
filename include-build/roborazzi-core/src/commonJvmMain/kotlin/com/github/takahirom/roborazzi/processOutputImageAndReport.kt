@@ -9,7 +9,7 @@ fun processOutputImageAndReport(
   roborazziOptions: RoborazziOptions,
   canvasFactory: (Int, Int, Boolean, Int) -> RoboCanvas,
   canvasFromFile: (File, Int) -> RoboCanvas,
-  generateCompareCanvas: RoboCanvas.(RoboCanvas, Double, Int) -> RoboCanvas,
+  generateComparisonCanvas: RoboCanvas.(RoboCanvas, Double, Int) -> RoboCanvas,
 ) {
   debugLog {
     "processOutputImageAndReport(): " +
@@ -47,26 +47,26 @@ fun processOutputImageAndReport(
       true
     }
 
-    val result: CompareReportCaptureResult = if (changed) {
-      val compareFile = File(
+    val result: CaptureResult = if (changed) {
+      val comparisonFile = File(
         roborazziOptions.compareOptions.outputDirectoryPath,
         goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
       )
-      val compareCanvas = goldenRoboCanvas.generateCompareCanvas(
+      val comparisonCanvas = goldenRoboCanvas.generateComparisonCanvas(
         canvas,
         resizeScale,
         recordOptions.pixelBitConfig.toBufferedImageType()
       )
-      compareCanvas
+      comparisonCanvas
         .save(
-          file = compareFile,
+          file = comparisonFile,
           resizeScale = resizeScale
         )
       debugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
-          "compareFile:${compareFile.absolutePath}"
+          "compareFile:${comparisonFile.absolutePath}"
       }
-      compareCanvas.release()
+      comparisonCanvas.release()
 
       val actualFile = if (roborazziRecordingEnabled()) {
         // If record option is enabled, we should save the actual file as the golden file.
@@ -87,22 +87,22 @@ fun processOutputImageAndReport(
           "actualFile:${actualFile.absolutePath}"
       }
       if (goldenFile.exists()) {
-        CompareReportCaptureResult.Changed(
-          compareFile = compareFile,
+        CaptureResult.Changed(
+          compareFile = comparisonFile,
           actualFile = actualFile,
           goldenFile = goldenFile,
           timestampNs = System.nanoTime(),
         )
       } else {
-        CompareReportCaptureResult.Added(
-          compareFile = compareFile,
+        CaptureResult.Added(
+          compareFile = comparisonFile,
           actualFile = actualFile,
           goldenFile = goldenFile,
           timestampNs = System.nanoTime(),
         )
       }
     } else {
-      CompareReportCaptureResult.Unchanged(
+      CaptureResult.Unchanged(
         goldenFile = goldenFile,
         timestampNs = System.nanoTime(),
       )
@@ -113,7 +113,7 @@ fun processOutputImageAndReport(
         "  changed: $changed\n" +
         "  result: $result\n"
     }
-    roborazziOptions.compareOptions.roborazziCompareReporter.report(result)
+    roborazziOptions.compareOptions.roborazziReporter.report(result)
   } else {
     // roborazzi.record is checked before
     canvas.save(goldenFile, resizeScale)
@@ -121,6 +121,12 @@ fun processOutputImageAndReport(
       "processOutputImageAndReport: \n" +
         " record goldenFile: $goldenFile\n"
     }
+    roborazziOptions.compareOptions.roborazziReporter.report(
+      CaptureResult.Recorded(
+        goldenFile = goldenFile,
+        timestampNs = System.nanoTime()
+      )
+    )
   }
 }
 
