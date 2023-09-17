@@ -14,7 +14,7 @@ sealed interface CaptureResult {
   data class Recorded(
     override val goldenFile: File,
     override val timestampNs: Long,
-  ): CaptureResult {
+  ) : CaptureResult {
     override val actualFile: File?
       get() = null
     override val compareFile: File?
@@ -95,6 +95,11 @@ sealed interface CaptureResult {
       val timestampNs = json.getLong("timestamp")
 
       return when (type) {
+        "recorded" -> Recorded(
+          goldenFile = goldenFile!!,
+          timestampNs = timestampNs
+        )
+
         "changed" -> Changed(
           compareFile = compareFile!!,
           goldenFile = goldenFile!!,
