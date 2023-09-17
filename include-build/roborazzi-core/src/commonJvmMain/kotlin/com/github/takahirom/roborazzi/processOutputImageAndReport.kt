@@ -122,7 +122,7 @@ fun processOutputImageAndReport(
         " record goldenFile: $goldenFile\n"
     }
     roborazziOptions.compareOptions.roborazziReporter.report(
-      CaptureResult.Record(
+      CaptureResult.Recorded(
         goldenFile = goldenFile,
         timestampNs = System.nanoTime()
       )

@@ -11,7 +11,7 @@ sealed interface CaptureResult {
   val actualFile: File?
   val goldenFile: File?
 
-  data class Record(
+  data class Recorded(
     override val goldenFile: File,
     override val timestampNs: Long,
   ): CaptureResult {
@@ -22,7 +22,7 @@ sealed interface CaptureResult {
 
     override fun toJson(): JSONObject {
       val json = JSONObject()
-      json.put("type", "unchanged")
+      json.put("type", "recorded")
       json.put("golden_file_path", goldenFile.absolutePath)
       json.put("timestamp", timestampNs)
       return json

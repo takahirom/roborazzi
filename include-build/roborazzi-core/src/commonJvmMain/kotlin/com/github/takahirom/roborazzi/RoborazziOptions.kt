@@ -112,7 +112,7 @@ data class RoborazziOptions(
           is CaptureResult.Added -> reportResult.compareFile
           is CaptureResult.Changed -> reportResult.goldenFile
           is CaptureResult.Unchanged -> reportResult.goldenFile
-          is CaptureResult.Record -> reportResult.goldenFile
+          is CaptureResult.Recorded -> reportResult.goldenFile
         }.nameWithoutExtension
         val reportFileName =
           "$absolutePath/${reportResult.timestampNs}_$nameWithoutExtension.json"
@@ -138,7 +138,7 @@ data class RoborazziOptions(
               "See the compare image at ${reportResult.compareFile.absolutePath}"
           )
 
-          is CaptureResult.Unchanged, is CaptureResult.Record -> {
+          is CaptureResult.Unchanged, is CaptureResult.Recorded -> {
           }
         }
       }

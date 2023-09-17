@@ -241,6 +241,7 @@ class RoborazziPlugin : Plugin<Project> {
             val roborazziResult = CaptureResults(
               summary = ResultSummary(
                 total = results.size,
+                recorded = results.count { it is CaptureResult.Recorded },
                 added = results.count { it is CaptureResult.Added },
                 changed = results.count { it is CaptureResult.Changed },
                 unchanged = results.count { it is CaptureResult.Unchanged }

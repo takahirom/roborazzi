@@ -263,7 +263,8 @@ fun SemanticsNodeInteraction.captureRoboGif(
   }
 }
 
-class CaptureResult(
+@InternalRoborazziApi
+class CaptureInternalResult(
   val result: Result<Unit>,
   val saveLastImage: (file: File) -> Unit,
   val saveAllImage: (file: (String) -> File) -> Unit,
@@ -275,7 +276,7 @@ class CaptureResult(
 fun ViewInteraction.captureAndroidView(
   roborazziOptions: RoborazziOptions,
   block: () -> Unit
-): CaptureResult {
+): CaptureInternalResult {
   var removeListener = {}
 
   val canvases = mutableListOf<AwtRoboCanvas>()
@@ -347,7 +348,7 @@ fun ViewInteraction.captureAndroidView(
     val application = instrumentation.targetContext.applicationContext as Application
     application.registerActivityLifecycleCallbacks(activityCallbacks)
   }
-  return CaptureResult(
+  return CaptureInternalResult(
     result = runCatching {
       try {
         block()
@@ -416,7 +417,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
   composeRule: AndroidComposeTestRule<*, *>,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
-): CaptureResult {
+): CaptureInternalResult {
   val canvases = mutableListOf<AwtRoboCanvas>()
 
   val capture = {
@@ -448,7 +449,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
   } catch (e: IllegalStateException) {
     // No compose hierarchies found in the app, so wait
   }
-  return CaptureResult(
+  return CaptureInternalResult(
     result = runCatching {
       try {
         block()
