@@ -113,7 +113,7 @@ fun processOutputImageAndReport(
         "  changed: $changed\n" +
         "  result: $result\n"
     }
-    roborazziOptions.compareOptions.roborazziCompareReporter.report(result)
+    roborazziOptions.compareOptions.roborazziReporter.report(result)
   } else {
     // roborazzi.record is checked before
     canvas.save(goldenFile, resizeScale)
@@ -121,7 +121,7 @@ fun processOutputImageAndReport(
       "processOutputImageAndReport: \n" +
         " record goldenFile: $goldenFile\n"
     }
-    roborazziOptions.compareOptions.roborazziCompareReporter.report(
+    roborazziOptions.compareOptions.roborazziReporter.report(
       CaptureResult.Record(
         goldenFile = goldenFile,
         timestampNs = System.nanoTime()

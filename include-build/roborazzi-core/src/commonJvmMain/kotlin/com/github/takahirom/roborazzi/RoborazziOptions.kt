@@ -57,7 +57,7 @@ data class RoborazziOptions(
 ) {
   interface CaptureType {
     class Screenshot : CaptureType {
-      override fun shouldTakeScreenshot(): kotlin.Boolean {
+      override fun shouldTakeScreenshot(): Boolean {
         return true
       }
     }
@@ -68,12 +68,12 @@ data class RoborazziOptions(
   }
 
   data class CompareOptions(
-    val roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+    val roborazziReporter: RoborazziReporter = RoborazziReporter(),
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
-      roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
+      roborazziCompareReporter: RoborazziReporter = RoborazziReporter(),
       outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
       /**
        * This value determines the threshold of pixel change at which the diff image is output or not.
@@ -81,26 +81,26 @@ data class RoborazziOptions(
        */
       changeThreshold: Float = 0.01F,
     ) : this(
-      roborazziCompareReporter = roborazziCompareReporter,
+      roborazziReporter = roborazziCompareReporter,
       outputDirectoryPath = outputDirectoryPath,
       resultValidator = ThresholdValidator(changeThreshold)
     )
   }
 
-  interface RoborazziCompareReporter {
+  interface RoborazziReporter {
     fun report(reportResult: CaptureResult)
 
     companion object {
-      operator fun invoke(): RoborazziCompareReporter {
+      operator fun invoke(): RoborazziReporter {
         return if (roborazziVerifyEnabled()) {
-          VerifyRoborazziCompareReporter()
+          VerifyRoborazziReporter()
         } else {
-          JsonOutputRoborazziCompareReporter()
+          JsonOutputRoborazziReporter()
         }
       }
     }
 
-    class JsonOutputRoborazziCompareReporter : RoborazziCompareReporter {
+    class JsonOutputRoborazziReporter : RoborazziReporter {
 
       init {
         File(RoborazziReportConst.resultDirPath).mkdirs()
@@ -123,8 +123,8 @@ data class RoborazziOptions(
       }
     }
 
-    class VerifyRoborazziCompareReporter : RoborazziCompareReporter {
-      private val jsonOutputRoborazziCompareReporter = JsonOutputRoborazziCompareReporter()
+    class VerifyRoborazziReporter : RoborazziReporter {
+      private val jsonOutputRoborazziCompareReporter = JsonOutputRoborazziReporter()
       override fun report(reportResult: CaptureResult) {
         jsonOutputRoborazziCompareReporter.report(reportResult)
         when (reportResult) {

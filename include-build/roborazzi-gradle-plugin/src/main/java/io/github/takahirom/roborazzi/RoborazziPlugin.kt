@@ -149,7 +149,7 @@ class RoborazziPlugin : Plugin<Project> {
         .configureEach { test ->
           val roborazziProperties =
             project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
-          val compareReportDir = project.file(RoborazziReportConst.resultDirPath)
+          val resultsDir = project.file(RoborazziReportConst.resultDirPath)
           val resultDirFileTree =
             project.fileTree(RoborazziReportConst.resultDirPath)
           val resultsSummaryFile =
@@ -207,8 +207,8 @@ class RoborazziPlugin : Plugin<Project> {
             if (test.systemProperties["roborazzi.test.compare"]?.toString()
                 ?.toBoolean() == true
             ) {
-              compareReportDir.deleteRecursively()
-              compareReportDir.mkdirs()
+              resultsDir.deleteRecursively()
+              resultsDir.mkdirs()
             }
           }
           // We don't use custom task action here because we want to run it even if we use `-P` parameter

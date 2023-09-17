@@ -55,12 +55,12 @@ data class CaptureResults(
     fun fromJson(jsonObject: JSONObject): CaptureResults {
       val summary = CompareSummary.fromJson(jsonObject.getJSONObject("summary"))
       val resultsArray = jsonObject.getJSONArray("results")
-      val compareReportCaptureResults = mutableListOf<CaptureResult>()
+      val captureResults = mutableListOf<CaptureResult>()
       for (i in 0 until resultsArray.length()) {
         val resultJson = resultsArray.getJSONObject(i)
-        compareReportCaptureResults.add(CaptureResult.fromJson(resultJson))
+        captureResults.add(CaptureResult.fromJson(resultJson))
       }
-      return CaptureResults(summary, compareReportCaptureResults)
+      return CaptureResults(summary, captureResults)
     }
   }
 }
