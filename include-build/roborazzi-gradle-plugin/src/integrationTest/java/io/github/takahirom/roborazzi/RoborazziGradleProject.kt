@@ -224,17 +224,23 @@ dependencies {
     }
   }
 
-  fun checkCompareFileNotExists() {
+  fun checkResultFileExists(nameSuffix: String) {
+    testProjectDir.root.resolve("app/build/test-results/roborazzi/results/").listFiles()
+      .firstOrNull { it.name.endsWith(nameSuffix) }
+      ?: error("File not found: $nameSuffix")
+  }
+
+  fun checkResultsSummaryFileNotExists() {
     val recordedFile =
-      testProjectDir.root.resolve("app/build/test-results/roborazzi/compare-report.json")
+      testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
     assert(!recordedFile.exists()) {
       "File exists: ${recordedFile.absolutePath}"
     }
   }
 
-  fun checkCompareFileExists() {
+  fun checkResultsSummaryFileExists() {
     val recordedFile =
-      testProjectDir.root.resolve("app/build/test-results/roborazzi/compare-report.json")
+      testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
     assert(recordedFile.exists()) {
       "File not exists: ${recordedFile.absolutePath}"
     }
@@ -251,7 +257,6 @@ dependencies {
     val recordedFile = testProjectDir.root.resolve(path)
     return recordedFile.readBytes().contentHashCode()
   }
-
 
   fun checkRecordedFileNotExists(path: String) {
     val recordedFile = testProjectDir.root.resolve(path)

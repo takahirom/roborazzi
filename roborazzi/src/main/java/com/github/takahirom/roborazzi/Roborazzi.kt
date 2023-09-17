@@ -585,7 +585,7 @@ fun processOutputImageAndReportWithDefaults(
     canvasFromFile = { file, bufferedImageType ->
       AwtRoboCanvas.load(file, bufferedImageType)
     },
-    generateCompareCanvas = { actualCanvas, resizeScale, bufferedImageType ->
+    generateComparisonCanvas = { actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
         this as AwtRoboCanvas,
         actualCanvas as AwtRoboCanvas,

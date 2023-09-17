@@ -1,6 +1,6 @@
 package io.github.takahirom.roborazzi
 
-import com.github.takahirom.roborazzi.CompareReportCaptureResult
+import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CompareReportResult
 import com.github.takahirom.roborazzi.CompareSummary
 import java.io.File
@@ -13,26 +13,26 @@ class CompareReportResultTest {
   @Test
   fun testJsonSerialization() {
     val summary = CompareSummary(10, 2, 3, 5)
-    val compareReportCaptureResults = listOf(
-      CompareReportCaptureResult.Added(
+    val captureResutlsResults = listOf(
+      CaptureResult.Added(
         compareFile = File("/compare_file"),
         actualFile = File("/actual_file"),
         goldenFile = File("/golden_file"),
         timestampNs = 123456789,
       ),
-      CompareReportCaptureResult.Changed(
+      CaptureResult.Changed(
         compareFile = File("/compare_file"),
         goldenFile = File("/golden_file"),
         actualFile = File("/actual_file"),
         timestampNs = 123456789,
       ),
-      CompareReportCaptureResult.Unchanged(
+      CaptureResult.Unchanged(
         goldenFile = File("/golden_file"),
         timestampNs = 123456789
       )
     )
 
-    val compareReportResult = CompareReportResult(summary, compareReportCaptureResults)
+    val compareReportResult = CompareReportResult(summary, captureResutlsResults)
 
     val json = compareReportResult.toJson()
     val jsonSummary = json.getJSONObject("summary")
@@ -45,11 +45,11 @@ class CompareReportResultTest {
     assertEquals(summary.unchanged, jsonSummary.getInt("unchanged"))
 
     // Test capture results
-    assertEquals(compareReportCaptureResults.size, jsonResults.length())
+    assertEquals(captureResutlsResults.size, jsonResults.length())
 
     for (i in 0 until jsonResults.length()) {
       val jsonResult = jsonResults.getJSONObject(i)
-      val captureResult = compareReportCaptureResults[i]
+      val captureResult = captureResutlsResults[i]
 
       assertEquals(
         captureResult.compareFile?.absolutePath, jsonResult.optString("compare_file_path", null)
@@ -112,18 +112,18 @@ class CompareReportResultTest {
     // Test capture results
     assertEquals(3, compareReportCaptureResults.size)
 
-    val addedResult = compareReportCaptureResults[0] as CompareReportCaptureResult.Added
+    val addedResult = compareReportCaptureResults[0] as CaptureResult.Added
     assertEquals(File("compare_file"), addedResult.compareFile)
     assertEquals(File("actual_file"), addedResult.actualFile)
     assertEquals(123456789, addedResult.timestampNs)
 
-    val changedResult = compareReportCaptureResults[1] as CompareReportCaptureResult.Changed
+    val changedResult = compareReportCaptureResults[1] as CaptureResult.Changed
     assertEquals(File("compare_file"), changedResult.compareFile)
     assertEquals(File("actual_file"), changedResult.actualFile)
     assertEquals(File("golden_file"), changedResult.goldenFile)
     assertEquals(123456789, changedResult.timestampNs)
 
-    val unchangedResult = compareReportCaptureResults[2] as CompareReportCaptureResult.Unchanged
+    val unchangedResult = compareReportCaptureResults[2] as CaptureResult.Unchanged
     assertEquals(File("golden_file"), unchangedResult.goldenFile)
     assertEquals(123456789, unchangedResult.timestampNs)
   }

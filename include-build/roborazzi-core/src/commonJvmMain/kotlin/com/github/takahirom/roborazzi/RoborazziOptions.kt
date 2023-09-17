@@ -1,9 +1,6 @@
 package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
-import com.github.takahirom.roborazzi.DefaultFileNameGenerator
-import com.github.takahirom.roborazzi.ThresholdValidator
-import com.github.takahirom.roborazzi.debugLog
 import java.io.File
 import java.io.FileWriter
 
@@ -91,7 +88,7 @@ data class RoborazziOptions(
   }
 
   interface RoborazziCompareReporter {
-    fun report(compareReportCaptureResult: CompareReportCaptureResult)
+    fun report(reportResult: CaptureResult)
 
     companion object {
       operator fun invoke(): RoborazziCompareReporter {
@@ -99,7 +96,6 @@ data class RoborazziOptions(
           VerifyRoborazziCompareReporter()
         } else {
           JsonOutputRoborazziCompareReporter()
-
         }
       }
     }
@@ -107,38 +103,42 @@ data class RoborazziOptions(
     class JsonOutputRoborazziCompareReporter : RoborazziCompareReporter {
 
       init {
-        File(RoborazziReportConst.compareReportDirPath).mkdirs()
+        File(RoborazziReportConst.resultDirPath).mkdirs()
       }
 
-      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
-        val absolutePath = File(RoborazziReportConst.compareReportDirPath).absolutePath
-        val nameWithoutExtension = when (compareReportCaptureResult) {
-          is CompareReportCaptureResult.Added -> compareReportCaptureResult.compareFile
-          is CompareReportCaptureResult.Changed -> compareReportCaptureResult.goldenFile
-          is CompareReportCaptureResult.Unchanged -> compareReportCaptureResult.goldenFile
+      override fun report(reportResult: CaptureResult) {
+        val absolutePath = File(RoborazziReportConst.resultDirPath).absolutePath
+        val nameWithoutExtension = when (reportResult) {
+          is CaptureResult.Added -> reportResult.compareFile
+          is CaptureResult.Changed -> reportResult.goldenFile
+          is CaptureResult.Unchanged -> reportResult.goldenFile
+          is CaptureResult.Record -> reportResult.goldenFile
         }.nameWithoutExtension
         val reportFileName =
-          "$absolutePath/${compareReportCaptureResult.timestampNs}_$nameWithoutExtension.json"
+          "$absolutePath/${reportResult.timestampNs}_$nameWithoutExtension.json"
 
-        val jsonResult = compareReportCaptureResult.toJson()
+        val jsonResult = reportResult.toJson()
         FileWriter(reportFileName).use { it.write(jsonResult.toString()) }
+        debugLog { "JsonResult file($reportFileName) has been written" }
       }
     }
 
     class VerifyRoborazziCompareReporter : RoborazziCompareReporter {
-      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
-        when (compareReportCaptureResult) {
-          is CompareReportCaptureResult.Added -> throw AssertionError(
-            "Roborazzi: The original file(${compareReportCaptureResult.goldenFile.absolutePath}) was not found.\n" +
-              "See the actual image at ${compareReportCaptureResult.actualFile.absolutePath}"
+      private val jsonOutputRoborazziCompareReporter = JsonOutputRoborazziCompareReporter()
+      override fun report(reportResult: CaptureResult) {
+        jsonOutputRoborazziCompareReporter.report(reportResult)
+        when (reportResult) {
+          is CaptureResult.Added -> throw AssertionError(
+            "Roborazzi: The original file(${reportResult.goldenFile.absolutePath}) was not found.\n" +
+              "See the actual image at ${reportResult.actualFile.absolutePath}"
           )
 
-          is CompareReportCaptureResult.Changed -> throw AssertionError(
-            "Roborazzi: ${compareReportCaptureResult.goldenFile.absolutePath} is changed.\n" +
-              "See the compare image at ${compareReportCaptureResult.compareFile.absolutePath}"
+          is CaptureResult.Changed -> throw AssertionError(
+            "Roborazzi: ${reportResult.goldenFile.absolutePath} is changed.\n" +
+              "See the compare image at ${reportResult.compareFile.absolutePath}"
           )
 
-          is CompareReportCaptureResult.Unchanged -> {
+          is CaptureResult.Unchanged, is CaptureResult.Record -> {
           }
         }
       }

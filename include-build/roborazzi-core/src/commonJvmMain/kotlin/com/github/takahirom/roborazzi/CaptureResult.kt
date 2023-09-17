@@ -4,19 +4,37 @@ import java.io.File
 import java.io.FileReader
 import org.json.JSONObject
 
-sealed interface CompareReportCaptureResult {
+sealed interface CaptureResult {
   fun toJson(): JSONObject
   val timestampNs: Long
   val compareFile: File?
   val actualFile: File?
   val goldenFile: File?
 
+  data class Record(
+    override val goldenFile: File,
+    override val timestampNs: Long,
+  ): CaptureResult {
+    override val actualFile: File?
+      get() = null
+    override val compareFile: File?
+      get() = null
+
+    override fun toJson(): JSONObject {
+      val json = JSONObject()
+      json.put("type", "unchanged")
+      json.put("golden_file_path", goldenFile.absolutePath)
+      json.put("timestamp", timestampNs)
+      return json
+    }
+  }
+
   data class Added(
     override val compareFile: File,
     override val actualFile: File,
     override val goldenFile: File,
     override val timestampNs: Long,
-  ) : CompareReportCaptureResult {
+  ) : CaptureResult {
     override fun toJson(): JSONObject {
       val json = JSONObject()
       json.put("type", "added")
@@ -33,7 +51,7 @@ sealed interface CompareReportCaptureResult {
     override val goldenFile: File,
     override val actualFile: File,
     override val timestampNs: Long
-  ) : CompareReportCaptureResult {
+  ) : CaptureResult {
     override fun toJson(): JSONObject {
       val json = JSONObject()
       json.put("type", "changed")
@@ -48,7 +66,7 @@ sealed interface CompareReportCaptureResult {
   data class Unchanged(
     override val goldenFile: File,
     override val timestampNs: Long
-  ) : CompareReportCaptureResult {
+  ) : CaptureResult {
     override val actualFile: File?
       get() = null
     override val compareFile: File?
@@ -64,12 +82,12 @@ sealed interface CompareReportCaptureResult {
   }
 
   companion object {
-    fun fromJsonFile(inputPath: String): CompareReportCaptureResult {
+    fun fromJsonFile(inputPath: String): CaptureResult {
       val json = JSONObject(FileReader(inputPath).readText())
       return fromJson(json)
     }
 
-    fun fromJson(json: JSONObject): CompareReportCaptureResult {
+    fun fromJson(json: JSONObject): CaptureResult {
       val type = json.getString("type")
       val compareFile = json.optString("compare_file_path")?.let { File(it) }
       val goldenFile = json.optString("golden_file_path")?.let { File(it) }

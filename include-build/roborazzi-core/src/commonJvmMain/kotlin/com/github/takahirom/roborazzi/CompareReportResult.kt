@@ -32,7 +32,7 @@ data class CompareSummary(
 
 data class CompareReportResult(
   val summary: CompareSummary,
-  val compareReportCaptureResults: List<CompareReportCaptureResult>
+  val compareReportCaptureResults: List<CaptureResult>
 ) {
   fun toJson(): JSONObject {
     val json = JSONObject()
@@ -55,10 +55,10 @@ data class CompareReportResult(
     fun fromJson(jsonObject: JSONObject): CompareReportResult {
       val summary = CompareSummary.fromJson(jsonObject.getJSONObject("summary"))
       val resultsArray = jsonObject.getJSONArray("results")
-      val compareReportCaptureResults = mutableListOf<CompareReportCaptureResult>()
+      val compareReportCaptureResults = mutableListOf<CaptureResult>()
       for (i in 0 until resultsArray.length()) {
         val resultJson = resultsArray.getJSONObject(i)
-        compareReportCaptureResults.add(CompareReportCaptureResult.fromJson(resultJson))
+        compareReportCaptureResults.add(CaptureResult.fromJson(resultJson))
       }
       return CompareReportResult(summary, compareReportCaptureResults)
     }

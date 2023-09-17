@@ -4,7 +4,7 @@ import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
-import com.github.takahirom.roborazzi.CompareReportCaptureResult
+import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CompareReportResult
 import com.github.takahirom.roborazzi.CompareSummary
 import com.github.takahirom.roborazzi.RoborazziReportConst
@@ -149,11 +149,11 @@ class RoborazziPlugin : Plugin<Project> {
         .configureEach { test ->
           val roborazziProperties =
             project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
-          val compareReportDir = project.file(RoborazziReportConst.compareReportDirPath)
-          val compareReportDirFileTree =
-            project.fileTree(RoborazziReportConst.compareReportDirPath)
-          val compareSummaryReportFile =
-            project.file(RoborazziReportConst.compareSummaryReportFilePath)
+          val compareReportDir = project.file(RoborazziReportConst.resultDirPath)
+          val resultDirFileTree =
+            project.fileTree(RoborazziReportConst.resultDirPath)
+          val resultsSummaryFile =
+            project.file(RoborazziReportConst.resultsSummaryFilePath)
           if (restoreOutputDirRoborazziTaskProvider.isPresent) {
             test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
               if (!it.outputDir.get().asFile.exists()) {
@@ -213,6 +213,11 @@ class RoborazziPlugin : Plugin<Project> {
           }
           // We don't use custom task action here because we want to run it even if we use `-P` parameter
           test.doLast {
+            val isTaskPresent =
+              isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
+            if (!isTaskPresent) {
+              return@doLast
+            }
             // Copy all files from outputDir to intermediateDir
             // so that we can use Gradle's output caching
             infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
@@ -224,32 +229,27 @@ class RoborazziPlugin : Plugin<Project> {
               overwrite = true
             )
 
-            val isCompare =
-              test.systemProperties["roborazzi.test.compare"]?.toString()?.toBoolean() == true
-            if (!isCompare) {
-              return@doLast
-            }
-            val results: List<CompareReportCaptureResult> = compareReportDirFileTree.mapNotNull {
+            val results: List<CaptureResult> = resultDirFileTree.mapNotNull {
               if (it.name.endsWith(".json")) {
-                CompareReportCaptureResult.fromJsonFile(it.path)
+                CaptureResult.fromJsonFile(it.path)
               } else {
                 null
               }
             }
-            infoln("Save report to ${compareSummaryReportFile.absolutePath} with results:${results.size}")
+            infoln("Save result to ${resultsSummaryFile.absolutePath} with results:${results.size}")
 
-            val reportResult = CompareReportResult(
+            val roborazziResult = CompareReportResult(
               summary = CompareSummary(
                 total = results.size,
-                added = results.count { it is CompareReportCaptureResult.Added },
-                changed = results.count { it is CompareReportCaptureResult.Changed },
-                unchanged = results.count { it is CompareReportCaptureResult.Unchanged }
+                added = results.count { it is CaptureResult.Added },
+                changed = results.count { it is CaptureResult.Changed },
+                unchanged = results.count { it is CaptureResult.Unchanged }
               ),
               compareReportCaptureResults = results
             )
 
-            val jsonResult = reportResult.toJson()
-            compareSummaryReportFile.writeText(jsonResult.toString())
+            val jsonResult = roborazziResult.toJson()
+            resultsSummaryFile.writeText(jsonResult.toString())
           }
         }
 
