@@ -30,15 +30,15 @@ data class CompareSummary(
   }
 }
 
-data class CompareReportResult(
+data class CaptureResults(
   val summary: CompareSummary,
-  val compareReportCaptureResults: List<CaptureResult>
+  val captureResults: List<CaptureResult>
 ) {
   fun toJson(): JSONObject {
     val json = JSONObject()
     json.put("summary", summary.toJson())
     val resultsArray = JSONArray()
-    compareReportCaptureResults.forEach { result ->
+    captureResults.forEach { result ->
       resultsArray.put(result.toJson())
     }
     json.put("results", resultsArray)
@@ -46,13 +46,13 @@ data class CompareReportResult(
   }
 
   companion object {
-    fun fromJsonFile(inputPath: String): CompareReportResult {
+    fun fromJsonFile(inputPath: String): CaptureResults {
       val fileContents = File(inputPath).readText()
       val jsonObject = JSONObject(fileContents)
       return fromJson(jsonObject)
     }
 
-    fun fromJson(jsonObject: JSONObject): CompareReportResult {
+    fun fromJson(jsonObject: JSONObject): CaptureResults {
       val summary = CompareSummary.fromJson(jsonObject.getJSONObject("summary"))
       val resultsArray = jsonObject.getJSONArray("results")
       val compareReportCaptureResults = mutableListOf<CaptureResult>()
@@ -60,7 +60,7 @@ data class CompareReportResult(
         val resultJson = resultsArray.getJSONObject(i)
         compareReportCaptureResults.add(CaptureResult.fromJson(resultJson))
       }
-      return CompareReportResult(summary, compareReportCaptureResults)
+      return CaptureResults(summary, compareReportCaptureResults)
     }
   }
 }

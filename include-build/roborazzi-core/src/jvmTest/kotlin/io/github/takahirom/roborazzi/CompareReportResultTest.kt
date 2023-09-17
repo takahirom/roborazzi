@@ -1,7 +1,7 @@
 package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResult
-import com.github.takahirom.roborazzi.CompareReportResult
+import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.CompareSummary
 import java.io.File
 import org.json.JSONObject
@@ -32,7 +32,7 @@ class CompareReportResultTest {
       )
     )
 
-    val compareReportResult = CompareReportResult(summary, captureResutlsResults)
+    val compareReportResult = CaptureResults(summary, captureResutlsResults)
 
     val json = compareReportResult.toJson()
     val jsonSummary = json.getJSONObject("summary")
@@ -99,9 +99,9 @@ class CompareReportResultTest {
         }
         """.trimIndent()
 
-    val compareReportResult = CompareReportResult.fromJson(JSONObject(jsonString))
+    val compareReportResult = CaptureResults.fromJson(JSONObject(jsonString))
     val summary = compareReportResult.summary
-    val compareReportCaptureResults = compareReportResult.compareReportCaptureResults
+    val compareReportCaptureResults = compareReportResult.captureResults
 
     // Test summary
     assertEquals(10, summary.total)
