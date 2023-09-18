@@ -69,7 +69,7 @@ data class RoborazziOptions(
   }
 
   data class ReportOptions(
-    val roborazziReporter: RoborazziReporter = RoborazziReporter(),
+    val captureResultReporter: CaptureResultReporter = CaptureResultReporter(),
   )
 
   data class CompareOptions(
@@ -89,11 +89,11 @@ data class RoborazziOptions(
     )
   }
 
-  interface RoborazziReporter {
+  interface CaptureResultReporter {
     fun report(reportResult: CaptureResult)
 
     companion object {
-      operator fun invoke(): RoborazziReporter {
+      operator fun invoke(): CaptureResultReporter {
         return if (roborazziVerifyEnabled()) {
           VerifyRoborazziReporter()
         } else {
@@ -102,7 +102,7 @@ data class RoborazziOptions(
       }
     }
 
-    class JsonOutputRoborazziReporter : RoborazziReporter {
+    class JsonOutputRoborazziReporter : CaptureResultReporter {
 
       init {
         File(RoborazziReportConst.resultDirPath).mkdirs()
@@ -125,7 +125,7 @@ data class RoborazziOptions(
       }
     }
 
-    class VerifyRoborazziReporter : RoborazziReporter {
+    class VerifyRoborazziReporter : CaptureResultReporter {
       private val jsonOutputRoborazziCompareReporter = JsonOutputRoborazziReporter()
       override fun report(reportResult: CaptureResult) {
         jsonOutputRoborazziCompareReporter.report(reportResult)
