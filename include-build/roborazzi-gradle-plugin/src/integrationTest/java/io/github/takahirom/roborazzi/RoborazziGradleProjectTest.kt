@@ -203,6 +203,30 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun record_noTestFiles() {
+    RoborazziGradleProject(testProjectDir).apply {
+      removeTest()
+      record()
+
+      // Test will be skipped when no souce so no output
+      checkResultsSummaryFileNotExists()
+      checkResultFileNotExists(resultFileSuffix)
+    }
+  }
+
+  @Test
+  fun record_noTests() {
+    RoborazziGradleProject(testProjectDir).apply {
+      removeTest()
+      addTestClass()
+      record()
+
+      checkResultsSummaryFileExists()
+      checkResultFileNotExists(resultFileSuffix)
+    }
+  }
+
+  @Test
   fun verify_nochange() {
     RoborazziGradleProject(testProjectDir).apply {
       record()

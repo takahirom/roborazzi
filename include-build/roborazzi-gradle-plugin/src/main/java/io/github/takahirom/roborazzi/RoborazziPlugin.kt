@@ -243,6 +243,7 @@ class RoborazziPlugin : Plugin<Project> {
             val roborazziResult = CaptureResults.from(results)
 
             val jsonResult = roborazziResult.toJson()
+            resultsSummaryFile.parentFile.mkdirs()
             resultsSummaryFile.writeText(jsonResult.toString())
             reportFile.parentFile.mkdirs()
             reportFile.writeText(
