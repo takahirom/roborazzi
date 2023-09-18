@@ -52,6 +52,7 @@ fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStra
 
 data class RoborazziOptions(
   val captureType: CaptureType = if (canScreenshot()) CaptureType.Screenshot() else defaultCaptureType(),
+  val reportOptions: ReportOptions = ReportOptions(),
   val compareOptions: CompareOptions = CompareOptions(),
   val recordOptions: RecordOptions = RecordOptions(),
 ) {
@@ -67,13 +68,15 @@ data class RoborazziOptions(
     companion object
   }
 
-  data class CompareOptions(
+  data class ReportOptions(
     val roborazziReporter: RoborazziReporter = RoborazziReporter(),
+  )
+
+  data class CompareOptions(
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
-      roborazziCompareReporter: RoborazziReporter = RoborazziReporter(),
       outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
       /**
        * This value determines the threshold of pixel change at which the diff image is output or not.
@@ -81,7 +84,6 @@ data class RoborazziOptions(
        */
       changeThreshold: Float = 0.01F,
     ) : this(
-      roborazziReporter = roborazziCompareReporter,
       outputDirectoryPath = outputDirectoryPath,
       resultValidator = ThresholdValidator(changeThreshold)
     )
