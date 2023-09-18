@@ -3,6 +3,7 @@ package io.github.takahirom.roborazzi
 import java.io.File
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import org.junit.rules.TemporaryFolder
 
 class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
@@ -230,6 +231,15 @@ dependencies {
       ?: error("File not found: $nameSuffix")
   }
 
+  fun checkResultFileNotExists(nameSuffix: String) {
+    testProjectDir.root.resolve("app/build/test-results/roborazzi/results/").listFiles()
+      ?.firstOrNull { it.name.endsWith(nameSuffix) }
+      ?.let {
+        error("File exists: $nameSuffix")
+      }
+  }
+
+
   fun checkResultsSummaryFileNotExists() {
     val recordedFile =
       testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
@@ -300,6 +310,24 @@ dependencies {
     val file =
       testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project")
     file.deleteRecursively()
+  }
+
+  fun addTestClass() {
+    val file =
+      testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project/AddedClass.kt")
+    file.parentFile.mkdirs()
+    file.writeText(
+      """
+      |package com.github.takahirom.integration_test_project
+      |import org.junit.Test
+      |class AddedClass {
+      |  @Test
+      |  fun test() {
+      |    println("test")
+      |  }
+      |}
+    """.trimMargin()
+    )
   }
 
   val appBuildFile = AppBuildFile(testProjectDir)
