@@ -32,7 +32,7 @@ kotlin {
     }
     commonJvmMain {
       dependencies {
-        compileOnly 'org.json:json:20220924'
+        compileOnly 'org.json:json:20230227'
         api "com.dropbox.differ:differ:0.0.1-alpha1"
         implementation 'junit:junit:4.13.2'
       }
@@ -46,7 +46,7 @@ kotlin {
     }
     jvmMain {
       dependencies {
-        implementation 'org.json:json:20220924'
+        implementation 'org.json:json:20230227'
       }
     }
     jvmTest {
