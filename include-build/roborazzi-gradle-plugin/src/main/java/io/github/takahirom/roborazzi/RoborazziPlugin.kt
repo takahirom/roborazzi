@@ -6,7 +6,6 @@ import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
-import com.github.takahirom.roborazzi.ResultSummary
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import java.util.Locale
 import javax.inject.Inject
@@ -154,6 +153,8 @@ class RoborazziPlugin : Plugin<Project> {
             project.fileTree(RoborazziReportConst.resultDirPath)
           val resultsSummaryFile =
             project.file(RoborazziReportConst.resultsSummaryFilePath)
+          val reportFile =
+            project.file(RoborazziReportConst.reportFilePath)
           if (restoreOutputDirRoborazziTaskProvider.isPresent) {
             test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
               if (!it.outputDir.get().asFile.exists()) {
@@ -239,19 +240,17 @@ class RoborazziPlugin : Plugin<Project> {
             }
             infoln("Save result to ${resultsSummaryFile.absolutePath} with results:${results.size}")
 
-            val roborazziResult = CaptureResults(
-              summary = ResultSummary(
-                total = results.size,
-                recorded = results.count { it is CaptureResult.Recorded },
-                added = results.count { it is CaptureResult.Added },
-                changed = results.count { it is CaptureResult.Changed },
-                unchanged = results.count { it is CaptureResult.Unchanged }
-              ),
-              captureResults = results
-            )
+            val roborazziResult = CaptureResults.from(results)
 
             val jsonResult = roborazziResult.toJson()
             resultsSummaryFile.writeText(jsonResult.toString())
+            reportFile.parentFile.mkdirs()
+            reportFile.writeText(
+              RoborazziReportConst.reportHtml.replace(
+                oldValue = "REPORT_TEMPLATE_BODY",
+                newValue = roborazziResult.toHtml(reportFile.parentFile.absolutePath)
+              )
+            )
           }
         }
 

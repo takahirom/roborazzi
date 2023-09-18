@@ -19,6 +19,32 @@ data class ResultSummary(
     return json
   }
 
+  fun toHtml(): String {
+    return """
+        <h3>Summary</h3>
+        <table class="highlight">
+            <thead>
+            <tr>
+                <th>Total</th>
+                <th>Recorded</th>
+                <th>Added</th>
+                <th>Changed</th>
+                <th>Unchanged</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>$total</td>
+                <td>$recorded</td>
+                <td>$added</td>
+                <td>$changed</td>
+                <td>$unchanged</td>
+            </tr>
+            </tbody>
+        </table>
+    """.trimIndent()
+  }
+
   companion object {
     fun fromJson(jsonObject: JSONObject): ResultSummary {
       val total = jsonObject.getInt("total")
