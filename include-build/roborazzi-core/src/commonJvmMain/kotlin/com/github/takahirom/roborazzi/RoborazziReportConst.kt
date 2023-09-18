@@ -3,7 +3,7 @@ package com.github.takahirom.roborazzi
 object RoborazziReportConst {
   const val resultsSummaryFilePath = "build/test-results/roborazzi/results-summary.json"
   const val resultDirPath = "build/test-results/roborazzi/results/"
-  const val reportFilePath = "build/reports/roborazzi/report.html"
+  const val reportFilePath = "build/reports/roborazzi/index.html"
   const val reportHtml = """
 <!DOCTYPE html>
 <html lang="en">
