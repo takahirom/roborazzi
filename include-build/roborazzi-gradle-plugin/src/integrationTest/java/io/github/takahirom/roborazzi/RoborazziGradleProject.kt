@@ -296,5 +296,11 @@ dependencies {
     file.writeText(originalFileText.replace("RoborazziTest", "AddedRoborazziTest"))
   }
 
+  fun removeTest() {
+    val file =
+      testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project")
+    file.deleteRecursively()
+  }
+
   val appBuildFile = AppBuildFile(testProjectDir)
 }

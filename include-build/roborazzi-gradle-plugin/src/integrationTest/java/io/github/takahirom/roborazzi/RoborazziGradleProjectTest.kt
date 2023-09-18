@@ -203,6 +203,17 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun record_noTests() {
+    RoborazziGradleProject(testProjectDir).apply {
+      removeTest()
+      record()
+
+      checkResultsSummaryFileExists()
+      checkResultFileExists(resultFileSuffix)
+    }
+  }
+
+  @Test
   fun verify_nochange() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
