@@ -25,11 +25,11 @@ data class ResultSummary(
         <table class="highlight">
             <thead>
             <tr>
-                <td>Total</td>
-                <td>Recorded</td>
-                <td>Added</td>
-                <td>Changed</td>
-                <td>Unchanged</td>
+                <th>Total</th>
+                <th>Recorded</th>
+                <th>Added</th>
+                <th>Changed</th>
+                <th>Unchanged</th>
             </tr>
             </thead>
             <tbody>
