@@ -130,7 +130,9 @@ or
 
 </td><td> 
 
-Record a screenshot
+Record a screenshot  
+Default output directory is `build/outputs/roborazzi`  
+You can check a report under `build/reports/roborazzi/index.html`
 
 </td>
 </tr>
