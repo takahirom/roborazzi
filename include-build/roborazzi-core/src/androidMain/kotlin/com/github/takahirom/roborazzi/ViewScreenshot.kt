@@ -86,12 +86,14 @@ private fun View.generateBitmap(
   }
   val destBitmap = Bitmap.createBitmap(width, height, pixelBitConfig.toBitmapConfig())
   when {
-    Build.VERSION.SDK_INT < 26 -> {
+    Build.VERSION.SDK_INT < 28 -> {
       println(
-        "**Warning from Roborazzi**: Robolectric may not function properly under API 26, " +
+        "**Warning from Roborazzi**: Robolectric may not function properly under API 28, " +
           "specifically it may fail to capture accurate screenshots. " +
-          "Please add @Config(sdk = [26]) or higher to your test class to ensure proper operation. " +
-          "For more details, please refer to https://github.com/takahirom/roborazzi/issues/114 ."
+          "Please add @Config(sdk = [28]) or higher to your test class to ensure proper operation. " +
+          "For more details, please refer to " +
+          "https://github.com/takahirom/roborazzi/issues/114 " +
+          "https://github.com/takahirom/roborazzi/issues/164 ."
       )
       generateBitmapFromDraw(destBitmap, bitmapFuture)
     }
