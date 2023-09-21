@@ -999,8 +999,8 @@ fun checkLaunchShot() {
 
 This allows you to create a category of screenshot tests and filter them using the `-Pscreenshot` property, thus making it easier to run only those specific tests.
 
-## Q: How can I debug screenshot tests in Android Studio?
-## Q: How can I execute screenshot tests using Android Studio's Run button?
+### Q: How can I debug screenshot tests in Android Studio?
+### Q: How can I execute screenshot tests using Android Studio's Run button?
 
 A: To execute screenshot tests using Android Studio's Run button, configure your project as follows:
 
