@@ -60,6 +60,15 @@ REPORT_TEMPLATE_BODY
     </div>
 </div>
 
+<div id="imageModal" class="modal">
+    <div class="modal-content">
+        <img id="modalImage" src="" alt="">
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+</div>
+
 <footer class="page-footer orange">
     <div class="container">
         <a class="us" href="https://github.com/takahirom/roborazzi" target="_blank"
@@ -72,6 +81,22 @@ REPORT_TEMPLATE_BODY
 <script src="https://cdn.jsdelivr.net/npm/@materializecss/materialize/dist/js/materialize.min.js"></script>
 <script>
     M.AutoInit();
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalInstance = M.Modal.init(document.getElementById('imageModal'), {});
+        var modal = document.getElementById('imageModal');
+        var modalImage = document.getElementById('modalImage');
+        var modalTriggers = document.querySelectorAll('.modal-trigger');
+        modalTriggers.forEach(function(trigger) {
+            trigger.addEventListener('click', function() {
+                var src = this.getAttribute('src');
+                var alt = this.getAttribute('data-alt');
+                modalImage.setAttribute('src', src);
+                modalImage.setAttribute('alt', alt);
+                var instance = M.Modal.getInstance(modal);
+                instance.open();
+            });
+        });
+    });
 </script>
 </body>
 </html>

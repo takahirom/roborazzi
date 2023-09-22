@@ -52,22 +52,22 @@ data class CaptureResults(
           when (image) {
             is CaptureResult.Added -> {
               append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.actualFile.name}</td>")
-              append("<td class=\"$imgClass\"><img $imgAttributes src=\"${image.actualFile.pathFrom(reportDirectoryPath)}\"/></td>")
+              append("<td class=\"$imgClass\"><img $imgAttributes class=\"modal-trigger\" src=\"${image.actualFile.pathFrom(reportDirectoryPath)}\" data-alt=\"${image.goldenFile.name}\"/></td>")
             }
 
             is CaptureResult.Changed -> {
               append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.compareFile.name}</td>")
-              append("<td class=\"$imgClass\"><img $imgAttributes src=\"${image.compareFile.pathFrom(reportDirectoryPath)}\"/></td>")
+              append("<td class=\"$imgClass\"><img $imgAttributes class=\"modal-trigger\" src=\"${image.compareFile.pathFrom(reportDirectoryPath)}\" data-alt=\"${image.goldenFile.name}\"/></td>")
             }
 
             is CaptureResult.Recorded -> {
               append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.goldenFile.name}</td>")
-              append("<td class=\"$imgClass\"><img $imgAttributes src=\"${image.goldenFile.pathFrom(reportDirectoryPath)}\"/></td>")
+              append("<td class=\"$imgClass\"><img $imgAttributes class=\"modal-trigger\" src=\"${image.goldenFile.pathFrom(reportDirectoryPath)}\" data-alt=\"${image.goldenFile.name}\"/></td>")
             }
 
             is CaptureResult.Unchanged -> {
               append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.goldenFile.name}</td>")
-              append("<td class=\"$imgClass\"><img $imgAttributes src=\"${image.goldenFile.pathFrom(reportDirectoryPath)}\"/></td>")
+              append("<td class=\"$imgClass\"><img $imgAttributes class=\"modal-trigger\" src=\"${image.goldenFile.pathFrom(reportDirectoryPath)}\" data-alt=\"${image.goldenFile.name}\" /></td>")
             }
           }
           append("</tr>")
