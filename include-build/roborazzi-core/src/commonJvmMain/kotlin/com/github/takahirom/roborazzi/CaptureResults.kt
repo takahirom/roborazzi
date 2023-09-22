@@ -37,7 +37,7 @@ data class CaptureResults(
         val fileNameClass = "flow-text col s3"
         val fileNameStyle = "word-wrap: break-word; word-break: break-all;"
         val imgClass = "col s7"
-        val imgAttributes = "style=\"width: 100%; height: 100%; object-fit: cover;\""
+        val imgAttributes = "style=\"max-width: 100%; height: 100%; object-fit: cover;\""
         append("<table class=\"highlight\">")
         append("<thead>")
         append("<tr class=\"row\">")

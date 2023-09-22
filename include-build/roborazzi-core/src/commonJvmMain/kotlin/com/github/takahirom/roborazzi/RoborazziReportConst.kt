@@ -41,6 +41,15 @@ object RoborazziReportConst {
         .us {
             color: #ffcc80;
         }
+        
+        #imageBottomSheet {
+            max-height: 100%;
+            top: 15%;
+        }
+
+        #modalImage {
+          max-width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -60,12 +69,9 @@ REPORT_TEMPLATE_BODY
     </div>
 </div>
 
-<div id="imageModal" class="modal">
-    <div class="modal-content">
+<div id="imageBottomSheet" class="modal bottom-sheet max-height">
+    <div class="modal-content center-align">
         <img id="modalImage" src="" alt="">
-    </div>
-    <div class="modal-footer">
-        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
     </div>
 </div>
 
@@ -82,8 +88,8 @@ REPORT_TEMPLATE_BODY
 <script>
     M.AutoInit();
     document.addEventListener('DOMContentLoaded', function() {
-        var modalInstance = M.Modal.init(document.getElementById('imageModal'), {});
-        var modal = document.getElementById('imageModal');
+        var modalInstance = M.Modal.init(document.getElementById('imageBottomSheet'), {});
+        var modal = document.getElementById('imageBottomSheet');
         var modalImage = document.getElementById('modalImage');
         var modalTriggers = document.querySelectorAll('.modal-trigger');
         modalTriggers.forEach(function(trigger) {
