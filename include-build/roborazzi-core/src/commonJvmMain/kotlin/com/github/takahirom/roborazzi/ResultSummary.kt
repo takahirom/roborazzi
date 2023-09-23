@@ -26,19 +26,19 @@ data class ResultSummary(
             <thead>
             <tr>
                 <th>Total</th>
-                <th>Recorded</th>
-                <th>Added</th>
-                <th>Changed</th>
-                <th>Unchanged</th>
+                <th><a href="#recorded">Recorded</a></th>
+                <th><a href="#added">Added</a></th>
+                <th><a href="#changed">Changed</a></th>
+                <th><a href="#unchanged">Unchanged</a></th>
             </tr>
             </thead>
             <tbody>
             <tr>
                 <td>$total</td>
-                <td>$recorded</td>
-                <td>$added</td>
-                <td>$changed</td>
-                <td>$unchanged</td>
+                <td><a href="#recorded">$recorded</a></td>
+                <td><a href="#added">$added</a></td>
+                <td><a href="#changed">$changed</a></td>
+                <td><a href="#unchanged">$unchanged</a></td>
             </tr>
             </tbody>
         </table>
