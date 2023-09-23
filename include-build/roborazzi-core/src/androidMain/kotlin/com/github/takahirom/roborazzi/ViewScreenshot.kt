@@ -86,14 +86,12 @@ private fun View.generateBitmap(
   }
   val destBitmap = Bitmap.createBitmap(width, height, pixelBitConfig.toBitmapConfig())
   when {
-    Build.VERSION.SDK_INT < 28 -> {
+    Build.VERSION.SDK_INT < 26 -> {
       println(
-        "**Warning from Roborazzi**: Robolectric may not function properly under API 28, " +
+        "**Warning from Roborazzi**: Robolectric may not function properly under API 26, " +
           "specifically it may fail to capture accurate screenshots. " +
-          "Please add @Config(sdk = [28]) or higher to your test class to ensure proper operation. " +
-          "For more details, please refer to " +
-          "https://github.com/takahirom/roborazzi/issues/114 " +
-          "https://github.com/takahirom/roborazzi/issues/164 ."
+          "Please add @Config(sdk = [26]) or higher to your test class to ensure proper operation. " +
+          "For more details, please refer to https://github.com/takahirom/roborazzi/issues/114 ."
       )
       generateBitmapFromDraw(destBitmap, bitmapFuture)
     }
@@ -102,7 +100,14 @@ private fun View.generateBitmap(
     else -> {
       val window = getActivity()?.window
       if (window != null) {
-        generateBitmapFromPixelCopy(window, destBitmap, bitmapFuture)
+        if (Build.VERSION.SDK_INT < 28) {
+          // See: https://github.com/robolectric/robolectric/blob/robolectric-4.10.3/shadows/framework/src/main/java/org/robolectric/shadows/ShadowPixelCopy.java#L32
+          println("PixelCopy is not supported for API levels below 28. Falling back to View#draw instead of PixelCopy. " +
+            "Consider using API level 28 or higher, e.g., @Config(sdk = [28]).")
+          generateBitmapFromDraw(destBitmap, bitmapFuture)
+        } else {
+          generateBitmapFromPixelCopy(window, destBitmap, bitmapFuture)
+        }
       } else {
         println(
           "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy"
