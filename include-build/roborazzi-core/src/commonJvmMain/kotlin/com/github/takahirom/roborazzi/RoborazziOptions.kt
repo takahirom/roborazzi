@@ -98,17 +98,17 @@ data class RoborazziOptions(
       operator fun invoke(isUsingRule: Boolean): CaptureResultReporter {
         return if (roborazziVerifyEnabled()) {
           if (isUsingRule) {
-            VerifyAfterTestsReporter()
+            VerifyAfterTestsCaptureResultReporter()
           } else {
-            VerifyReporter()
+            VerifyCaptureResultReporter()
           }
         } else {
-          JsonOutputReporter()
+          JsonOutputCaptureResultReporter()
         }
       }
     }
 
-    class JsonOutputReporter : CaptureResultReporter {
+    class JsonOutputCaptureResultReporter : CaptureResultReporter {
 
       init {
         File(RoborazziReportConst.resultDirPath).mkdirs()
@@ -131,10 +131,10 @@ data class RoborazziOptions(
       }
     }
 
-    class VerifyReporter : CaptureResultReporter {
-      private val jsonOutputReporter = JsonOutputReporter()
+    class VerifyCaptureResultReporter : CaptureResultReporter {
+      private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
       override fun report(reportResult: CaptureResult) {
-        jsonOutputReporter.report(reportResult)
+        jsonOutputCaptureResultReporter.report(reportResult)
         val assertErrorOrNull = getAssertErrorOrNull(reportResult)
         if (assertErrorOrNull != null) {
           throw assertErrorOrNull
@@ -143,12 +143,12 @@ data class RoborazziOptions(
     }
 
     @InternalRoborazziApi
-    class VerifyAfterTestsReporter : CaptureResultReporter, OnTestFinishedListener {
-      private val jsonOutputReporter = JsonOutputReporter()
+    class VerifyAfterTestsCaptureResultReporter : CaptureResultReporter, OnTestFinishedListener {
+      private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
       private val captureResults = mutableListOf<Pair<CaptureResult, AssertionError?>>()
 
       override fun report(reportResult: CaptureResult) {
-        jsonOutputReporter.report(reportResult)
+        jsonOutputCaptureResultReporter.report(reportResult)
         captureResults.add(reportResult to getAssertErrorOrNull(reportResult))
       }
 
