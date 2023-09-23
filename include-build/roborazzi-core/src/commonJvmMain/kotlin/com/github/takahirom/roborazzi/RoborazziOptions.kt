@@ -132,7 +132,7 @@ data class RoborazziOptions(
       }
     }
 
-    class DefaultCaptureResultReporter : CaptureResultReporter, OnTestFinishedListener {
+    class DefaultCaptureResultReporter : CaptureResultReporter, OnTestWithRuleFinishedListener {
       @InternalRoborazziApi
       val delegatedReporter by lazy {
         provideRoborazziContext().ruleCaptureResultReporter ?: run {
@@ -148,10 +148,10 @@ data class RoborazziOptions(
         delegatedReporter.report(reportResult)
       }
 
-      override fun onTestFinished() {
+      override fun onTestWithRuleFinished() {
         // This method is called only when RoborazziRule is used.
-        if (delegatedReporter is OnTestFinishedListener) {
-          (delegatedReporter as OnTestFinishedListener).onTestFinished()
+        if (delegatedReporter is OnTestWithRuleFinishedListener) {
+          (delegatedReporter as OnTestWithRuleFinishedListener).onTestWithRuleFinished()
         }
       }
     }
@@ -169,7 +169,7 @@ data class RoborazziOptions(
     }
 
     @InternalRoborazziApi
-    class VerifyAfterTestCaptureResultReporter : CaptureResultReporter, OnTestFinishedListener {
+    class VerifyAfterTestCaptureResultReporter : CaptureResultReporter, OnTestWithRuleFinishedListener {
       private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
       private val captureResults = mutableListOf<Pair<CaptureResult, AssertionError?>>()
 
@@ -178,7 +178,7 @@ data class RoborazziOptions(
         captureResults.add(reportResult to getAssertErrorOrNull(reportResult))
       }
 
-      override fun onTestFinished() {
+      override fun onTestWithRuleFinished() {
         val assertionErrorOrNull =
           captureResults.firstOrNull { it.first is CaptureResult.Added || it.first is CaptureResult.Changed }?.second
         if (assertionErrorOrNull != null) {
@@ -189,8 +189,8 @@ data class RoborazziOptions(
     }
 
     @ExperimentalRoborazziApi
-    interface OnTestFinishedListener {
-      fun onTestFinished()
+    interface OnTestWithRuleFinishedListener {
+      fun onTestWithRuleFinished()
     }
   }
 

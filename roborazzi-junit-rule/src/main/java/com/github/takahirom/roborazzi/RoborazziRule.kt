@@ -138,8 +138,8 @@ class RoborazziRule private constructor(
           runTest(base, description, captureRoot)
         } finally {
           val captureResultReporter = provideRoborazziContext().options.reportOptions.captureResultReporter
-          if ((captureResultReporter is RoborazziOptions.CaptureResultReporter.OnTestFinishedListener)) {
-            captureResultReporter.onTestFinished()
+          if ((captureResultReporter is RoborazziOptions.CaptureResultReporter.OnTestWithRuleFinishedListener)) {
+            captureResultReporter.onTestWithRuleFinished()
           }
           provideRoborazziContext().clearRuleCaptureResultReporter()
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
