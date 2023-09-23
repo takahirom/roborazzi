@@ -1,7 +1,5 @@
 package io.github.takahirom.roborazzi
 
-import groovy.test.GroovyTestCase.assertEquals
-import org.gradle.internal.impldep.org.junit.Assert.assertNotEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -148,7 +146,7 @@ class RoborazziGradleProjectTest {
       verifyAndFail().shouldDetectChangedPngCapture()
 
       val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
-      assertEquals(recordFileHash1, recordFileHash2)
+      assert(recordFileHash1 == recordFileHash2)
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
@@ -194,7 +192,7 @@ class RoborazziGradleProjectTest {
       recordWithScaleSize()
 
       val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
-      assertNotEquals(recordFileHash1, recordFileHash2)
+      assert(recordFileHash1 != recordFileHash2)
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
@@ -205,7 +203,7 @@ class RoborazziGradleProjectTest {
   @Test
   fun record_noTestFiles() {
     RoborazziGradleProject(testProjectDir).apply {
-      removeTest()
+      removeTests()
       record()
 
       // Test will be skipped when no souce so no output
@@ -217,7 +215,7 @@ class RoborazziGradleProjectTest {
   @Test
   fun record_noTests() {
     RoborazziGradleProject(testProjectDir).apply {
-      removeTest()
+      removeTests()
       addTestClass()
       record()
 
@@ -251,7 +249,7 @@ class RoborazziGradleProjectTest {
       verifyAndRecordAndFail()
 
       val recordFileHash2 = getFileHash("$screenshotAndName.testCapture.png")
-      assertNotEquals(recordFileHash1, recordFileHash2)
+      assert(recordFileHash1 != recordFileHash2)
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkResultFileExists(resultFileSuffix)
@@ -328,6 +326,26 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$customReferenceScreenshotAndName.png")
       checkRecordedFileExists("${customCompareScreenshotAndName}_compare.png")
       checkRecordedFileExists("${customCompareScreenshotAndName}_actual.png")
+    }
+  }
+
+  @Test
+  fun secondImagesShouldExistEvenIfFirstVerificationFails() {
+    RoborazziGradleProject(testProjectDir).apply {
+      removeTests()
+      addRuleTest()
+      record()
+      changeScreen()
+
+      verifyAndFail().shouldDetectChangedPngCapture()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_2_actual.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_2.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_2_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_2_actual.png")
     }
   }
 }

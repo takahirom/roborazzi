@@ -202,6 +202,7 @@ android {
 
 dependencies {
   implementation("io.github.takahirom.roborazzi:roborazzi:1.0.0")
+  implementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:1.0.0")
   testImplementation("org.robolectric:robolectric:4.10.3")
 
   implementation(libs.core.ktx)
@@ -306,7 +307,7 @@ dependencies {
     file.writeText(originalFileText.replace("RoborazziTest", "AddedRoborazziTest"))
   }
 
-  fun removeTest() {
+  fun removeTests() {
     val file =
       testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project")
     file.deleteRecursively()
@@ -327,6 +328,56 @@ dependencies {
       |  }
       |}
     """.trimMargin()
+    )
+  }
+
+  fun addRuleTest() {
+    val file =
+      testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project/RoborazziTest.kt")
+    file.parentFile.mkdirs()
+    file.writeText(
+      """
+package com.github.takahirom.integration_test_project
+
+import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.*
+import android.app.Application
+import androidx.test.core.app.ApplicationProvider
+import org.robolectric.Shadows
+import android.content.ComponentName
+import org.junit.Test
+import org.junit.Rule
+import org.robolectric.annotation.GraphicsMode
+
+import org.junit.Assert.*
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class RoborazziTest {
+
+  @get:Rule val roborazziRule = RoborazziRule()
+  init {
+    com.github.takahirom.roborazzi.ROBORAZZI_DEBUG = true
+  }
+  @Test
+  fun testCapture() {
+    val appContext: Application = ApplicationProvider.getApplicationContext()
+    Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
+      ComponentName(
+        appContext.packageName,
+        MainActivity::class.java.name,
+      )
+    )
+    ActivityScenario.launch(MainActivity::class.java)
+    onView(ViewMatchers.isRoot()).captureRoboImage()
+    onView(ViewMatchers.isRoot()).captureRoboImage()
+  }
+}
+    """
     )
   }
 

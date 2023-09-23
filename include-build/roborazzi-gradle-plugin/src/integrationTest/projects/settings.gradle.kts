@@ -20,6 +20,7 @@ val roborazziRootPath = java.lang.System.getenv("ROBORAZZI_ROOT_PATH") ?: "../..
 includeBuild(roborazziRootPath) {
   dependencySubstitution {
     substitute(module("io.github.takahirom.roborazzi:roborazzi")).using(project(":roborazzi"))
+    substitute(module("io.github.takahirom.roborazzi:roborazzi-junit-rule")).using(project(":roborazzi-junit-rule"))
   }
 }
 
