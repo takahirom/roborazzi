@@ -100,7 +100,14 @@ private fun View.generateBitmap(
     else -> {
       val window = getActivity()?.window
       if (window != null) {
-        generateBitmapFromPixelCopy(window, destBitmap, bitmapFuture)
+        if (Build.VERSION.SDK_INT < 28) {
+          // See: https://github.com/robolectric/robolectric/blob/robolectric-4.10.3/shadows/framework/src/main/java/org/robolectric/shadows/ShadowPixelCopy.java#L32
+          println("PixelCopy is not supported for API levels below 28. Falling back to View#draw instead of PixelCopy. " +
+            "Consider using API level 28 or higher, e.g., @Config(sdk = [28]).")
+          generateBitmapFromDraw(destBitmap, bitmapFuture)
+        } else {
+          generateBitmapFromPixelCopy(window, destBitmap, bitmapFuture)
+        }
       } else {
         println(
           "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy"
