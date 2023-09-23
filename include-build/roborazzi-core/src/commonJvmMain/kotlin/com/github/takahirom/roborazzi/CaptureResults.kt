@@ -30,7 +30,7 @@ data class CaptureResults(
     val addedImages = captureResults.filterIsInstance<CaptureResult.Added>()
     val changedImages = captureResults.filterIsInstance<CaptureResult.Changed>()
     val unchangedImages = captureResults.filterIsInstance<CaptureResult.Unchanged>()
-    fun buildTable(title: String, images: List<CaptureResult>): String {
+    fun buildTable(title: String, anchor: String, images: List<CaptureResult>): String {
       if (images.isEmpty()) return ""
       return buildString {
         append("<h3>$title (${images.size})</h3>")
@@ -38,7 +38,7 @@ data class CaptureResults(
         val fileNameStyle = "word-wrap: break-word; word-break: break-all;"
         val imgClass = "col s7"
         val imgAttributes = "style=\"max-width: 100%; height: 100%; object-fit: cover;\""
-        append("<table class=\"highlight\">")
+        append("<table class=\"highlight\" id=\"$anchor\">")
         append("<thead>")
         append("<tr class=\"row\">")
         append("<th class=\"$fileNameClass\" style=\"$fileNameStyle\">File Name</th>")
@@ -79,10 +79,10 @@ data class CaptureResults(
     }
     return buildString {
       append(summary.toHtml())
-      append(buildTable("Recorded images", recordedImages))
-      append(buildTable("Added images", addedImages))
-      append(buildTable("Changed images", changedImages))
-      append(buildTable("Unchanged images", unchangedImages))
+      append(buildTable("Recorded images", "recorded", recordedImages))
+      append(buildTable("Added images", "added", addedImages))
+      append(buildTable("Changed images", "changed", changedImages))
+      append(buildTable("Unchanged images", "unchanged", unchangedImages))
     }
   }
 

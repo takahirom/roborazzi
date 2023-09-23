@@ -33,6 +33,11 @@ object RoborazziReportConst {
         a, .menu {
             color: white;
         }
+        
+        th a, td a {
+            display: block;
+            color: black;
+        }
 
         .material-icons {
             color: #29b6f6;
