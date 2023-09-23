@@ -69,7 +69,7 @@ data class RoborazziOptions(
   }
 
   data class ReportOptions(
-    val captureResultReporter: CaptureResultReporter = CaptureResultReporter(isUsingRule = false),
+    val captureResultReporter: CaptureResultReporter = CaptureResultReporter.defaultReporter(),
   )
 
   data class CompareOptions(
@@ -95,16 +95,17 @@ data class RoborazziOptions(
 
     companion object {
       @ExperimentalRoborazziApi
-      operator fun invoke(isUsingRule: Boolean): CaptureResultReporter {
+      fun ruleReporter(): CaptureResultReporter {
         return if (roborazziVerifyEnabled()) {
-          if (isUsingRule) {
-            VerifyAfterTestsCaptureResultReporter()
-          } else {
-            VerifyCaptureResultReporter()
-          }
+          VerifyAfterTestsCaptureResultReporter()
         } else {
           JsonOutputCaptureResultReporter()
         }
+      }
+
+      @ExperimentalRoborazziApi
+      fun defaultReporter(): CaptureResultReporter {
+        return DefaultCaptureResultReporter()
       }
     }
 
@@ -131,7 +132,30 @@ data class RoborazziOptions(
       }
     }
 
-    class VerifyCaptureResultReporter : CaptureResultReporter {
+    class DefaultCaptureResultReporter : CaptureResultReporter, OnTestFinishedListener {
+      private val verifyReporter by lazy {
+        provideRoborazziContext().ruleCaptureResultReporter ?: run {
+          if (roborazziVerifyEnabled()) {
+            VerifyImmediateCaptureResultReporter()
+          } else {
+            JsonOutputCaptureResultReporter()
+          }
+        }
+      }
+
+      override fun report(reportResult: CaptureResult) {
+        verifyReporter.report(reportResult)
+      }
+
+      override fun onTestFinished() {
+        if (verifyReporter is OnTestFinishedListener) {
+          (verifyReporter as OnTestFinishedListener).onTestFinished()
+        }
+      }
+    }
+
+    @InternalRoborazziApi
+    class VerifyImmediateCaptureResultReporter : CaptureResultReporter {
       private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
       override fun report(reportResult: CaptureResult) {
         jsonOutputCaptureResultReporter.report(reportResult)

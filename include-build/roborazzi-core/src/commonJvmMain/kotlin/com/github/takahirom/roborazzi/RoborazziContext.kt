@@ -5,8 +5,12 @@ import org.junit.runner.Description
 
 @ExperimentalRoborazziApi
 object RoborazziContext {
+  @InternalRoborazziApi
+  var ruleCaptureResultReporter: RoborazziOptions.CaptureResultReporter? = null
+    private set
   private var ruleOverrideOutputDirectory: String? = null
   private var ruleOverrideRoborazziOptions: RoborazziOptions? = null
+
   private var ruleOverrideFileProvider: FileProvider? = null
   private var ruleOverrideDescription: Description? = null
 
@@ -23,6 +27,11 @@ object RoborazziContext {
   @InternalRoborazziApi
   fun setRuleOverrideRoborazziOptions(options: RoborazziOptions) {
     ruleOverrideRoborazziOptions = options
+  }
+
+  @InternalRoborazziApi
+  fun setRuleCaptureResultReporter(captureResultReporter: RoborazziOptions.CaptureResultReporter) {
+    ruleCaptureResultReporter = captureResultReporter
   }
 
   @InternalRoborazziApi
@@ -51,11 +60,11 @@ object RoborazziContext {
   }
 
   @InternalRoborazziApi
-  val outputDirectory
+  val outputDirectory: String
     get() = ruleOverrideOutputDirectory ?: DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 
   @InternalRoborazziApi
-  val options
+  val options: RoborazziOptions
     get() = ruleOverrideRoborazziOptions ?: RoborazziOptions()
 
   // If we don't use Runner and JUnit Rule, we can't use this property.
@@ -77,6 +86,10 @@ object RoborazziContext {
         ruleOverrideDescription=$ruleOverrideDescription
       )
     """.trimIndent()
+  }
+
+  fun clearRuleCaptureResultReporter() {
+    ruleCaptureResultReporter = null
   }
 }
 

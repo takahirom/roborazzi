@@ -50,7 +50,7 @@ class RuleTestWithPath {
     launch(MainActivity::class.java)
     val currentCaptureRepoter = provideRoborazziContext().options.reportOptions.captureResultReporter
     assert(
-      currentCaptureRepoter !is RoborazziOptions.CaptureResultReporter.VerifyCaptureResultReporter
+      currentCaptureRepoter !is RoborazziOptions.CaptureResultReporter.DefaultCaptureResultReporter
     )
   }
 }

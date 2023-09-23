@@ -47,9 +47,7 @@ class RoborazziRule private constructor(
      * Override the [RoborazziOptions.CaptureResultReporter] class to throw an AssertionError after the test has finished,
      * in order to capture all screenshots
      */
-    val captureResultReporterOverride: RoborazziOptions.CaptureResultReporter = RoborazziOptions.CaptureResultReporter(
-      isUsingRule = true
-    ),
+    val ruleCaptureResultReporter: RoborazziOptions.CaptureResultReporter = RoborazziOptions.CaptureResultReporter.ruleReporter(),
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   )
 
@@ -133,13 +131,8 @@ class RoborazziRule private constructor(
       override fun evaluate() {
         try {
           provideRoborazziContext().setRuleOverrideOutputDirectory(options.outputDirectoryPath)
-          provideRoborazziContext().setRuleOverrideRoborazziOptions(
-            options.roborazziOptions.copy(
-              reportOptions = options.roborazziOptions.reportOptions.copy(
-                captureResultReporter = options.captureResultReporterOverride
-              )
-            )
-          )
+          provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
+          provideRoborazziContext().setRuleCaptureResultReporter(options.ruleCaptureResultReporter)
           provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
           provideRoborazziContext().setRuleOverrideDescription(description)
           runTest(base, description, captureRoot)
@@ -148,6 +141,7 @@ class RoborazziRule private constructor(
           if ((captureResultReporter is RoborazziOptions.CaptureResultReporter.OnTestFinishedListener)) {
             captureResultReporter.onTestFinished()
           }
+          provideRoborazziContext().clearRuleCaptureResultReporter()
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
           provideRoborazziContext().clearRuleOverrideFileProvider()
