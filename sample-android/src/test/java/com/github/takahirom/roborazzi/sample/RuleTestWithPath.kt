@@ -46,11 +46,17 @@ class RuleTestWithPath {
   }
 
   @Test
-  fun shouldNotUseVerifyTestReporter() {
+  fun shouldNotUseDefaultTestReporter() {
     launch(MainActivity::class.java)
     val currentCaptureRepoter = provideRoborazziContext().options.reportOptions.captureResultReporter
     assert(
-      currentCaptureRepoter !is RoborazziOptions.CaptureResultReporter.DefaultCaptureResultReporter
+      currentCaptureRepoter is RoborazziOptions.CaptureResultReporter.DefaultCaptureResultReporter
+    )
+
+    val defaultCaptureResultReporter =
+      currentCaptureRepoter as RoborazziOptions.CaptureResultReporter.DefaultCaptureResultReporter
+    assert(
+      defaultCaptureResultReporter.delegatedReporter !is RoborazziOptions.CaptureResultReporter.DefaultCaptureResultReporter
     )
   }
 }

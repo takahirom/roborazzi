@@ -133,7 +133,8 @@ data class RoborazziOptions(
     }
 
     class DefaultCaptureResultReporter : CaptureResultReporter, OnTestFinishedListener {
-      private val verifyReporter by lazy {
+      @InternalRoborazziApi
+      val delegatedReporter by lazy {
         provideRoborazziContext().ruleCaptureResultReporter ?: run {
           if (roborazziVerifyEnabled()) {
             VerifyImmediateCaptureResultReporter()
@@ -144,12 +145,13 @@ data class RoborazziOptions(
       }
 
       override fun report(reportResult: CaptureResult) {
-        verifyReporter.report(reportResult)
+        delegatedReporter.report(reportResult)
       }
 
       override fun onTestFinished() {
-        if (verifyReporter is OnTestFinishedListener) {
-          (verifyReporter as OnTestFinishedListener).onTestFinished()
+        // This method is called only when RoborazziRule is used.
+        if (delegatedReporter is OnTestFinishedListener) {
+          (delegatedReporter as OnTestFinishedListener).onTestFinished()
         }
       }
     }
