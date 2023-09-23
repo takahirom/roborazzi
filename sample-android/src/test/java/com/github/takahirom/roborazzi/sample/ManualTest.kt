@@ -20,12 +20,12 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.github.takahirom.roborazzi.*
-import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -50,6 +50,7 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
   }
+
   @Test
   @Config(qualifiers = "+ja")
   fun captureScreenLevelJapaneseWithEspresso() {
@@ -63,7 +64,6 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
   }
-
 
 
   @Test
@@ -232,5 +232,13 @@ class ManualTest {
         composeTestRule.onNodeWithTag("MyComposeButton")
           .performClick()
       }
+  }
+
+  @Test
+  fun shouldNotUseVerifyAfterTestReporter() {
+    val currentCaptureRepoter = provideRoborazziContext().options.reportOptions.captureResultReporter
+    assert(
+      currentCaptureRepoter !is RoborazziOptions.CaptureResultReporter.VerifyAfterTestsReporter
+    )
   }
 }

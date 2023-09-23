@@ -4,11 +4,8 @@ import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
-import com.github.takahirom.roborazzi.RoborazziOptions
-import com.github.takahirom.roborazzi.RoborazziRule
+import com.github.takahirom.roborazzi.*
 import com.github.takahirom.roborazzi.RoborazziRule.Options
-import com.github.takahirom.roborazzi.captureRoboImage
 import java.io.File
 import org.junit.Rule
 import org.junit.Test
@@ -46,5 +43,14 @@ class RuleTestWithPath {
   fun captureRoboImageWithPath() {
     launch(MainActivity::class.java)
     onView(isRoot()).captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_file.png")
+  }
+
+  @Test
+  fun shouldNotUseVerifyTestReporter() {
+    launch(MainActivity::class.java)
+    val currentCaptureRepoter = provideRoborazziContext().options.reportOptions.captureResultReporter
+    assert(
+      currentCaptureRepoter !is RoborazziOptions.CaptureResultReporter.VerifyReporter
+    )
   }
 }

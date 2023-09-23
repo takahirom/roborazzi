@@ -3,10 +3,10 @@ package com.github.takahirom.roborazzi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.ViewInteraction
-import java.io.File
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import java.io.File
 
 private val defaultFileProvider: FileProvider =
   { description, directory, fileExtension ->
@@ -43,6 +43,13 @@ class RoborazziRule private constructor(
 
     val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
       ?: defaultFileProvider,
+    /**
+     * Override the [RoborazziOptions.CaptureResultReporter] class to throw an AssertionError after the test has finished,
+     * in order to capture all screenshots
+     */
+    val captureResultReporterOverride: RoborazziOptions.CaptureResultReporter = RoborazziOptions.CaptureResultReporter(
+      isUsingRule = true
+    ),
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   )
 
@@ -126,11 +133,21 @@ class RoborazziRule private constructor(
       override fun evaluate() {
         try {
           provideRoborazziContext().setRuleOverrideOutputDirectory(options.outputDirectoryPath)
-          provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
+          provideRoborazziContext().setRuleOverrideRoborazziOptions(
+            options.roborazziOptions.copy(
+              reportOptions = options.roborazziOptions.reportOptions.copy(
+                captureResultReporter = options.captureResultReporterOverride
+              )
+            )
+          )
           provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
           provideRoborazziContext().setRuleOverrideDescription(description)
           runTest(base, description, captureRoot)
         } finally {
+          val captureResultReporter = provideRoborazziContext().options.reportOptions.captureResultReporter
+          if ((captureResultReporter is RoborazziOptions.CaptureResultReporter.OnTestFinishedListener)) {
+            captureResultReporter.onTestFinished()
+          }
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
           provideRoborazziContext().clearRuleOverrideFileProvider()
@@ -168,17 +185,13 @@ class RoborazziRule private constructor(
       directory.mkdirs()
     }
 
+    val roborazziOptions = provideRoborazziContext().options
     when (captureType) {
       CaptureType.None -> {
         evaluate()
       }
 
       is CaptureType.AllImage, is CaptureType.Gif -> {
-        val roborazziOptions = when (captureType) {
-          is CaptureType.AllImage -> options.roborazziOptions
-          is CaptureType.Gif -> options.roborazziOptions
-          else -> error("Unsupported captureType")
-        }
         val result = when (captureRoot) {
           is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureComposeNode(
             composeRule = captureRoot.composeRule,
@@ -218,7 +231,6 @@ class RoborazziRule private constructor(
       }
 
       is CaptureType.LastImage -> {
-        val roborazziOptions = options.roborazziOptions
         val result = runCatching {
           evaluate()
         }

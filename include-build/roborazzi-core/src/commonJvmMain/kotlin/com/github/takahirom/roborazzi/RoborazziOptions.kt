@@ -69,7 +69,7 @@ data class RoborazziOptions(
   }
 
   data class ReportOptions(
-    val captureResultReporter: CaptureResultReporter = CaptureResultReporter(),
+    val captureResultReporter: CaptureResultReporter = CaptureResultReporter(isUsingRule = false),
   )
 
   data class CompareOptions(
@@ -89,20 +89,26 @@ data class RoborazziOptions(
     )
   }
 
+  @ExperimentalRoborazziApi
   interface CaptureResultReporter {
     fun report(reportResult: CaptureResult)
 
     companion object {
-      operator fun invoke(): CaptureResultReporter {
+      @ExperimentalRoborazziApi
+      operator fun invoke(isUsingRule: Boolean): CaptureResultReporter {
         return if (roborazziVerifyEnabled()) {
-          VerifyRoborazziReporter()
+          if (isUsingRule) {
+            VerifyAfterTestsReporter()
+          } else {
+            VerifyReporter()
+          }
         } else {
-          JsonOutputRoborazziReporter()
+          JsonOutputReporter()
         }
       }
     }
 
-    class JsonOutputRoborazziReporter : CaptureResultReporter {
+    class JsonOutputReporter : CaptureResultReporter {
 
       init {
         File(RoborazziReportConst.resultDirPath).mkdirs()
@@ -125,25 +131,40 @@ data class RoborazziOptions(
       }
     }
 
-    class VerifyRoborazziReporter : CaptureResultReporter {
-      private val jsonOutputRoborazziCompareReporter = JsonOutputRoborazziReporter()
+    class VerifyReporter : CaptureResultReporter {
+      private val jsonOutputReporter = JsonOutputReporter()
       override fun report(reportResult: CaptureResult) {
-        jsonOutputRoborazziCompareReporter.report(reportResult)
-        when (reportResult) {
-          is CaptureResult.Added -> throw AssertionError(
-            "Roborazzi: The original file(${reportResult.goldenFile.absolutePath}) was not found.\n" +
-              "See the actual image at ${reportResult.actualFile.absolutePath}"
-          )
-
-          is CaptureResult.Changed -> throw AssertionError(
-            "Roborazzi: ${reportResult.goldenFile.absolutePath} is changed.\n" +
-              "See the compare image at ${reportResult.compareFile.absolutePath}"
-          )
-
-          is CaptureResult.Unchanged, is CaptureResult.Recorded -> {
-          }
+        jsonOutputReporter.report(reportResult)
+        val assertErrorOrNull = getAssertErrorOrNull(reportResult)
+        if (assertErrorOrNull != null) {
+          throw assertErrorOrNull
         }
       }
+    }
+
+    @InternalRoborazziApi
+    class VerifyAfterTestsReporter : CaptureResultReporter, OnTestFinishedListener {
+      private val jsonOutputReporter = JsonOutputReporter()
+      private val captureResults = mutableListOf<Pair<CaptureResult, AssertionError?>>()
+
+      override fun report(reportResult: CaptureResult) {
+        jsonOutputReporter.report(reportResult)
+        captureResults.add(reportResult to getAssertErrorOrNull(reportResult))
+      }
+
+      override fun onTestFinished() {
+        val assertionErrorOrNull =
+          captureResults.firstOrNull { it.first is CaptureResult.Added || it.first is CaptureResult.Changed }?.second
+        if (assertionErrorOrNull != null) {
+          throw assertionErrorOrNull
+        }
+        captureResults.clear()
+      }
+    }
+
+    @ExperimentalRoborazziApi
+    interface OnTestFinishedListener {
+      fun onTestFinished()
     }
   }
 
@@ -171,3 +192,19 @@ data class RoborazziOptions(
 expect fun canScreenshot(): Boolean
 
 expect fun defaultCaptureType(): RoborazziOptions.CaptureType
+
+private fun getAssertErrorOrNull(reportResult: CaptureResult): AssertionError? = when (reportResult) {
+  is CaptureResult.Added -> AssertionError(
+    "Roborazzi: The original file(${reportResult.goldenFile.absolutePath}) was not found.\n" +
+      "See the actual image at ${reportResult.actualFile.absolutePath}"
+  )
+
+  is CaptureResult.Changed -> AssertionError(
+    "Roborazzi: ${reportResult.goldenFile.absolutePath} is changed.\n" +
+      "See the compare image at ${reportResult.compareFile.absolutePath}"
+  )
+
+  is CaptureResult.Unchanged, is CaptureResult.Recorded -> {
+    null
+  }
+}

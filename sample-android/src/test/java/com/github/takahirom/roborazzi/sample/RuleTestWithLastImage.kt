@@ -18,10 +18,12 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTestWithLastImage {
-  @get:Rule val roborazziRule = RoborazziRule(
+  @get:Rule
+  val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
     options = Options(CaptureType.LastImage())
   )
+
   @Test
   fun captureRoboGifSample() {
     // launch
