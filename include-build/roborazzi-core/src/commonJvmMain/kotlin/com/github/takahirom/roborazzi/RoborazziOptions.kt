@@ -97,7 +97,7 @@ data class RoborazziOptions(
       @ExperimentalRoborazziApi
       fun ruleReporter(): CaptureResultReporter {
         return if (roborazziVerifyEnabled()) {
-          VerifyAfterTestsCaptureResultReporter()
+          VerifyAfterTestCaptureResultReporter()
         } else {
           JsonOutputCaptureResultReporter()
         }
@@ -169,7 +169,7 @@ data class RoborazziOptions(
     }
 
     @InternalRoborazziApi
-    class VerifyAfterTestsCaptureResultReporter : CaptureResultReporter, OnTestFinishedListener {
+    class VerifyAfterTestCaptureResultReporter : CaptureResultReporter, OnTestFinishedListener {
       private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
       private val captureResults = mutableListOf<Pair<CaptureResult, AssertionError?>>()
 
