@@ -68,6 +68,7 @@ data class RoborazziOptions(
     companion object
   }
 
+  @ExperimentalRoborazziApi
   data class ReportOptions(
     val captureResultReporter: CaptureResultReporter = CaptureResultReporter.defaultReporter(),
   )
