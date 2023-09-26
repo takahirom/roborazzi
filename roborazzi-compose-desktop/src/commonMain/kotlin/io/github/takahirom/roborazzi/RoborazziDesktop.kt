@@ -19,7 +19,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
     return
   }
   captureRoboImage(
-    file = File(filePath),
+    file = fileWithOutputDirectoryContext(filePath),
     roborazziOptions = roborazziOptions
   )
 }
@@ -59,7 +59,7 @@ fun ImageBitmap.captureRoboImage(
     return
   }
   captureRoboImage(
-    file = File(filePath),
+    file = fileWithOutputDirectoryContext(filePath),
     roborazziOptions = roborazziOptions
   )
 }

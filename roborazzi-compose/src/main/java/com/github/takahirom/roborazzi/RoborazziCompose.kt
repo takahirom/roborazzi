@@ -18,7 +18,7 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   captureRoboImage(
-    file = File(filePath),
+    file = fileWithOutputDirectoryContext(filePath),
     roborazziOptions = roborazziOptions,
     content = content
   )
