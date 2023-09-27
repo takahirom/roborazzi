@@ -7,10 +7,10 @@ fun fileWithOutputDirectoryContext(filePath: String): File {
     return File(filePath)
   }
   when (roborazziCaptureRoboImageFilePathStrategy()) {
-    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectoryCaptureRoboImage -> {
+    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectory -> {
       return File(filePath)
     }
-    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromRoborazziContextOutputDirectoryCaptureRoboImage -> {
+    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromRoborazziContextOutputDirectory -> {
       val outputDirectory = provideRoborazziContext().outputDirectory
       return File(outputDirectory, filePath)
     }

@@ -3,7 +3,6 @@ package io.github.takahirom.roborazzi
 import java.io.File
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
-import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import org.junit.rules.TemporaryFolder
 
 class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
@@ -328,6 +327,11 @@ dependencies {
       |}
     """.trimMargin()
     )
+  }
+
+  fun addRelativeFromContextCaptureRoboImageFilePathStrategyGradleProperty() {
+    val file = testProjectDir.root.resolve("gradle.properties")
+    file.appendText("\nroborazzi.captureRoboImage.filePathStrategy=RelativePathFromRoborazziContextOutputDirectory")
   }
 
   val appBuildFile = AppBuildFile(testProjectDir)

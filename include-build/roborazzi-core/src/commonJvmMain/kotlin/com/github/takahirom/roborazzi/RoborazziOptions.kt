@@ -17,6 +17,7 @@ fun roborazziEnabled(): Boolean {
       "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n" +
       "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
       "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n" +
+      "roborazziCaptureRoboImageFilePathStrategy(): ${roborazziCaptureRoboImageFilePathStrategy()}\n" +
       "RoborazziContext: ${provideRoborazziContext()}\n"
   }
   return isEnabled
@@ -42,12 +43,12 @@ fun roborazziDefaultResizeScale(): Double {
 sealed interface RoborazziCaptureRoboImageFilePathStrategy {
   val propertyValue: String
 
-  object RelativePathFromCurrentDirectoryCaptureRoboImage : RoborazziCaptureRoboImageFilePathStrategy {
+  object RelativePathFromCurrentDirectory : RoborazziCaptureRoboImageFilePathStrategy {
     override val propertyValue: String
       get() = "RelativePathFromCurrentDirectory"
   }
 
-  object RelativePathFromRoborazziContextOutputDirectoryCaptureRoboImage : RoborazziCaptureRoboImageFilePathStrategy {
+  object RelativePathFromRoborazziContextOutputDirectory : RoborazziCaptureRoboImageFilePathStrategy {
     override val propertyValue: String
       get() = "RelativePathFromRoborazziContextOutputDirectory"
   }
@@ -59,16 +60,16 @@ fun roborazziCaptureRoboImageFilePathStrategy(): RoborazziCaptureRoboImageFilePa
   return when (
     System.getProperty(
       "roborazzi.captureRoboImage.filePathStrategy",
-      RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectoryCaptureRoboImage.propertyValue
+      RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectory.propertyValue
     )
   ) {
-    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectoryCaptureRoboImage.propertyValue ->
-      RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectoryCaptureRoboImage
+    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectory.propertyValue ->
+      RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectory
 
-    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromRoborazziContextOutputDirectoryCaptureRoboImage.propertyValue ->
-      RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromRoborazziContextOutputDirectoryCaptureRoboImage
+    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromRoborazziContextOutputDirectory.propertyValue ->
+      RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromRoborazziContextOutputDirectory
 
-    else -> RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectoryCaptureRoboImage
+    else -> RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectory
   }
 }
 
