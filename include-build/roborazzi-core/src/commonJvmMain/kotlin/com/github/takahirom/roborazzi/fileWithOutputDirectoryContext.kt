@@ -2,6 +2,7 @@ package com.github.takahirom.roborazzi
 
 import java.io.File
 
+@InternalRoborazziApi
 fun fileWithOutputDirectoryContext(filePath: String): File {
   if (filePath.startsWith("/")) {
     return File(filePath)
