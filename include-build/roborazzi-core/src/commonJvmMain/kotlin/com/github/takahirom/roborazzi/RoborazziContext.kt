@@ -5,9 +5,6 @@ import org.junit.runner.Description
 
 @ExperimentalRoborazziApi
 object RoborazziContext {
-  @InternalRoborazziApi
-  var ruleCaptureResultReporter: RoborazziOptions.CaptureResultReporter? = null
-    private set
   private var ruleOverrideOutputDirectory: String? = null
   private var ruleOverrideRoborazziOptions: RoborazziOptions? = null
 
@@ -27,11 +24,6 @@ object RoborazziContext {
   @InternalRoborazziApi
   fun setRuleOverrideRoborazziOptions(options: RoborazziOptions) {
     ruleOverrideRoborazziOptions = options
-  }
-
-  @InternalRoborazziApi
-  fun setRuleCaptureResultReporter(captureResultReporter: RoborazziOptions.CaptureResultReporter) {
-    ruleCaptureResultReporter = captureResultReporter
   }
 
   @InternalRoborazziApi
@@ -86,10 +78,6 @@ object RoborazziContext {
         ruleOverrideDescription=$ruleOverrideDescription
       )
     """.trimIndent()
-  }
-
-  fun clearRuleCaptureResultReporter() {
-    ruleCaptureResultReporter = null
   }
 }
 

@@ -70,7 +70,7 @@ data class RoborazziOptions(
 
   @ExperimentalRoborazziApi
   data class ReportOptions(
-    val captureResultReporter: CaptureResultReporter = CaptureResultReporter.defaultReporter(),
+    val captureResultReporter: CaptureResultReporter = CaptureResultReporter(),
   )
 
   data class CompareOptions(
@@ -95,18 +95,12 @@ data class RoborazziOptions(
     fun report(reportResult: CaptureResult)
 
     companion object {
-      @ExperimentalRoborazziApi
-      fun ruleReporter(): CaptureResultReporter {
+      operator fun invoke(): CaptureResultReporter {
         return if (roborazziVerifyEnabled()) {
-          VerifyAfterTestCaptureResultReporter()
+          VerifyCaptureResultReporter()
         } else {
           JsonOutputCaptureResultReporter()
         }
-      }
-
-      @ExperimentalRoborazziApi
-      fun defaultReporter(): CaptureResultReporter {
-        return DefaultCaptureResultReporter()
       }
     }
 
@@ -133,32 +127,8 @@ data class RoborazziOptions(
       }
     }
 
-    class DefaultCaptureResultReporter : CaptureResultReporter, OnTestWithRuleFinishedListener {
-      @InternalRoborazziApi
-      val delegatedReporter by lazy {
-        provideRoborazziContext().ruleCaptureResultReporter ?: run {
-          if (roborazziVerifyEnabled()) {
-            VerifyImmediateCaptureResultReporter()
-          } else {
-            JsonOutputCaptureResultReporter()
-          }
-        }
-      }
-
-      override fun report(reportResult: CaptureResult) {
-        delegatedReporter.report(reportResult)
-      }
-
-      override fun onTestWithRuleFinished() {
-        // This method is called only when RoborazziRule is used.
-        if (delegatedReporter is OnTestWithRuleFinishedListener) {
-          (delegatedReporter as OnTestWithRuleFinishedListener).onTestWithRuleFinished()
-        }
-      }
-    }
-
     @InternalRoborazziApi
-    class VerifyImmediateCaptureResultReporter : CaptureResultReporter {
+    class VerifyCaptureResultReporter : CaptureResultReporter {
       private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
       override fun report(reportResult: CaptureResult) {
         jsonOutputCaptureResultReporter.report(reportResult)
@@ -167,31 +137,6 @@ data class RoborazziOptions(
           throw assertErrorOrNull
         }
       }
-    }
-
-    @InternalRoborazziApi
-    class VerifyAfterTestCaptureResultReporter : CaptureResultReporter, OnTestWithRuleFinishedListener {
-      private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
-      private val captureResults = mutableListOf<Pair<CaptureResult, AssertionError?>>()
-
-      override fun report(reportResult: CaptureResult) {
-        jsonOutputCaptureResultReporter.report(reportResult)
-        captureResults.add(reportResult to getAssertErrorOrNull(reportResult))
-      }
-
-      override fun onTestWithRuleFinished() {
-        val assertionErrorOrNull =
-          captureResults.firstOrNull { it.first is CaptureResult.Added || it.first is CaptureResult.Changed }?.second
-        if (assertionErrorOrNull != null) {
-          throw assertionErrorOrNull
-        }
-        captureResults.clear()
-      }
-    }
-
-    @ExperimentalRoborazziApi
-    interface OnTestWithRuleFinishedListener {
-      fun onTestWithRuleFinished()
     }
   }
 

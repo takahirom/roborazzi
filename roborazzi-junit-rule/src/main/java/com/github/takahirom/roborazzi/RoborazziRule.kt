@@ -43,11 +43,6 @@ class RoborazziRule private constructor(
 
     val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
       ?: defaultFileProvider,
-    /**
-     * Override the [RoborazziOptions.CaptureResultReporter] class to throw an AssertionError after the test has finished,
-     * in order to capture all screenshots
-     */
-    val ruleCaptureResultReporter: RoborazziOptions.CaptureResultReporter = RoborazziOptions.CaptureResultReporter.ruleReporter(),
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   )
 
@@ -132,16 +127,10 @@ class RoborazziRule private constructor(
         try {
           provideRoborazziContext().setRuleOverrideOutputDirectory(options.outputDirectoryPath)
           provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
-          provideRoborazziContext().setRuleCaptureResultReporter(options.ruleCaptureResultReporter)
           provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
           provideRoborazziContext().setRuleOverrideDescription(description)
           runTest(base, description, captureRoot)
         } finally {
-          val captureResultReporter = provideRoborazziContext().options.reportOptions.captureResultReporter
-          if ((captureResultReporter is RoborazziOptions.CaptureResultReporter.OnTestWithRuleFinishedListener)) {
-            captureResultReporter.onTestWithRuleFinished()
-          }
-          provideRoborazziContext().clearRuleCaptureResultReporter()
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
           provideRoborazziContext().clearRuleOverrideFileProvider()

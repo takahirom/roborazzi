@@ -44,19 +44,4 @@ class RuleTestWithPath {
     launch(MainActivity::class.java)
     onView(isRoot()).captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_file.png")
   }
-
-  @Test
-  fun shouldNotUseDefaultTestReporter() {
-    launch(MainActivity::class.java)
-    val currentCaptureRepoter = provideRoborazziContext().options.reportOptions.captureResultReporter
-    assert(
-      currentCaptureRepoter is RoborazziOptions.CaptureResultReporter.DefaultCaptureResultReporter
-    )
-
-    val defaultCaptureResultReporter =
-      currentCaptureRepoter as RoborazziOptions.CaptureResultReporter.DefaultCaptureResultReporter
-    assert(
-      defaultCaptureResultReporter.delegatedReporter !is RoborazziOptions.CaptureResultReporter.DefaultCaptureResultReporter
-    )
-  }
 }

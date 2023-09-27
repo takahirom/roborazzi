@@ -233,12 +233,4 @@ class ManualTest {
           .performClick()
       }
   }
-
-  @Test
-  fun shouldNotUseVerifyAfterTestReporter() {
-    val currentCaptureRepoter = provideRoborazziContext().options.reportOptions.captureResultReporter as RoborazziOptions.CaptureResultReporter.DefaultCaptureResultReporter
-    assert(
-      currentCaptureRepoter.delegatedReporter !is RoborazziOptions.CaptureResultReporter.VerifyAfterTestCaptureResultReporter
-    )
-  }
 }
