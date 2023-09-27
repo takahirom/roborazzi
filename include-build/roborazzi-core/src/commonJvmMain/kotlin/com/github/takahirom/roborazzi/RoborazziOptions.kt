@@ -38,6 +38,40 @@ fun roborazziDefaultResizeScale(): Double {
   return checkNotNull(System.getProperty("roborazzi.record.resizeScale", "1.0")).toDouble()
 }
 
+@ExperimentalRoborazziApi
+sealed interface RoborazziCaptureRoboImageFilePathStrategy {
+  val propertyValue: String
+
+  object RelativePathFromCurrentDirectoryCaptureRoboImage : RoborazziCaptureRoboImageFilePathStrategy {
+    override val propertyValue: String
+      get() = "RelativePathFromCurrentDirectory"
+  }
+
+  object RelativePathFromRoborazziContextOutputDirectoryCaptureRoboImage : RoborazziCaptureRoboImageFilePathStrategy {
+    override val propertyValue: String
+      get() = "RelativePathFromRoborazziContextOutputDirectory"
+  }
+}
+
+
+@ExperimentalRoborazziApi
+fun roborazziCaptureRoboImageFilePathStrategy(): RoborazziCaptureRoboImageFilePathStrategy {
+  return when (
+    System.getProperty(
+      "roborazzi.captureRoboImage.filePathStrategy",
+      RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectoryCaptureRoboImage.propertyValue
+    )
+  ) {
+    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectoryCaptureRoboImage.propertyValue ->
+      RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectoryCaptureRoboImage
+
+    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromRoborazziContextOutputDirectoryCaptureRoboImage.propertyValue ->
+      RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromRoborazziContextOutputDirectoryCaptureRoboImage
+
+    else -> RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectoryCaptureRoboImage
+  }
+}
+
 fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStrategy {
   return DefaultFileNameGenerator.DefaultNamingStrategy
     .fromOptionName(
