@@ -94,7 +94,9 @@ class ManualTest {
   @Test
   fun captureViewOnWindowImage() {
     composeTestRule.activity.findViewById<View>(R.id.button_first)
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_on_window.png")
+      .captureRoboImage(
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_on_window.png"
+      )
   }
 
   @Test
@@ -102,7 +104,9 @@ class ManualTest {
     TextView(composeTestRule.activity).apply {
       text = "Hello View!"
       setTextColor(Color.RED)
-    }.captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png")
+    }.captureRoboImage(
+      filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png"
+    )
   }
 
   @Test
@@ -120,7 +124,9 @@ class ManualTest {
           drawColor(android.graphics.Color.YELLOW)
         }
       }
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_bitmap.png")
+      .captureRoboImage(
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_bitmap.png"
+      )
   }
 
   @Test
@@ -182,7 +188,9 @@ class ManualTest {
   @Test
   fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
-      .captureRoboGif("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_gif.gif") {
+      .captureRoboGif(
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_gif.gif"
+      ) {
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
@@ -190,7 +198,9 @@ class ManualTest {
         pressBack()
       }
     onView(ViewMatchers.isRoot())
-      .captureRoboLastImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_last.png") {
+      .captureRoboLastImage(
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_last.png"
+      ) {
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
@@ -222,8 +232,8 @@ class ManualTest {
   fun captureRoboGifSampleCompose() {
     composeTestRule.onRoot(false)
       .captureRoboGif(
-        composeTestRule,
-        "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_captureRoboGifSampleCompose.gif"
+        composeRule = composeTestRule,
+        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_captureRoboGifSampleCompose.gif"
       ) {
         composeTestRule.onNodeWithTag("MyComposeButton")
           .performClick()
