@@ -324,6 +324,8 @@ class RoborazziGradleProjectTest {
   @Test
   fun compareWithCustomPath() {
     RoborazziGradleProject(testProjectDir).apply {
+      removeTests()
+      addTestCaptureWithCustomPathTest()
       record()
       changeScreen()
       compare()
@@ -338,6 +340,8 @@ class RoborazziGradleProjectTest {
   @Test
   fun compareWithCustomPathAndCaptureFilePathStrategy() {
     RoborazziGradleProject(testProjectDir).apply {
+      removeTests()
+      addTestCaptureWithCustomPathTest()
       addRelativeFromContextRecordFilePathStrategyGradleProperty()
       record()
       changeScreen()
