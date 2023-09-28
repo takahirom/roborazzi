@@ -103,6 +103,7 @@ data class RoborazziOptions(
     companion object
   }
 
+  @ExperimentalRoborazziApi
   data class ReportOptions(
     val captureResultReporter: CaptureResultReporter = CaptureResultReporter(),
   )
@@ -124,20 +125,21 @@ data class RoborazziOptions(
     )
   }
 
+  @ExperimentalRoborazziApi
   interface CaptureResultReporter {
     fun report(reportResult: CaptureResult)
 
     companion object {
       operator fun invoke(): CaptureResultReporter {
         return if (roborazziVerifyEnabled()) {
-          VerifyRoborazziReporter()
+          VerifyCaptureResultReporter()
         } else {
-          JsonOutputRoborazziReporter()
+          JsonOutputCaptureResultReporter()
         }
       }
     }
 
-    class JsonOutputRoborazziReporter : CaptureResultReporter {
+    class JsonOutputCaptureResultReporter : CaptureResultReporter {
 
       init {
         File(RoborazziReportConst.resultDirPath).mkdirs()
@@ -160,23 +162,14 @@ data class RoborazziOptions(
       }
     }
 
-    class VerifyRoborazziReporter : CaptureResultReporter {
-      private val jsonOutputRoborazziCompareReporter = JsonOutputRoborazziReporter()
+    @InternalRoborazziApi
+    class VerifyCaptureResultReporter : CaptureResultReporter {
+      private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
       override fun report(reportResult: CaptureResult) {
-        jsonOutputRoborazziCompareReporter.report(reportResult)
-        when (reportResult) {
-          is CaptureResult.Added -> throw AssertionError(
-            "Roborazzi: The original file(${reportResult.goldenFile.absolutePath}) was not found.\n" +
-              "See the actual image at ${reportResult.actualFile.absolutePath}"
-          )
-
-          is CaptureResult.Changed -> throw AssertionError(
-            "Roborazzi: ${reportResult.goldenFile.absolutePath} is changed.\n" +
-              "See the compare image at ${reportResult.compareFile.absolutePath}"
-          )
-
-          is CaptureResult.Unchanged, is CaptureResult.Recorded -> {
-          }
+        jsonOutputCaptureResultReporter.report(reportResult)
+        val assertErrorOrNull = getAssertErrorOrNull(reportResult)
+        if (assertErrorOrNull != null) {
+          throw assertErrorOrNull
         }
       }
     }
@@ -206,3 +199,19 @@ data class RoborazziOptions(
 expect fun canScreenshot(): Boolean
 
 expect fun defaultCaptureType(): RoborazziOptions.CaptureType
+
+private fun getAssertErrorOrNull(reportResult: CaptureResult): AssertionError? = when (reportResult) {
+  is CaptureResult.Added -> AssertionError(
+    "Roborazzi: The original file(${reportResult.goldenFile.absolutePath}) was not found.\n" +
+      "See the actual image at ${reportResult.actualFile.absolutePath}"
+  )
+
+  is CaptureResult.Changed -> AssertionError(
+    "Roborazzi: ${reportResult.goldenFile.absolutePath} is changed.\n" +
+      "See the compare image at ${reportResult.compareFile.absolutePath}"
+  )
+
+  is CaptureResult.Unchanged, is CaptureResult.Recorded -> {
+    null
+  }
+}
