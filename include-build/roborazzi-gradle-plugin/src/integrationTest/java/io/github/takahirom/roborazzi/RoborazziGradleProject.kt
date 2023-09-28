@@ -332,7 +332,7 @@ dependencies {
 
   fun addRelativeFromContextRecordFilePathStrategyGradleProperty() {
     val file = testProjectDir.root.resolve("gradle.properties")
-    file.appendText("\nroborazzi.record.filePathStrategy=RelativePathFromRoborazziContextOutputDirectory")
+    file.appendText("\nroborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory")
   }
 
   fun addRuleTest() {
