@@ -46,6 +46,15 @@ object RoborazziReportConst {
         .us {
             color: #ffcc80;
         }
+        
+        #imageBottomSheet {
+            max-height: 100%;
+            top: 15%;
+        }
+
+        #modalImage {
+          max-width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -65,6 +74,12 @@ REPORT_TEMPLATE_BODY
     </div>
 </div>
 
+<div id="imageBottomSheet" class="modal bottom-sheet max-height">
+    <div class="modal-content center-align">
+        <img id="modalImage" src="" alt="">
+    </div>
+</div>
+
 <footer class="page-footer orange">
     <div class="container">
         <a class="us" href="https://github.com/takahirom/roborazzi" target="_blank"
@@ -77,6 +92,22 @@ REPORT_TEMPLATE_BODY
 <script src="https://cdn.jsdelivr.net/npm/@materializecss/materialize/dist/js/materialize.min.js"></script>
 <script>
     M.AutoInit();
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalInstance = M.Modal.init(document.getElementById('imageBottomSheet'), {});
+        var modal = document.getElementById('imageBottomSheet');
+        var modalImage = document.getElementById('modalImage');
+        var modalTriggers = document.querySelectorAll('.modal-trigger');
+        modalTriggers.forEach(function(trigger) {
+            trigger.addEventListener('click', function() {
+                var src = this.getAttribute('src');
+                var alt = this.getAttribute('data-alt');
+                modalImage.setAttribute('src', src);
+                modalImage.setAttribute('alt', alt);
+                var instance = M.Modal.getInstance(modal);
+                instance.open();
+            });
+        });
+    });
 </script>
 </body>
 </html>
