@@ -955,6 +955,31 @@ The sample image
 ![MainJvmTest test](https://github.com/takahirom/roborazzi/assets/1386930/41287c29-26ae-4539-b387-de570ae3f2b3)
 ![MainJvmTest test_2](https://github.com/takahirom/roborazzi/assets/1386930/2edc828c-6fd8-4a9a-8f3d-b0e7baa85f0d)
 
+# Roborazzi gradle.properties options
+
+You can use the following options in your `gradle.properties` file:
+
+```properties
+# Refer to the "Apply Roborazzi Gradle Plugin" section for options related to roborazzi.test.
+roborazzi.test.record=true
+# roborazzi.test.compare=true
+# roborazzi.test.verify=true
+
+# Specify the image's resize scale to be recorded. The default is 1.0.
+roborazzi.record.resizeScale=0.5
+# You can specify the file path strategy of the image to be recorded.
+# The default is roborazzi.record.filePathStrategy=relativePathFromCurrentDirectory
+# If you specify relativePathFromRoborazziContextOutputDirectory,
+# the file will be output to the output directory specified by RoborazziRule.Options.outputDirectoryPath.
+roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory
+# You can specify the naming strategy of the image to be recorded.
+# The default is roborazzi.record.namingStrategy=testPackageAndClassAndMethod
+# If you specify testPackageAndClassAndMethod, the file name will be com.example.MyTest.testMethod.png
+# If you specify escapedTestPackageAndClassAndMethod, the file name will be com_example_MyTest.testMethod.png
+# If you specify testClassAndMethod, the file name will be MyTest.testMethod.png
+roborazzi.record.namingStrategy=testClassAndMethod
+```
+
 # FAQ
 
 ### Q: How can I run only screenshot tests using Roborazzi?
