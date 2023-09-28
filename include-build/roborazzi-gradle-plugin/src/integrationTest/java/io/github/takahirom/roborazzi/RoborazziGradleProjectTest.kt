@@ -342,9 +342,9 @@ class RoborazziGradleProjectTest {
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_2.png")
       // If the first verification fails, the second verification will be skipped.
       checkRecordedFileNotExists("$screenshotAndName.testCapture_2_actual.png")
-      checkRecordedFileNotExists("$screenshotAndName.testCapture_2.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_2_compare.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_2_actual.png")
     }
