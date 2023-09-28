@@ -36,7 +36,7 @@ fun ViewInteraction.captureRoboImage(
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
-    file = fileWithOutputDirectoryContext(filePath),
+    file = fileWithRecordFilePathStrategy(filePath),
     roborazziOptions = roborazziOptions
   )
 }
@@ -62,7 +62,7 @@ fun View.captureRoboImage(
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
-    file = fileWithOutputDirectoryContext(filePath),
+    file = fileWithRecordFilePathStrategy(filePath),
     roborazziOptions = roborazziOptions
   )
 }
@@ -115,7 +115,7 @@ fun Bitmap.captureRoboImage(
 ) {
   if (!roborazziEnabled()) return
   captureRoboImage(
-    file = fileWithOutputDirectoryContext(filePath),
+    file = fileWithRecordFilePathStrategy(filePath),
     roborazziOptions = roborazziOptions
   )
 }
@@ -149,7 +149,7 @@ fun ViewInteraction.captureRoboGif(
 ) {
   // currently, gif compare is not supported
   if (!roborazziRecordingEnabled()) return
-  captureRoboGif(fileWithOutputDirectoryContext(filePath), roborazziOptions, block)
+  captureRoboGif(fileWithRecordFilePathStrategy(filePath), roborazziOptions, block)
 }
 
 fun ViewInteraction.captureRoboGif(
@@ -172,7 +172,7 @@ fun ViewInteraction.captureRoboLastImage(
   block: () -> Unit
 ) {
   if (!roborazziEnabled()) return
-  captureRoboLastImage(fileWithOutputDirectoryContext(filePath), roborazziOptions, block)
+  captureRoboLastImage(fileWithRecordFilePathStrategy(filePath), roborazziOptions, block)
 }
 
 fun ViewInteraction.captureRoboLastImage(
@@ -207,7 +207,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziEnabled()) return
-  captureRoboImage(fileWithOutputDirectoryContext(filePath), roborazziOptions)
+  captureRoboImage(fileWithRecordFilePathStrategy(filePath), roborazziOptions)
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
@@ -244,7 +244,7 @@ fun SemanticsNodeInteraction.captureRoboGif(
     roborazziOptions = roborazziOptions,
     block = block
   ).apply {
-    saveGif(fileWithOutputDirectoryContext(filePath))
+    saveGif(fileWithRecordFilePathStrategy(filePath))
     clear()
   }
 }
