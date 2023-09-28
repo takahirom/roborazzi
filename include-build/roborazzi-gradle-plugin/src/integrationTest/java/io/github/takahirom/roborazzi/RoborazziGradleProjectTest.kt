@@ -338,7 +338,7 @@ class RoborazziGradleProjectTest {
   @Test
   fun compareWithCustomPathAndCaptureFilePathStrategy() {
     RoborazziGradleProject(testProjectDir).apply {
-      addRelativeFromContextCaptureRoboImageFilePathStrategyGradleProperty()
+      addRelativeFromContextRecordFilePathStrategyGradleProperty()
       record()
       changeScreen()
       compare()

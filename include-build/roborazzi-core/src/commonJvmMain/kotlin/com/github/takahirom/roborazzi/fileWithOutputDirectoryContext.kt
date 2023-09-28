@@ -7,13 +7,13 @@ fun fileWithOutputDirectoryContext(filePath: String): File {
   if (filePath.startsWith("/")) {
     return File(filePath)
   }
-  when (roborazziCaptureRoboImageFilePathStrategy()) {
-    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromCurrentDirectory -> {
-      return File(filePath)
+  return when (roborazziRecordFilePathStrategy()) {
+    RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory -> {
+      File(filePath)
     }
-    RoborazziCaptureRoboImageFilePathStrategy.RelativePathFromRoborazziContextOutputDirectory -> {
+    RoborazziRecordFilePathStrategy.RelativePathFromRoborazziContextOutputDirectory -> {
       val outputDirectory = provideRoborazziContext().outputDirectory
-      return File(outputDirectory, filePath)
+      File(outputDirectory, filePath)
     }
   }
 }

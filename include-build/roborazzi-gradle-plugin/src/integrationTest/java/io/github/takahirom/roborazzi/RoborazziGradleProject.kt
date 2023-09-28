@@ -330,9 +330,9 @@ dependencies {
     )
   }
 
-  fun addRelativeFromContextCaptureRoboImageFilePathStrategyGradleProperty() {
+  fun addRelativeFromContextRecordFilePathStrategyGradleProperty() {
     val file = testProjectDir.root.resolve("gradle.properties")
-    file.appendText("\nroborazzi.captureRoboImage.filePathStrategy=RelativePathFromRoborazziContextOutputDirectory")
+    file.appendText("\nroborazzi.record.filePathStrategy=RelativePathFromRoborazziContextOutputDirectory")
   }
 
   fun addRuleTest() {
