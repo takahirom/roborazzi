@@ -17,6 +17,7 @@ import org.robolectric.annotation.GraphicsMode
 class RuleTestWithPath {
   @get:Rule
   val roborazziRule = RoborazziRule(
+    captureRoot = onView(isRoot()),
     options = Options(
       captureType = RoborazziRule.CaptureType.LastImage(),
       outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_outputDirectoryPath",
