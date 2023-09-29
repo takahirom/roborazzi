@@ -18,6 +18,7 @@ class RuleTestWithPath {
   @get:Rule
   val roborazziRule = RoborazziRule(
     options = Options(
+      captureType = RoborazziRule.CaptureType.LastImage(),
       outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_outputDirectoryPath",
       outputFileProvider = { description, directory, fileExtension ->
         File(

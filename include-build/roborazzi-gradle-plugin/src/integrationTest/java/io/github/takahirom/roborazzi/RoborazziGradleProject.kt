@@ -395,13 +395,17 @@ package com.github.takahirom.integration_test_project
 
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.*
+import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
+import com.github.takahirom.roborazzi.RoborazziRule.Options
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import org.robolectric.Shadows
 import android.content.ComponentName
+import java.io.File
 import org.junit.Test
 import org.junit.Rule
 import org.robolectric.annotation.GraphicsMode
@@ -413,7 +417,25 @@ import org.junit.runner.RunWith
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RoborazziTest {
 
-  @get:Rule val roborazziRule = RoborazziRule()
+  @get:Rule
+  val roborazziRule = RoborazziRule(
+    captureRoot = onView(isRoot()),
+    options = Options(
+      captureType = RoborazziRule.CaptureType.LastImage(),
+      outputDirectoryPath = "${"$"}DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_outputDirectoryPath_from_rule",
+      outputFileProvider = { description, directory, fileExtension ->
+        File(
+          directory,
+          "custom_outputFileProvider-${"$"}{description.testClass.name}.${"$"}{description.methodName}.${"$"}fileExtension"
+        )
+      },
+      roborazziOptions = RoborazziOptions(
+        compareOptions = RoborazziOptions.CompareOptions(
+          outputDirectoryPath = "${"$"}DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_compare_outputDirectoryPath_from_rule",
+        )
+      )
+    ),
+  )
   init {
     com.github.takahirom.roborazzi.ROBORAZZI_DEBUG = true
   }

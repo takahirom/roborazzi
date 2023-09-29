@@ -21,11 +21,11 @@ class RoborazziGradleProjectTest {
   private val customReferenceScreenshotAndName =
     "app/$defaultRoborazziOutputDir/customdir/custom_file"
   private val customCompareScreenshotAndName =
-    "app/$defaultRoborazziOutputDir/custom_compare_outputDirectoryPath/custom_file"
+    "app/$defaultRoborazziOutputDir/custom_outputDirectoryPath_from_rule/custom_file"
   private val customReferenceScreenshotAndNameWithRoborazziContext =
-    "app/$defaultRoborazziOutputDir/$defaultRoborazziOutputDir/customdir/custom_file"
+    "app/$defaultRoborazziOutputDir/custom_outputDirectoryPath/$defaultRoborazziOutputDir/customdir/custom_file"
   private val customCompareScreenshotAndNameWithRoborazziContext =
-    "app/$defaultRoborazziOutputDir/custom_compare_outputDirectoryPath/custom_file"
+    "app/$defaultRoborazziOutputDir/custom_outputDirectoryPath_from_rule/custom_file"
 
   private val addedScreenshotAndName =
     "app/$defaultRoborazziOutputDir/com.github.takahirom.integration_test_project.AddedRoborazziTest"
@@ -351,6 +351,7 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$customReferenceScreenshotAndNameWithRoborazziContext.png")
       checkRecordedFileExists("${customCompareScreenshotAndNameWithRoborazziContext}_compare.png")
       checkRecordedFileExists("${customCompareScreenshotAndNameWithRoborazziContext}_actual.png")
+      checkRecordedFileExists("app/build/outputs/roborazzi/custom_outputDirectoryPath/custom_outputFileProvider-com.github.takahirom.integration_test_project.RoborazziTest.testCaptureWithCustomPath.png")
     }
   }
 
