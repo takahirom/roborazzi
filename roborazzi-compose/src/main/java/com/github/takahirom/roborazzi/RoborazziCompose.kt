@@ -9,8 +9,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
-import java.io.File
 import org.robolectric.Shadows
+import java.io.File
 
 fun captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
@@ -18,7 +18,7 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   captureRoboImage(
-    file = File(filePath),
+    file = fileWithRecordFilePathStrategy(filePath),
     roborazziOptions = roborazziOptions,
     content = content
   )

@@ -4,6 +4,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
+
 /**
  * Run this test with `cd include-build` and `./gradlew roborazzi-gradle-plugin:check`
  */
@@ -16,13 +17,18 @@ class RoborazziGradleProjectTest {
   private val screenshotAndName =
     "app/build/outputs/roborazzi/$className"
 
+  private val defaultRoborazziOutputDir = "build/outputs/roborazzi"
   private val customReferenceScreenshotAndName =
-    "app/build/outputs/roborazzi/customdir/custom_file"
+    "app/$defaultRoborazziOutputDir/customdir/custom_file"
   private val customCompareScreenshotAndName =
-    "app/build/outputs/roborazzi/custom_compare_outputDirectoryPath/custom_file"
+    "app/$defaultRoborazziOutputDir/custom_compare_outputDirectoryPath/custom_file"
+  private val customReferenceScreenshotAndNameWithRoborazziContext =
+    "app/$defaultRoborazziOutputDir/custom_outputDirectoryPath_from_rule/$defaultRoborazziOutputDir/customdir/custom_file"
+  private val customCompareScreenshotAndNameWithRoborazziContext =
+    "app/$defaultRoborazziOutputDir/custom_compare_outputDirectoryPath/custom_file"
 
   private val addedScreenshotAndName =
-    "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.AddedRoborazziTest"
+    "app/$defaultRoborazziOutputDir/com.github.takahirom.integration_test_project.AddedRoborazziTest"
 
   private val resultFileSuffix = "$className.testCapture.json"
 
@@ -318,6 +324,8 @@ class RoborazziGradleProjectTest {
   @Test
   fun compareWithCustomPath() {
     RoborazziGradleProject(testProjectDir).apply {
+      removeTests()
+      addTestCaptureWithCustomPathTest()
       record()
       changeScreen()
       compare()
@@ -326,6 +334,25 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$customReferenceScreenshotAndName.png")
       checkRecordedFileExists("${customCompareScreenshotAndName}_compare.png")
       checkRecordedFileExists("${customCompareScreenshotAndName}_actual.png")
+      checkRecordedFileExists("app/build/outputs/roborazzi/custom_outputDirectoryPath_from_rule/custom_outputFileProvider-com.github.takahirom.integration_test_project.RoborazziTest.testCaptureWithCustomPath.png")
+    }
+  }
+
+  @Test
+  fun compareWithCustomPathAndCaptureFilePathStrategy() {
+    RoborazziGradleProject(testProjectDir).apply {
+      removeTests()
+      addTestCaptureWithCustomPathTest()
+      addRelativeFromContextRecordFilePathStrategyGradleProperty()
+      record()
+      changeScreen()
+      compare()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("$customReferenceScreenshotAndNameWithRoborazziContext.png")
+      checkRecordedFileExists("${customCompareScreenshotAndNameWithRoborazziContext}_compare.png")
+      checkRecordedFileExists("${customCompareScreenshotAndNameWithRoborazziContext}_actual.png")
+      checkRecordedFileExists("app/build/outputs/roborazzi/custom_outputDirectoryPath_from_rule/custom_outputFileProvider-com.github.takahirom.integration_test_project.RoborazziTest.testCaptureWithCustomPath.png")
     }
   }
 

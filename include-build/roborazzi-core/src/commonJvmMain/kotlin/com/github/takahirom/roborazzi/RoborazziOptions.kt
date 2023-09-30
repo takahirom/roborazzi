@@ -17,9 +17,14 @@ fun roborazziEnabled(): Boolean {
       "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n" +
       "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
       "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n" +
+      "roborazziRecordFilePathStrategy(): ${roborazziRecordFilePathStrategy()}\n" +
       "RoborazziContext: ${provideRoborazziContext()}\n"
   }
   return isEnabled
+}
+
+fun roborazziRecordingEnabled(): Boolean {
+  return System.getProperty("roborazzi.test.record") == "true"
 }
 
 fun roborazziCompareEnabled(): Boolean {
@@ -30,14 +35,63 @@ fun roborazziVerifyEnabled(): Boolean {
   return System.getProperty("roborazzi.test.verify") == "true"
 }
 
-fun roborazziRecordingEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.record") == "true"
-}
-
+/**
+ * Specify the file path strategy for the recorded image.
+ * Default: roborazzi.record.filePathStrategy=relativePathFromCurrentDirectory
+ * If set to relativePathFromRoborazziContextOutputDirectory, the file will be saved to the output directory specified by RoborazziRule.Options.outputDirectoryPath.
+ */
 fun roborazziDefaultResizeScale(): Double {
   return checkNotNull(System.getProperty("roborazzi.record.resizeScale", "1.0")).toDouble()
 }
 
+@ExperimentalRoborazziApi
+sealed interface RoborazziRecordFilePathStrategy {
+  val propertyValue: String
+
+  object RelativePathFromCurrentDirectory : RoborazziRecordFilePathStrategy {
+    override val propertyValue: String
+      get() = "relativePathFromCurrentDirectory"
+  }
+
+  object RelativePathFromRoborazziContextOutputDirectory : RoborazziRecordFilePathStrategy {
+    override val propertyValue: String
+      get() = "relativePathFromRoborazziContextOutputDirectory"
+  }
+}
+
+
+/**
+ * Specify the naming strategy for the recorded image.
+ * Default: roborazzi.record.namingStrategy=testPackageAndClassAndMethod
+ * If set to testPackageAndClassAndMethod, the file name will be com.example.MyTest.testMethod.png
+ * If set to escapedTestPackageAndClassAndMethod, the file name will be com_example_MyTest.testMethod.png
+ * If set to testClassAndMethod, the file name will be MyTest.testMethod.png
+ */
+@ExperimentalRoborazziApi
+fun roborazziRecordFilePathStrategy(): RoborazziRecordFilePathStrategy {
+  return when (
+    System.getProperty(
+      "roborazzi.record.filePathStrategy",
+      RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory.propertyValue
+    )
+  ) {
+    RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory.propertyValue ->
+      RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory
+
+    RoborazziRecordFilePathStrategy.RelativePathFromRoborazziContextOutputDirectory.propertyValue ->
+      RoborazziRecordFilePathStrategy.RelativePathFromRoborazziContextOutputDirectory
+
+    else -> RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory
+  }
+}
+
+/**
+ * You can specify the naming strategy of the image to be recorded.
+ * The default is roborazzi.record.namingStrategy=testPackageAndClassAndMethod
+ * If you specify testPackageAndClassAndMethod, the file name will be com.example.MyTest.testMethod.png
+ * If you specify escapedTestPackageAndClassAndMethod, the file name will be com_example_MyTest.testMethod.png
+ * If you specify testClassAndMethod, the file name will be MyTest.testMethod.png
+ */
 fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStrategy {
   return DefaultFileNameGenerator.DefaultNamingStrategy
     .fromOptionName(

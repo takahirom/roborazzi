@@ -35,17 +35,4 @@ class RoborazziTest {
     ActivityScenario.launch(MainActivity::class.java)
     onView(ViewMatchers.isRoot()).captureRoboImage()
   }
-
-  @Test
-  fun testCaptureWithCustomPath() {
-    ActivityScenario.launch(MainActivity::class.java)
-    onView(ViewMatchers.isRoot()).captureRoboImage(
-      filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/customdir/custom_file.png",
-      roborazziOptions = RoborazziOptions(
-        compareOptions = RoborazziOptions.CompareOptions(
-          outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_compare_outputDirectoryPath",
-        )
-      )
-    )
-  }
 }
