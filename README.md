@@ -955,28 +955,48 @@ The sample image
 ![MainJvmTest test](https://github.com/takahirom/roborazzi/assets/1386930/41287c29-26ae-4539-b387-de570ae3f2b3)
 ![MainJvmTest test_2](https://github.com/takahirom/roborazzi/assets/1386930/2edc828c-6fd8-4a9a-8f3d-b0e7baa85f0d)
 
-# Roborazzi gradle.properties options
+## Roborazzi gradle.properties Options
 
-You can use the following options in your `gradle.properties` file:
+You can configure the following options in your `gradle.properties` file:
+
+### roborazzi.test
+
+This option allows you to specify the type of test to run. By default, all options are set to false. 
+For related options, refer to the "Apply Roborazzi Gradle Plugin" section.
 
 ```properties
-# Refer to the "Apply Roborazzi Gradle Plugin" section for options related to roborazzi.test.
 roborazzi.test.record=true
 # roborazzi.test.compare=true
 # roborazzi.test.verify=true
+```
 
-# Specify the image's resize scale to be recorded. The default is 1.0.
+### roborazzi.record
+
+#### roborazzi.record.resizeScale
+
+This option lets you set the resize scale for the image being recorded. The default value is 1.0.
+
+```properties
 roborazzi.record.resizeScale=0.5
-# You can specify the file path strategy of the image to be recorded.
-# The default is roborazzi.record.filePathStrategy=relativePathFromCurrentDirectory
-# If you specify relativePathFromRoborazziContextOutputDirectory,
-# the file will be output to the output directory specified by RoborazziRule.Options.outputDirectoryPath.
+```
+
+#### roborazzi.record.filePathStrategy
+
+This setting allows you to specify the file path strategy for the recorded image. The default strategy is `relativePathFromCurrentDirectory`. If you choose `relativePathFromRoborazziContextOutputDirectory`, the file will be saved in the output directory specified by `RoborazziRule.Options.outputDirectoryPath`.
+
+```properties
 roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory
-# You can specify the naming strategy of the image to be recorded.
-# The default is roborazzi.record.namingStrategy=testPackageAndClassAndMethod
-# If you specify testPackageAndClassAndMethod, the file name will be com.example.MyTest.testMethod.png
-# If you specify escapedTestPackageAndClassAndMethod, the file name will be com_example_MyTest.testMethod.png
-# If you specify testClassAndMethod, the file name will be MyTest.testMethod.png
+```
+
+#### roborazzi.record.namingStrategy
+
+This option enables you to define the naming strategy for the recorded image. The default strategy is `testPackageAndClassAndMethod`.
+
+- If you choose `testPackageAndClassAndMethod`, the file name will be `com.example.MyTest.testMethod.png`.
+- If you choose `escapedTestPackageAndClassAndMethod`, the file name will be `com_example_MyTest.testMethod.png`.
+- If you choose `testClassAndMethod`, the file name will be `MyTest.testMethod.png`.
+
+```properties
 roborazzi.record.namingStrategy=testClassAndMethod
 ```
 
