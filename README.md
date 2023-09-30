@@ -961,8 +961,8 @@ You can configure the following options in your `gradle.properties` file:
 
 ### roborazzi.test
 
-This option allows you to specify the type of test to run. By default, all options are set to false. 
-For related options, refer to the "Apply Roborazzi Gradle Plugin" section.
+This option enables you to configure the behavior of Roborazzi. By default, all settings are set to false. 
+For additional configuration options, please refer to the 'Apply Roborazzi Gradle Plugin' section.
 
 ```properties
 roborazzi.test.record=true
