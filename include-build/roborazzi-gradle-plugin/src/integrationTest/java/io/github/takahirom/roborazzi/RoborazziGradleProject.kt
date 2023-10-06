@@ -139,6 +139,7 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
 
   class AppBuildFile(private val folder: TemporaryFolder) {
     private val PATH = "app/build.gradle.kts"
+    var removeOutputDirBeforeTestTypeTask = false
 
     fun addIncludeBuild() {
       folder.root.resolve(PATH).delete()
@@ -222,6 +223,18 @@ dependencies {
 }
           """
       )
+      if (removeOutputDirBeforeTestTypeTask) {
+        buildFile.appendText(
+          """
+            // Before test task
+            tasks.withType<Test> {
+              doLast {
+                delete("build/outputs/roborazzi")
+              }
+            }
+          """.trimIndent()
+        )
+      }
     }
   }
 

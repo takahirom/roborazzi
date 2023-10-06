@@ -143,6 +143,14 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun canRecordWhenRemoveOutputDirBeforeTests() {
+    RoborazziGradleProject(testProjectDir).apply {
+      appBuildFile.removeOutputDirBeforeTestTypeTask = true
+      record()
+    }
+  }
+
+  @Test
   fun verify_changeDetect() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
