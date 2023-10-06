@@ -226,6 +226,7 @@ class RoborazziPlugin : Plugin<Project> {
             // outputDir.get().asFileTree.forEach {
             //   println("Copy file ${it.absolutePath} to ${intermediateDir.get()}")
             // }
+            outputDir.get().asFile.mkdirs()
             outputDir.get().asFile.copyRecursively(
               target = intermediateDir.get().asFile,
               overwrite = true

@@ -226,7 +226,6 @@ dependencies {
       if (removeOutputDirBeforeTestTypeTask) {
         buildFile.appendText(
           """
-            // Before test task
             tasks.withType<Test> {
               doLast {
                 delete("build/outputs/roborazzi")
