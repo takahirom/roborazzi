@@ -24,11 +24,11 @@ import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dropbox.differ.ImageComparator
-import java.io.File
-import java.util.Locale
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
+import java.io.File
+import java.util.Locale
 
 fun ViewInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
@@ -199,7 +199,6 @@ fun ViewInteraction.captureRoboAllImage(
     clear()
     result.getOrThrow()
   }
-
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
@@ -510,7 +509,7 @@ private fun saveAllImage(
   }
 }
 
-private class ImageCaptureViewAction(
+internal class ImageCaptureViewAction(
   val roborazziOptions: RoborazziOptions,
   val saveAction: (AwtRoboCanvas) -> Unit
 ) :
@@ -564,7 +563,6 @@ internal fun capture(
     }
   }
 }
-
 
 fun processOutputImageAndReportWithDefaults(
   canvas: RoboCanvas,

@@ -7,8 +7,6 @@ import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.RoborazziReportConst
-import java.util.Locale
-import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -24,6 +22,8 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
+import java.util.Locale
+import javax.inject.Inject
 
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
 private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"

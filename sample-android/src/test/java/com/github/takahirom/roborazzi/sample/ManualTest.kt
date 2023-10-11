@@ -38,6 +38,11 @@ class ManualTest {
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
   @Test
+  fun emulator() {
+    onView(ViewMatchers.isRoot())
+      .roboNativeGraphicsEmulator()
+  }
+  @Test
   @Config(qualifiers = "+land")
   fun captureScreenLevelImageWithEspresso() {
     onView(ViewMatchers.isRoot())
