@@ -131,7 +131,7 @@ data class RoborazziOptions(
   data class CompareOptions(
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
-    val imageComparator: ImageComparator = SimpleImageComparator(maxDistance = 0.007F),
+    val imageComparator: ImageComparator = DefaultImageComparator,
   ) {
     constructor(
       outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
@@ -143,8 +143,12 @@ data class RoborazziOptions(
     ) : this(
       outputDirectoryPath = outputDirectoryPath,
       resultValidator = ThresholdValidator(changeThreshold),
-      imageComparator = SimpleImageComparator(maxDistance = 0.007F),
+      imageComparator = DefaultImageComparator,
     )
+
+    companion object {
+      val DefaultImageComparator = SimpleImageComparator(maxDistance = 0.007F)
+    }
   }
 
   @ExperimentalRoborazziApi
