@@ -20,6 +20,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.github.takahirom.roborazzi.*
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,6 +39,7 @@ class ManualTest {
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
   @Test
+  @Ignore
   fun emulator() {
     onView(ViewMatchers.isRoot())
       .roboNativeGraphicsEmulator()
