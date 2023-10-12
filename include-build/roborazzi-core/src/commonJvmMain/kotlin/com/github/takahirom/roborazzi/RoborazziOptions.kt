@@ -130,8 +130,8 @@ data class RoborazziOptions(
 
   data class CompareOptions(
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
-    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
     val imageComparator: ImageComparator = DefaultImageComparator,
+    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
       outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
