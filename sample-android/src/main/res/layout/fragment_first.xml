@@ -6,6 +6,13 @@
   android:layout_height="match_parent"
   tools:context=".FirstFragment"
   >
+  <View
+      app:layout_constraintTop_toTopOf="parent"
+      app:layout_constraintLeft_toLeftOf="parent"
+      android:layout_width="1px"
+      android:layout_height="1px"
+      android:background="@color/black"
+  />
 
   <TextView
     android:id="@+id/textview_first"
