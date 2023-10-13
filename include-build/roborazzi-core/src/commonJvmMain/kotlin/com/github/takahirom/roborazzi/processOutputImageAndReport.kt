@@ -38,7 +38,7 @@ fun processOutputImageAndReport(
     }
     val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
       val comparisonResult: ImageComparator.ComparisonResult =
-        canvas.differ(goldenRoboCanvas, resizeScale)
+        canvas.differ(goldenRoboCanvas, resizeScale, roborazziOptions.compareOptions.imageComparator)
       val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
       log("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
       changed

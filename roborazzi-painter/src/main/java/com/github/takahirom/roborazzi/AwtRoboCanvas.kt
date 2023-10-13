@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
-import com.dropbox.differ.SimpleImageComparator
 import java.awt.*
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
@@ -206,11 +205,10 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     )
   }
 
-  override fun differ(other: RoboCanvas, resizeScale: Double): ImageComparator.ComparisonResult {
+  override fun differ(other: RoboCanvas, resizeScale: Double, imageComparator: ImageComparator): ImageComparator.ComparisonResult {
     other as AwtRoboCanvas
     val otherImage = other.bufferedImage
-    val simpleImageComparator = SimpleImageComparator(maxDistance = 0.007F)
-    return simpleImageComparator.compare(
+    return imageComparator.compare(
       DifferBufferedImage(croppedImage.scale(resizeScale)),
       DifferBufferedImage(otherImage)
     )

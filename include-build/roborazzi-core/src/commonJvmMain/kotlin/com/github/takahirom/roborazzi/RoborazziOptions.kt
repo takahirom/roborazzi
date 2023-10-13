@@ -1,6 +1,7 @@
 package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
+import com.dropbox.differ.SimpleImageComparator
 import java.io.File
 import java.io.FileWriter
 
@@ -129,6 +130,7 @@ data class RoborazziOptions(
 
   data class CompareOptions(
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
+    val imageComparator: ImageComparator = DefaultImageComparator,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
   ) {
     constructor(
@@ -140,8 +142,13 @@ data class RoborazziOptions(
       changeThreshold: Float = 0.01F,
     ) : this(
       outputDirectoryPath = outputDirectoryPath,
-      resultValidator = ThresholdValidator(changeThreshold)
+      resultValidator = ThresholdValidator(changeThreshold),
+      imageComparator = DefaultImageComparator,
     )
+
+    companion object {
+      val DefaultImageComparator = SimpleImageComparator(maxDistance = 0.007F)
+    }
   }
 
   @ExperimentalRoborazziApi

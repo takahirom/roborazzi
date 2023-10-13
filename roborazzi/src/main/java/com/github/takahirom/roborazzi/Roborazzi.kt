@@ -24,11 +24,11 @@ import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dropbox.differ.ImageComparator
-import java.io.File
-import java.util.Locale
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
+import java.io.File
+import java.util.*
 
 fun ViewInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
@@ -386,7 +386,7 @@ private fun MutableList<AwtRoboCanvas>.addIfChanged(
     return
   }
   val differ: ImageComparator.ComparisonResult =
-    prev.differ(next, 1.0)
+    prev.differ(next, 1.0, roborazziOptions.compareOptions.imageComparator)
   if (!roborazziOptions.compareOptions.resultValidator(differ)) {
     this.add(next)
   } else {

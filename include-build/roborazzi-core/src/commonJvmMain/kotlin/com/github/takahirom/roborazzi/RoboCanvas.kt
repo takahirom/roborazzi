@@ -9,7 +9,7 @@ interface RoboCanvas {
   val width: Int
   val height: Int
   fun save(file: File, resizeScale: Double)
-  fun differ(other: RoboCanvas, resizeScale: Double): ImageComparator.ComparisonResult
+  fun differ(other: RoboCanvas, resizeScale: Double, imageComparator: ImageComparator): ImageComparator.ComparisonResult
   fun release()
 
 }
