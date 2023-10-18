@@ -572,7 +572,7 @@ fun processOutputImageAndReportWithDefaults(
   roborazziOptions: RoborazziOptions,
 ) {
   processOutputImageAndReport(
-    canvas = canvas,
+    newRoboCanvas = canvas,
     goldenFile = goldenFile,
     roborazziOptions = roborazziOptions,
     canvasFactory = { width, height, filled, bufferedImageType ->

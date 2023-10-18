@@ -89,13 +89,14 @@ fun ImageBitmap.captureRoboImage(
   canvas.release()
 }
 
+@OptIn(InternalRoborazziApi::class)
 fun processOutputImageAndReportWithDefaults(
   canvas: RoboCanvas,
   goldenFile: File,
   roborazziOptions: RoborazziOptions,
 ) {
   processOutputImageAndReport(
-    canvas = canvas,
+    newRoboCanvas = canvas,
     goldenFile = goldenFile,
     roborazziOptions = roborazziOptions,
     canvasFactory = { width, height, filled, bufferedImageType ->
