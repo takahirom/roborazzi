@@ -14,7 +14,7 @@ import java.io.File
 
 fun captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   content: @Composable () -> Unit,
 ) {
   captureRoboImage(
@@ -26,7 +26,7 @@ fun captureRoboImage(
 
 fun captureRoboImage(
   file: File,
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   content: @Composable () -> Unit,
 ) {
   if (!roborazziEnabled()) return
