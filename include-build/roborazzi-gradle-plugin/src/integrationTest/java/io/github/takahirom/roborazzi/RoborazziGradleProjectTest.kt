@@ -384,4 +384,17 @@ class RoborazziGradleProjectTest {
       checkRecordedFileNotExists("$screenshotAndName.testCapture_2_actual.png")
     }
   }
+
+  @Test
+  fun shouldNotRetainPreviousTestResults() {
+    RoborazziGradleProject(testProjectDir).apply {
+      removeTests()
+      addMultipleTest()
+
+      recordWithFilter1()
+      recordWithFilter2()
+
+      checkResultCount(1)
+    }
+  }
 }

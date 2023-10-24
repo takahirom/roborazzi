@@ -1,9 +1,10 @@
 package io.github.takahirom.roborazzi
 
-import java.io.File
+import com.github.takahirom.roborazzi.CaptureResults
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
   init {
@@ -13,6 +14,28 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
   fun record(): BuildResult {
     val task = "recordRoborazziDebug"
     return runTask(task)
+  }
+
+  fun recordWithFilter1(): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(
+      task,
+      additionalParameters = arrayOf(
+        "--tests",
+        "com.github.takahirom.integration_test_project.RoborazziTest.testCapture1"
+      )
+    )
+  }
+
+  fun recordWithFilter2(): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(
+      task,
+      additionalParameters = arrayOf(
+        "--tests",
+        "com.github.takahirom.integration_test_project.RoborazziTest.testCapture2"
+      )
+    )
   }
 
   fun unitTest(): BuildResult {
@@ -263,8 +286,18 @@ dependencies {
   fun checkResultsSummaryFileExists() {
     val recordedFile =
       testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
+    println("mytest:" + recordedFile.readText())
     assert(recordedFile.exists()) {
       "File not exists: ${recordedFile.absolutePath}"
+    }
+  }
+
+  fun checkResultCount(count: Int) {
+    val recordedFile =
+      testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
+    val resutls = CaptureResults.fromJsonFile(recordedFile.absolutePath)
+    assert(resutls.captureResults.size == count) {
+      "Expected count: $count, actual count: ${resutls.captureResults.size}"
     }
   }
 
@@ -463,6 +496,68 @@ class RoborazziTest {
         )
       )
     )
+  }
+}
+    """
+    )
+  }
+
+  fun addMultipleTest() {
+    val file =
+      testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project/RoborazziTest.kt")
+    file.parentFile.mkdirs()
+    file.writeText(
+      """
+package com.github.takahirom.integration_test_project
+
+import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.*
+import android.app.Application
+import androidx.test.core.app.ApplicationProvider
+import org.robolectric.Shadows
+import android.content.ComponentName
+import org.junit.Test
+import org.junit.Rule
+import org.robolectric.annotation.GraphicsMode
+
+import org.junit.Assert.*
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class RoborazziTest {
+
+  @get:Rule val roborazziRule = RoborazziRule()
+  init {
+    com.github.takahirom.roborazzi.ROBORAZZI_DEBUG = true
+  }
+  @Test
+  fun testCapture1() {
+    val appContext: Application = ApplicationProvider.getApplicationContext()
+    Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
+      ComponentName(
+        appContext.packageName,
+        MainActivity::class.java.name,
+      )
+    )
+    ActivityScenario.launch(MainActivity::class.java)
+    onView(ViewMatchers.isRoot()).captureRoboImage()
+  }
+
+  @Test
+  fun testCapture2() {
+    val appContext: Application = ApplicationProvider.getApplicationContext()
+    Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
+      ComponentName(
+        appContext.packageName,
+        MainActivity::class.java.name,
+      )
+    )
+    ActivityScenario.launch(MainActivity::class.java)
+    onView(ViewMatchers.isRoot()).captureRoboImage()
   }
 }
     """
