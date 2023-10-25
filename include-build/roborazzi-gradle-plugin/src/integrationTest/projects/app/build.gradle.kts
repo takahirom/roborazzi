@@ -36,18 +36,18 @@ android {
     jvmTarget = "1.8"
   }
   buildFeatures {
-    compose = true
+//    compose = true
   }
-  composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-  }
+//  composeOptions {
+//    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
+//  }
   testOptions {
     unitTests {
       isIncludeAndroidResources = true
     }
     unitTests.all {
       testLogging {
-        events "passed", "skipped", "failed", "standardOut", "standardError"
+        events "skipped", "failed"
         showStandardStreams = true
         showStackTraces = true
         exceptionFormat = TestExceptionFormat.FULL
@@ -68,16 +68,16 @@ dependencies {
 
   implementation(libs.core.ktx)
   implementation(libs.lifecycle.runtime.ktx)
-  implementation(libs.activity.compose)
-  implementation(platform(libs.compose.bom))
-  implementation(libs.ui)
-  implementation(libs.ui.graphics)
-  implementation(libs.ui.tooling.preview)
+//  implementation(libs.activity.compose)
+//  implementation(platform(libs.compose.bom))
+//  implementation(libs.ui)
+//  implementation(libs.ui.graphics)
+//  implementation(libs.ui.tooling.preview)
   implementation(libs.material3)
   testImplementation(libs.junit)
   testImplementation(libs.androidx.test.ext.junit)
   testImplementation(libs.espresso.core)
-  testImplementation(platform(libs.compose.bom))
+//  testImplementation(platform(libs.compose.bom))
   testImplementation(libs.ui.test.junit4)
   debugImplementation(libs.ui.tooling)
   debugImplementation(libs.ui.test.manifest)
