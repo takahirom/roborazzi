@@ -205,12 +205,12 @@ android {
   kotlinOptions {
     jvmTarget = "1.8"
   }
-  buildFeatures {
-    compose = true
-  }
-  composeOptions {
-    kotlinCompilerExtensionVersion = "1.4.8"
-  }
+//  buildFeatures {
+//    compose = true
+//  }
+//  composeOptions {
+//    kotlinCompilerExtensionVersion = "1.4.8"
+//  }
   testOptions {
     unitTests {
       isIncludeAndroidResources = true
@@ -230,19 +230,20 @@ dependencies {
 
   implementation(libs.core.ktx)
   implementation(libs.lifecycle.runtime.ktx)
-  implementation(libs.activity.compose)
+  implementation("androidx.activity:activity:1.7.2")
+//  implementation(libs.activity.compose)
   implementation(platform(libs.compose.bom))
-  implementation(libs.ui)
-  implementation(libs.ui.graphics)
-  implementation(libs.ui.tooling.preview)
+//  implementation(libs.ui)
+//  implementation(libs.ui.graphics)
+//  implementation(libs.ui.tooling.preview)
   implementation(libs.material3)
   testImplementation(libs.junit)
   testImplementation(libs.androidx.test.ext.junit)
   testImplementation(libs.espresso.core)
-  testImplementation(platform(libs.compose.bom))
-  testImplementation(libs.ui.test.junit4)
-  debugImplementation(libs.ui.tooling)
-  debugImplementation(libs.ui.test.manifest)
+//  testImplementation(platform(libs.compose.bom))
+//  testImplementation(libs.ui.test.junit4)
+//  debugImplementation(libs.ui.tooling)
+//  debugImplementation(libs.ui.test.manifest)
 }
           """
       )
@@ -286,7 +287,6 @@ dependencies {
   fun checkResultsSummaryFileExists() {
     val recordedFile =
       testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
-    println("mytest:" + recordedFile.readText())
     assert(recordedFile.exists()) {
       "File not exists: ${recordedFile.absolutePath}"
     }
@@ -322,23 +322,23 @@ dependencies {
 
   fun changeScreen() {
     val file =
-      testProjectDir.root.resolve("app/src/main/java/com/github/takahirom/integration_test_project/Greeting.kt")
+      testProjectDir.root.resolve("app/src/main/java/com/github/takahirom/integration_test_project/MainActivity.kt")
     file.writeText(
       """package com.github.takahirom.integration_test_project
 
-    import androidx.compose.material3.MaterialTheme
-      import androidx.compose.material3.Text
-      import androidx.compose.runtime.Composable
-      import androidx.compose.ui.Modifier
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import android.widget.TextView
 
-      @Composable
-      fun Greeting(name: String, modifier: Modifier = Modifier) {
-        Text(
-          text = "This screen has been changed ${'$'}name!",
-          style = MaterialTheme.typography.headlineLarge,
-          modifier = modifier
-        )
-      }"""
+class MainActivity : ComponentActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContentView(TextView(this).apply{
+      text = "■■■■■■■■■■■■■■■■  Roborazzi!!Detect this change!!!! ■■■■■■■■■■"
+    })
+  }
+}
+"""
     )
   }
 
