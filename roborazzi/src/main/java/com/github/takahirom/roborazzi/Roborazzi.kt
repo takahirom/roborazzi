@@ -28,7 +28,7 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
 import java.io.File
-import java.util.*
+import java.util.Locale
 
 fun ViewInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
@@ -572,10 +572,10 @@ fun processOutputImageAndReportWithDefaults(
   roborazziOptions: RoborazziOptions,
 ) {
   processOutputImageAndReport(
-    canvas = canvas,
+    newRoboCanvas = canvas,
     goldenFile = goldenFile,
     roborazziOptions = roborazziOptions,
-    canvasFactory = { width, height, filled, bufferedImageType ->
+    emptyCanvasFactory = { width, height, filled, bufferedImageType ->
       AwtRoboCanvas(
         width = width,
         height = height,
@@ -583,12 +583,12 @@ fun processOutputImageAndReportWithDefaults(
         bufferedImageType = bufferedImageType
       )
     },
-    canvasFromFile = { file, bufferedImageType ->
+    canvasFactoryFromFile = { file, bufferedImageType ->
       AwtRoboCanvas.load(file, bufferedImageType)
     },
-    generateComparisonCanvas = { actualCanvas, resizeScale, bufferedImageType ->
+    comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        this as AwtRoboCanvas,
+        goldenCanvas as AwtRoboCanvas,
         actualCanvas as AwtRoboCanvas,
         resizeScale,
         bufferedImageType
