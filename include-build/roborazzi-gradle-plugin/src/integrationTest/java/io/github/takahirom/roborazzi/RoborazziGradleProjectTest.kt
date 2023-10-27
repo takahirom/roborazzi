@@ -165,9 +165,9 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+      checkResultCount(changed = 1)
     }
   }
-
 
   @Test
   fun verify_addDetect() {
@@ -394,7 +394,7 @@ class RoborazziGradleProjectTest {
       recordWithFilter1()
       recordWithFilter2()
 
-      checkResultCount(1)
+      checkResultCount(recorded = 1)
     }
   }
 }

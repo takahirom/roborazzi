@@ -292,12 +292,29 @@ dependencies {
     }
   }
 
-  fun checkResultCount(count: Int) {
+  fun checkResultCount(
+    recorded: Int = 0,
+    added: Int = 0,
+    changed: Int = 0,
+    unchanged: Int = 0
+  ) {
     val recordedFile =
       testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
     val resutls = CaptureResults.fromJsonFile(recordedFile.absolutePath)
-    assert(resutls.captureResults.size == count) {
-      "Expected count: $count, actual count: ${resutls.captureResults.size}"
+//    assert(resutls.captureResults.size == recorded) {
+//      "Expected count: $recorded, actual count: ${resutls.captureResults.size}"
+//    }
+    assert(resutls.summary.recorded == recorded) {
+      "Expected count: $recorded, actual count: ${resutls.summary.recorded} summary:${resutls.summary}"
+    }
+    assert(resutls.summary.added == added) {
+      "Expected count: $added, actual count: ${resutls.summary.added} summary:${resutls.summary}"
+    }
+    assert(resutls.summary.changed == changed) {
+      "Expected count: $changed, actual count: ${resutls.summary.changed} summary:${resutls.summary}"
+    }
+    assert(resutls.summary.unchanged == unchanged) {
+      "Expected count: $unchanged, actual count: ${resutls.summary.unchanged} summary:${resutls.summary}"
     }
   }
 
