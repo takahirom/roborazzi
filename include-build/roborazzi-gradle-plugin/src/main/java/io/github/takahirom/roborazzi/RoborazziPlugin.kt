@@ -148,6 +148,12 @@ class RoborazziPlugin : Plugin<Project> {
         }
       val roborazziProperties =
         project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
+      val resultDirFileTree =
+        project.fileTree(RoborazziReportConst.resultDirPath)
+      val resultsSummaryFile =
+        project.file(RoborazziReportConst.resultsSummaryFilePath)
+      val reportFile =
+        project.file(RoborazziReportConst.reportFilePath)
 
       val roborazziReportTask = project.tasks.register(
         "roborazziReport$variantSlug",
@@ -160,12 +166,6 @@ class RoborazziPlugin : Plugin<Project> {
               if (!isRoborazziRun) {
                 return@doLast
               }
-              val resultDirFileTree =
-                project.fileTree(RoborazziReportConst.resultDirPath)
-              val resultsSummaryFile =
-                project.file(RoborazziReportConst.resultsSummaryFilePath)
-              val reportFile =
-                project.file(RoborazziReportConst.reportFilePath)
 
               // Copy all files from outputDir to intermediateDir
               // so that we can use Gradle's output caching

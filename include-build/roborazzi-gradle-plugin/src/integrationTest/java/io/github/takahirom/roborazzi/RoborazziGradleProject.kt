@@ -301,9 +301,6 @@ dependencies {
     val recordedFile =
       testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
     val resutls = CaptureResults.fromJsonFile(recordedFile.absolutePath)
-//    assert(resutls.captureResults.size == recorded) {
-//      "Expected count: $recorded, actual count: ${resutls.captureResults.size}"
-//    }
     assert(resutls.summary.recorded == recorded) {
       "Expected count: $recorded, actual count: ${resutls.summary.recorded} summary:${resutls.summary}"
     }
