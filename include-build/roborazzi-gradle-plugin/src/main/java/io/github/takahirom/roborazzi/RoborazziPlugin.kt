@@ -7,9 +7,11 @@ import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.RoborazziReportConst
+import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -22,7 +24,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
-import java.util.*
+import java.util.Locale
 import javax.inject.Inject
 
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
@@ -144,17 +146,66 @@ class RoborazziPlugin : Plugin<Project> {
         .matching {
           it.name == testTaskName
         }
+      val roborazziProperties =
+        project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
+
+      val roborazziReportTask = project.tasks.register(
+        "roborazziReport$variantSlug",
+        object : Action<Task> {
+          override fun execute(t: Task) {
+            t.doLast {
+              val isRoborazziRun =
+                (isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
+                  || hasRoborazziTaskProperty(roborazziProperties))
+              if (!isRoborazziRun) {
+                return@doLast
+              }
+              val resultDirFileTree =
+                project.fileTree(RoborazziReportConst.resultDirPath)
+              val resultsSummaryFile =
+                project.file(RoborazziReportConst.resultsSummaryFilePath)
+              val reportFile =
+                project.file(RoborazziReportConst.reportFilePath)
+
+              // Copy all files from outputDir to intermediateDir
+              // so that we can use Gradle's output caching
+              infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
+              // outputDir.get().asFileTree.forEach {
+              //   println("Copy file ${it.absolutePath} to ${intermediateDir.get()}")
+              // }
+              outputDir.get().asFile.mkdirs()
+              outputDir.get().asFile.copyRecursively(
+                target = intermediateDir.get().asFile,
+                overwrite = true
+              )
+
+              val results: List<CaptureResult> = resultDirFileTree.mapNotNull {
+                if (it.name.endsWith(".json")) {
+                  CaptureResult.fromJsonFile(it.path)
+                } else {
+                  null
+                }
+              }
+              infoln("Save result to ${resultsSummaryFile.absolutePath} with results:${results.size}")
+
+              val roborazziResult = CaptureResults.from(results)
+
+              val jsonResult = roborazziResult.toJson()
+              resultsSummaryFile.parentFile.mkdirs()
+              resultsSummaryFile.writeText(jsonResult.toString())
+              reportFile.parentFile.mkdirs()
+              reportFile.writeText(
+                RoborazziReportConst.reportHtml.replace(
+                  oldValue = "REPORT_TEMPLATE_BODY",
+                  newValue = roborazziResult.toHtml(reportFile.parentFile.absolutePath)
+                )
+              )
+            }
+          }
+        })
       testTaskProvider
         .configureEach { test ->
-          val roborazziProperties =
-            project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
           val resultsDir = project.file(RoborazziReportConst.resultDirPath)
-          val resultDirFileTree =
-            project.fileTree(RoborazziReportConst.resultDirPath)
-          val resultsSummaryFile =
-            project.file(RoborazziReportConst.resultsSummaryFilePath)
-          val reportFile =
-            project.file(RoborazziReportConst.reportFilePath)
           if (restoreOutputDirRoborazziTaskProvider.isPresent) {
             test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
               if (!it.outputDir.get().asFile.exists()) {
@@ -213,48 +264,7 @@ class RoborazziPlugin : Plugin<Project> {
               resultsDir.mkdirs()
             }
           }
-          // We don't use custom task action here because we want to run it even if we use `-P` parameter
-          test.doLast {
-            val isRoborazziRun =
-              (isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
-                || hasRoborazziTaskProperty(roborazziProperties))
-            if (!isRoborazziRun) {
-              return@doLast
-            }
-            // Copy all files from outputDir to intermediateDir
-            // so that we can use Gradle's output caching
-            infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
-            // outputDir.get().asFileTree.forEach {
-            //   println("Copy file ${it.absolutePath} to ${intermediateDir.get()}")
-            // }
-            outputDir.get().asFile.mkdirs()
-            outputDir.get().asFile.copyRecursively(
-              target = intermediateDir.get().asFile,
-              overwrite = true
-            )
-
-            val results: List<CaptureResult> = resultDirFileTree.mapNotNull {
-              if (it.name.endsWith(".json")) {
-                CaptureResult.fromJsonFile(it.path)
-              } else {
-                null
-              }
-            }
-            infoln("Save result to ${resultsSummaryFile.absolutePath} with results:${results.size}")
-
-            val roborazziResult = CaptureResults.from(results)
-
-            val jsonResult = roborazziResult.toJson()
-            resultsSummaryFile.parentFile.mkdirs()
-            resultsSummaryFile.writeText(jsonResult.toString())
-            reportFile.parentFile.mkdirs()
-            reportFile.writeText(
-              RoborazziReportConst.reportHtml.replace(
-                oldValue = "REPORT_TEMPLATE_BODY",
-                newValue = roborazziResult.toHtml(reportFile.parentFile.absolutePath)
-              )
-            )
-          }
+          test.finalizedBy(roborazziReportTask)
         }
 
       recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
