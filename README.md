@@ -1082,6 +1082,22 @@ By following these steps, you should be able to identify and resolve the issue c
 **A:** As of now, there is no direct support for running Roborazzi with Bazel. However, it is possible to do so. Please refer to the following comment for more details:
 [Roborazzi Bazel Support Comment](https://github.com/takahirom/roborazzi/issues/63#issuecomment-1531990825)
 
+### Q: My tests are being skipped or, conversely, are being run when they should be skipped. How can I handle caching to address this?
+
+**A:** The behavior you are experiencing may be related to caching issues. Although it's
+experimental, you can set the `outputDir` parameter in your `build.gradle` file to handle caching
+and improve the stability of your tests. This parameter allows you to specify the output directory
+for your screenshots, which can help in managing the cache. Here is how you can set it up:
+If you use the default output directory(module/build/outputs/roborazzi), specifying the `outputDir`
+parameter is not necessary. For more reference, you can check
+out [the issue](https://github.com/takahirom/roborazzi/issues/193#issuecomment-1782073746).
+
+```gradle
+roborazzi {
+    outputDir = "src/your/screenshot/folder"
+}
+```
+
 ### LICENSE
 
 ```
