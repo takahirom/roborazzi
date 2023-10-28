@@ -175,12 +175,7 @@ class RoborazziPlugin : Plugin<Project> {
               doesRoborazziRun
             }
             t.doLast {
-              val doesRoborazziRun =
-                (doesRoborazziRunProvider.get())
-              if (!doesRoborazziRun) {
-                return@doLast
-              }
-
+              t.infoln("Roborazzi: roborazziTestFinalizer.doLast")
               // Copy all files from outputDir to intermediateDir
               // so that we can use Gradle's output caching
               t.infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
@@ -260,6 +255,7 @@ class RoborazziPlugin : Plugin<Project> {
             if (!doesRoborazziRun) {
               return@doFirst
             }
+            test.infoln("Roborazzi: test.doFirst")
             val isTaskPresent =
               isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
             if (!isTaskPresent) {
