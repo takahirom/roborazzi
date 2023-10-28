@@ -165,8 +165,8 @@ class RoborazziPlugin : Plugin<Project> {
       val reportFile =
         project.file(RoborazziReportConst.reportFilePath)
 
-      val roborazziTestFinalizerTask = project.tasks.register(
-        "roborazziTestFinalizer$variantSlug",
+      val finalizeTestRoborazziTask = project.tasks.register(
+        "finalizeTestRoborazzi$variantSlug",
         object : Action<Task> {
           override fun execute(t: Task) {
             t.onlyIf {
@@ -277,7 +277,7 @@ class RoborazziPlugin : Plugin<Project> {
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
           }
-          test.finalizedBy(roborazziTestFinalizerTask)
+          test.finalizedBy(finalizeTestRoborazziTask)
         }
 
       recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
