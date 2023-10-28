@@ -220,8 +220,9 @@ class RoborazziGradleProjectTest {
       removeTests()
       record()
 
-      // Test will be skipped when no souce so no output
-      checkResultsSummaryFileNotExists()
+      // Summary file will be generated even if no test files
+      checkResultsSummaryFileExists()
+      // Test will be skipped when no source so no output
       checkResultFileNotExists(resultFileSuffix)
     }
   }
