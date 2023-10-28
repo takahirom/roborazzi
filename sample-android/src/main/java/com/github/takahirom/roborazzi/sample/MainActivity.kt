@@ -8,7 +8,6 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.github.takahirom.roborazzi.sample.R
 import com.github.takahirom.roborazzi.sample.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
 
@@ -18,6 +17,8 @@ class MainActivity : AppCompatActivity() {
   private lateinit var binding: ActivityMainBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    // for making diff
+    // setTheme(com.google.android.material.R.style.Theme_Material3_Dark_NoActionBar)
     super.onCreate(savedInstanceState)
 
     binding = ActivityMainBinding.inflate(layoutInflater)
