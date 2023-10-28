@@ -205,9 +205,11 @@ android {
   kotlinOptions {
     jvmTarget = "1.8"
   }
-//  buildFeatures {
+  buildFeatures {
 //    compose = true
-//  }
+    buildConfig = false
+    resValues = false
+  }
 //  composeOptions {
 //    kotlinCompilerExtensionVersion = "1.4.8"
 //  }

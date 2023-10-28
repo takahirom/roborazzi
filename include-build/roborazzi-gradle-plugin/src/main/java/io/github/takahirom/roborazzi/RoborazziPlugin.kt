@@ -3,7 +3,6 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.RoborazziReportConst
@@ -148,6 +147,17 @@ class RoborazziPlugin : Plugin<Project> {
         }
       val roborazziProperties =
         project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
+
+      val isRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
+        isVerifyRun.flatMap { isVerifyRunValue ->
+          isVerifyAndRecordRun.flatMap { isVerifyAndRecordRunValue ->
+            isCompareRun.map { compareRunValue ->
+              isRecordRunValue || isVerifyRunValue || isVerifyAndRecordRunValue || compareRunValue
+                || hasRoborazziTaskProperty(roborazziProperties)
+            }
+          }
+        }
+      }
       val resultDirFileTree =
         project.fileTree(RoborazziReportConst.resultDirPath)
       val resultsSummaryFile =
@@ -161,15 +171,14 @@ class RoborazziPlugin : Plugin<Project> {
           override fun execute(t: Task) {
             t.doLast {
               val isRoborazziRun =
-                (isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
-                  || hasRoborazziTaskProperty(roborazziProperties))
+                (isRoborazziRunProvider.get())
               if (!isRoborazziRun) {
                 return@doLast
               }
 
               // Copy all files from outputDir to intermediateDir
               // so that we can use Gradle's output caching
-              infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
+              t.infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
               // outputDir.get().asFileTree.forEach {
               //   println("Copy file ${it.absolutePath} to ${intermediateDir.get()}")
               // }
@@ -186,7 +195,7 @@ class RoborazziPlugin : Plugin<Project> {
                   null
                 }
               }
-              infoln("Save result to ${resultsSummaryFile.absolutePath} with results:${results.size}")
+              t.infoln("Save result to ${resultsSummaryFile.absolutePath} with results:${results.size}")
 
               val roborazziResult = CaptureResults.from(results)
 
@@ -207,10 +216,11 @@ class RoborazziPlugin : Plugin<Project> {
         .configureEach { test ->
           val resultsDir = project.file(RoborazziReportConst.resultDirPath)
           if (restoreOutputDirRoborazziTaskProvider.isPresent) {
-            test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
+            test.inputs.dir(restoreOutputDirRoborazziTaskProvider.map {
               if (!it.outputDir.get().asFile.exists()) {
                 it.outputDir.get().asFile.mkdirs()
               }
+              test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
               it.outputDir
             })
           } else {
@@ -218,6 +228,7 @@ class RoborazziPlugin : Plugin<Project> {
               if (!it.asFile.exists()) {
                 it.asFile.mkdirs()
               }
+              test.infoln("Roborazzi: Set input dir $it to test task")
               it
             })
           }
@@ -232,12 +243,18 @@ class RoborazziPlugin : Plugin<Project> {
               "roborazziProperties" to roborazziProperties,
             )
           )
-          test.outputs.doNotCacheIf("Run Roborazzi tests if roborazzi output dir is empty") {
-            (isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
-              || hasRoborazziTaskProperty(roborazziProperties))
-              && outputDir.get().asFile.listFiles()?.isEmpty() ?: true
+          test.outputs.upToDateWhen {
+            val isRoborazziRun = isRoborazziRunProvider.get()
+            val inputDirEmpty = outputDir.get().asFile.listFiles()?.isEmpty() ?: true
+            test.infoln("Roborazzi: test.outputs.upToDateWhen !(isRoborazziRun:$isRoborazziRun && inputDirEmpty:$inputDirEmpty)")
+            !(isRoborazziRun && inputDirEmpty)
           }
           test.doFirst {
+            val isRoborazziRun =
+              isRoborazziRunProvider.get()
+            if (!isRoborazziRun) {
+              return@doFirst
+            }
             val isTaskPresent =
               isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
             if (!isTaskPresent) {
@@ -256,13 +273,8 @@ class RoborazziPlugin : Plugin<Project> {
               test.systemProperties["roborazzi.test.verify"] =
                 isVerifyRun.get() || isVerifyAndRecordRun.get()
             }
-            val isRoborazziRun =
-              (isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
-                || hasRoborazziTaskProperty(roborazziProperties))
-            if (isRoborazziRun) {
-              resultsDir.deleteRecursively()
-              resultsDir.mkdirs()
-            }
+            resultsDir.deleteRecursively()
+            resultsDir.mkdirs()
           }
           test.finalizedBy(roborazziReportTask)
         }
@@ -347,5 +359,5 @@ class RoborazziPlugin : Plugin<Project> {
   }
 }
 
-fun infoln(format: String) =
-  ThreadLoggingEnvironment.reportFormattedInfoToCurrentLogger(format)
+fun Task.infoln(format: String) =
+  logger.info(format)
