@@ -148,7 +148,7 @@ class RoborazziPlugin : Plugin<Project> {
       val roborazziProperties =
         project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
 
-      val isRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
+      val doesRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
         isVerifyRun.flatMap { isVerifyRunValue ->
           isVerifyAndRecordRun.flatMap { isVerifyAndRecordRunValue ->
             isCompareRun.map { compareRunValue ->
@@ -165,14 +165,19 @@ class RoborazziPlugin : Plugin<Project> {
       val reportFile =
         project.file(RoborazziReportConst.reportFilePath)
 
-      val roborazziReportTask = project.tasks.register(
-        "roborazziReport$variantSlug",
+      val roborazziTestFinalizerTask = project.tasks.register(
+        "roborazziTestFinalizer$variantSlug",
         object : Action<Task> {
           override fun execute(t: Task) {
+            t.onlyIf {
+              val doesRoborazziRun = doesRoborazziRunProvider.get()
+              t.infoln("Roborazzi: roborazziTestFinalizer.onlyIf doesRoborazziRun $doesRoborazziRun")
+              doesRoborazziRun
+            }
             t.doLast {
-              val isRoborazziRun =
-                (isRoborazziRunProvider.get())
-              if (!isRoborazziRun) {
+              val doesRoborazziRun =
+                (doesRoborazziRunProvider.get())
+              if (!doesRoborazziRun) {
                 return@doLast
               }
 
@@ -244,15 +249,15 @@ class RoborazziPlugin : Plugin<Project> {
             )
           )
           test.outputs.upToDateWhen {
-            val isRoborazziRun = isRoborazziRunProvider.get()
+            val doesRoborazziRun = doesRoborazziRunProvider.get()
             val inputDirEmpty = outputDir.get().asFile.listFiles()?.isEmpty() ?: true
-            test.infoln("Roborazzi: test.outputs.upToDateWhen !(isRoborazziRun:$isRoborazziRun && inputDirEmpty:$inputDirEmpty)")
-            !(isRoborazziRun && inputDirEmpty)
+            test.infoln("Roborazzi: test.outputs.upToDateWhen !(doesRoborazziRun:$doesRoborazziRun && inputDirEmpty:$inputDirEmpty)")
+            !(doesRoborazziRun && inputDirEmpty)
           }
           test.doFirst {
-            val isRoborazziRun =
-              isRoborazziRunProvider.get()
-            if (!isRoborazziRun) {
+            val doesRoborazziRun =
+              doesRoborazziRunProvider.get()
+            if (!doesRoborazziRun) {
               return@doFirst
             }
             val isTaskPresent =
@@ -276,7 +281,7 @@ class RoborazziPlugin : Plugin<Project> {
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
           }
-          test.finalizedBy(roborazziReportTask)
+          test.finalizedBy(roborazziTestFinalizerTask)
         }
 
       recordTaskProvider.configure { it.dependsOn(testTaskProvider) }
