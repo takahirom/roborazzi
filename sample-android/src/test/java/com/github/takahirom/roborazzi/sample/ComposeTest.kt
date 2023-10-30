@@ -61,7 +61,7 @@ class ComposeTest {
 
   @Test
   @Config(
-    sdk = [30],
+    sdk = [34],
     qualifiers = "w221dp-h221dp-small-notlong-round-watch-xhdpi-keyshidden-nonav"
   )
   fun wearComposable() {
