@@ -19,7 +19,6 @@ import android.view.View
 import android.view.Window
 import androidx.concurrent.futures.ResolvableFuture
 import androidx.core.graphics.withClip
-import org.robolectric.versioning.AndroidVersions
 import kotlin.math.min
 
 fun View.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
@@ -85,7 +84,13 @@ private fun View.generateBitmap(
     return
   }
   val destBitmap = Bitmap.createBitmap(width, height, pixelBitConfig.toBitmapConfig())
-  if (AndroidVersions.U.RELEASED && Build.VERSION.SDK_INT <= 33) {
+  val robolectric411OrHigher = try {
+    Class.forName("org.robolectric.versioning.AndroidVersions")
+    true
+  } catch (e: ClassNotFoundException) {
+    false
+  }
+  if (robolectric411OrHigher && Build.VERSION.SDK_INT <= 33) {
     // It seems that Robolectric 4.11 does not support PixelCopy when using API 33 or lower.
     debugLog {
       "PixelCopy is not supported for API levels below 34. Falling back to View#draw instead of PixelCopy. " +
