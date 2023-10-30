@@ -6,4 +6,6 @@ composeCompiler = "1.4.8"
 robolectric = "4.10.3"
 
 [libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.7.1" }
+
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }

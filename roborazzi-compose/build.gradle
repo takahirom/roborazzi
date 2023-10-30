@@ -20,6 +20,6 @@ dependencies {
 
   testImplementation "androidx.compose.runtime:runtime"
   compileOnly "androidx.compose.ui:ui"
-  compileOnly "androidx.activity:activity-compose:1.7.1"
+  compileOnly libs.androidx.activity.compose
   compileOnly libs.robolectric
 }
