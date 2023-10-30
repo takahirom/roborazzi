@@ -10,7 +10,7 @@ apply plugin: 'java-gradle-plugin'
 
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
+    languageVersion.set(JavaLanguageVersion.of(17))
   }
 }
 
