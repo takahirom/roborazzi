@@ -49,6 +49,6 @@ dependencies {
   compileOnly 'androidx.test.ext:junit-ktx:1.1.5'
   def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
   implementation composeBom
-  compileOnly "androidx.compose.ui:ui-test"
-  compileOnly "androidx.compose.ui:ui-test-junit4"
+  compileOnly libs.androidx.compose.ui.test
+  compileOnly libs.androidx.compose.ui.test.junit4
 }
