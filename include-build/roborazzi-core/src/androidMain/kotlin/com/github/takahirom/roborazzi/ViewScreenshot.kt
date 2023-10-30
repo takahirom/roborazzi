@@ -19,6 +19,7 @@ import android.view.View
 import android.view.Window
 import androidx.concurrent.futures.ResolvableFuture
 import androidx.core.graphics.withClip
+import org.robolectric.versioning.AndroidVersions
 import kotlin.math.min
 
 
@@ -85,14 +86,23 @@ private fun View.generateBitmap(
     return
   }
   val destBitmap = Bitmap.createBitmap(width, height, pixelBitConfig.toBitmapConfig())
+  if (AndroidVersions.U.RELEASED && Build.VERSION.SDK_INT <= 33) {
+    // It seems that Robolectric 4.11 does not support PixelCopy when using API 33 or lower.
+    debugLog {
+      "PixelCopy is not supported for API levels below 34. Falling back to View#draw instead of PixelCopy. " +
+        "Consider using API level 34 or higher, e.g., @Config(sdk = [34])."
+    }
+    generateBitmapFromDraw(destBitmap, bitmapFuture)
+    return
+  }
   when {
     Build.VERSION.SDK_INT < 26 -> {
-      println(
+      debugLog {
         "**Warning from Roborazzi**: Robolectric may not function properly under API 26, " +
           "specifically it may fail to capture accurate screenshots. " +
           "Please add @Config(sdk = [26]) or higher to your test class to ensure proper operation. " +
           "For more details, please refer to https://github.com/takahirom/roborazzi/issues/114 ."
-      )
+      }
       generateBitmapFromDraw(destBitmap, bitmapFuture)
     }
 
@@ -102,16 +112,18 @@ private fun View.generateBitmap(
       if (window != null) {
         if (Build.VERSION.SDK_INT < 28) {
           // See: https://github.com/robolectric/robolectric/blob/robolectric-4.10.3/shadows/framework/src/main/java/org/robolectric/shadows/ShadowPixelCopy.java#L32
-          println("PixelCopy is not supported for API levels below 28. Falling back to View#draw instead of PixelCopy. " +
-            "Consider using API level 28 or higher, e.g., @Config(sdk = [28]).")
+          debugLog {
+            "PixelCopy is not supported for API levels below 28. Falling back to View#draw instead of PixelCopy. " +
+              "Consider using API level 28 or higher, e.g., @Config(sdk = [28])."
+          }
           generateBitmapFromDraw(destBitmap, bitmapFuture)
         } else {
           generateBitmapFromPixelCopy(window, destBitmap, bitmapFuture)
         }
       } else {
-        println(
+        debugLog {
           "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy"
-        )
+        }
         generateBitmapFromDraw(destBitmap, bitmapFuture)
       }
     }
