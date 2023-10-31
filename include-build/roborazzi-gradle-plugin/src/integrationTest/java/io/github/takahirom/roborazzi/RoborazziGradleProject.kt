@@ -228,7 +228,7 @@ android {
 dependencies {
   implementation("io.github.takahirom.roborazzi:roborazzi:1.0.0")
   implementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:1.0.0")
-  testImplementation("org.robolectric:robolectric:4.11")
+  testImplementation("org.robolectric:robolectric:4.11.1")
 
   implementation(libs.core.ktx)
   implementation(libs.lifecycle.runtime.ktx)
