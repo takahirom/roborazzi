@@ -3,7 +3,7 @@ agp = "7.3.1"
 kotlin = "1.8.22"
 mavenPublish = "0.25.3"
 composeCompiler = "1.4.8"
-robolectric = "4.10.3"
+robolectric = "4.11.1"
 
 [libraries]
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
