@@ -131,7 +131,7 @@ data class RoborazziOptions(
   data class CompareOptions(
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
     val imageComparator: ImageComparator = DefaultImageComparator,
-    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
+    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
   ) {
     constructor(
       outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
@@ -140,14 +140,16 @@ data class RoborazziOptions(
        * The value should be between 0 and 1
        */
       changeThreshold: Float = 0F,
+      imageComparator: ImageComparator = DefaultImageComparator,
     ) : this(
       outputDirectoryPath = outputDirectoryPath,
       resultValidator = ThresholdValidator(changeThreshold),
-      imageComparator = DefaultImageComparator,
+      imageComparator = imageComparator,
     )
 
     companion object {
       val DefaultImageComparator = SimpleImageComparator(maxDistance = 0.007F)
+      val DefaultResultValidator = ThresholdValidator(0F)
     }
   }
 
@@ -226,18 +228,19 @@ expect fun canScreenshot(): Boolean
 
 expect fun defaultCaptureType(): RoborazziOptions.CaptureType
 
-private fun getAssertErrorOrNull(reportResult: CaptureResult): AssertionError? = when (reportResult) {
-  is CaptureResult.Added -> AssertionError(
-    "Roborazzi: The original file(${reportResult.goldenFile.absolutePath}) was not found.\n" +
-      "See the actual image at ${reportResult.actualFile.absolutePath}"
-  )
+private fun getAssertErrorOrNull(reportResult: CaptureResult): AssertionError? =
+  when (reportResult) {
+    is CaptureResult.Added -> AssertionError(
+      "Roborazzi: The original file(${reportResult.goldenFile.absolutePath}) was not found.\n" +
+        "See the actual image at ${reportResult.actualFile.absolutePath}"
+    )
 
-  is CaptureResult.Changed -> AssertionError(
-    "Roborazzi: ${reportResult.goldenFile.absolutePath} is changed.\n" +
-      "See the compare image at ${reportResult.compareFile.absolutePath}"
-  )
+    is CaptureResult.Changed -> AssertionError(
+      "Roborazzi: ${reportResult.goldenFile.absolutePath} is changed.\n" +
+        "See the compare image at ${reportResult.compareFile.absolutePath}"
+    )
 
-  is CaptureResult.Unchanged, is CaptureResult.Recorded -> {
-    null
+    is CaptureResult.Unchanged, is CaptureResult.Recorded -> {
+      null
+    }
   }
-}
