@@ -29,6 +29,9 @@ kotlin {
 
   sourceSets {
     commonMain {
+      dependencies {
+        implementation 'com.soywiz.korlibs.krypto:krypto:4.0.10'
+      }
     }
     commonJvmMain {
       dependencies {

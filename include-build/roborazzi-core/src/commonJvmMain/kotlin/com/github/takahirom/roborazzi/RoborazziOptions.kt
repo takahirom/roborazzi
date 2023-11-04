@@ -2,6 +2,8 @@ package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
+import com.github.takahirom.roborazzi.hash.ImageHashCalculator
+import com.github.takahirom.roborazzi.hash.Md5ImageHashCalculator
 import java.io.File
 import java.io.FileWriter
 
@@ -176,8 +178,9 @@ data class RoborazziOptions(
       override fun report(reportResult: CaptureResult) {
         val absolutePath = File(RoborazziReportConst.resultDirPath).absolutePath
         val nameWithoutExtension = when (reportResult) {
-          is CaptureResult.Added -> reportResult.compareFile
-          is CaptureResult.Changed -> reportResult.goldenFile
+          is CaptureResult.Added -> reportResult.actualFile
+          is CaptureResult.Changed.FileChanged -> reportResult.goldenFile
+          is CaptureResult.Changed.HashChanged -> reportResult.actualFile
           is CaptureResult.Unchanged -> reportResult.goldenFile
           is CaptureResult.Recorded -> reportResult.goldenFile
         }.nameWithoutExtension
@@ -207,7 +210,17 @@ data class RoborazziOptions(
     val resizeScale: Double = roborazziDefaultResizeScale(),
     val applyDeviceCrop: Boolean = false,
     val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
-  )
+    val hashOptions: HashOptions = HashOptions.Disabled,
+  ) {
+
+    sealed interface HashOptions {
+      object Disabled : HashOptions
+      data class Enabled(
+        val imageHashCalculator: ImageHashCalculator = Md5ImageHashCalculator()
+      ) : HashOptions
+    }
+
+  }
 
   enum class PixelBitConfig {
     Argb8888,
@@ -231,13 +244,18 @@ expect fun defaultCaptureType(): RoborazziOptions.CaptureType
 private fun getAssertErrorOrNull(reportResult: CaptureResult): AssertionError? =
   when (reportResult) {
     is CaptureResult.Added -> AssertionError(
-      "Roborazzi: The original file(${reportResult.goldenFile.absolutePath}) was not found.\n" +
+      "Roborazzi: The original file was not found.\n" +
         "See the actual image at ${reportResult.actualFile.absolutePath}"
     )
 
-    is CaptureResult.Changed -> AssertionError(
+    is CaptureResult.Changed.FileChanged -> AssertionError(
       "Roborazzi: ${reportResult.goldenFile.absolutePath} is changed.\n" +
         "See the compare image at ${reportResult.compareFile.absolutePath}"
+    )
+
+    is CaptureResult.Changed.HashChanged -> AssertionError(
+      "Roborazzi: ${reportResult.goldenHashFile.absolutePath}(${reportResult.goldenHashFile.readText()}) is changed.\n" +
+        "See the compare image at ${reportResult.actualFile.absolutePath}(${reportResult.actualFile.readText()})"
     )
 
     is CaptureResult.Unchanged, is CaptureResult.Recorded -> {

@@ -48,7 +48,13 @@ class ManualTest {
   @Config(qualifiers = "+night")
   fun captureScreenLevelNightWithEspresso() {
     onView(ViewMatchers.isRoot())
-      .captureRoboImage()
+      .captureRoboImage(
+        roborazziOptions = RoborazziOptions(
+          recordOptions = RoborazziOptions.RecordOptions(
+            hashOptions = RoborazziOptions.RecordOptions.HashOptions.Enabled()
+          )
+        )
+      )
   }
 
   @Test

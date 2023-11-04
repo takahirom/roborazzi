@@ -52,12 +52,17 @@ data class CaptureResults(
           when (image) {
             is CaptureResult.Added -> {
               append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.actualFile.name}</td>")
-              append("<td class=\"$imgClass\"><img $imgAttributes src=\"${image.actualFile.pathFrom(reportDirectoryPath)}\" data-alt=\"${image.goldenFile.name}\"/></td>")
+              append("<td class=\"$imgClass\"><img $imgAttributes src=\"${image.actualFile.pathFrom(reportDirectoryPath)}\" data-alt=\"${image.actualFile.name}\"/></td>")
             }
 
-            is CaptureResult.Changed -> {
+            is CaptureResult.Changed.FileChanged -> {
               append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.compareFile.name}</td>")
               append("<td class=\"$imgClass\"><img $imgAttributes src=\"${image.compareFile.pathFrom(reportDirectoryPath)}\" data-alt=\"${image.goldenFile.name}\"/></td>")
+            }
+
+            is CaptureResult.Changed.HashChanged -> {
+              append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.goldenHashFile.name}</td>")
+              append("<td class=\"$imgClass\">golden: ${image.goldenHashFile.readText()}<br>actual:${image.actualFile.readText()}</td>")
             }
 
             is CaptureResult.Recorded -> {
