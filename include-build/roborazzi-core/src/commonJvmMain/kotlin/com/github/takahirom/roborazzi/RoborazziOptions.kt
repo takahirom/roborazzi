@@ -139,7 +139,7 @@ data class RoborazziOptions(
        * This value determines the threshold of pixel change at which the diff image is output or not.
        * The value should be between 0 and 1
        */
-      changeThreshold: Float = 0F,
+      changeThreshold: Float,
       imageComparator: ImageComparator = DefaultImageComparator,
     ) : this(
       outputDirectoryPath = outputDirectoryPath,
