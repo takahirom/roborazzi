@@ -33,6 +33,7 @@ sealed interface CaptureResult {
       compareFile?.let {
         json.put("compare_file_path", it.absolutePath)
       }
+      json.put("actual_file_path", actualFile.absolutePath)
       actualHashFile?.let {
         json.put("actual_hash_file_path", it.absolutePath)
       }
