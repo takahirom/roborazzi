@@ -1,9 +1,8 @@
 package com.github.takahirom.roborazzi
 
-import com.github.takahirom.roborazzi.roborazziDefaultNamingStrategy
-import java.io.File
 import org.junit.Test
 import org.junit.runner.Description
+import java.io.File
 
 
 object DefaultFileNameGenerator {
@@ -37,7 +36,7 @@ object DefaultFileNameGenerator {
       ).absolutePath
     }
     val dir = roborazziContext.outputDirectory
-    return "$dir/${generateName()}.$extension"
+    return "$dir/${generateCountableNameWithStacktrace()}.$extension"
   }
 
   val jupiterTestAnnotationOrNull = try {
@@ -46,7 +45,14 @@ object DefaultFileNameGenerator {
     null
   }
 
-  private fun generateName(): String {
+  private fun generateCountableNameWithStacktrace(): String {
+    val testName =
+      generateNameWithStackTrace()
+
+    return countableTestName(testName)
+  }
+
+  internal fun generateNameWithStackTrace(): String {
     // Find test method name
     val allStackTraces = Thread.getAllStackTraces()
     val filteredTracces = allStackTraces
@@ -74,8 +80,8 @@ object DefaultFileNameGenerator {
       }
       ?: throw IllegalArgumentException("Roborazzi can't find method of test. Please specify file name or use Rule")
     val testName =
-      generateTestName(stackTraceElement.className, stackTraceElement.methodName)
-    return countableTestName(testName)
+      generateName(stackTraceElement.className, stackTraceElement.methodName)
+    return testName
   }
 
   private fun countableTestName(testName: String): String {
@@ -88,15 +94,20 @@ object DefaultFileNameGenerator {
     }
   }
 
-  fun generate(description: Description): String {
-    description.testClass
-    val className = description.className
-    val methodName = description.methodName
-    val testName = generateTestName(className, methodName)
+  @ExperimentalRoborazziApi
+  fun generateCountableFileNameWithDescription(description: Description): String {
+    val testName = generateNameWithDescription(description)
     return countableTestName(testName)
   }
 
-  private fun generateTestName(className: String, methodName: String?): String {
+  internal fun generateNameWithDescription(description: Description): String {
+    val className = description.className
+    val methodName = description.methodName
+    val testName = generateName(className, methodName)
+    return testName
+  }
+
+  private fun generateName(className: String, methodName: String?): String {
     return when (defaultNamingStrategy) {
       DefaultNamingStrategy.TestPackageAndClassAndMethod -> "$className.$methodName"
       DefaultNamingStrategy.EscapedTestPackageAndClassAndMethod -> className.replace(
@@ -107,4 +118,14 @@ object DefaultFileNameGenerator {
       DefaultNamingStrategy.TestClassAndMethod -> className.substringAfterLast(".") + "." + methodName
     }
   }
+}
+
+@ExperimentalRoborazziApi
+fun roboOutputName(): String {
+  val roborazziContext = provideRoborazziContext()
+  val description = roborazziContext.description
+  if (description != null) {
+    return DefaultFileNameGenerator.generateNameWithDescription(description)
+  }
+  return DefaultFileNameGenerator.generateNameWithStackTrace()
 }

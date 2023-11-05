@@ -12,7 +12,7 @@ private val defaultFileProvider: FileProvider =
   { description, directory, fileExtension ->
     File(
       directory.absolutePath,
-      DefaultFileNameGenerator.generate(description) + "." + fileExtension
+      DefaultFileNameGenerator.generateCountableFileNameWithDescription(description) + "." + fileExtension
     )
   }
 
@@ -199,10 +199,11 @@ class RoborazziRule private constructor(
         if (!isOnlyFail || result.result.isFailure) {
           if (captureType is CaptureType.AllImage) {
             result.saveAllImage {
-              options.outputFileProvider(description, directory, "png")
+              fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath("png"))
             }
           } else {
-            val file = options.outputFileProvider(description, directory, "gif")
+            val file =
+              fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath("gif"))
             result.saveGif(file)
           }
         }
@@ -218,7 +219,8 @@ class RoborazziRule private constructor(
           evaluate()
         }
         if (!captureType.onlyFail || result.isFailure) {
-          val outputFile = options.outputFileProvider(description, directory, "png")
+          val outputFile =
+            fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath("png"))
           when (captureRoot) {
             is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureRoboImage(
               file = outputFile,

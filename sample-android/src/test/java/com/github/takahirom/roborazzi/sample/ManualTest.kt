@@ -233,4 +233,9 @@ class ManualTest {
           .performClick()
       }
   }
+
+  @Test
+  fun roboOutputNameTest() {
+    assert(roboOutputName() == "com.github.takahirom.roborazzi.sample.ManualTest.roboOutputNameTest")
+  }
 }
