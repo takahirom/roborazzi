@@ -12,7 +12,7 @@ private val defaultFileProvider: FileProvider =
   { description, directory, fileExtension ->
     File(
       directory.absolutePath,
-      DefaultFileNameGenerator.generateCountableFileNameWithDescription(description) + "." + fileExtension
+      DefaultFileNameGenerator.generateCountableOutputNameWithDescription(description) + "." + fileExtension
     )
   }
 
