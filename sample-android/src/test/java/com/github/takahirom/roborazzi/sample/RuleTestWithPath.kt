@@ -49,6 +49,8 @@ class RuleTestWithPath {
 
   @Test
   fun roboOutputNameTest() {
+    // For last image
+    launch(MainActivity::class.java)
     assert(roboOutputName() == "com.github.takahirom.roborazzi.sample.RuleTestWithPath.roboOutputNameTest")
   }
 }
