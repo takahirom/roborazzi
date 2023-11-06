@@ -385,7 +385,7 @@ private fun MutableList<AwtRoboCanvas>.addIfChanged(
     return
   }
   val differ: ImageComparator.ComparisonResult =
-    prev.differ(next, 1.0)
+    prev.differ(next, 1.0, roborazziOptions.compareOptions.imageComparator)
   if (!roborazziOptions.compareOptions.resultValidator(differ)) {
     this.add(next)
   } else {
@@ -570,10 +570,10 @@ fun processOutputImageAndReportWithDefaults(
   roborazziOptions: RoborazziOptions,
 ) {
   processOutputImageAndReport(
-    canvas = canvas,
+    newRoboCanvas = canvas,
     goldenFile = goldenFile,
     roborazziOptions = roborazziOptions,
-    canvasFactory = { width, height, filled, bufferedImageType ->
+    emptyCanvasFactory = { width, height, filled, bufferedImageType ->
       AwtRoboCanvas(
         width = width,
         height = height,
@@ -581,12 +581,12 @@ fun processOutputImageAndReportWithDefaults(
         bufferedImageType = bufferedImageType
       )
     },
-    canvasFromFile = { file, bufferedImageType ->
+    canvasFactoryFromFile = { file, bufferedImageType ->
       AwtRoboCanvas.load(file, bufferedImageType)
     },
-    generateComparisonCanvas = { actualCanvas, resizeScale, bufferedImageType ->
+    comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        this as AwtRoboCanvas,
+        goldenCanvas as AwtRoboCanvas,
         actualCanvas as AwtRoboCanvas,
         resizeScale,
         bufferedImageType

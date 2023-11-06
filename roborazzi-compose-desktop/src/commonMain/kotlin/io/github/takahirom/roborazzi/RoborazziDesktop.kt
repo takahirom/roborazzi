@@ -95,10 +95,10 @@ fun processOutputImageAndReportWithDefaults(
   roborazziOptions: RoborazziOptions,
 ) {
   processOutputImageAndReport(
-    canvas = canvas,
+    newRoboCanvas = canvas,
     goldenFile = goldenFile,
     roborazziOptions = roborazziOptions,
-    canvasFactory = { width, height, filled, bufferedImageType ->
+    emptyCanvasFactory = { width, height, filled, bufferedImageType ->
       AwtRoboCanvas(
         width = width,
         height = height,
@@ -106,12 +106,12 @@ fun processOutputImageAndReportWithDefaults(
         bufferedImageType = bufferedImageType
       )
     },
-    canvasFromFile = { file, bufferedImageType ->
+    canvasFactoryFromFile = { file, bufferedImageType ->
       AwtRoboCanvas.load(file, bufferedImageType)
     },
-    generateComparisonCanvas = { actualCanvas, resizeScale, bufferedImageType ->
+    comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        goldenCanvas = this as AwtRoboCanvas,
+        goldenCanvas = goldenCanvas as AwtRoboCanvas,
         newCanvas = actualCanvas as AwtRoboCanvas,
         newCanvasResize = resizeScale,
         bufferedImageType = bufferedImageType

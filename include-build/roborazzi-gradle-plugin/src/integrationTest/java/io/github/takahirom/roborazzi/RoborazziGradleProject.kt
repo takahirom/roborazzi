@@ -1,9 +1,10 @@
 package io.github.takahirom.roborazzi
 
-import java.io.File
+import com.github.takahirom.roborazzi.CaptureResults
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
   init {
@@ -13,6 +14,28 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
   fun record(): BuildResult {
     val task = "recordRoborazziDebug"
     return runTask(task)
+  }
+
+  fun recordWithFilter1(): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(
+      task,
+      additionalParameters = arrayOf(
+        "--tests",
+        "com.github.takahirom.integration_test_project.RoborazziTest.testCapture1"
+      )
+    )
+  }
+
+  fun recordWithFilter2(): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(
+      task,
+      additionalParameters = arrayOf(
+        "--tests",
+        "com.github.takahirom.integration_test_project.RoborazziTest.testCapture2"
+      )
+    )
   }
 
   fun unitTest(): BuildResult {
@@ -183,11 +206,13 @@ android {
     jvmTarget = "1.8"
   }
   buildFeatures {
-    compose = true
+//    compose = true
+    buildConfig = false
+    resValues = false
   }
-  composeOptions {
-    kotlinCompilerExtensionVersion = "1.4.8"
-  }
+//  composeOptions {
+//    kotlinCompilerExtensionVersion = "1.4.8"
+//  }
   testOptions {
     unitTests {
       isIncludeAndroidResources = true
@@ -207,19 +232,20 @@ dependencies {
 
   implementation(libs.core.ktx)
   implementation(libs.lifecycle.runtime.ktx)
-  implementation(libs.activity.compose)
+  implementation("androidx.activity:activity:1.7.2")
+//  implementation(libs.activity.compose)
   implementation(platform(libs.compose.bom))
-  implementation(libs.ui)
-  implementation(libs.ui.graphics)
-  implementation(libs.ui.tooling.preview)
+//  implementation(libs.ui)
+//  implementation(libs.ui.graphics)
+//  implementation(libs.ui.tooling.preview)
   implementation(libs.material3)
   testImplementation(libs.junit)
   testImplementation(libs.androidx.test.ext.junit)
   testImplementation(libs.espresso.core)
-  testImplementation(platform(libs.compose.bom))
-  testImplementation(libs.ui.test.junit4)
-  debugImplementation(libs.ui.tooling)
-  debugImplementation(libs.ui.test.manifest)
+//  testImplementation(platform(libs.compose.bom))
+//  testImplementation(libs.ui.test.junit4)
+//  debugImplementation(libs.ui.tooling)
+//  debugImplementation(libs.ui.test.manifest)
 }
           """
       )
@@ -268,6 +294,29 @@ dependencies {
     }
   }
 
+  fun checkResultCount(
+    recorded: Int = 0,
+    added: Int = 0,
+    changed: Int = 0,
+    unchanged: Int = 0
+  ) {
+    val recordedFile =
+      testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
+    val resutls = CaptureResults.fromJsonFile(recordedFile.absolutePath)
+    assert(resutls.summary.recorded == recorded) {
+      "Expected count: $recorded, actual count: ${resutls.summary.recorded} summary:${resutls.summary}"
+    }
+    assert(resutls.summary.added == added) {
+      "Expected count: $added, actual count: ${resutls.summary.added} summary:${resutls.summary}"
+    }
+    assert(resutls.summary.changed == changed) {
+      "Expected count: $changed, actual count: ${resutls.summary.changed} summary:${resutls.summary}"
+    }
+    assert(resutls.summary.unchanged == unchanged) {
+      "Expected count: $unchanged, actual count: ${resutls.summary.unchanged} summary:${resutls.summary}"
+    }
+  }
+
   fun checkRecordedFileExists(path: String) {
     val recordedFile = testProjectDir.root.resolve(path)
     assert(recordedFile.exists()) {
@@ -289,23 +338,23 @@ dependencies {
 
   fun changeScreen() {
     val file =
-      testProjectDir.root.resolve("app/src/main/java/com/github/takahirom/integration_test_project/Greeting.kt")
+      testProjectDir.root.resolve("app/src/main/java/com/github/takahirom/integration_test_project/MainActivity.kt")
     file.writeText(
       """package com.github.takahirom.integration_test_project
 
-    import androidx.compose.material3.MaterialTheme
-      import androidx.compose.material3.Text
-      import androidx.compose.runtime.Composable
-      import androidx.compose.ui.Modifier
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import android.widget.TextView
 
-      @Composable
-      fun Greeting(name: String, modifier: Modifier = Modifier) {
-        Text(
-          text = "This screen has been changed ${'$'}name!",
-          style = MaterialTheme.typography.headlineLarge,
-          modifier = modifier
-        )
-      }"""
+class MainActivity : ComponentActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContentView(TextView(this).apply{
+      text = "■■■■■■■■■■■■■■■■  Roborazzi!!Detect this change!!!! ■■■■■■■■■■"
+    })
+  }
+}
+"""
     )
   }
 
@@ -463,6 +512,68 @@ class RoborazziTest {
         )
       )
     )
+  }
+}
+    """
+    )
+  }
+
+  fun addMultipleTest() {
+    val file =
+      testProjectDir.root.resolve("app/src/test/java/com/github/takahirom/integration_test_project/RoborazziTest.kt")
+    file.parentFile.mkdirs()
+    file.writeText(
+      """
+package com.github.takahirom.integration_test_project
+
+import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.*
+import android.app.Application
+import androidx.test.core.app.ApplicationProvider
+import org.robolectric.Shadows
+import android.content.ComponentName
+import org.junit.Test
+import org.junit.Rule
+import org.robolectric.annotation.GraphicsMode
+
+import org.junit.Assert.*
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class RoborazziTest {
+
+  @get:Rule val roborazziRule = RoborazziRule()
+  init {
+    com.github.takahirom.roborazzi.ROBORAZZI_DEBUG = true
+  }
+  @Test
+  fun testCapture1() {
+    val appContext: Application = ApplicationProvider.getApplicationContext()
+    Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
+      ComponentName(
+        appContext.packageName,
+        MainActivity::class.java.name,
+      )
+    )
+    ActivityScenario.launch(MainActivity::class.java)
+    onView(ViewMatchers.isRoot()).captureRoboImage()
+  }
+
+  @Test
+  fun testCapture2() {
+    val appContext: Application = ApplicationProvider.getApplicationContext()
+    Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
+      ComponentName(
+        appContext.packageName,
+        MainActivity::class.java.name,
+      )
+    )
+    ActivityScenario.launch(MainActivity::class.java)
+    onView(ViewMatchers.isRoot()).captureRoboImage()
   }
 }
     """

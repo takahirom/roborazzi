@@ -58,7 +58,7 @@ kotlin {
       dependencies {
         def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
         implementation composeBom
-        compileOnly "org.robolectric:robolectric:4.10.3"
+        compileOnly libs.robolectric
         compileOnly "androidx.compose.ui:ui-test"
         compileOnly "androidx.compose.ui:ui-test-junit4"
         api 'androidx.test.espresso:espresso-core:3.5.1'

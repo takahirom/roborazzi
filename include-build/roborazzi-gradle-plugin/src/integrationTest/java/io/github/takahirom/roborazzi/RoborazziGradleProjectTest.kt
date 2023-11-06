@@ -165,9 +165,9 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+      checkResultCount(changed = 1)
     }
   }
-
 
   @Test
   fun verify_addDetect() {
@@ -220,8 +220,9 @@ class RoborazziGradleProjectTest {
       removeTests()
       record()
 
-      // Test will be skipped when no souce so no output
-      checkResultsSummaryFileNotExists()
+      // Summary file will be generated even if no test files
+      checkResultsSummaryFileExists()
+      // Test will be skipped when no source so no output
       checkResultFileNotExists(resultFileSuffix)
     }
   }
@@ -382,6 +383,19 @@ class RoborazziGradleProjectTest {
       checkRecordedFileNotExists("$screenshotAndName.testCapture_2_actual.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_2_compare.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_2_actual.png")
+    }
+  }
+
+  @Test
+  fun shouldNotRetainPreviousTestResults() {
+    RoborazziGradleProject(testProjectDir).apply {
+      removeTests()
+      addMultipleTest()
+
+      recordWithFilter1()
+      recordWithFilter2()
+
+      checkResultCount(recorded = 1)
     }
   }
 }

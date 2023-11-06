@@ -3,13 +3,39 @@ package com.github.takahirom.roborazzi
 import com.dropbox.differ.ImageComparator
 import java.io.File
 
+fun interface EmptyCanvasFactory {
+  operator fun invoke(
+    width: Int,
+    height: Int,
+    filled: Boolean,
+    bufferedImageType: Int
+  ): RoboCanvas
+}
+
+fun interface CanvasFactoryFromFile {
+  operator fun invoke(
+    file: File,
+    bufferedImageType: Int
+  ): RoboCanvas
+}
+
+fun interface ComparisonCanvasFactory {
+  operator fun invoke(
+    goldenRoboCanvas: RoboCanvas,
+    newRoboImage: RoboCanvas,
+    resizeScale: Double,
+    bufferedImageType: Int
+  ): RoboCanvas
+}
+
+@InternalRoborazziApi
 fun processOutputImageAndReport(
-  canvas: RoboCanvas,
+  newRoboCanvas: RoboCanvas,
   goldenFile: File,
   roborazziOptions: RoborazziOptions,
-  canvasFactory: (Int, Int, Boolean, Int) -> RoboCanvas,
-  canvasFromFile: (File, Int) -> RoboCanvas,
-  generateComparisonCanvas: RoboCanvas.(RoboCanvas, Double, Int) -> RoboCanvas,
+  emptyCanvasFactory: EmptyCanvasFactory,
+  canvasFactoryFromFile: CanvasFactoryFromFile,
+  comparisonCanvasFactory: ComparisonCanvasFactory,
 ) {
   debugLog {
     "processOutputImageAndReport(): " +
@@ -24,26 +50,30 @@ fun processOutputImageAndReport(
   val recordOptions = roborazziOptions.recordOptions
   val resizeScale = recordOptions.resizeScale
   if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
-    val width = (canvas.croppedWidth * resizeScale).toInt()
-    val height = (canvas.croppedHeight * resizeScale).toInt()
+    val width = (newRoboCanvas.croppedWidth * resizeScale).toInt()
+    val height = (newRoboCanvas.croppedHeight * resizeScale).toInt()
     val goldenRoboCanvas = if (goldenFile.exists()) {
-      canvasFromFile(goldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
+      canvasFactoryFromFile(goldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
     } else {
-      canvasFactory(
-        width,
-        height,
-        true,
-        recordOptions.pixelBitConfig.toBufferedImageType()
+      emptyCanvasFactory(
+        width = width,
+        height = height,
+        filled = true,
+        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
       )
     }
     val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
       val comparisonResult: ImageComparator.ComparisonResult =
-        canvas.differ(goldenRoboCanvas, resizeScale)
+        newRoboCanvas.differ(
+          other = goldenRoboCanvas,
+          resizeScale = resizeScale,
+          imageComparator = roborazziOptions.compareOptions.imageComparator
+        )
       val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
       log("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
-      log("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${canvas.croppedWidth}, ${canvas.croppedHeight})")
+      log("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
       true
     }
 
@@ -52,10 +82,11 @@ fun processOutputImageAndReport(
         roborazziOptions.compareOptions.outputDirectoryPath,
         goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
       )
-      val comparisonCanvas = goldenRoboCanvas.generateComparisonCanvas(
-        canvas,
-        resizeScale,
-        recordOptions.pixelBitConfig.toBufferedImageType()
+      val comparisonCanvas = comparisonCanvasFactory(
+        goldenRoboCanvas = goldenRoboCanvas,
+        newRoboImage = newRoboCanvas,
+        resizeScale = resizeScale,
+        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
       )
       comparisonCanvas
         .save(
@@ -77,7 +108,7 @@ fun processOutputImageAndReport(
           goldenFile.nameWithoutExtension + "_actual." + goldenFile.extension
         )
       }
-      canvas
+      newRoboCanvas
         .save(
           file = actualFile,
           resizeScale = resizeScale
@@ -116,7 +147,7 @@ fun processOutputImageAndReport(
     roborazziOptions.reportOptions.captureResultReporter.report(result)
   } else {
     // roborazzi.record is checked before
-    canvas.save(goldenFile, resizeScale)
+    newRoboCanvas.save(goldenFile, resizeScale)
     debugLog {
       "processOutputImageAndReport: \n" +
         " record goldenFile: $goldenFile\n"
