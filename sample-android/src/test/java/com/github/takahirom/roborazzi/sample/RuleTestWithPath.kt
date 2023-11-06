@@ -6,11 +6,11 @@ import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.*
 import com.github.takahirom.roborazzi.RoborazziRule.Options
-import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.GraphicsMode
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -45,5 +45,12 @@ class RuleTestWithPath {
   fun captureRoboImageWithPath() {
     launch(MainActivity::class.java)
     onView(isRoot()).captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_file.png")
+  }
+
+  @Test
+  fun roboOutputNameTest() {
+    // For last image
+    launch(MainActivity::class.java)
+    assert(roboOutputName() == "com.github.takahirom.roborazzi.sample.RuleTestWithPath.roboOutputNameTest")
   }
 }
