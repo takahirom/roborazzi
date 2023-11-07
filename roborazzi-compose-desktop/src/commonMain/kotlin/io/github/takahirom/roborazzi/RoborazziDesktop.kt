@@ -111,10 +111,11 @@ fun processOutputImageAndReportWithDefaults(
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        goldenCanvas = goldenCanvas as AwtRoboCanvas,
-        newCanvas = actualCanvas as AwtRoboCanvas,
-        newCanvasResize = resizeScale,
-        bufferedImageType = bufferedImageType
+          goldenCanvas = goldenCanvas as AwtRoboCanvas,
+          newCanvas = actualCanvas as AwtRoboCanvas,
+          newCanvasResize = resizeScale,
+          bufferedImageType = bufferedImageType,
+          oneDpPx = null
       )
     }
   )

@@ -70,7 +70,7 @@ fun SampleComposableFunction() {
       Modifier
         .testTag("MyComposeButton")
         .background(Color.Gray)
-        .size(50.dp)
+        .size(64.dp)
         .clickable {
           count++
         }
@@ -80,7 +80,7 @@ fun SampleComposableFunction() {
         Modifier
           .background(Color.Red)
           .testTag("child:$it")
-          .size(30.dp)
+          .size(32.dp)
       )
     }
   }
