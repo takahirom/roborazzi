@@ -7,6 +7,8 @@ import java.awt.Dimension
 import java.awt.Frame
 import java.awt.Graphics
 import java.awt.Panel
+import java.awt.ScrollPane
+import java.awt.ScrollPane.SCROLLBARS_ALWAYS
 import java.awt.TextField
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
