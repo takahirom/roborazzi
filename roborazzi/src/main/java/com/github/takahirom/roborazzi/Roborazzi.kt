@@ -604,7 +604,7 @@ fun processOutputImageAndReportWithDefaults(
             dip,
             r.getDisplayMetrics()
           )
-          px
+          (px * resizeScale).toFloat()
         }
       )
     }

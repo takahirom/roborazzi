@@ -307,10 +307,13 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
         g.drawLine(x, 0, x, height)
       }
 
-      g.font = Font("Courier New", Font.BOLD, 12)
       // draw rect for texts
-      fun drawStringWithBackgroundRect(text: String, x: Int, y: Int) {
-        val textLayout = TextLayout(text, g.font, g.fontRenderContext)
+      fun drawStringWithBackgroundRect(text: String, x: Int, y: Int, fontSize: Int) {
+        // fill with 4dp margin
+        val textMargin = (4 * oneDpPx).toInt()
+        // Set size to 12dp
+        val font = Font("Courier New", Font.BOLD, fontSize)
+        val textLayout = TextLayout(text, font, g.fontRenderContext)
         val bounds = textLayout.bounds
         val rect = Rectangle(
           x,
@@ -318,14 +321,20 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
           bounds.width.toInt(),
           bounds.height.toInt()
         )
-        g.color = Color(0x55999999, true)
-        g.fillRect(rect.x - 4, rect.y - 4, rect.width + 8, rect.height + 8)
+        g.color = Color(0x55999999.toInt(), true)
+        g.fillRect(
+          rect.x,
+          rect.y - textMargin * 2,
+          rect.width + textMargin * 2,
+          rect.height + textMargin * 2
+        )
         g.color = Color.BLACK
-        g.drawString(text, x, y)
+        textLayout.draw(g, x.toFloat() + textMargin, y.toFloat() - textMargin)
       }
-      drawStringWithBackgroundRect("Reference", margin, margin - 12)
-      drawStringWithBackgroundRect("Diff", image1.width + margin, margin - 12)
-      drawStringWithBackgroundRect("New", image1.width + diff.width + margin, margin - 12)
+      val fontSize = (12 * oneDpPx).toInt()
+      drawStringWithBackgroundRect("Reference", margin, margin, fontSize)
+      drawStringWithBackgroundRect("Diff", image1.width + margin, margin, fontSize)
+      drawStringWithBackgroundRect("New", image1.width + diff.width + margin, margin, fontSize)
 
       g.drawImage(image1, margin, margin, null)
       g.drawImage(diff, image1.width + margin, margin, null)
