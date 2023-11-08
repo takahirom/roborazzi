@@ -31,7 +31,8 @@ import java.io.File
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
   sdk = [30],
-  qualifiers = RobolectricDeviceQualifiers.NexusOne
+  fontScale = 2.0f,
+  qualifiers = RobolectricDeviceQualifiers.Pixel4XL,
 )
 class ManualTest {
   @get:Rule

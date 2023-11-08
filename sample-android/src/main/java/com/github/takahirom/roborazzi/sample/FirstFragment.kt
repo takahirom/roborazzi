@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.github.takahirom.roborazzi.sample.databinding.FragmentFirstBinding
@@ -46,6 +48,11 @@ class FirstFragment : Fragment() {
     super.onViewCreated(view, savedInstanceState)
     binding.compose.setContent {
       SampleComposableFunction()
+      Text(
+        text = "Outer Box",
+        color = Color.Yellow,
+        fontSize = 50.sp
+      )
     }
 
     binding.buttonFirst.setOnClickListener {
@@ -64,7 +71,7 @@ fun SampleComposableFunction() {
   var count by remember { mutableStateOf(0) }
   Column(
     Modifier
-      .size(300.dp)
+      .size(100.dp)
   ) {
     Box(
       Modifier
@@ -74,14 +81,27 @@ fun SampleComposableFunction() {
         .clickable {
           count++
         }
-    )
+    ) {
+      Text(
+        text = "Bigger Box",
+        color = Color.Yellow,
+        fontSize = 25.sp
+      )
+    }
     (0 until count).forEach {
       Box(
         Modifier
           .background(Color.Red)
           .testTag("child:$it")
           .size(30.dp)
-      )
+      ) {
+        Text(
+          text = "Smaller Box",
+          color = Color.Yellow,
+          fontSize = 10.sp,
+          modifier = Modifier.background(Color.Green)
+        )
+      }
     }
   }
 }
