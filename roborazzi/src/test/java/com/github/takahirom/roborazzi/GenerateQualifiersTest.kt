@@ -38,6 +38,22 @@ class GenerateQualifiersTest {
     repairNamespaces = true
   }
 
+  class DeviceQualifier(
+    val tagId: String,
+    val name: String,
+    val qualifier: String
+  ) {
+    override fun toString(): String {
+      return "DeviceQualifier(tagId=\"$tagId\", name=\"$name\", qualifier=\"$qualifier\")"
+    }
+
+    companion object {
+      fun classString(): String {
+        return "class DeviceQualifier(val tagId: String, val name: String, val qualifier: String)"
+      }
+    }
+  }
+
   @Test
   fun generate() {
     val deviceTypes = runBlocking { readAllDevices() }.groupBy { it.tagId }
@@ -54,8 +70,11 @@ class GenerateQualifiersTest {
  
         """.trimIndent()
       )
+
+      val allDevices = mutableListOf<DeviceQualifier>()
       deviceTypes.forEach { (tagId, devices) ->
-        writeUtf8("\n\t// Type: ${tagId ?: "default"}\n")
+        val tagIdOrDefault = tagId ?: "default"
+        writeUtf8("\n\t// Type: $tagIdOrDefault\n")
         devices.forEach { device ->
           // find device name
           val name = device.name
@@ -75,8 +94,16 @@ class GenerateQualifiersTest {
           }
 
           writeUtf8("\tconst val $name = \"${device.qualifier}\"\n")
+          allDevices.add(DeviceQualifier(tagIdOrDefault, name, device.qualifier))
         }
       }
+      // Create function to access device list
+      writeUtf8("\t"+DeviceQualifier.classString()+"\n")
+      writeUtf8("\n\tfun allDevices() = listOf(\n")
+      allDevices.forEach { device ->
+        writeUtf8("\t\t${device},\n")
+      }
+      writeUtf8("\t)")
 
       writeUtf8("\n}")
     }

@@ -1,6 +1,8 @@
 plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
+  // For generating device qualifiers
+  //id 'org.jetbrains.kotlin.plugin.serialization' version "1.8.22"
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")

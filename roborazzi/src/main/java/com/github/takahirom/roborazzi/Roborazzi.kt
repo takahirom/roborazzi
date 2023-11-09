@@ -199,7 +199,6 @@ fun ViewInteraction.captureRoboAllImage(
     clear()
     result.getOrThrow()
   }
-
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
@@ -512,7 +511,7 @@ private fun saveAllImage(
   }
 }
 
-private class ImageCaptureViewAction(
+internal class ImageCaptureViewAction(
   val roborazziOptions: RoborazziOptions,
   val saveAction: (AwtRoboCanvas) -> Unit
 ) :
@@ -566,7 +565,6 @@ internal fun capture(
     }
   }
 }
-
 
 fun processOutputImageAndReportWithDefaults(
   canvas: RoboCanvas,

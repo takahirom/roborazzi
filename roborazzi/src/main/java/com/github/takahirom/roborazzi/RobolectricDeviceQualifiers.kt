@@ -7,6 +7,9 @@ object RobolectricDeviceQualifiers {
 	// Type: android-automotive-playstore
 	const val Automotive1024plandscape = "w1024dp-h768dp-normal-notlong-notround-car-mdpi-keyshidden-nonav"
 
+	// Type: android-automotive
+	const val Automotive1080plandscape = "w1440dp-h800dp-normal-notlong-notround-any-ldpi-keyshidden-nonav"
+
 	// Type: android-desktop
 	const val SmallDesktop = "w1366dp-h768dp-xlarge-long-notround-any-mdpi-keyshidden-nonav"
 	const val MediumDesktop = "w1920dp-h1080dp-xlarge-long-notround-any-xhdpi-keyshidden-nonav"
@@ -31,6 +34,11 @@ object RobolectricDeviceQualifiers {
 	const val Pixel6a = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
 	const val Pixel7Pro = "w411dp-h891dp-normal-long-notround-any-560dpi-keyshidden-nonav"
 	const val Pixel7 = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
+	const val PixelFold = "w841dp-h701dp-large-notlong-notround-any-420dpi-keyshidden-nonav"
+	const val PixelTablet = "w1280dp-h800dp-large-notlong-notround-any-xhdpi-keyshidden-nonav"
+	const val Pixel7a = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
+	const val Pixel8 = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
+	const val Pixel8Pro = "w448dp-h997dp-normal-long-notround-any-xxhdpi-keyshidden-nonav"
 
 	// Type: android-tv
 	const val Television4K = "w960dp-h540dp-xlarge-long-notround-television-xxxhdpi-keyshidden-dpad"
@@ -42,5 +50,43 @@ object RobolectricDeviceQualifiers {
 	const val WearOSSmallRound = "w192dp-h192dp-small-long-round-watch-xhdpi-keyshidden-nonav"
 	const val WearOSRectangular = "w201dp-h238dp-small-long-notround-watch-xhdpi-keyshidden-nonav"
 	const val WearOSSquare = "w180dp-h180dp-small-long-notround-watch-xhdpi-keyshidden-nonav"
+	class DeviceQualifier(val tagId: String, val name: String, val qualifier: String)
 
+	fun allDevices() = listOf(
+		DeviceQualifier(tagId="android-automotive-playstore", name="Automotive1024plandscape", qualifier="w1024dp-h768dp-normal-notlong-notround-car-mdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="android-automotive", name="Automotive1080plandscape", qualifier="w1440dp-h800dp-normal-notlong-notround-any-ldpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="android-desktop", name="SmallDesktop", qualifier="w1366dp-h768dp-xlarge-long-notround-any-mdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="android-desktop", name="MediumDesktop", qualifier="w1920dp-h1080dp-xlarge-long-notround-any-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="android-desktop", name="LargeDesktop", qualifier="w1920dp-h1080dp-xlarge-long-notround-any-mdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="ResizableExperimental", qualifier="w411dp-h891dp-normal-notlong-notround-any-420dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="SmallPhone", qualifier="w360dp-h640dp-normal-long-notround-any-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="MediumPhone", qualifier="w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="MediumTablet", qualifier="w1280dp-h800dp-xlarge-notlong-notround-any-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="NexusOne", qualifier="w320dp-h533dp-normal-long-notround-any-hdpi-keyshidden-trackball"),
+		DeviceQualifier(tagId="default", name="Nexus7", qualifier="w600dp-h960dp-large-notlong-notround-any-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Nexus9", qualifier="w1024dp-h768dp-xlarge-notlong-notround-any-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="PixelC", qualifier="w1280dp-h900dp-xlarge-notlong-notround-any-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="PixelXL", qualifier="w411dp-h731dp-normal-notlong-notround-any-560dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel4", qualifier="w393dp-h829dp-normal-long-notround-any-440dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel4XL", qualifier="w411dp-h869dp-normal-long-notround-any-560dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel4a", qualifier="w393dp-h851dp-normal-long-notround-any-440dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel5", qualifier="w393dp-h851dp-normal-long-notround-any-440dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel6", qualifier="w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel6Pro", qualifier="w411dp-h891dp-normal-long-notround-any-560dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel6a", qualifier="w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel7Pro", qualifier="w411dp-h891dp-normal-long-notround-any-560dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel7", qualifier="w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="PixelFold", qualifier="w841dp-h701dp-large-notlong-notround-any-420dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="PixelTablet", qualifier="w1280dp-h800dp-large-notlong-notround-any-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel7a", qualifier="w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel8", qualifier="w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="default", name="Pixel8Pro", qualifier="w448dp-h997dp-normal-long-notround-any-xxhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="android-tv", name="Television4K", qualifier="w960dp-h540dp-xlarge-long-notround-television-xxxhdpi-keyshidden-dpad"),
+		DeviceQualifier(tagId="android-tv", name="Television1080p", qualifier="w960dp-h540dp-xlarge-long-notround-television-xhdpi-keyshidden-dpad"),
+		DeviceQualifier(tagId="android-tv", name="Television720p", qualifier="w962dp-h541dp-large-long-notround-television-tvdpi-keyshidden-dpad"),
+		DeviceQualifier(tagId="android-wear", name="WearOSLargeRound", qualifier="w227dp-h227dp-small-long-round-watch-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="android-wear", name="WearOSSmallRound", qualifier="w192dp-h192dp-small-long-round-watch-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="android-wear", name="WearOSRectangular", qualifier="w201dp-h238dp-small-long-notround-watch-xhdpi-keyshidden-nonav"),
+		DeviceQualifier(tagId="android-wear", name="WearOSSquare", qualifier="w180dp-h180dp-small-long-notround-watch-xhdpi-keyshidden-nonav"),
+	)
 }

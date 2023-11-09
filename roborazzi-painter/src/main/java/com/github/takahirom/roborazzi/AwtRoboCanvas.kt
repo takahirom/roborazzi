@@ -17,7 +17,7 @@ import javax.imageio.ImageIO
 
 
 class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: Int): RoboCanvas {
-  private val bufferedImage = BufferedImage(width, height, bufferedImageType)
+  internal val bufferedImage = BufferedImage(width, height, bufferedImageType)
   override val width: Int get() = bufferedImage.width
   override val height: Int get() = bufferedImage.height
   override val croppedWidth: Int get() = croppedImage.width
@@ -214,7 +214,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     )
   }
 
-  private fun drawPendingDraw() {
+  internal fun drawPendingDraw() {
 //    val start = System.currentTimeMillis()
     baseDrawList.forEach { it() }
     if (baseDrawList.isNotEmpty()) {
