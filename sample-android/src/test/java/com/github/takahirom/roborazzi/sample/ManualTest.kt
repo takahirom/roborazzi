@@ -8,7 +8,6 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onParent
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
@@ -68,7 +67,7 @@ class ManualTest {
 
   @Test
   fun captureComposeImage() {
-    composeTestRule.onNodeWithTag("MyComposeButton")
+    composeTestRule.onNodeWithTag("AddBoxButton")
       .onParent()
       .captureRoboImage()
   }
@@ -134,10 +133,10 @@ class ManualTest {
         )
       )
 
-    composeTestRule.onNodeWithTag("MyComposeButton")
+    composeTestRule.onNodeWithTag("AddBoxButton")
       .performClick()
 
-    composeTestRule.onNodeWithTag("MyComposeButton")
+    composeTestRule.onNodeWithTag("AddBoxButton")
       .performClick()
     composeTestRule.waitForIdle()
 
@@ -220,16 +219,16 @@ class ManualTest {
     qualifiers = "w150dp-h200dp",
   )
   fun captureRoboGifSampleCompose() {
-    composeTestRule.onRoot(false)
+    composeTestRule.onNodeWithTag("MyColumn")
       .captureRoboGif(
         composeTestRule,
         "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_captureRoboGifSampleCompose.gif"
       ) {
-        composeTestRule.onNodeWithTag("MyComposeButton")
+        composeTestRule.onNodeWithTag("SubBoxButton")
           .performClick()
-        composeTestRule.onNodeWithTag("MyComposeButton")
+        composeTestRule.onNodeWithTag("AddBoxButton")
           .performClick()
-        composeTestRule.onNodeWithTag("MyComposeButton")
+        composeTestRule.onNodeWithTag("AddBoxButton")
           .performClick()
       }
   }
