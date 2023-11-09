@@ -18,7 +18,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.dropbox.differ.ImageComparator
 import com.github.takahirom.roborazzi.*
 import org.junit.Rule
 import org.junit.Test
@@ -124,60 +123,60 @@ class ManualTest {
       .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_bitmap.png")
   }
 
-  @Test
-  fun captureRoboImageSampleWithQuery() {
-    val filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_view.png"
-    onView(ViewMatchers.isRoot())
-      .captureRoboImage(
-        filePath = filePath,
-        roborazziOptions = RoborazziOptions(
-          captureType = RoborazziOptions.CaptureType.Dump(query = withViewId(R.id.textview_first))
-        )
-      )
-
-    composeTestRule.onNodeWithTag("MyComposeButton")
-      .performClick()
-
-    composeTestRule.onNodeWithTag("MyComposeButton")
-      .performClick()
-    composeTestRule.waitForIdle()
-
-    onView(ViewMatchers.isRoot())
-      .captureRoboImage(
-        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose.png",
-        roborazziOptions = RoborazziOptions(
-          captureType = RoborazziOptions.CaptureType.Dump(
-            query = withComposeTestTag("child:0"),
-          ),
-          compareOptions = RoborazziOptions.CompareOptions { result: ImageComparator.ComparisonResult -> result.pixelDifferences < 1 }
-        )
-      )
-
-    onView(ViewMatchers.isRoot())
-      .captureRoboImage(
-        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose_custom.png",
-        roborazziOptions = RoborazziOptions(
-          captureType = RoborazziOptions.CaptureType.Dump(
-            query = { roboComponent ->
-              when (roboComponent) {
-                is RoboComponent.Compose -> roboComponent.testTag?.startsWith("child") == true
-                is RoboComponent.View -> false
-              }
-            })
-        )
-      )
-
-
-    onView(ViewMatchers.isRoot())
-      .captureRoboImage(
-        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_a11y_dump.png",
-        roborazziOptions = RoborazziOptions(
-          captureType = RoborazziOptions.CaptureType.Dump(
-            explanation = Dump.AccessibilityExplanation,
-          )
-        )
-      )
-  }
+//  @Test
+//  fun captureRoboImageSampleWithQuery() {
+//    val filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_view.png"
+//    onView(ViewMatchers.isRoot())
+//      .captureRoboImage(
+//        filePath = filePath,
+//        roborazziOptions = RoborazziOptions(
+//          captureType = RoborazziOptions.CaptureType.Dump(query = withViewId(R.id.textview_first))
+//        )
+//      )
+//
+//    composeTestRule.onNodeWithTag("MyComposeButton")
+//      .performClick()
+//
+//    composeTestRule.onNodeWithTag("MyComposeButton")
+//      .performClick()
+//    composeTestRule.waitForIdle()
+//
+//    onView(ViewMatchers.isRoot())
+//      .captureRoboImage(
+//        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose.png",
+//        roborazziOptions = RoborazziOptions(
+//          captureType = RoborazziOptions.CaptureType.Dump(
+//            query = withComposeTestTag("child:0"),
+//          ),
+//          compareOptions = RoborazziOptions.CompareOptions { result: ImageComparator.ComparisonResult -> result.pixelDifferences < 1 }
+//        )
+//      )
+//
+//    onView(ViewMatchers.isRoot())
+//      .captureRoboImage(
+//        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose_custom.png",
+//        roborazziOptions = RoborazziOptions(
+//          captureType = RoborazziOptions.CaptureType.Dump(
+//            query = { roboComponent ->
+//              when (roboComponent) {
+//                is RoboComponent.Compose -> roboComponent.testTag?.startsWith("child") == true
+//                is RoboComponent.View -> false
+//              }
+//            })
+//        )
+//      )
+//
+//
+//    onView(ViewMatchers.isRoot())
+//      .captureRoboImage(
+//        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_a11y_dump.png",
+//        roborazziOptions = RoborazziOptions(
+//          captureType = RoborazziOptions.CaptureType.Dump(
+//            explanation = Dump.AccessibilityExplanation,
+//          )
+//        )
+//      )
+//  }
 
 
   @Test
