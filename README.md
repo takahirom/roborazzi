@@ -264,7 +264,7 @@ class ManualTest {
       .captureRoboImage()
 
     // Capture Jetpack Compose Node
-    composeTestRule.onNodeWithTag("MyComposeButton")
+    composeTestRule.onNodeWithTag("AddBoxButton")
       .onParent()
       .captureRoboImage("build/compose.png")
   }
@@ -280,7 +280,7 @@ Roborazzi supports the following APIs.
 </td><td>
 
 ```kotlin
-composeTestRule.onNodeWithTag("MyComposeButton")
+composeTestRule.onNodeWithTag("AddBoxButton")
   .captureRoboImage()
 ```
 
@@ -635,7 +635,7 @@ fun SampleComposableFunction() {
   ) {
     Box(
       Modifier
-        .testTag("MyComposeButton")
+        .testTag("AddBoxButton")
         .size(50.dp)
         .clickable {
           count++
@@ -676,7 +676,7 @@ class ComposeTest {
     }
     (0 until 3).forEach { _ ->
       composeTestRule
-        .onNodeWithTag("MyComposeButton")
+        .onNodeWithTag("AddBoxButton")
         .performClick()
     }
   }
