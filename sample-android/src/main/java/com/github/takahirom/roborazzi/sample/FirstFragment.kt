@@ -85,9 +85,9 @@ fun SampleComposableFunction() {
       Box(
         Modifier
           .background(Color.Red)
-          .testTag("child:$index")
+          .testTag("child:$it")
           .size(32.dp)
-      ) {
+      ){
         Text(
           text = "$index/$count"
         )
