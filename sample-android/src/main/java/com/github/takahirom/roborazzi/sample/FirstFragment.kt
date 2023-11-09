@@ -9,11 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -61,27 +58,40 @@ class FirstFragment : Fragment() {
 
 @Composable
 fun SampleComposableFunction() {
-  var count by remember { mutableStateOf(0) }
+  var count by remember { mutableStateOf(2) }
   Column(
     Modifier
-      .size(300.dp)
+      .testTag("MyColumn")
   ) {
-    Box(
+    Text(
+      text = "Add",
       Modifier
-        .testTag("MyComposeButton")
+        .testTag("AddBoxButton")
         .background(Color.Gray)
-        .size(50.dp)
         .clickable {
           count++
         }
     )
-    (0 until count).forEach {
+    Text(
+      text = "Sub",
+      Modifier
+        .testTag("SubBoxButton")
+        .background(Color.Gray)
+        .clickable {
+          count--
+        }
+    )
+    (0 until count).forEach { index ->
       Box(
         Modifier
           .background(Color.Red)
-          .testTag("child:$it")
-          .size(30.dp)
-      )
+          .testTag("child:$index")
+          .size(25.dp)
+      ) {
+        Text(
+          text = "$index/$count"
+        )
+      }
     }
   }
 }
