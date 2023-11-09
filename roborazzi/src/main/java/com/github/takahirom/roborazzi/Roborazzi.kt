@@ -28,7 +28,7 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
 import java.io.File
-import java.util.Locale
+import java.util.*
 
 fun ViewInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
@@ -246,6 +246,7 @@ fun SemanticsNodeInteraction.captureRoboGif(
   ).apply {
     saveGif(fileWithRecordFilePathStrategy(filePath))
     clear()
+    result.getOrThrow()
   }
 }
 
@@ -260,6 +261,7 @@ fun SemanticsNodeInteraction.captureRoboGif(
   captureComposeNode(composeRule, roborazziOptions, block).apply {
     saveGif(file)
     clear()
+    result.getOrThrow()
   }
 }
 
