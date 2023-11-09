@@ -14,7 +14,10 @@ internal class DifferBufferedImage(private val bufferedImage: BufferedImage) : I
     try {
       return Color(bufferedImage.getRGB(x, y))
     } catch (e: ArrayIndexOutOfBoundsException) {
-      throw ArrayIndexOutOfBoundsException("Failed to get pixel at ($x, $y) in image with size ${bufferedImage.width}x${bufferedImage.height}")
+      throw IllegalStateException(
+        message = "Failed to get pixel at ($x, $y) in image with size ${bufferedImage.width}x${bufferedImage.height}",
+        cause = e,
+      )
     }
   }
 }
