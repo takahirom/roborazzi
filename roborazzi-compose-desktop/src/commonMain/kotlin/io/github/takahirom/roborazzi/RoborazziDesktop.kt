@@ -5,14 +5,9 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.DesktopComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.*
-import java.awt.GraphicsConfiguration
-import java.awt.GraphicsEnvironment
 import java.awt.image.BufferedImage
 import java.io.File
-import java.util.*
 
 context(DesktopComposeUiTest)
 @OptIn(ExperimentalTestApi::class)
@@ -116,28 +111,12 @@ fun processOutputImageAndReportWithDefaults(
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        goldenCanvas = goldenCanvas as AwtRoboCanvas,
-        newCanvas = actualCanvas as AwtRoboCanvas,
-        newCanvasResize = resizeScale,
-        bufferedImageType = bufferedImageType,
-        oneDpPx = GlobalDensity.run { 1.dp.toPx() }
+          goldenCanvas = goldenCanvas as AwtRoboCanvas,
+          newCanvas = actualCanvas as AwtRoboCanvas,
+          newCanvasResize = resizeScale,
+          bufferedImageType = bufferedImageType,
+          oneDpPx = null
       )
     }
   )
 }
-
-/**
- * From compose-multiplatform's density.kt
- */
-private val GlobalDensity: Density
-  get() = GraphicsEnvironment.getLocalGraphicsEnvironment()
-    .defaultScreenDevice
-    .defaultConfiguration
-    .density
-
-private val GraphicsConfiguration.density: Density
-  get() = Density(
-    defaultTransform.scaleX.toFloat(),
-    fontScale = 1f
-  )
-

@@ -267,7 +267,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       val image1 = goldenCanvas.bufferedImage
       val image2 = newCanvas.bufferedImage.scale(newCanvasResize)
       val diff = generateDiffImage(image1, image2)
-      val margin = ((oneDpPx?:1F) * 16).toInt()
+      val margin = ((oneDpPx ?: 1F) * 16).toInt()
       val width = image1.width + diff.width + image2.width + margin * 2
       val height =
         image1.height.coerceAtLeast(diff.height).coerceAtLeast(image2.height) + margin * 2
@@ -275,70 +275,78 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       val combined = BufferedImage(width, height, bufferedImageType)
 
       val g = combined.createGraphics()
-      // Grid lines with 16 and 4 px spacing
-      val oneDpPx = oneDpPx ?: 1F
-      g.stroke = BasicStroke(1F)
-      g.color = Color(0x33777777, true)
-      for (y in 0 until height step (4 * oneDpPx).toInt()) {
-        g.drawLine(0, y, width, y)
-      }
-      for (x in 0 until (margin + image1.width) step (4 * oneDpPx).toInt()) {
-        g.drawLine(x, 0, x, height)
-      }
-      for (x in (margin + image1.width) until (margin + image1.width + image2.width) step (4 * oneDpPx).toInt()) {
-        g.drawLine(x, 0, x, height)
-      }
-      for (x in (margin + image1.width + image2.width) until width step (4 * oneDpPx).toInt()) {
-        g.drawLine(x, 0, x, height)
-      }
+      if (oneDpPx != null) {
+        // Grid lines with 16 and 4 px spacing
+        val oneDpPx = oneDpPx ?: 1F
+        g.stroke = BasicStroke(1F)
+        g.color = Color(0x33777777, true)
+        for (y in 0 until height step (4 * oneDpPx).toInt()) {
+          g.drawLine(0, y, width, y)
+        }
+        for (x in 0 until (margin + image1.width) step (4 * oneDpPx).toInt()) {
+          g.drawLine(x, 0, x, height)
+        }
+        for (x in (margin + image1.width) until (margin + image1.width + image2.width) step (4 * oneDpPx).toInt()) {
+          g.drawLine(x, 0, x, height)
+        }
+        for (x in (margin + image1.width + image2.width) until width step (4 * oneDpPx).toInt()) {
+          g.drawLine(x, 0, x, height)
+        }
 
-      g.color = Color(0x99777777.toInt(), true)
-      for (y in 0 until height step (16 * oneDpPx).toInt()) {
-        g.drawLine(0, y, width, y)
-      }
+        g.color = Color(0x99777777.toInt(), true)
+        for (y in 0 until height step (16 * oneDpPx).toInt()) {
+          g.drawLine(0, y, width, y)
+        }
 
-      for (x in 0 until (margin + image1.width) step (16 * oneDpPx).toInt()) {
-        g.drawLine(x, 0, x, height)
-      }
-      for (x in (margin + image1.width) until (margin + image1.width + image2.width) step (16 * oneDpPx).toInt()) {
-        g.drawLine(x, 0, x, height)
-      }
-      for (x in (margin + image1.width + image2.width) until width step (16 * oneDpPx).toInt()) {
-        g.drawLine(x, 0, x, height)
-      }
+        for (x in 0 until (margin + image1.width) step (16 * oneDpPx).toInt()) {
+          g.drawLine(x, 0, x, height)
+        }
+        for (x in (margin + image1.width) until (margin + image1.width + image2.width) step (16 * oneDpPx).toInt()) {
+          g.drawLine(x, 0, x, height)
+        }
+        for (x in (margin + image1.width + image2.width) until width step (16 * oneDpPx).toInt()) {
+          g.drawLine(x, 0, x, height)
+        }
 
-      // draw rect for texts
-      fun drawStringWithBackgroundRect(text: String, x: Int, y: Int, fontSize: Int) {
-        // fill with 4dp margin
-        val textMargin = (4 * oneDpPx).toInt()
-        // Set size to 12dp
-        val font = Font("Courier New", Font.BOLD, fontSize)
-        val textLayout = TextLayout(text, font, g.fontRenderContext)
-        val bounds = textLayout.bounds
-        val rect = Rectangle(
-          x,
-          y - bounds.height.toInt(),
-          bounds.width.toInt(),
-          bounds.height.toInt()
-        )
-        g.color = Color(0x55999999.toInt(), true)
-        g.fillRect(
-          rect.x,
-          rect.y - textMargin * 2,
-          rect.width + textMargin * 2,
-          rect.height + textMargin * 2
-        )
-        g.color = Color.BLACK
-        textLayout.draw(g, x.toFloat() + textMargin, y.toFloat() - textMargin)
-      }
-      val fontSize = (12 * oneDpPx).toInt()
-      drawStringWithBackgroundRect("Reference", margin, margin, fontSize)
-      drawStringWithBackgroundRect("Diff", image1.width + margin, margin, fontSize)
-      drawStringWithBackgroundRect("New", image1.width + diff.width + margin, margin, fontSize)
+        // draw rect for texts
+        fun drawStringWithBackgroundRect(text: String, x: Int, y: Int, fontSize: Int) {
+          // fill with 4dp margin
+          val textMargin = (4 * oneDpPx).toInt()
+          // Set size to 12dp
+          val font = Font("Courier New", Font.BOLD, fontSize)
+          val textLayout = TextLayout(text, font, g.fontRenderContext)
+          val bounds = textLayout.bounds
+          val rect = Rectangle(
+            x,
+            y - bounds.height.toInt(),
+            bounds.width.toInt(),
+            bounds.height.toInt()
+          )
+          g.color = Color(0x55999999.toInt(), true)
+          g.fillRect(
+            rect.x,
+            rect.y - textMargin * 2,
+            rect.width + textMargin * 2,
+            rect.height + textMargin * 2
+          )
+          g.color = Color.BLACK
+          textLayout.draw(g, x.toFloat() + textMargin, y.toFloat() - textMargin)
+        }
 
-      g.drawImage(image1, margin, margin, null)
-      g.drawImage(diff, image1.width + margin, margin, null)
-      g.drawImage(image2, image1.width + diff.width + margin, margin, null)
+        val fontSize = (12 * oneDpPx).toInt()
+        drawStringWithBackgroundRect("Reference", margin, margin, fontSize)
+        drawStringWithBackgroundRect("Diff", image1.width + margin, margin, fontSize)
+        drawStringWithBackgroundRect("New", image1.width + diff.width + margin, margin, fontSize)
+
+
+        g.drawImage(image1, margin, margin, null)
+        g.drawImage(diff, image1.width + margin, margin, null)
+        g.drawImage(image2, image1.width + diff.width + margin, margin, null)
+      } else {
+        g.drawImage(image1, 0, 0, null)
+        g.drawImage(diff, image1.width, 0, null)
+        g.drawImage(image2, image1.width + diff.width, 0, null)
+      }
       g.dispose()
       return AwtRoboCanvas(
         width = width,
