@@ -18,7 +18,7 @@ fun App() {
     Button(
       modifier = Modifier.testTag("button"),
       onClick = {
-        text = "Hello, Desktop!"
+        text = "Hello, Desktop! test"
       }) {
       Text(
         style = MaterialTheme.typography.h2,
