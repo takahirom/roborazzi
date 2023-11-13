@@ -61,7 +61,7 @@ kotlin {
         compileOnly libs.robolectric
         compileOnly libs.androidx.compose.ui.test
         compileOnly libs.androidx.compose.ui.test.junit4
-        api 'androidx.test.espresso:espresso-core:3.5.1'
+        api libs.androidx.test.espresso.core
         implementation libs.androidx.core.ktx
       }
     }

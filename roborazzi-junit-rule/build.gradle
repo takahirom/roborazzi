@@ -45,8 +45,8 @@ android {
 
 dependencies {
   implementation project(':roborazzi')
-  implementation 'androidx.test.ext:junit-ktx:1.1.5'
-  compileOnly 'androidx.test.ext:junit-ktx:1.1.5'
+  implementation libs.androidx.test.ext.junit.ktx
+  compileOnly libs.androidx.test.ext.junit.ktx
   def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
   implementation composeBom
   compileOnly libs.androidx.compose.ui.test

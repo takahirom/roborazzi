@@ -28,7 +28,7 @@ dependencies {
   implementation libs.androidx.core.ktx
   api "com.dropbox.differ:differ:0.0.1-alpha1"
 
-  api 'androidx.test.espresso:espresso-core:3.5.1'
+  api libs.androidx.test.espresso.core
 
   // For fetching device qualifiers from AOSP
   testImplementation "io.ktor:ktor-serialization-kotlinx-xml:2.3.0"
