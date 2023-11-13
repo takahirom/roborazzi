@@ -29,7 +29,7 @@ fun captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   content: @Composable () -> Unit,
 ) {
-  if (!roborazziEnabled()) return
+  if (!roborazziOptions.taskType.isEnabled()) return
   registerRoborazziActivityToRobolectricIfNeeded()
   val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
   activityScenario.onActivity { activity ->

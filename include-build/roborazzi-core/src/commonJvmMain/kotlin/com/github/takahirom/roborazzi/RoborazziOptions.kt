@@ -7,33 +7,59 @@ import java.io.FileWriter
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 var ROBORAZZI_DEBUG = false
+
+@Deprecated(
+  message = "Use roborazziEnabled()",
+  replaceWith = ReplaceWith("roborazziSystemPropertyTaskType().isEnabled()"),
+)
 fun roborazziEnabled(): Boolean {
-  val isEnabled = roborazziRecordingEnabled() ||
-    roborazziCompareEnabled() ||
-    roborazziVerifyEnabled()
+  return roborazziSystemPropertyTaskType().isEnabled()
+}
+
+@Deprecated(
+  message = "Use roborazziSystemPropertyTaskType()",
+  ReplaceWith("roborazziSystemPropertyTaskType().isRecord()")
+)
+fun roborazziRecordingEnabled(): Boolean {
+  return roborazziSystemPropertyTaskType().isRecording()
+}
+
+@Deprecated(
+  message = "Use roborazziSystemPropertyTaskType()",
+  ReplaceWith("roborazziSystemPropertyTaskType().isComparing()")
+)
+fun roborazziCompareEnabled(): Boolean {
+  return roborazziSystemPropertyTaskType().isComparing()
+}
+
+@Deprecated(
+  message = "Use roborazziSystemPropertyTaskType()",
+  ReplaceWith("roborazziSystemPropertyTaskType().isVerifying()")
+)
+fun roborazziVerifyEnabled(): Boolean {
+  return roborazziSystemPropertyTaskType().isVerifying()
+}
+
+@ExperimentalRoborazziApi
+fun roborazziSystemPropertyTaskType(): RoborazziTaskType {
+  val result = run {
+    val roborazziRecordingEnabled = System.getProperty("roborazzi.test.record") == "true"
+    val roborazziCompareEnabled = System.getProperty("roborazzi.test.compare") == "true"
+    val roborazziVerifyEnabled = System.getProperty("roborazzi.test.verify") == "true"
+    RoborazziTaskType.of(
+      isRecording = roborazziRecordingEnabled,
+      isComparing = roborazziCompareEnabled,
+      isVerifying = roborazziVerifyEnabled
+    )
+  }
   debugLog {
-    "roborazziEnabled: $isEnabled \n" +
-      "roborazziRecordingEnabled(): ${roborazziRecordingEnabled()}\n" +
-      "roborazziCompareEnabled(): ${roborazziCompareEnabled()}\n" +
-      "roborazziVerifyEnabled(): ${roborazziVerifyEnabled()}\n" +
+    "roborazziTaskType: $result \n" +
       "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
       "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n" +
       "roborazziRecordFilePathStrategy(): ${roborazziRecordFilePathStrategy()}\n" +
       "RoborazziContext: ${provideRoborazziContext()}\n"
   }
-  return isEnabled
-}
-
-fun roborazziRecordingEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.record") == "true"
-}
-
-fun roborazziCompareEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.compare") == "true"
-}
-
-fun roborazziVerifyEnabled(): Boolean {
-  return System.getProperty("roborazzi.test.verify") == "true"
+  return result
 }
 
 /**
@@ -106,6 +132,7 @@ fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStra
 }
 
 data class RoborazziOptions(
+  val taskType: RoborazziTaskType = roborazziSystemPropertyTaskType(),
   val captureType: CaptureType = if (canScreenshot()) CaptureType.Screenshot() else defaultCaptureType(),
   val reportOptions: ReportOptions = ReportOptions(),
   val compareOptions: CompareOptions = CompareOptions(),
@@ -155,14 +182,20 @@ data class RoborazziOptions(
 
   @ExperimentalRoborazziApi
   interface CaptureResultReporter {
-    fun report(reportResult: CaptureResult)
+    fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType)
 
     companion object {
       operator fun invoke(): CaptureResultReporter {
-        return if (roborazziVerifyEnabled()) {
-          VerifyCaptureResultReporter()
+        return DefaultCaptureResultReporter()
+      }
+    }
+
+    class DefaultCaptureResultReporter : CaptureResultReporter {
+      override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
+        if (roborazziTaskType.isVerifying()) {
+          VerifyCaptureResultReporter().report(captureResult, roborazziTaskType)
         } else {
-          JsonOutputCaptureResultReporter()
+          JsonOutputCaptureResultReporter().report(captureResult, roborazziTaskType)
         }
       }
     }
@@ -173,18 +206,18 @@ data class RoborazziOptions(
         File(RoborazziReportConst.resultDirPath).mkdirs()
       }
 
-      override fun report(reportResult: CaptureResult) {
+      override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
         val absolutePath = File(RoborazziReportConst.resultDirPath).absolutePath
-        val nameWithoutExtension = when (reportResult) {
-          is CaptureResult.Added -> reportResult.compareFile
-          is CaptureResult.Changed -> reportResult.goldenFile
-          is CaptureResult.Unchanged -> reportResult.goldenFile
-          is CaptureResult.Recorded -> reportResult.goldenFile
+        val nameWithoutExtension = when (captureResult) {
+          is CaptureResult.Added -> captureResult.compareFile
+          is CaptureResult.Changed -> captureResult.goldenFile
+          is CaptureResult.Unchanged -> captureResult.goldenFile
+          is CaptureResult.Recorded -> captureResult.goldenFile
         }.nameWithoutExtension
         val reportFileName =
-          "$absolutePath/${reportResult.timestampNs}_$nameWithoutExtension.json"
+          "$absolutePath/${captureResult.timestampNs}_$nameWithoutExtension.json"
 
-        val jsonResult = reportResult.toJson()
+        val jsonResult = captureResult.toJson()
         FileWriter(reportFileName).use { it.write(jsonResult.toString()) }
         debugLog { "JsonResult file($reportFileName) has been written" }
       }
@@ -193,9 +226,9 @@ data class RoborazziOptions(
     @InternalRoborazziApi
     class VerifyCaptureResultReporter : CaptureResultReporter {
       private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
-      override fun report(reportResult: CaptureResult) {
-        jsonOutputCaptureResultReporter.report(reportResult)
-        val assertErrorOrNull = getAssertErrorOrNull(reportResult)
+      override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
+        jsonOutputCaptureResultReporter.report(captureResult, roborazziTaskType)
+        val assertErrorOrNull = getAssertErrorOrNull(captureResult)
         if (assertErrorOrNull != null) {
           throw assertErrorOrNull
         }
@@ -228,16 +261,16 @@ expect fun canScreenshot(): Boolean
 
 expect fun defaultCaptureType(): RoborazziOptions.CaptureType
 
-private fun getAssertErrorOrNull(reportResult: CaptureResult): AssertionError? =
-  when (reportResult) {
+private fun getAssertErrorOrNull(captureResult: CaptureResult): AssertionError? =
+  when (captureResult) {
     is CaptureResult.Added -> AssertionError(
-      "Roborazzi: The original file(${reportResult.goldenFile.absolutePath}) was not found.\n" +
-        "See the actual image at ${reportResult.actualFile.absolutePath}"
+      "Roborazzi: The original file(${captureResult.goldenFile.absolutePath}) was not found.\n" +
+        "See the actual image at ${captureResult.actualFile.absolutePath}"
     )
 
     is CaptureResult.Changed -> AssertionError(
-      "Roborazzi: ${reportResult.goldenFile.absolutePath} is changed.\n" +
-        "See the compare image at ${reportResult.compareFile.absolutePath}"
+      "Roborazzi: ${captureResult.goldenFile.absolutePath} is changed.\n" +
+        "See the compare image at ${captureResult.compareFile.absolutePath}"
     )
 
     is CaptureResult.Unchanged, is CaptureResult.Recorded -> {
