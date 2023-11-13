@@ -62,7 +62,7 @@ kotlin {
         compileOnly libs.androidx.compose.ui.test
         compileOnly libs.androidx.compose.ui.test.junit4
         api 'androidx.test.espresso:espresso-core:3.5.1'
-        implementation 'androidx.core:core-ktx:1.8.0'
+        implementation libs.androidx.core.ktx
       }
     }
 

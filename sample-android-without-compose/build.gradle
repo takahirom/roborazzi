@@ -50,7 +50,7 @@ java {
 dependencies {
   testImplementation project(":roborazzi")
 
-  implementation 'androidx.core:core-ktx:1.7.0'
+  implementation libs.androidx.core.ktx
   implementation libs.androidx.appcompat
   implementation 'com.google.android.material:material:1.5.0'
   implementation libs.androidx.constraintlayout

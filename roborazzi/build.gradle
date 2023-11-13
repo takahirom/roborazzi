@@ -25,7 +25,7 @@ dependencies {
   compileOnly libs.androidx.compose.ui.test.junit4
 
   compileOnly libs.robolectric
-  implementation 'androidx.core:core-ktx:1.8.0'
+  implementation libs.androidx.core.ktx
   api "com.dropbox.differ:differ:0.0.1-alpha1"
 
   api 'androidx.test.espresso:espresso-core:3.5.1'
