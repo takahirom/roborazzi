@@ -61,7 +61,7 @@ dependencies {
   testImplementation project(":roborazzi-compose")
   testImplementation project(":roborazzi-junit-rule")
 
-  def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
+  def composeBom = platform(libs.androidx.compose.bom)
   implementation composeBom
   implementation libs.androidx.compose.material3
   implementation libs.androidx.compose.ui
