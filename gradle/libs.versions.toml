@@ -11,6 +11,8 @@ androidx-compose-material = "1.4.2"
 androidx-compose-material3 = "1.0.1"
 androidx-constraintlayout = "2.1.3"
 androidx-core-ktx = "1.8.0"
+androidx-navigation-fragment-ktx = "2.4.1"
+androidx-navigation-ui-ktx = "2.4.1"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
@@ -25,5 +27,7 @@ androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core-ktx" }
+androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation-fragment-ktx" }
+androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "androidx-navigation-ui-ktx" }
 
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
