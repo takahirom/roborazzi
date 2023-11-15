@@ -1,5 +1,6 @@
 package com.github.takahirom.roborazzi
 
+@ExperimentalRoborazziApi
 enum class RoborazziTaskType {
   None,
   Record,
@@ -23,7 +24,7 @@ enum class RoborazziTaskType {
     return this == Verify || this == VerifyAndRecord
   }
 
-  fun isVerifyAndRecord(): Boolean {
+  fun isVerifyingAndRecording(): Boolean {
     return this == VerifyAndRecord
   }
 
