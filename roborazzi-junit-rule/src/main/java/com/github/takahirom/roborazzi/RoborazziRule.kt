@@ -153,11 +153,11 @@ class RoborazziRule private constructor(
       }
     }
     val captureType = options.captureType
-    if (!roborazziSystemPropertyTaskType().isEnabled()) {
+    if (!options.roborazziOptions.taskType.isEnabled()) {
       evaluate()
       return
     }
-    if (!roborazziSystemPropertyTaskType().isRecording() && options.captureType is CaptureType.Gif) {
+    if (!options.roborazziOptions.taskType.isRecording() && options.captureType is CaptureType.Gif) {
       // currently, gif compare is not supported
       evaluate()
       return
