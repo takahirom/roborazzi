@@ -24,6 +24,14 @@ enum class RoborazziTaskType {
     return this == Verify || this == VerifyAndRecord
   }
 
+  fun convertVerifyingToComparing(): RoborazziTaskType {
+    return when (this) {
+      Verify -> Compare
+      VerifyAndRecord -> Compare
+      else -> this
+    }
+  }
+
   fun isVerifyingAndRecording(): Boolean {
     return this == VerifyAndRecord
   }
