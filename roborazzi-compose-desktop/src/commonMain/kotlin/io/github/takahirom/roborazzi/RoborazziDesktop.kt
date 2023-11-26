@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.DesktopComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.*
 import java.awt.image.BufferedImage
 import java.io.File
@@ -33,6 +35,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   if (!roborazziOptions.taskType.isEnabled()) {
     return
   }
+  val density = this.fetchSemanticsNode().layoutInfo.density
   val awtImage = this.captureToImage().toAwtImage()
   val canvas = AwtRoboCanvas(
     width = awtImage.width,
@@ -46,7 +49,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
   processOutputImageAndReportWithDefaults(
     canvas = canvas,
     goldenFile = file,
-    roborazziOptions = roborazziOptions
+    roborazziOptions = roborazziOptions,
+    density = density
   )
   canvas.release()
 }
@@ -84,7 +88,8 @@ fun ImageBitmap.captureRoboImage(
   processOutputImageAndReportWithDefaults(
     canvas = canvas,
     goldenFile = file,
-    roborazziOptions = roborazziOptions
+    roborazziOptions = roborazziOptions,
+    density = null
   )
   canvas.release()
 }
@@ -93,6 +98,7 @@ fun processOutputImageAndReportWithDefaults(
   canvas: RoboCanvas,
   goldenFile: File,
   roborazziOptions: RoborazziOptions,
+  density: Density?,
 ) {
   processOutputImageAndReport(
     newRoboCanvas = canvas,
@@ -111,10 +117,14 @@ fun processOutputImageAndReportWithDefaults(
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        goldenCanvas = goldenCanvas as AwtRoboCanvas,
-        newCanvas = actualCanvas as AwtRoboCanvas,
-        newCanvasResize = resizeScale,
-        bufferedImageType = bufferedImageType
+          AwtRoboCanvas.Companion.ComparisonCanvasParameters.create(
+            goldenCanvas = goldenCanvas as AwtRoboCanvas,
+            newCanvas = actualCanvas as AwtRoboCanvas,
+            newCanvasResize = resizeScale,
+            bufferedImageType = bufferedImageType,
+            oneDpPx = density?.run { 1.dp.toPx() },
+            comparisonComparisonStyle = roborazziOptions.compareOptions.comparisonStyle,
+          )
       )
     }
   )

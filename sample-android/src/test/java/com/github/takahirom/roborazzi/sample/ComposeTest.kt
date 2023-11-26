@@ -54,7 +54,7 @@ class ComposeTest {
     }
     (0 until 3).forEach { _ ->
       composeTestRule
-        .onNodeWithTag("MyComposeButton")
+        .onNodeWithTag("AddBoxButton")
         .performClick()
     }
   }

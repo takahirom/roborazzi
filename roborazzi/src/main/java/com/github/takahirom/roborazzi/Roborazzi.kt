@@ -4,11 +4,13 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -16,6 +18,7 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.view.drawToBitmap
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoActivityResumedException
@@ -29,6 +32,7 @@ import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
 import java.io.File
 import java.util.Locale
+
 
 fun ViewInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
@@ -246,6 +250,7 @@ fun SemanticsNodeInteraction.captureRoboGif(
   ).apply {
     saveGif(fileWithRecordFilePathStrategy(filePath))
     clear()
+    result.getOrThrow()
   }
 }
 
@@ -260,6 +265,7 @@ fun SemanticsNodeInteraction.captureRoboGif(
   captureComposeNode(composeRule, roborazziOptions, block).apply {
     saveGif(file)
     clear()
+    result.getOrThrow()
   }
 }
 
@@ -588,10 +594,23 @@ fun processOutputImageAndReportWithDefaults(
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        goldenCanvas as AwtRoboCanvas,
-        actualCanvas as AwtRoboCanvas,
-        resizeScale,
-        bufferedImageType
+        AwtRoboCanvas.Companion.ComparisonCanvasParameters.create(
+          goldenCanvas = goldenCanvas as AwtRoboCanvas,
+          newCanvas = actualCanvas as AwtRoboCanvas,
+          newCanvasResize = resizeScale,
+          bufferedImageType = bufferedImageType,
+          oneDpPx = run {
+            val dip = 1f
+            val r: Resources = ApplicationProvider.getApplicationContext<Context>().resources
+            val px = TypedValue.applyDimension(
+              TypedValue.COMPLEX_UNIT_DIP,
+              dip,
+              r.getDisplayMetrics()
+            )
+            (px * resizeScale).toFloat()
+          },
+          comparisonComparisonStyle = roborazziOptions.compareOptions.comparisonStyle
+        )
       )
     }
   )

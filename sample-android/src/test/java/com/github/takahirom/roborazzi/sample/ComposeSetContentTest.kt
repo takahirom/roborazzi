@@ -55,7 +55,7 @@ class ComposeSetContentTest {
       }
       (0 until 3).forEach { _ ->
         composeTestRule
-          .onNodeWithTag("MyComposeButton")
+          .onNodeWithTag("AddBoxButton")
           .performClick()
       }
     } catch (e: Exception) {
@@ -73,7 +73,7 @@ fun SampleComposableFunction() {
   ) {
     Box(
       Modifier
-        .testTag("MyComposeButton")
+        .testTag("AddBoxButton")
         .size(50.dp)
         .clickable {
           count++
