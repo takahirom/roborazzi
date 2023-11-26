@@ -6,7 +6,12 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
-import java.awt.*
+import com.github.takahirom.roborazzi.hash.ImageHashCalculator
+import java.awt.BasicStroke
+import java.awt.Color
+import java.awt.Font
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.geom.AffineTransform
@@ -188,7 +193,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     pendingDrawList.add(pendingDraw)
   }
 
-  override fun save(file: File, resizeScale: Double) {
+  override fun save(file: File, resizeScale: Double, imageHashCalculator: ImageHashCalculator?) {
     drawPendingDraw()
     val directory = file.parentFile
     try {
@@ -198,11 +203,23 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     } catch (e: Exception) {
       // ignore
     }
+    val scaledCroppedImage = croppedImage.scale(resizeScale)
     ImageIO.write(
-      croppedImage.scale(resizeScale),
+      scaledCroppedImage,
       "png",
       file
     )
+    if (imageHashCalculator != null) {
+      val hashResult = imageHashCalculator.hash(DifferBufferedImage(scaledCroppedImage))
+      val hashFile = File("${file.absolutePath}.${imageHashCalculator.extension()}")
+      hashFile.writeBytes(hashResult.toBytes())
+    }
+    scaledCroppedImage.flush()
+  }
+
+  override fun hash(imageHashCalculator: ImageHashCalculator, resizeScale: Double): ImageHashCalculator.HashResult {
+    drawPendingDraw()
+    return imageHashCalculator.hash(DifferBufferedImage(croppedImage.scale(resizeScale)))
   }
 
   override fun differ(

@@ -49,10 +49,27 @@ fun processOutputImageAndReport(
   }
   val recordOptions = roborazziOptions.recordOptions
   val resizeScale = recordOptions.resizeScale
+  val imageHashCalculatorOrNull =
+    when (val hashOptions = roborazziOptions.recordOptions.hashOptions) {
+      is RoborazziOptions.RecordOptions.HashOptions.Enabled -> {
+        hashOptions.imageHashCalculator
+      }
+
+      else -> null
+    }
+  val goldenHashFile = if (imageHashCalculatorOrNull != null) {
+    File(
+      roborazziOptions.compareOptions.outputDirectoryPath,
+      "${goldenFile.absolutePath}.${imageHashCalculatorOrNull.extension()}"
+    )
+  } else {
+    null
+  }
   if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
     val width = (newRoboCanvas.croppedWidth * resizeScale).toInt()
     val height = (newRoboCanvas.croppedHeight * resizeScale).toInt()
-    val goldenRoboCanvas = if (goldenFile.exists()) {
+    val goldenFileExists = goldenFile.exists()
+    val goldenRoboCanvas = if (goldenFileExists) {
       canvasFactoryFromFile(goldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
     } else {
       emptyCanvasFactory(
@@ -63,78 +80,119 @@ fun processOutputImageAndReport(
       )
     }
     val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
-      val comparisonResult: ImageComparator.ComparisonResult =
-        newRoboCanvas.differ(
-          other = goldenRoboCanvas,
-          resizeScale = resizeScale,
-          imageComparator = roborazziOptions.compareOptions.imageComparator
-        )
-      val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
-      log("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
-      changed
+      if (goldenFileExists) {
+        val comparisonResult: ImageComparator.ComparisonResult =
+          newRoboCanvas.differ(
+            other = goldenRoboCanvas,
+            resizeScale = resizeScale,
+            imageComparator = roborazziOptions.compareOptions.imageComparator
+          )
+        val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
+        log("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
+        changed
+      } else {
+        if (imageHashCalculatorOrNull != null && goldenHashFile?.exists() == true) {
+          val goldenHashResult = imageHashCalculatorOrNull.load(goldenHashFile.readBytes())
+          val actualHashResult = newRoboCanvas.hash(imageHashCalculatorOrNull, resizeScale)
+          val changed = imageHashCalculatorOrNull.areSimilar(goldenHashResult, actualHashResult)
+          log("${goldenFile.name} The hash result :$goldenHashResult, $actualHashResult changed:$changed")
+          changed
+        } else {
+          log("${goldenFile.name} The golden file does not exist. The image is added.")
+          true
+        }
+      }
     } else {
       log("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
       true
     }
 
     val result: CaptureResult = if (changed) {
-      val comparisonFile = File(
-        roborazziOptions.compareOptions.outputDirectoryPath,
-        goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
-      )
-      val comparisonCanvas = comparisonCanvasFactory(
-        goldenRoboCanvas = goldenRoboCanvas,
-        newRoboImage = newRoboCanvas,
-        resizeScale = resizeScale,
-        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
-      )
-      comparisonCanvas
-        .save(
-          file = comparisonFile,
-          resizeScale = resizeScale
-        )
-      debugLog {
-        "processOutputImageAndReport(): compareCanvas is saved " +
-          "compareFile:${comparisonFile.absolutePath}"
-      }
-      comparisonCanvas.release()
-
       val actualFile = if (roborazziRecordingEnabled()) {
         // If record option is enabled, we should save the actual file as the golden file.
         goldenFile
       } else {
         File(
           roborazziOptions.compareOptions.outputDirectoryPath,
-          goldenFile.nameWithoutExtension + "_actual." + goldenFile.extension
+          "${goldenFile.nameWithoutExtension}_actual.${goldenFile.extension}"
         )
+      }
+      val actualHashFile = if (imageHashCalculatorOrNull != null) {
+        File(
+          roborazziOptions.compareOptions.outputDirectoryPath,
+          "${actualFile.absolutePath}.${imageHashCalculatorOrNull.extension()}"
+        )
+      } else {
+        null
       }
       newRoboCanvas
         .save(
           file = actualFile,
-          resizeScale = resizeScale
+          resizeScale = resizeScale,
+          imageHashCalculator = imageHashCalculatorOrNull
         )
       debugLog {
         "processOutputImageAndReport(): actualCanvas is saved " +
           "actualFile:${actualFile.absolutePath}"
       }
-      if (goldenFile.exists()) {
-        CaptureResult.Changed(
-          compareFile = comparisonFile,
-          actualFile = actualFile,
-          goldenFile = goldenFile,
-          timestampNs = System.nanoTime(),
+      if (goldenFileExists || imageHashCalculatorOrNull == null) {
+        val comparisonFile = File(
+          roborazziOptions.compareOptions.outputDirectoryPath,
+          goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
         )
+        val comparisonCanvas = comparisonCanvasFactory(
+          goldenRoboCanvas = goldenRoboCanvas,
+          newRoboImage = newRoboCanvas,
+          resizeScale = resizeScale,
+          bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
+        )
+        comparisonCanvas
+          .save(
+            file = comparisonFile,
+            resizeScale = resizeScale,
+            imageHashCalculator = null
+          )
+        debugLog {
+          "processOutputImageAndReport(): compareCanvas is saved " +
+            "compareFile:${comparisonFile.absolutePath}"
+        }
+        comparisonCanvas.release()
+        if (goldenFileExists) {
+          CaptureResult.Changed.FileChanged(
+            compareFile = comparisonFile,
+            actualFile = actualFile,
+            goldenFile = goldenFile,
+            timestampNs = System.nanoTime(),
+          )
+        } else {
+          CaptureResult.Added(
+            compareFile = comparisonFile,
+            actualFile = actualFile,
+            actualHashFile = actualHashFile,
+            timestampNs = System.nanoTime(),
+          )
+        }
       } else {
-        CaptureResult.Added(
-          compareFile = comparisonFile,
-          actualFile = actualFile,
-          goldenFile = goldenFile,
-          timestampNs = System.nanoTime(),
-        )
+        if (goldenHashFile?.exists() == true) {
+          CaptureResult.Changed.HashChanged(
+            goldenHashFile = goldenHashFile,
+            actualHashFile = actualHashFile!!,
+            actualFile = actualFile,
+            timestampNs = System.nanoTime(),
+          )
+        } else {
+          CaptureResult.Added(
+            compareFile = null,
+            actualFile = actualFile,
+            actualHashFile = actualHashFile,
+            timestampNs = System.nanoTime(),
+          )
+        }
       }
     } else {
       CaptureResult.Unchanged(
         goldenFile = goldenFile,
+        goldenHashFile = goldenHashFile,
         timestampNs = System.nanoTime(),
       )
     }
@@ -147,7 +205,11 @@ fun processOutputImageAndReport(
     roborazziOptions.reportOptions.captureResultReporter.report(result)
   } else {
     // roborazzi.record is checked before
-    newRoboCanvas.save(goldenFile, resizeScale)
+    newRoboCanvas.save(
+      file = goldenFile,
+      resizeScale = resizeScale,
+      imageHashCalculator = imageHashCalculatorOrNull
+    )
     debugLog {
       "processOutputImageAndReport: \n" +
         " record goldenFile: $goldenFile\n"

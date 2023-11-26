@@ -73,7 +73,7 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
   }
 
   fun BuildResult.shouldDetectNonExistentPngCapture() {
-    assert(output.contains(".png) was not found."))
+    assert(output.contains("original file was not found."))
   }
 
   fun verifyAndRecord(): BuildResult {
