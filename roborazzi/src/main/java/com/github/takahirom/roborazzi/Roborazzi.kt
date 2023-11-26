@@ -31,7 +31,7 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
 import java.io.File
-import java.util.*
+import java.util.Locale
 
 
 fun ViewInteraction.captureRoboImage(
@@ -594,20 +594,23 @@ fun processOutputImageAndReportWithDefaults(
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        goldenCanvas as AwtRoboCanvas,
-        actualCanvas as AwtRoboCanvas,
-        resizeScale,
-        bufferedImageType,
-        oneDpPx = run {
-          val dip = 1f
-          val r: Resources = ApplicationProvider.getApplicationContext<Context>().resources
-          val px = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            dip,
-            r.getDisplayMetrics()
-          )
-          (px * resizeScale).toFloat()
-        }
+        AwtRoboCanvas.Companion.ComparisonFormat.create(
+          goldenCanvas = goldenCanvas as AwtRoboCanvas,
+          newCanvas = actualCanvas as AwtRoboCanvas,
+          newCanvasResize = resizeScale,
+          bufferedImageType = bufferedImageType,
+          oneDpPx = run {
+            val dip = 1f
+            val r: Resources = ApplicationProvider.getApplicationContext<Context>().resources
+            val px = TypedValue.applyDimension(
+              TypedValue.COMPLEX_UNIT_DIP,
+              dip,
+              r.getDisplayMetrics()
+            )
+            (px * resizeScale).toFloat()
+          },
+          comparisonComparisonImageLayoutFormat = roborazziOptions.compareOptions.comparisonImageLayoutFormat
+        )
       )
     }
   )

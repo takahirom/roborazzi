@@ -5,6 +5,12 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
 
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(11))
+  }
+}
+
 dependencies {
   // Please see settings.gradle
   api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
