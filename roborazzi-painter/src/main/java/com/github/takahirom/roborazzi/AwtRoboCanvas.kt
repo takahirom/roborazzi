@@ -16,7 +16,7 @@ import java.io.File
 import javax.imageio.ImageIO
 
 
-class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: Int): RoboCanvas {
+class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: Int) : RoboCanvas {
   private val bufferedImage = BufferedImage(width, height, bufferedImageType)
   override val width: Int get() = bufferedImage.width
   override val height: Int get() = bufferedImage.height
@@ -177,13 +177,13 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     )
   }
 
-  var baseDrawList = mutableListOf<() -> Unit>()
+  private var baseDrawList = mutableListOf<() -> Unit>()
 
   fun addBaseDraw(baseDraw: () -> Unit) {
     baseDrawList.add(baseDraw)
   }
 
-  var pendingDrawList = mutableListOf<() -> Unit>()
+  private var pendingDrawList = mutableListOf<() -> Unit>()
   fun addPendingDraw(pendingDraw: () -> Unit) {
     pendingDrawList.add(pendingDraw)
   }
@@ -205,7 +205,11 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     )
   }
 
-  override fun differ(other: RoboCanvas, resizeScale: Double, imageComparator: ImageComparator): ImageComparator.ComparisonResult {
+  override fun differ(
+    other: RoboCanvas,
+    resizeScale: Double,
+    imageComparator: ImageComparator
+  ): ImageComparator.ComparisonResult {
     other as AwtRoboCanvas
     val otherImage = other.bufferedImage
     return imageComparator.compare(
@@ -252,33 +256,226 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     const val TRANSPARENT_MEDIUM = 0x88 shl 56
     const val TRANSPARENT_STRONG = 0x66 shl 56
 
+    sealed interface ComparisonCanvasParameters {
+      abstract val referenceImage: BufferedImage
+      abstract val newImage: BufferedImage
+      abstract val diffImage: BufferedImage
+      abstract val newCanvasResize: Double
+      abstract val bufferedImageType: Int
+      abstract val comparisonImageWidth: Int
+      abstract val comparisonImageHeight: Int
+
+      data class Grid(
+        val goldenCanvas: AwtRoboCanvas,
+        val newCanvas: AwtRoboCanvas,
+        override val newCanvasResize: Double,
+        override val bufferedImageType: Int,
+        override val referenceImage: BufferedImage,
+        override val newImage: BufferedImage,
+        override val diffImage: BufferedImage,
+        val oneDpPx: Float,
+        val bigLineSpaceDp: Int? = 16,
+        val smallLineSpaceDp: Int? = 4,
+        val hasLabel: Boolean = true
+      ) : ComparisonCanvasParameters {
+
+        val margin = (16 * oneDpPx).toInt()
+        override val comparisonImageWidth: Int
+          get() = goldenCanvas.width + newCanvas.width + diffImage.width + 2 * margin
+
+        override val comparisonImageHeight: Int
+          get() = goldenCanvas.height.coerceAtLeast(newCanvas.height) + 2 * margin
+      }
+
+      data class Simple(
+        val goldenCanvas: AwtRoboCanvas,
+        val newCanvas: AwtRoboCanvas,
+        override val newCanvasResize: Double,
+        override val bufferedImageType: Int,
+        override val referenceImage: BufferedImage,
+        override val newImage: BufferedImage,
+        override val diffImage: BufferedImage,
+      ) : ComparisonCanvasParameters {
+        override val comparisonImageWidth: Int
+          get() = goldenCanvas.width + newCanvas.width
+
+        override val comparisonImageHeight: Int
+          get() = goldenCanvas.height.coerceAtLeast(newCanvas.height)
+      }
+
+      companion object {
+        fun create(
+          goldenCanvas: AwtRoboCanvas,
+          newCanvas: AwtRoboCanvas,
+          newCanvasResize: Double,
+          bufferedImageType: Int,
+          oneDpPx: Float?,
+          comparisonComparisonStyle: RoborazziOptions.CompareOptions.ComparisonStyle,
+        ): ComparisonCanvasParameters {
+          newCanvas.drawPendingDraw()
+
+          val referenceImage = goldenCanvas.bufferedImage
+          val newImage =
+            newCanvas.bufferedImage.scale(newCanvasResize)
+          val diffImage = generateDiffImage(referenceImage, newImage)
+          return if (comparisonComparisonStyle is RoborazziOptions.CompareOptions.ComparisonStyle.Grid && oneDpPx != null) {
+            Grid(
+              goldenCanvas = goldenCanvas,
+              newCanvas = newCanvas,
+              newCanvasResize = newCanvasResize,
+              bufferedImageType = bufferedImageType,
+              referenceImage = referenceImage,
+              newImage = newImage,
+              diffImage = diffImage,
+              oneDpPx = oneDpPx,
+              bigLineSpaceDp = comparisonComparisonStyle.bigLineSpaceDp,
+              smallLineSpaceDp = comparisonComparisonStyle.smallLineSpaceDp,
+              hasLabel = comparisonComparisonStyle.hasLabel
+            )
+          } else {
+            if (comparisonComparisonStyle is RoborazziOptions.CompareOptions.ComparisonStyle.Grid) {
+              debugLog { "Roborazzi can't find the oneDpPx, so fall back to CompareOptions.Format.Simple comparison format" }
+            }
+            Simple(
+              goldenCanvas = goldenCanvas,
+              newCanvas = newCanvas,
+              newCanvasResize = newCanvasResize,
+              bufferedImageType = bufferedImageType,
+              referenceImage = referenceImage,
+              newImage = newImage,
+              diffImage = diffImage,
+            )
+          }
+        }
+      }
+    }
+
     fun generateCompareCanvas(
-      goldenCanvas: AwtRoboCanvas,
-      newCanvas: AwtRoboCanvas,
-      newCanvasResize: Double,
-      bufferedImageType: Int
+      comparisonCanvasParameters: ComparisonCanvasParameters
     ): AwtRoboCanvas {
-      newCanvas.drawPendingDraw()
-      val image1 = goldenCanvas.bufferedImage
-      val image2 = newCanvas.bufferedImage.scale(newCanvasResize)
-      val diff = generateDiffImage(image1, image2)
-      val width = image1.width + diff.width + image2.width
-      val height = image1.height.coerceAtLeast(diff.height).coerceAtLeast(image2.height)
+      val referenceImage = comparisonCanvasParameters.referenceImage
+      val newImage = comparisonCanvasParameters.newImage
+      val diffImage = comparisonCanvasParameters.diffImage
+      val comparisonImageWidth = comparisonCanvasParameters.comparisonImageWidth
+      val comparisonImageHeight =
+        comparisonCanvasParameters.comparisonImageHeight
 
-      val combined = BufferedImage(width, height, bufferedImageType)
+      val comparisonImage =
+        BufferedImage(
+          comparisonImageWidth,
+          comparisonImageHeight,
+          comparisonCanvasParameters.bufferedImageType
+        )
 
-      val g = combined.createGraphics()
-      g.drawImage(image1, 0, 0, null)
-      g.drawImage(diff, image1.width, 0, null)
-      g.drawImage(image2, image1.width + diff.width, 0, null)
-      g.dispose()
+      val comparisonImageGraphics = comparisonImage.createGraphics()
+      when (comparisonCanvasParameters) {
+        is ComparisonCanvasParameters.Grid -> {
+          val margin = comparisonCanvasParameters.margin
+          // Grid lines with 16 and 4 px spacing
+          val oneDpPx = comparisonCanvasParameters.oneDpPx
+          comparisonImageGraphics.stroke = BasicStroke(1F)
+          comparisonImageGraphics.color = Color(0x33777777, true)
+          comparisonCanvasParameters.smallLineSpaceDp?.let { smallSpaceDp ->
+            for (y in 0 until comparisonImageHeight step (smallSpaceDp * oneDpPx).toInt()) {
+              comparisonImageGraphics.drawLine(0, y, comparisonImageWidth, y)
+            }
+            for (x in 0 until (margin + referenceImage.width) step (smallSpaceDp * oneDpPx).toInt()) {
+              comparisonImageGraphics.drawLine(x, 0, x, comparisonImageHeight)
+            }
+            for (x in (margin + referenceImage.width) until (margin + referenceImage.width + newImage.width) step (smallSpaceDp * oneDpPx).toInt()) {
+              comparisonImageGraphics.drawLine(x, 0, x, comparisonImageHeight)
+            }
+            for (x in (margin + referenceImage.width + newImage.width) until comparisonImageWidth step (smallSpaceDp * oneDpPx).toInt()) {
+              comparisonImageGraphics.drawLine(x, 0, x, comparisonImageHeight)
+            }
+          }
+
+          comparisonImageGraphics.color = Color(0x99777777.toInt(), true)
+          comparisonCanvasParameters.bigLineSpaceDp?.let { bigSpaceDp ->
+            for (y in 0 until comparisonImageHeight step (bigSpaceDp * oneDpPx).toInt()) {
+              comparisonImageGraphics.drawLine(0, y, comparisonImageWidth, y)
+            }
+
+            for (x in 0 until (margin + referenceImage.width) step (bigSpaceDp * oneDpPx).toInt()) {
+              comparisonImageGraphics.drawLine(x, 0, x, comparisonImageHeight)
+            }
+            for (x in (margin + referenceImage.width) until (margin + referenceImage.width + newImage.width) step (bigSpaceDp * oneDpPx).toInt()) {
+              comparisonImageGraphics.drawLine(x, 0, x, comparisonImageHeight)
+            }
+            for (x in (margin + referenceImage.width + newImage.width) until comparisonImageWidth step (bigSpaceDp * oneDpPx).toInt()) {
+              comparisonImageGraphics.drawLine(x, 0, x, comparisonImageHeight)
+            }
+          }
+          if (comparisonCanvasParameters.hasLabel) {
+            // draw rect for texts
+            fun drawStringWithBackgroundRect(text: String, x: Int, y: Int, fontSize: Int) {
+              // fill with 4dp margin
+              val textMargin = (4 * oneDpPx).toInt()
+              // Set size to 12dp
+              val font = Font("Courier New", Font.BOLD, fontSize)
+              val textLayout = TextLayout(text, font, comparisonImageGraphics.fontRenderContext)
+              val bounds = textLayout.bounds
+              val rect = Rectangle(
+                x,
+                y - bounds.height.toInt(),
+                bounds.width.toInt(),
+                bounds.height.toInt()
+              )
+              comparisonImageGraphics.color = Color(0x55999999, true)
+              comparisonImageGraphics.fillRect(
+                rect.x,
+                rect.y - textMargin * 2,
+                rect.width + textMargin * 2,
+                rect.height + textMargin * 2
+              )
+              comparisonImageGraphics.color = Color.BLACK
+              textLayout.draw(
+                comparisonImageGraphics,
+                x.toFloat() + textMargin,
+                y.toFloat() - textMargin
+              )
+            }
+
+            val fontSize = (12 * oneDpPx).toInt()
+            drawStringWithBackgroundRect("Reference", margin, margin, fontSize)
+            drawStringWithBackgroundRect("Diff", referenceImage.width + margin, margin, fontSize)
+            drawStringWithBackgroundRect(
+              "New",
+              referenceImage.width + diffImage.width + margin,
+              margin,
+              fontSize
+            )
+          }
+          comparisonImageGraphics.drawImage(referenceImage, margin, margin, null)
+          comparisonImageGraphics.drawImage(diffImage, referenceImage.width + margin, margin, null)
+          comparisonImageGraphics.drawImage(
+            newImage,
+            referenceImage.width + diffImage.width + margin,
+            margin,
+            null
+          )
+
+        }
+
+        is ComparisonCanvasParameters.Simple -> {
+          comparisonImageGraphics.drawImage(referenceImage, 0, 0, null)
+          comparisonImageGraphics.drawImage(diffImage, referenceImage.width, 0, null)
+          comparisonImageGraphics.drawImage(
+            newImage,
+            referenceImage.width + diffImage.width,
+            0,
+            null
+          )
+        }
+      }
+      comparisonImageGraphics.dispose()
       return AwtRoboCanvas(
-        width = width,
-        height = height,
+        width = comparisonImageWidth,
+        height = comparisonImageHeight,
         filled = true,
-        bufferedImageType = bufferedImageType
+        bufferedImageType = comparisonCanvasParameters.bufferedImageType
       ).apply {
-        drawImage(combined)
+        drawImage(comparisonImage)
       }
     }
 
