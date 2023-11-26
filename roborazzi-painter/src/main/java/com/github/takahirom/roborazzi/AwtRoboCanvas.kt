@@ -297,7 +297,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
         override val diffImage: BufferedImage,
       ) : ComparisonCanvasParameters {
         override val comparisonImageWidth: Int
-          get() = goldenCanvas.width + newCanvas.width
+          get() = goldenCanvas.width + newCanvas.width + diffImage.width
 
         override val comparisonImageHeight: Int
           get() = goldenCanvas.height.coerceAtLeast(newCanvas.height)
