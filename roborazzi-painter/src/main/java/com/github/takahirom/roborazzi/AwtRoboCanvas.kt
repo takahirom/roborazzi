@@ -6,12 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Font
-import java.awt.Graphics2D
-import java.awt.Rectangle
-import java.awt.RenderingHints
+import java.awt.*
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.geom.AffineTransform
@@ -262,37 +257,44 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     const val TRANSPARENT_STRONG = 0x66 shl 56
 
     sealed interface ComparisonCanvasParameters {
-      val goldenCanvas: AwtRoboCanvas
-      val newCanvas: AwtRoboCanvas
-      val newCanvasResize: Double
-      val bufferedImageType: Int
-      val comparisonImageWidth: Int
-      val comparisonImageHeight: Int
+      abstract val referenceImage: BufferedImage
+      abstract val newImage: BufferedImage
+      abstract val diffImage: BufferedImage
+      abstract val newCanvasResize: Double
+      abstract val bufferedImageType: Int
+      abstract val comparisonImageWidth: Int
+      abstract val comparisonImageHeight: Int
 
       data class Grid(
-        override val goldenCanvas: AwtRoboCanvas,
-        override val newCanvas: AwtRoboCanvas,
+        val goldenCanvas: AwtRoboCanvas,
+        val newCanvas: AwtRoboCanvas,
         override val newCanvasResize: Double,
         override val bufferedImageType: Int,
+        override val referenceImage: BufferedImage,
+        override val newImage: BufferedImage,
+        override val diffImage: BufferedImage,
         val oneDpPx: Float,
         val bigLineSpaceDp: Int? = 16,
         val smallLineSpaceDp: Int? = 4,
         val hasLabel: Boolean = true
       ) : ComparisonCanvasParameters {
-        override val comparisonImageWidth: Int
-          get() = goldenCanvas.width + newCanvas.width + 2 * oneDpPx.toInt()
-
-        override val comparisonImageHeight: Int
-          get() = goldenCanvas.height.coerceAtLeast(newCanvas.height) + 2 * oneDpPx.toInt()
 
         val margin = (16 * oneDpPx).toInt()
+        override val comparisonImageWidth: Int
+          get() = goldenCanvas.width + newCanvas.width + diffImage.width + 2 * margin
+
+        override val comparisonImageHeight: Int
+          get() = goldenCanvas.height.coerceAtLeast(newCanvas.height) + 2 * margin
       }
 
       data class Simple(
-        override val goldenCanvas: AwtRoboCanvas,
-        override val newCanvas: AwtRoboCanvas,
+        val goldenCanvas: AwtRoboCanvas,
+        val newCanvas: AwtRoboCanvas,
         override val newCanvasResize: Double,
-        override val bufferedImageType: Int
+        override val bufferedImageType: Int,
+        override val referenceImage: BufferedImage,
+        override val newImage: BufferedImage,
+        override val diffImage: BufferedImage,
       ) : ComparisonCanvasParameters {
         override val comparisonImageWidth: Int
           get() = goldenCanvas.width + newCanvas.width
@@ -310,26 +312,38 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
           oneDpPx: Float?,
           comparisonComparisonStyle: RoborazziOptions.CompareOptions.ComparisonStyle,
         ): ComparisonCanvasParameters {
+          newCanvas.drawPendingDraw()
+
+          val referenceImage = goldenCanvas.bufferedImage
+          val newImage =
+            newCanvas.bufferedImage.scale(newCanvasResize)
+          val diffImage = generateDiffImage(referenceImage, newImage)
           return if (comparisonComparisonStyle is RoborazziOptions.CompareOptions.ComparisonStyle.Grid && oneDpPx != null) {
             Grid(
-              goldenCanvas,
-              newCanvas,
-              newCanvasResize,
-              bufferedImageType,
-              oneDpPx,
-              comparisonComparisonStyle.bigLineSpaceDp,
-              comparisonComparisonStyle.smallLineSpaceDp,
-              comparisonComparisonStyle.hasLabel
+              goldenCanvas = goldenCanvas,
+              newCanvas = newCanvas,
+              newCanvasResize = newCanvasResize,
+              bufferedImageType = bufferedImageType,
+              referenceImage = referenceImage,
+              newImage = newImage,
+              diffImage = diffImage,
+              oneDpPx = oneDpPx,
+              bigLineSpaceDp = comparisonComparisonStyle.bigLineSpaceDp,
+              smallLineSpaceDp = comparisonComparisonStyle.smallLineSpaceDp,
+              hasLabel = comparisonComparisonStyle.hasLabel
             )
           } else {
             if (comparisonComparisonStyle is RoborazziOptions.CompareOptions.ComparisonStyle.Grid) {
               debugLog { "Roborazzi can't find the oneDpPx, so fall back to CompareOptions.Format.Simple comparison format" }
             }
             Simple(
-              goldenCanvas,
-              newCanvas,
-              newCanvasResize,
-              bufferedImageType
+              goldenCanvas = goldenCanvas,
+              newCanvas = newCanvas,
+              newCanvasResize = newCanvasResize,
+              bufferedImageType = bufferedImageType,
+              referenceImage = referenceImage,
+              newImage = newImage,
+              diffImage = diffImage,
             )
           }
         }
@@ -339,11 +353,9 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     fun generateCompareCanvas(
       comparisonCanvasParameters: ComparisonCanvasParameters
     ): AwtRoboCanvas {
-      comparisonCanvasParameters.newCanvas.drawPendingDraw()
-      val referenceImage = comparisonCanvasParameters.goldenCanvas.bufferedImage
-      val newImage =
-        comparisonCanvasParameters.newCanvas.bufferedImage.scale(comparisonCanvasParameters.newCanvasResize)
-      val diffImage = generateDiffImage(referenceImage, newImage)
+      val referenceImage = comparisonCanvasParameters.referenceImage
+      val newImage = comparisonCanvasParameters.newImage
+      val diffImage = comparisonCanvasParameters.diffImage
       val comparisonImageWidth = comparisonCanvasParameters.comparisonImageWidth
       val comparisonImageHeight =
         comparisonCanvasParameters.comparisonImageHeight
