@@ -131,17 +131,17 @@ data class RoborazziOptions(
   data class CompareOptions(
     val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
     val imageComparator: ImageComparator = DefaultImageComparator,
-    val comparisonImageLayoutFormat: ComparisonImageLayoutFormat = ComparisonImageLayoutFormat.Grid(),
+    val comparisonStyle: ComparisonStyle = ComparisonStyle.Grid(),
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
   ) {
-    sealed interface ComparisonImageLayoutFormat {
+    sealed interface ComparisonStyle {
       data class Grid(
         val bigLineSpaceDp: Int? = 16,
         val smallLineSpaceDp: Int? = 4,
         val hasLabel: Boolean = true
-      ) : ComparisonImageLayoutFormat
+      ) : ComparisonStyle
 
-      object Simple : ComparisonImageLayoutFormat
+      object Simple : ComparisonStyle
     }
 
     constructor(

@@ -594,7 +594,7 @@ fun processOutputImageAndReportWithDefaults(
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-        AwtRoboCanvas.Companion.ComparisonFormat.create(
+        AwtRoboCanvas.Companion.ComparisonCanvasParameters.create(
           goldenCanvas = goldenCanvas as AwtRoboCanvas,
           newCanvas = actualCanvas as AwtRoboCanvas,
           newCanvasResize = resizeScale,
@@ -609,7 +609,7 @@ fun processOutputImageAndReportWithDefaults(
             )
             (px * resizeScale).toFloat()
           },
-          comparisonComparisonImageLayoutFormat = roborazziOptions.compareOptions.comparisonImageLayoutFormat
+          comparisonComparisonStyle = roborazziOptions.compareOptions.comparisonStyle
         )
       )
     }

@@ -117,12 +117,13 @@ fun processOutputImageAndReportWithDefaults(
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(
-          AwtRoboCanvas.Companion.ComparisonFormat.create(
+          AwtRoboCanvas.Companion.ComparisonCanvasParameters.create(
             goldenCanvas = goldenCanvas as AwtRoboCanvas,
             newCanvas = actualCanvas as AwtRoboCanvas,
             newCanvasResize = resizeScale,
             bufferedImageType = bufferedImageType,
-            oneDpPx = density?.run { 1.dp.toPx() }
+            oneDpPx = density?.run { 1.dp.toPx() },
+            comparisonComparisonStyle = roborazziOptions.compareOptions.comparisonStyle,
           )
       )
     }
