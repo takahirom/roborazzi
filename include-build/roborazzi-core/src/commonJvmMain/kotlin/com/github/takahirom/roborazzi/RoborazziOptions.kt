@@ -134,7 +134,9 @@ data class RoborazziOptions(
     val comparisonStyle: ComparisonStyle = ComparisonStyle.Grid(),
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
   ) {
+    @ExperimentalRoborazziApi
     sealed interface ComparisonStyle {
+      @ExperimentalRoborazziApi
       data class Grid(
         val bigLineSpaceDp: Int? = 16,
         val smallLineSpaceDp: Int? = 4,
