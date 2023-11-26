@@ -206,7 +206,12 @@ baseline.
 
 The comparison image, saved as `[original]_compare.png`, is shown below:
 
-![image](https://github.com/takahirom/roborazzi/assets/1386930/579199d5-8e17-4f51-b990-de603ca36251)
+![image](https://github.com/takahirom/roborazzi/assets/1386930/722090ff-77c4-4a04-a0e3-8ce562ffa6be)
+
+You can check the test report in `build/reports/roborazzi/index.html`
+
+<img width="400" alt="image" src="https://github.com/takahirom/roborazzi/assets/1386930/7834a436-1927-438d-8656-61f583ae3f48">
+
 
 This
 uses [JetNew from Compose Samples](https://github.com/android/compose-samples/tree/main/JetNews).

@@ -33,6 +33,20 @@ class ComparisonStyleTest {
   }
 
   @Test
+  fun simple() {
+    ActivityScenario.launch(MainActivity::class.java)
+
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        roborazziOptions = RoborazziOptions(
+          compareOptions = RoborazziOptions.CompareOptions(
+            comparisonStyle = RoborazziOptions.CompareOptions.ComparisonStyle.Simple
+          )
+        )
+      )
+  }
+
+  @Test
   fun diffNoLabel() {
     ActivityScenario.launch(MainActivity::class.java)
 
