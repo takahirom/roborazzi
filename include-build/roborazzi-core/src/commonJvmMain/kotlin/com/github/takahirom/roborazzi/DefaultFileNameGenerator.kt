@@ -35,8 +35,17 @@ object DefaultFileNameGenerator {
         extension
       ).absolutePath
     }
-    val dir = roborazziContext.outputDirectory
-    return "$dir/${generateCountableOutputNameWithStacktrace()}.$extension"
+    return when (roborazziRecordFilePathStrategy()) {
+      RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory -> {
+        val dir = roborazziContext.outputDirectory
+        "$dir/${generateCountableOutputNameWithStacktrace()}.$extension"
+      }
+
+      RoborazziRecordFilePathStrategy.RelativePathFromRoborazziContextOutputDirectory -> {
+        // The directory is specified by [fileWithRecordFilePathStrategy(filePath)]
+        "${generateCountableOutputNameWithStacktrace()}.$extension"
+      }
+    }
   }
 
   val jupiterTestAnnotationOrNull = try {
