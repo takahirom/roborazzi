@@ -39,7 +39,8 @@ fun processOutputImageAndReport(
 ) {
   debugLog {
     "processOutputImageAndReport(): " +
-      "goldenFile:${goldenFile.absolutePath}"
+      "taskType:" + roborazziOptions.taskType +
+      "\ngoldenFile:${goldenFile.absolutePath}"
   }
   val forbiddenFileSuffixes = listOf("_compare", "_actual")
   forbiddenFileSuffixes.forEach {

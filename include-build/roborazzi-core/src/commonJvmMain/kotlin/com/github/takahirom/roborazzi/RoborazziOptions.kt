@@ -53,7 +53,8 @@ fun roborazziSystemPropertyTaskType(): RoborazziTaskType {
     )
   }
   debugLog {
-    "roborazziTaskType: $result \n" +
+    "roborazziSystemPropertyTaskType():\n" +
+      "roborazziTaskType: $result \n" +
       "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
       "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n" +
       "roborazziRecordFilePathStrategy(): ${roborazziRecordFilePathStrategy()}\n" +

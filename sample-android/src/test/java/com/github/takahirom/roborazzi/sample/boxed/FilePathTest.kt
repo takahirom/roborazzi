@@ -47,8 +47,7 @@ class FilePathTest {
         expectedOutput
           .exists()
       ) {
-        "File not found: ${expectedOutput.absolutePath} \n" +
-          File("build/outputs/roborazzi").listFiles()?.joinToString("\n") { it.absolutePath }
+        "File not found: ${expectedOutput.absolutePath} \n"
       }
     }
   }

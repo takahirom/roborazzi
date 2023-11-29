@@ -6,18 +6,19 @@ enum class RoborazziTaskType {
   Record,
   Compare,
   Verify,
-  VerifyAndRecord, ;
+  VerifyAndRecord,
+  CompareAndRecord;
 
   fun isEnabled(): Boolean {
     return this != None
   }
 
   fun isRecording(): Boolean {
-    return this == Record || this == VerifyAndRecord
+    return this == Record || this == VerifyAndRecord || this == CompareAndRecord
   }
 
   fun isComparing(): Boolean {
-    return this == Compare
+    return this == Compare || this == CompareAndRecord
   }
 
   fun isVerifying(): Boolean {
@@ -27,7 +28,7 @@ enum class RoborazziTaskType {
   fun convertVerifyingToComparing(): RoborazziTaskType {
     return when (this) {
       Verify -> Compare
-      VerifyAndRecord -> Compare
+      VerifyAndRecord -> CompareAndRecord
       else -> this
     }
   }
@@ -44,6 +45,7 @@ enum class RoborazziTaskType {
     ): RoborazziTaskType {
       return when {
         isRecording && isVerifying -> VerifyAndRecord
+        isRecording && isComparing -> CompareAndRecord
         isRecording -> Record
         isComparing -> Compare
         isVerifying -> Verify

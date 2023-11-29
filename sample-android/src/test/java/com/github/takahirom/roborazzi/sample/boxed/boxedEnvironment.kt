@@ -13,3 +13,22 @@ fun boxedEnvironment(block: () -> Unit) {
   RoborazziContext = context
   originalProperties.forEach { System.setProperty(it.first.toString(), it.second.toString()) }
 }
+
+fun setupRoborazziSystemProperty(
+  record: Boolean = false,
+  compare: Boolean = false,
+  verify: Boolean = false,
+) {
+  System.setProperty(
+    "roborazzi.test.record",
+    record.toString()
+  )
+  System.setProperty(
+    "roborazzi.test.compare",
+    compare.toString()
+  )
+  System.setProperty(
+    "roborazzi.test.verify",
+    verify.toString()
+  )
+}
