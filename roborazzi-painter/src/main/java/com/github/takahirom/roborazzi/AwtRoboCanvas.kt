@@ -6,7 +6,12 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
-import java.awt.*
+import java.awt.BasicStroke
+import java.awt.Color
+import java.awt.Font
+import java.awt.Graphics2D
+import java.awt.Rectangle
+import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.geom.AffineTransform
@@ -257,13 +262,13 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     const val TRANSPARENT_STRONG = 0x66 shl 56
 
     sealed interface ComparisonCanvasParameters {
-      abstract val referenceImage: BufferedImage
-      abstract val newImage: BufferedImage
-      abstract val diffImage: BufferedImage
-      abstract val newCanvasResize: Double
-      abstract val bufferedImageType: Int
-      abstract val comparisonImageWidth: Int
-      abstract val comparisonImageHeight: Int
+      val referenceImage: BufferedImage
+      val newImage: BufferedImage
+      val diffImage: BufferedImage
+      val newCanvasResize: Double
+      val bufferedImageType: Int
+      val comparisonImageWidth: Int
+      val comparisonImageHeight: Int
 
       data class Grid(
         val goldenCanvas: AwtRoboCanvas,

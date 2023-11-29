@@ -40,6 +40,10 @@ android {
   testOptions {
     unitTests {
       includeAndroidResources = true
+      it.all {
+        // To run coverage report in Android Studio
+        jvmArgs '-noverify'
+      }
     }
   }
 }
