@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<buildprofiles xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/build-profiles.xsd"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <variables>
+        <enable-browser-edits>true</enable-browser-edits>
+        <header-logo>https://raw.githubusercontent.com/takahirom/roborazzi/main/.idea/icon.svg</header-logo>
+        <primary-color>blueberry</primary-color>
+        <browser-edits-url>https://github.com/takahirom/roborazzi/edit/main/docs/</browser-edits-url>
+    </variables>
+</buildprofiles>
