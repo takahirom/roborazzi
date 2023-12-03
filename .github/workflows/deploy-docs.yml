@@ -15,7 +15,7 @@ permissions:
 
 env:
     # Name of module and id separated by a slash
-    INSTANCE: Writerside/roborazzi-docs
+    INSTANCE: docs/roborazzi-docs
     ARTIFACT: web-roborazzi-docs-all.zip
     # Writerside docker image version
     DOCKER_VERSION: 232.10275
