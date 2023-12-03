@@ -70,9 +70,8 @@ By following these steps, you should be able to identify and resolve the issue c
 
 **A:** This warning may occur with Gradle 7.5. Upgrade to Gradle 7.6.2 to resolve this issue. Change the distribution URL in `gradle-wrapper.properties`:
 
-```diff
--distributionUrl=https\://services.gradle.org/distributions/gradle-7.5-bin.zip
-+distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.2-bin.zip
+```
+distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.2-bin.zip
 ```
 
 ### Q: Can I run Roborazzi with Bazel?
