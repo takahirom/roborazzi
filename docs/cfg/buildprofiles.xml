@@ -4,8 +4,11 @@
     <variables>
         <product-web-url>https://github.com/takahirom/roborazzi</product-web-url>
         <enable-browser-edits>true</enable-browser-edits>
-        <header-logo>https://raw.githubusercontent.com/takahirom/roborazzi/main/.idea/icon.svg</header-logo>
+        <header-logo>dot.png</header-logo>
         <primary-color>blueberry</primary-color>
         <browser-edits-url>https://github.com/takahirom/roborazzi/edit/main/docs/</browser-edits-url>
     </variables>
+    <footer>
+        <link href="https://github.com/takahirom/roborazzi">GitHub</link>
+    </footer>
 </buildprofiles>

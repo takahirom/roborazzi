@@ -3,7 +3,7 @@
         SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
 
 <instance-profile id="roborazzi-docs"
-                 name="roborazzi-docs"
+                 name="Roborazzi"
                  start-page="top.md">
 
     <toc-element topic="top.md"/>
