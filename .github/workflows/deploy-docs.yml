@@ -16,7 +16,7 @@ permissions:
 env:
     # Name of module and id separated by a slash
     INSTANCE: docs/roborazzi-docs
-    ARTIFACT: web-roborazzi-docs-all.zip
+    ARTIFACT: webHelpROBORAZZI-DOCS2-all.zip
     # Writerside docker image version
     DOCKER_VERSION: 232.10275
 # Add the variable below to upload Algolia indexes
