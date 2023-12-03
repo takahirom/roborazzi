@@ -64,12 +64,13 @@ class Topic {
 
 def topicsPath = "docs/topics"
 def topicsDir = rootProject.file(topicsPath)
+def readmeTemplate = rootProject.file("README.template.md")
 def readme = rootProject.file("README.md")
 // Generate README.md from docs/topics/topic_name.md files by coping
 // Insert topics into <topics=name="...">...</topics> by name in README.md
 tasks.register("generateReadme") {
     doLast {
-        def readmeContent = readme.text
+        def readmeContent = readmeTemplate.text
         def topicFiles = []
         topicsDir.eachFileRecurse { file ->
             if (file.name.endsWith(".md")) {

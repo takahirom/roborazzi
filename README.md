@@ -1118,7 +1118,6 @@ roborazzi {
 }
 ```
 </div>
-</div>
 
 ### LICENSE
 
