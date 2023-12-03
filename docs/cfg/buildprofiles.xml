@@ -2,6 +2,7 @@
 <buildprofiles xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/build-profiles.xsd"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <variables>
+        <product-web-url>https://github.com/takahirom/roborazzi</product-web-url>
         <enable-browser-edits>true</enable-browser-edits>
         <header-logo>https://raw.githubusercontent.com/takahirom/roborazzi/main/.idea/icon.svg</header-logo>
         <primary-color>blueberry</primary-color>
