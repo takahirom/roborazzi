@@ -741,7 +741,7 @@ You can configure the following options in your `gradle.properties` file:
 This option enables you to configure the behavior of Roborazzi. By default, all settings are set to false.
 For additional configuration options, please refer to the 'Apply Roborazzi Gradle Plugin' section.
 
-```properties
+```
 roborazzi.test.record=true
 # roborazzi.test.compare=true
 # roborazzi.test.verify=true
@@ -753,7 +753,7 @@ roborazzi.test.record=true
 
 This option lets you set the resize scale for the image being recorded. The default value is 1.0.
 
-```properties
+```
 roborazzi.record.resizeScale=0.5
 ```
 
@@ -761,7 +761,7 @@ roborazzi.record.resizeScale=0.5
 
 This setting allows you to specify the file path strategy for the recorded image. The default strategy is `relativePathFromCurrentDirectory`. If you choose `relativePathFromRoborazziContextOutputDirectory`, the file will be saved in the output directory specified by `RoborazziRule.Options.outputDirectoryPath`.
 
-```properties
+```
 roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory
 ```
 
@@ -773,6 +773,6 @@ This option enables you to define the naming strategy for the recorded image. Th
 - If you choose `escapedTestPackageAndClassAndMethod`, the file name will be `com_example_MyTest.testMethod.png`.
 - If you choose `testClassAndMethod`, the file name will be `MyTest.testMethod.png`.
 
-```properties
+```
 roborazzi.record.namingStrategy=testClassAndMethod
 ```
