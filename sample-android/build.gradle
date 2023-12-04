@@ -48,12 +48,6 @@ android {
   }
 }
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
-  }
-}
-
 dependencies {
   testImplementation project(":roborazzi")
   testImplementation project(":roborazzi-compose")

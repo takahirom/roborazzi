@@ -8,12 +8,6 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 
 apply plugin: 'java-gradle-plugin'
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
-  }
-}
-
 def integrationTestDep = sourceSets.create('integrationTestDep')
 
 dependencies {
