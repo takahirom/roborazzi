@@ -1,10 +1,11 @@
-package com.github.takahirom.roborazzi.sample
+package com.github.takahirom.roborazzi.sample.boxed
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.*
+import com.github.takahirom.roborazzi.sample.MainActivity
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,23 +47,8 @@ class FilePathTest {
         expectedOutput
           .exists()
       ) {
-        "File not found: ${expectedOutput.absolutePath} \n" +
-          File("build/outputs/roborazzi").listFiles()?.joinToString("\n") { it.absolutePath }
+        "File not found: ${expectedOutput.absolutePath} \n"
       }
-
-      provideRoborazziContext().clearRuleOverrideOutputDirectory()
     }
-  }
-
-  private fun boxedEnvironment(block: () -> Unit) {
-    val originalRecord = System.getProperty("roborazzi.test.record")
-    val originalFilePathStrategy = System.getProperty("roborazzi.record.filePathStrategy")
-    block()
-    originalFilePathStrategy?.let {
-      System.setProperty("roborazzi.record.filePathStrategy", it)
-    } ?: System.clearProperty("roborazzi.record.filePathStrategy")
-    originalRecord?.let {
-      System.setProperty("roborazzi.test.record", it)
-    } ?: System.clearProperty("roborazzi.test.record")
   }
 }

@@ -1,10 +1,10 @@
 package com.github.takahirom.roborazzi
 
-import java.io.File
 import org.junit.runner.Description
+import java.io.File
 
 @ExperimentalRoborazziApi
-object RoborazziContext {
+class RoborazziContextImpl {
   private var ruleOverrideOutputDirectory: String? = null
   private var ruleOverrideRoborazziOptions: RoborazziOptions? = null
 
@@ -80,6 +80,11 @@ object RoborazziContext {
     """.trimIndent()
   }
 }
+
+@ExperimentalRoborazziApi
+var RoborazziContext = RoborazziContextImpl()
+  @InternalRoborazziApi
+  set
 
 @ExperimentalRoborazziApi
 fun provideRoborazziContext() = RoborazziContext

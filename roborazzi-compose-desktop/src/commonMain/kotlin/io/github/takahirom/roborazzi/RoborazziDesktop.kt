@@ -17,7 +17,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
-  if (!roborazziEnabled()) {
+  if (!roborazziOptions.taskType.isEnabled()) {
     return
   }
   captureRoboImage(
@@ -32,7 +32,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions
 ) {
-  if (!roborazziEnabled()) {
+  if (!roborazziOptions.taskType.isEnabled()) {
     return
   }
   val density = this.fetchSemanticsNode().layoutInfo.density
@@ -59,7 +59,7 @@ fun ImageBitmap.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
-  if (!roborazziEnabled()) {
+  if (!roborazziOptions.taskType.isEnabled()) {
     return
   }
   captureRoboImage(
@@ -72,7 +72,7 @@ fun ImageBitmap.captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions
 ) {
-  if (!roborazziEnabled()) {
+  if (!roborazziOptions.taskType.isEnabled()) {
     return
   }
   val awtImage = this.toAwtImage()

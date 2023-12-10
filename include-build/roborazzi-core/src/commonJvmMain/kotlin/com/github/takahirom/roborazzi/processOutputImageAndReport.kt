@@ -37,9 +37,19 @@ fun processOutputImageAndReport(
   canvasFactoryFromFile: CanvasFactoryFromFile,
   comparisonCanvasFactory: ComparisonCanvasFactory,
 ) {
+  val taskType = roborazziOptions.taskType
   debugLog {
     "processOutputImageAndReport(): " +
-      "goldenFile:${goldenFile.absolutePath}"
+      "taskType:" + taskType +
+      "\ngoldenFile:${goldenFile.absolutePath}"
+  }
+  if (taskType.isEnabled() && !roborazziSystemPropertyTaskType().isEnabled()) {
+    println(
+      "Roborazzi Warning:\n" +
+        "You have specified '$taskType' without the necessary plugin configuration like roborazzi.test.record=true or ./gradlew recordRoborazziDebug.\n" +
+        "This may complicate your screenshot testing process because the behavior is not changeable. And it doesn't allow Roborazzi plugin to generate test report.\n" +
+        "Please ensure proper setup in gradle.properties or via Gradle tasks for optimal functionality."
+    )
   }
   val forbiddenFileSuffixes = listOf("_compare", "_actual")
   forbiddenFileSuffixes.forEach {
@@ -49,7 +59,7 @@ fun processOutputImageAndReport(
   }
   val recordOptions = roborazziOptions.recordOptions
   val resizeScale = recordOptions.resizeScale
-  if (roborazziCompareEnabled() || roborazziVerifyEnabled()) {
+  if (taskType.isVerifying() || taskType.isComparing()) {
     val width = (newRoboCanvas.croppedWidth * resizeScale).toInt()
     val height = (newRoboCanvas.croppedHeight * resizeScale).toInt()
     val goldenRoboCanvas = if (goldenFile.exists()) {
@@ -99,7 +109,7 @@ fun processOutputImageAndReport(
       }
       comparisonCanvas.release()
 
-      val actualFile = if (roborazziRecordingEnabled()) {
+      val actualFile = if (taskType.isRecording()) {
         // If record option is enabled, we should save the actual file as the golden file.
         goldenFile
       } else {
@@ -144,7 +154,10 @@ fun processOutputImageAndReport(
         "  changed: $changed\n" +
         "  result: $result\n"
     }
-    roborazziOptions.reportOptions.captureResultReporter.report(result)
+    roborazziOptions.reportOptions.captureResultReporter.report(
+      captureResult = result,
+      roborazziTaskType = taskType
+    )
   } else {
     // roborazzi.record is checked before
     newRoboCanvas.save(goldenFile, resizeScale)
@@ -153,10 +166,11 @@ fun processOutputImageAndReport(
         " record goldenFile: $goldenFile\n"
     }
     roborazziOptions.reportOptions.captureResultReporter.report(
-      CaptureResult.Recorded(
+      captureResult = CaptureResult.Recorded(
         goldenFile = goldenFile,
         timestampNs = System.nanoTime()
-      )
+      ),
+      roborazziTaskType = taskType
     )
   }
 }

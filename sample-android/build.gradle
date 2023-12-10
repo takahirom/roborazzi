@@ -43,6 +43,8 @@ android {
       it.all {
         // To run coverage report in Android Studio
         jvmArgs '-noverify'
+        // Set the max heap size for the tests JVM(s)
+        maxHeapSize = "4g"
       }
     }
   }
