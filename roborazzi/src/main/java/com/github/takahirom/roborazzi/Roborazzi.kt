@@ -140,12 +140,18 @@ fun captureScreenRoboImage(
   if (roborazziOptions.captureType is Dump) {
     throw IllegalStateException("Currently, Dump is not supported for screen-based captureRoboImage()")
   }
+  // Views needs to be laid out before we can capture them
+  Espresso.onIdle()
+
   val rootsOracle = RootsOracle_Factory({ Looper.getMainLooper() })
     .get()
   // Invoke rootOracle.listActiveRoots() via reflection
   val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
   listActiveRoots.isAccessible = true
-  @Suppress("UNCHECKED_CAST") val roots = listActiveRoots.invoke(rootsOracle) as List<Root>
+  @Suppress("UNCHECKED_CAST") val roots: List<Root> = listActiveRoots.invoke(rootsOracle) as List<Root>
+  debugLog {
+    "captureScreenRoboImage roots: ${roots.joinToString("\n") { it.toString() }}"
+  }
   // Create a bitmap of the screen
   val screenDecorView = roots.last().decorView
   val screenBitmap = screenDecorView.drawToBitmap()
