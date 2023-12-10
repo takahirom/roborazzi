@@ -9,9 +9,12 @@ fun boxedEnvironment(block: () -> Unit) {
   originalProperties.forEach { System.clearProperty(it.first.toString()) }
   val context = provideRoborazziContext()
   RoborazziContext = RoborazziContextImpl()
-  block()
-  RoborazziContext = context
-  originalProperties.forEach { System.setProperty(it.first.toString(), it.second.toString()) }
+  try {
+    block()
+  } finally {
+    RoborazziContext = context
+    originalProperties.forEach { System.setProperty(it.first.toString(), it.second.toString()) }
+  }
 }
 
 fun setupRoborazziSystemProperty(

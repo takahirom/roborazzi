@@ -29,25 +29,24 @@ class RoborazziTaskTest {
   fun roborazziOptionTask() {
     boxedEnvironment {
       ROBORAZZI_DEBUG = true
+      val prefix = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/${this::class.qualifiedName}.roborazziOptionTask"
       val expectedOutput =
-        File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/${this::class.qualifiedName}.roborazziOptionTask.png")
+        File("$prefix.png")
+      val expectedCompareOutput = File("${prefix}_compare.png")
       expectedOutput.delete()
       setupRoborazziSystemProperty(
         compare = true
       )
 
-      onView(ViewMatchers.isRoot())
-        .captureRoboImage(
-          roborazziOptions = RoborazziOptions(
-            taskType = RoborazziTaskType.Verify
+      try {
+        onView(ViewMatchers.isRoot())
+          .captureRoboImage(
+            roborazziOptions = RoborazziOptions(
+              taskType = RoborazziTaskType.Verify
+            )
           )
-        )
-
-      assert(
-        expectedOutput
-          .exists()
-      ) {
-        "File not found: ${expectedOutput.absolutePath} \n"
+      } finally {
+        expectedCompareOutput.delete()
       }
     }
   }
@@ -86,6 +85,7 @@ class RoborazziTaskTest {
       ) {
         "File not found: ${expectedOutput.absolutePath} \n"
       }
+      expectedCompareOutput.delete()
     }
   }
 }
