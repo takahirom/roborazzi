@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -19,19 +20,17 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.view.drawToBitmap
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.*
 import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.NoActivityResumedException
-import androidx.test.espresso.UiController
-import androidx.test.espresso.ViewAction
-import androidx.test.espresso.ViewInteraction
+import androidx.test.espresso.base.RootsOracle_Factory
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dropbox.differ.ImageComparator
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
 import java.io.File
-import java.util.Locale
+import java.util.*
 
 
 fun ViewInteraction.captureRoboImage(
@@ -113,6 +112,107 @@ fun View.captureRoboImage(
   }
 }
 
+/**
+ * Capture the screen image including dialogs.
+ */
+@ExperimentalRoborazziApi
+fun captureScreenRoboImage(
+  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+) {
+  if (!roborazziOptions.taskType.isEnabled()) return
+  captureScreenRoboImage(
+    file = fileWithRecordFilePathStrategy(filePath),
+    roborazziOptions = roborazziOptions,
+  )
+}
+
+/**
+ * Capture the screen image including dialogs.
+ */
+@Suppress("INACCESSIBLE_TYPE")
+@ExperimentalRoborazziApi
+fun captureScreenRoboImage(
+  file: File,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+) {
+  if (!roborazziOptions.taskType.isEnabled()) return
+  if (roborazziOptions.captureType is Dump) {
+    throw IllegalStateException("Currently, Dump is not supported for screen-based captureRoboImage()")
+  }
+  val rootsOracle = RootsOracle_Factory({ Looper.getMainLooper() })
+    .get()
+  // Invoke rootOracle.listActiveRoots() via reflection
+  val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
+  listActiveRoots.isAccessible = true
+  @Suppress("UNCHECKED_CAST") val roots = listActiveRoots.invoke(rootsOracle) as List<Root>
+  // Create a bitmap of the screen
+  val screenDecorView = roots.last().decorView
+  val screenBitmap = screenDecorView.drawToBitmap()
+  // Create a canvas to draw screen and dialogs
+  val canvas = android.graphics.Canvas(screenBitmap)
+  // Draw dialogs on the canvas
+  roots.reversed().drop(1).forEach { root ->
+    val layoutParams = root.windowLayoutParams.get()
+    val x = when (layoutParams.gravity) {
+      Gravity.TOP -> {
+        layoutParams.x
+      }
+
+      Gravity.BOTTOM -> {
+        layoutParams.x
+      }
+
+      Gravity.LEFT -> {
+        layoutParams.x
+      }
+
+      Gravity.RIGHT -> {
+        screenDecorView.width - root.decorView.width + layoutParams.x
+      }
+
+      Gravity.CENTER -> {
+        (screenDecorView.width - root.decorView.width) / 2 + layoutParams.x
+      }
+
+      else -> {
+        layoutParams.x
+      }
+    }
+    val y = when (layoutParams.gravity) {
+      Gravity.TOP -> {
+        layoutParams.y
+      }
+
+      Gravity.BOTTOM -> {
+        screenDecorView.height - root.decorView.height + layoutParams.y
+      }
+
+      Gravity.LEFT -> {
+        layoutParams.y
+      }
+
+      Gravity.RIGHT -> {
+        layoutParams.y
+      }
+
+      Gravity.CENTER -> {
+        (screenDecorView.height - root.decorView.height) / 2 + layoutParams.y
+      }
+
+      else -> {
+        layoutParams.y
+      }
+    }
+
+    canvas.drawBitmap(root.decorView.drawToBitmap(), x.toFloat(), y.toFloat(), null)
+  }
+  screenBitmap.captureRoboImage(
+    file = file,
+    roborazziOptions = roborazziOptions
+  )
+}
+
 fun Bitmap.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
@@ -129,6 +229,9 @@ fun Bitmap.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
+  if (roborazziOptions.captureType is Dump) {
+    throw IllegalStateException("Dump is not supported for Bitmap captureRoboImage()")
+  }
   val image = this
   val canvas = AwtRoboCanvas(
     width = image.width,
