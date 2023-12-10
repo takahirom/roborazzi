@@ -161,15 +161,7 @@ fun captureScreenRoboImage(
   roots.reversed().drop(1).forEach { root ->
     val layoutParams = root.windowLayoutParams.get()
     val x = when (layoutParams.gravity) {
-      Gravity.TOP -> {
-        layoutParams.x
-      }
-
-      Gravity.BOTTOM -> {
-        layoutParams.x
-      }
-
-      Gravity.LEFT -> {
+      Gravity.TOP, Gravity.BOTTOM, Gravity.LEFT -> {
         layoutParams.x
       }
 
@@ -186,20 +178,12 @@ fun captureScreenRoboImage(
       }
     }
     val y = when (layoutParams.gravity) {
-      Gravity.TOP -> {
+      Gravity.TOP, Gravity.LEFT, Gravity.RIGHT -> {
         layoutParams.y
       }
 
       Gravity.BOTTOM -> {
         screenDecorView.height - root.decorView.height + layoutParams.y
-      }
-
-      Gravity.LEFT -> {
-        layoutParams.y
-      }
-
-      Gravity.RIGHT -> {
-        layoutParams.y
       }
 
       Gravity.CENTER -> {
