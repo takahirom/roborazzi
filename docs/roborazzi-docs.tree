@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE instance-profile
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
+
+<instance-profile id="roborazzi-docs"
+                 name="Roborazzi"
+                 start-page="top.md">
+
+    <toc-element topic="top.md"/>
+    <toc-element topic="try_it_out.md"/>
+    <toc-element topic="how_to_use.md"/>
+    <toc-element topic="faq.md"/>
+</instance-profile>
