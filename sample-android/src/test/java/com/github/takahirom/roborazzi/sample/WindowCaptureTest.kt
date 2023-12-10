@@ -24,7 +24,7 @@ import org.robolectric.annotation.GraphicsMode
   sdk = [30],
   qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
-class DialogTest {
+class WindowCaptureTest {
   @get:Rule
   val composeTestRule = createComposeRule()
 
@@ -72,6 +72,21 @@ class DialogTest {
             .setNegativeButton("Cancel") { _, _ -> }
             .show()
         }
+      }
+    }
+
+    captureScreenRoboImage()
+  }
+
+  @Test
+  fun noDialog() {
+    composeTestRule.setContent {
+      Column(
+        modifier = androidx.compose.ui.Modifier
+          .background(Color.Cyan)
+          .fillMaxSize()
+      ) {
+        Text("Content")
       }
     }
 
