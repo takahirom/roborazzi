@@ -160,42 +160,18 @@ fun captureScreenRoboImage(
   // Draw dialogs on the canvas
   roots.reversed().drop(1).forEach { root ->
     val layoutParams = root.windowLayoutParams.get()
-    val x = when (layoutParams.gravity) {
-      Gravity.TOP, Gravity.BOTTOM, Gravity.LEFT -> {
-        layoutParams.x
-      }
+    val outRect = Rect()
+    Gravity.apply(
+      layoutParams.gravity,
+      root.decorView.width,
+      root.decorView.height,
+      Rect(0, 0, screenBitmap.width, screenBitmap.height),
+      layoutParams.x,
+      layoutParams.y,
+      outRect
+    )
 
-      Gravity.RIGHT -> {
-        screenDecorView.width - root.decorView.width + layoutParams.x
-      }
-
-      Gravity.CENTER -> {
-        (screenDecorView.width - root.decorView.width) / 2 + layoutParams.x
-      }
-
-      else -> {
-        layoutParams.x
-      }
-    }
-    val y = when (layoutParams.gravity) {
-      Gravity.TOP, Gravity.LEFT, Gravity.RIGHT -> {
-        layoutParams.y
-      }
-
-      Gravity.BOTTOM -> {
-        screenDecorView.height - root.decorView.height + layoutParams.y
-      }
-
-      Gravity.CENTER -> {
-        (screenDecorView.height - root.decorView.height) / 2 + layoutParams.y
-      }
-
-      else -> {
-        layoutParams.y
-      }
-    }
-
-    canvas.drawBitmap(root.decorView.drawToBitmap(), x.toFloat(), y.toFloat(), null)
+    canvas.drawBitmap(root.decorView.drawToBitmap(), outRect.left.toFloat(), outRect.top.toFloat(), null)
   }
   screenBitmap.captureRoboImage(
     file = file,
