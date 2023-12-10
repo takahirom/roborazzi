@@ -9,7 +9,7 @@ const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
 var ROBORAZZI_DEBUG = false
 
 @Deprecated(
-  message = "Use roborazziEnabled()",
+  message = "Use roborazziSystemPropertyTaskType()",
   replaceWith = ReplaceWith("roborazziSystemPropertyTaskType().isEnabled()"),
 )
 fun roborazziEnabled(): Boolean {
@@ -133,6 +133,11 @@ fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStra
 }
 
 data class RoborazziOptions(
+  /**
+   * This option, taskType, is experimental. So the API may change.
+   * Please tell me your opinion about this option
+   * https://github.com/takahirom/roborazzi/issues/215
+   */
   val taskType: RoborazziTaskType = roborazziSystemPropertyTaskType(),
   val captureType: CaptureType = if (canScreenshot()) CaptureType.Screenshot() else defaultCaptureType(),
   val reportOptions: ReportOptions = ReportOptions(),
