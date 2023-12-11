@@ -232,7 +232,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     )
   }
 
-  fun drawPendingDraw() {
+  private fun drawPendingDraw() {
 //    val start = System.currentTimeMillis()
     baseDrawList.forEach { it() }
     if (baseDrawList.isNotEmpty()) {
