@@ -6,19 +6,44 @@ import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.os.Build
 import android.view.View
 import android.view.Window
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.InternalTestApi
 import androidx.compose.ui.window.DialogWindowProvider
 import kotlin.math.roundToInt
-import com.github.takahirom.roborazzi.toBitmapConfig
 
 fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
   val node = this
   val view = (node.root as ViewRootForTest).view
+// If we are in dialog use its window to capture the bitmap
+  val dialogParentNodeMaybe = node.findClosestParentNode(includeSelf = true) {
+    it.config.contains(SemanticsProperties.IsDialog)
+  } ?: if (this.isRoot) {
+    node.children.find {
+      it.config.contains(SemanticsProperties.IsDialog)
+    }
+  } else {
+    null
+  }
+  var dialogWindow: Window? = null
+  if (dialogParentNodeMaybe != null) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+      // TODO(b/163023027)
+      throw IllegalArgumentException("Cannot currently capture dialogs on API lower than 28!")
+    }
+
+    dialogWindow = findDialogWindowProviderInParent(view)?.window
+      ?: throw IllegalArgumentException(
+        "Could not find a dialog window provider to capture its bitmap"
+      )
+  }
+
+  val windowToUse = dialogWindow ?: view.context.getActivityWindow()
 
   val nodeBounds = node.boundsInRoot
   val nodeBoundsRect = Rect(
@@ -27,7 +52,30 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
     nodeBounds.right.roundToInt(),
     nodeBounds.bottom.roundToInt()
   )
-  return view.fetchImage(recordOptions = recordOptions)?.crop(nodeBoundsRect, recordOptions)
+  return windowToUse.decorView.fetchImage(recordOptions = recordOptions)?.crop(nodeBoundsRect, recordOptions)
+}
+
+/**
+ * Executes [selector] on every parent of this [SemanticsNode] and returns the closest
+ * [SemanticsNode] to return `true` from [selector] or null if [selector] returns false
+ * for all ancestors.
+ *
+ * @param includeSelf Whether it should include self into the search.
+ */
+internal fun SemanticsNode.findClosestParentNode(
+  includeSelf: Boolean = false,
+  selector: (SemanticsNode) -> Boolean
+): SemanticsNode? {
+  var currentParent = if (includeSelf) this else parent
+  while (currentParent != null) {
+    if (selector(currentParent)) {
+      return currentParent
+    } else {
+      currentParent = currentParent.parent
+    }
+  }
+
+  return null
 }
 
 

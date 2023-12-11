@@ -93,11 +93,24 @@ private fun View.generateBitmap(
 
     this is SurfaceView -> generateBitmapFromSurfaceViewPixelCopy(destBitmap, bitmapFuture)
     else -> {
-      val window = getActivity()?.window ?: this.findViewById<View>(android.R.id.content)?.getActivity()?.window
-      if (window != null
-        // It seems that PixelCopy does not work in other windows than the main window.
-        && this.rootView == window.decorView
-      ) {
+      var nullableWindow = getActivity()?.window ?: this.findViewById<View>(android.R.id.content)?.getActivity()?.window
+      if (nullableWindow?.decorView != this.rootView) {
+        // Is there a better way to get the window for a view?
+        try {
+          this.rootView.javaClass
+            .getDeclaredField("mWindow")
+            .apply {
+              isAccessible = true
+              nullableWindow = get(this@generateBitmap.rootView) as Window
+            }
+        } catch (e: Exception) {
+          debugLog {
+            e.stackTraceToString()
+          }
+        }
+      }
+      if (nullableWindow != null) {
+        val window = nullableWindow!!
         if (Build.VERSION.SDK_INT < 28) {
           // See: https://github.com/robolectric/robolectric/blob/robolectric-4.10.3/shadows/framework/src/main/java/org/robolectric/shadows/ShadowPixelCopy.java#L32
           println(
@@ -109,11 +122,9 @@ private fun View.generateBitmap(
           generateBitmapFromPixelCopy(window, destBitmap, bitmapFuture)
         }
       } else {
-        if (window == null) {
-          println(
-            "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy"
-          )
-        }
+        println(
+          "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy"
+        )
         generateBitmapFromDraw(destBitmap, bitmapFuture)
       }
     }
