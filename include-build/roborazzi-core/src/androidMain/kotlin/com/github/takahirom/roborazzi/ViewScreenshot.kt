@@ -4,12 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.Rect
+import android.graphics.*
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -98,20 +93,27 @@ private fun View.generateBitmap(
 
     this is SurfaceView -> generateBitmapFromSurfaceViewPixelCopy(destBitmap, bitmapFuture)
     else -> {
-      val window = getActivity()?.window
-      if (window != null) {
+      val window = getActivity()?.window ?: this.findViewById<View>(android.R.id.content)?.getActivity()?.window
+      if (window != null
+        // It seems that PixelCopy does not work in other windows than the main window.
+        && this.rootView == window.decorView
+      ) {
         if (Build.VERSION.SDK_INT < 28) {
           // See: https://github.com/robolectric/robolectric/blob/robolectric-4.10.3/shadows/framework/src/main/java/org/robolectric/shadows/ShadowPixelCopy.java#L32
-          println("PixelCopy is not supported for API levels below 28. Falling back to View#draw instead of PixelCopy. " +
-            "Consider using API level 28 or higher, e.g., @Config(sdk = [28]).")
+          println(
+            "PixelCopy is not supported for API levels below 28. Falling back to View#draw instead of PixelCopy. " +
+              "Consider using API level 28 or higher, e.g., @Config(sdk = [28])."
+          )
           generateBitmapFromDraw(destBitmap, bitmapFuture)
         } else {
           generateBitmapFromPixelCopy(window, destBitmap, bitmapFuture)
         }
       } else {
-        println(
-          "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy"
-        )
+        if (window == null) {
+          println(
+            "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy"
+          )
+        }
         generateBitmapFromDraw(destBitmap, bitmapFuture)
       }
     }

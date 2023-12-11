@@ -158,6 +158,7 @@ class ManualTest {
           captureType = RoborazziOptions.CaptureType.Dump(
             query = { roboComponent ->
               when (roboComponent) {
+                is RoboComponent.Screen -> false
                 is RoboComponent.Compose -> roboComponent.testTag?.startsWith("child") == true
                 is RoboComponent.View -> false
               }

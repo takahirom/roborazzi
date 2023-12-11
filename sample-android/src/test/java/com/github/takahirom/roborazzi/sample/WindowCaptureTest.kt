@@ -16,9 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
-import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
-import com.github.takahirom.roborazzi.captureScreenRoboImage
+import com.github.takahirom.roborazzi.*
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.junit.Rule
 import org.junit.Test
@@ -99,6 +97,43 @@ class WindowCaptureTest {
     }
 
     captureScreenRoboImage()
+  }
+
+  @Test
+  fun dump() {
+    composeTestRule.setContent {
+      Column(
+        modifier = androidx.compose.ui.Modifier
+          .background(Color.Cyan)
+          .fillMaxSize()
+      ) {
+        Text("Under the dialog")
+        val context = LocalContext.current
+        LaunchedEffect(Unit) {
+          AlertDialog.Builder(context)
+            .setTitle("ViewAlertDialogTitle")
+            .setMessage("Text")
+            .setPositiveButton("OK") { _, _ -> }
+            .setNegativeButton("Cancel") { _, _ -> }
+            .show()
+        }
+        AlertDialog(
+          onDismissRequest = { },
+          title = { Text("ComposeAlertDialogTitle") },
+          text = { Text("Text") },
+          confirmButton = {
+            Text("OK")
+          },
+          dismissButton = {
+            Text("Cancel")
+          }
+        )
+      }
+    }
+
+    captureScreenRoboImage(roborazziOptions = RoborazziOptions(
+      captureType = RoborazziOptions.CaptureType.Dump(),
+    ))
   }
 }
 

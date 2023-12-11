@@ -6,12 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Font
-import java.awt.Graphics2D
-import java.awt.Rectangle
-import java.awt.RenderingHints
+import java.awt.*
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.geom.AffineTransform
@@ -49,7 +44,21 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       )
     }
     updateRightBottom(r.right, r.bottom)
-    consumeEmptyPoints(r)
+  }
+
+  fun drawImage(r: Rect, canvas: RoboCanvas) {
+    canvas as AwtRoboCanvas
+    bufferedImage.graphics { graphics2D ->
+      graphics2D.drawImage(
+        canvas.bufferedImage,
+        r.left,
+        r.top,
+        r.width(),
+        r.height(),
+        null
+      )
+    }
+    updateRightBottom(r.right, r.bottom)
   }
 
   fun drawImage(image: BufferedImage) {
@@ -223,7 +232,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     )
   }
 
-  private fun drawPendingDraw() {
+  fun drawPendingDraw() {
 //    val start = System.currentTimeMillis()
     baseDrawList.forEach { it() }
     if (baseDrawList.isNotEmpty()) {

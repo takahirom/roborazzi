@@ -1,8 +1,11 @@
 package com.github.takahirom.roborazzi
 
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
+import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.IdRes
@@ -12,6 +15,8 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.core.graphics.plus
+import androidx.test.espresso.Root
 import androidx.test.espresso.util.HumanReadables
 
 enum class Visibility {
@@ -26,9 +31,77 @@ val hasCompose = try {
 }
 
 sealed interface RoboComponent {
+  class Screen(
+    rootsOrderByDepth: List<Root>,
+    roborazziOptions: RoborazziOptions,
+  ) : RoboComponent {
+    override val width: Int = rootsOrderByDepth.maxOfOrNull {
+      it.decorView.width
+    } ?: 0
+    override val height: Int = rootsOrderByDepth.maxOfOrNull {
+      it.decorView.height
+    } ?: 0
+    override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
+      val bitmap = Bitmap.createBitmap(width, height, roborazziOptions.recordOptions.pixelBitConfig.toBitmapConfig())
+      val canvas = Canvas(bitmap)
+      val screenDecorView = rootsOrderByDepth.first().decorView
+      rootsOrderByDepth.forEach { root ->
+        val layoutParams = root.windowLayoutParams.get()
+        val decorView = root.decorView
+        val outRect = Rect()
+        Gravity.apply(
+          layoutParams.gravity,
+          root.decorView.width,
+          root.decorView.height,
+          Rect(0, 0, screenDecorView.width, screenDecorView.height),
+          layoutParams.x,
+          layoutParams.y,
+          outRect
+        )
+        decorView.fetchImage(
+          recordOptions = roborazziOptions.recordOptions,
+        )?.let {
+          canvas.drawBitmap(it, outRect.left.toFloat(), outRect.top.toFloat(), null)
+        }
+      }
+      bitmap
+    } else {
+      null
+    }
+    override val rect: Rect = run {
+      val rect = Rect()
+      rootsOrderByDepth.firstOrNull()?.decorView?.getGlobalVisibleRect(rect)
+      rect
+    }
+    override val children: List<RoboComponent> by lazy {
+      val screenDecorView = rootsOrderByDepth.first().decorView
+      rootsOrderByDepth.map { root ->
+        val layoutParams = root.windowLayoutParams.get()
+        val decorView = root.decorView
+        val outRect = Rect()
+        Gravity.apply(
+          layoutParams.gravity,
+          root.decorView.width,
+          root.decorView.height,
+          Rect(0, 0, screenDecorView.width, screenDecorView.height),
+          layoutParams.x,
+          layoutParams.y,
+          outRect
+        )
+        View(
+          decorView, roborazziOptions, outRect
+        )
+      }
+    }
+    override val text: String = "Screen"
+    override val accessibilityText: String = ""
+    override val visibility: Visibility = Visibility.Visible
+  }
+
   class View(
     view: android.view.View,
     roborazziOptions: RoborazziOptions,
+    val windowOffset: Rect = Rect(),
   ) : RoboComponent {
     override val width: Int = view.width
     override val height: Int = view.height
@@ -42,11 +115,11 @@ sealed interface RoboComponent {
     override val rect: Rect = run {
       val rect = Rect()
       view.getGlobalVisibleRect(rect)
-      rect
+      rect + Point(windowOffset.left, windowOffset.top)
     }
     override val children: List<RoboComponent> = roborazziOptions
       .captureType
-      .roboComponentChildVisitor(view, roborazziOptions)
+      .roboComponentChildVisitor(view, roborazziOptions, windowOffset)
 
     val id: Int = view.id
 
@@ -103,6 +176,7 @@ sealed interface RoboComponent {
   class Compose(
     node: SemanticsNode,
     roborazziOptions: RoborazziOptions,
+    val windowOffset: Rect = Rect(),
   ) : RoboComponent {
     override val width: Int = node.layoutInfo.width
     override val height: Int = node.layoutInfo.height
@@ -113,7 +187,7 @@ sealed interface RoboComponent {
     }
     override val children: List<RoboComponent> = roborazziOptions
       .captureType
-      .roboComponentChildVisitor(node, roborazziOptions)
+      .roboComponentChildVisitor(node, roborazziOptions, windowOffset)
     override val text: String = node.printToString()
     override val accessibilityText: String = run {
       buildString {
@@ -151,7 +225,7 @@ sealed interface RoboComponent {
       val rect = Rect()
       val boundsInWindow = node.boundsInWindow
       rect.set(boundsInWindow.toAndroidRect())
-      rect
+      rect + Point(windowOffset.left, windowOffset.top)
     }
   }
 
@@ -177,19 +251,19 @@ sealed interface RoboComponent {
   }
 
   companion object {
-    internal val defaultChildVisitor: (Any, RoborazziOptions) -> List<RoboComponent> =
-      { platformNode: Any, roborazziOptions: RoborazziOptions ->
+    internal val defaultChildVisitor: (Any, RoborazziOptions, Rect) -> List<RoboComponent> =
+      { platformNode: Any, roborazziOptions: RoborazziOptions, windowOffset: Rect ->
         when {
           hasCompose && platformNode is androidx.compose.ui.platform.AbstractComposeView -> {
             (platformNode.getChildAt(0) as? ViewRootForTest)?.semanticsOwner?.rootSemanticsNode?.let {
-              listOf(Compose(it, roborazziOptions))
+              listOf(Compose(it, roborazziOptions, windowOffset))
             } ?: listOf()
           }
 
           platformNode is ViewGroup -> {
             (0 until platformNode.childCount).map {
               View(
-                platformNode.getChildAt(it), roborazziOptions
+                platformNode.getChildAt(it), roborazziOptions, windowOffset
               )
             }
           }
@@ -197,7 +271,7 @@ sealed interface RoboComponent {
           hasCompose && platformNode is SemanticsNode -> {
             platformNode.children.map {
               Compose(
-                it, roborazziOptions
+                it, roborazziOptions, windowOffset
               )
             }
           }
@@ -213,6 +287,7 @@ sealed interface RoboComponent {
 fun withViewId(@IdRes id: Int): (RoboComponent) -> Boolean {
   return { roboComponent ->
     when (roboComponent) {
+      is RoboComponent.Screen -> false
       is RoboComponent.Compose -> false
       is RoboComponent.View -> roboComponent.id == id
     }
@@ -222,18 +297,19 @@ fun withViewId(@IdRes id: Int): (RoboComponent) -> Boolean {
 fun withComposeTestTag(testTag: String): (RoboComponent) -> Boolean {
   return { roboComponent ->
     when (roboComponent) {
+      is RoboComponent.Screen -> false
       is RoboComponent.Compose -> testTag == roboComponent.testTag
       is RoboComponent.View -> false
     }
   }
 }
 
-internal val RoborazziOptions.CaptureType.roboComponentChildVisitor: (Any, RoborazziOptions) -> List<RoboComponent>
+internal val RoborazziOptions.CaptureType.roboComponentChildVisitor: (Any, RoborazziOptions, Rect) -> List<RoboComponent>
   get() {
     return when (this) {
       is Dump -> RoboComponent.defaultChildVisitor
-      is RoborazziOptions.CaptureType.Screenshot -> { _, _ -> listOf() }
-      else -> { _, _ -> listOf() }
+      is RoborazziOptions.CaptureType.Screenshot -> { _, _, _ -> listOf() }
+      else -> { _, _, _ -> listOf() }
     }
   }
 

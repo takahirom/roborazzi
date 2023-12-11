@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -137,9 +136,6 @@ fun captureScreenRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  if (roborazziOptions.captureType is Dump) {
-    throw IllegalStateException("Currently, Dump is not supported for screen-based captureRoboImage()")
-  }
   // Views needs to be laid out before we can capture them
   Espresso.onIdle()
 
@@ -152,31 +148,65 @@ fun captureScreenRoboImage(
   debugLog {
     "captureScreenRoboImage roots: ${roots.joinToString("\n") { it.toString() }}"
   }
-  // Create a bitmap of the screen
-  val screenDecorView = roots.last().decorView
-  val screenBitmap = screenDecorView.drawToBitmap()
-  // Create a canvas to draw screen and dialogs
-  val canvas = android.graphics.Canvas(screenBitmap)
-  // Draw dialogs on the canvas
-  roots.reversed().drop(1).forEach { root ->
-    val layoutParams = root.windowLayoutParams.get()
-    val outRect = Rect()
-    Gravity.apply(
-      layoutParams.gravity,
-      root.decorView.width,
-      root.decorView.height,
-      Rect(0, 0, screenBitmap.width, screenBitmap.height),
-      layoutParams.x,
-      layoutParams.y,
-      outRect
+  capture(
+    rootComponent = RoboComponent.Screen(
+      rootsOrderByDepth = roots.reversed(),
+      roborazziOptions = roborazziOptions
+    ),
+    roborazziOptions = roborazziOptions,
+  ) { canvas ->
+    processOutputImageAndReportWithDefaults(
+      canvas = canvas,
+      goldenFile = file,
+      roborazziOptions = roborazziOptions
     )
-
-    canvas.drawBitmap(root.decorView.drawToBitmap(), outRect.left.toFloat(), outRect.top.toFloat(), null)
+    canvas.release()
   }
-  screenBitmap.captureRoboImage(
-    file = file,
-    roborazziOptions = roborazziOptions
-  )
+//  // Create a bitmap of the screen
+//  val screenDecorView = roots.last().decorView
+//  val roboCanvas = roots.reversed().asSequence().map { root ->
+//    val layoutParams = root.windowLayoutParams.get()
+//    var nullableWindowCanvas: AwtRoboCanvas? = null
+//    capture(
+//      rootComponent = RoboComponent.View(
+//        view = root.decorView,
+//        roborazziOptions,
+//      ),
+//      roborazziOptions = roborazziOptions,
+//    ) { canvas ->
+//      nullableWindowCanvas = canvas
+//    }
+//    val windowCanvas = nullableWindowCanvas!!
+//    windowCanvas.drawPendingDraw()
+//    val outRect = Rect()
+//    if (roborazziOptions.captureType !is Dump) {
+//      Gravity.apply(
+//        layoutParams.gravity,
+//        root.decorView.width,
+//        root.decorView.height,
+//        Rect(0, 0, screenDecorView.width, screenDecorView.height),
+//        layoutParams.x,
+//        layoutParams.y,
+//        outRect
+//      )
+//    } else {
+//      outRect.set(0, 0, windowCanvas.width, windowCanvas.height)
+//    }
+//    windowCanvas to outRect
+//  }.reduce { acc, newWindow ->
+//    val (accCanvas, accRect) = acc
+//    val (newCanvas, newRect) = newWindow
+//    accCanvas.drawImage(newRect, newCanvas)
+//    newCanvas.release()
+//    accCanvas to accRect
+//  }
+//  val (canvas, rect) = roboCanvas
+//  processOutputImageAndReportWithDefaults(
+//    canvas = canvas,
+//    goldenFile = file,
+//    roborazziOptions = roborazziOptions
+//  )
+//  canvas.release()
 }
 
 fun Bitmap.captureRoboImage(
