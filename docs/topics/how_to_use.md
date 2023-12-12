@@ -102,6 +102,17 @@ captureRoboImage() {
 </td></tr>
 
 <tr><td>
+Experimental🧪<br>✅ Whole screen including dialogs
+
+</td><td>
+
+```kotlin
+captureScreenRoboImage()
+```
+
+</td></tr>
+
+<tr><td>
 ✅ Bitmap
 
 </td><td>

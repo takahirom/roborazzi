@@ -19,19 +19,17 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.view.drawToBitmap
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.*
 import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.NoActivityResumedException
-import androidx.test.espresso.UiController
-import androidx.test.espresso.ViewAction
-import androidx.test.espresso.ViewInteraction
+import androidx.test.espresso.base.RootsOracle_Factory
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dropbox.differ.ImageComparator
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
 import java.io.File
-import java.util.Locale
+import java.util.*
 
 
 fun ViewInteraction.captureRoboImage(
@@ -113,6 +111,59 @@ fun View.captureRoboImage(
   }
 }
 
+/**
+ * Capture the screen image including dialogs.
+ */
+@ExperimentalRoborazziApi
+fun captureScreenRoboImage(
+  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+) {
+  if (!roborazziOptions.taskType.isEnabled()) return
+  captureScreenRoboImage(
+    file = fileWithRecordFilePathStrategy(filePath),
+    roborazziOptions = roborazziOptions,
+  )
+}
+
+/**
+ * Capture the screen image including dialogs.
+ */
+@Suppress("INACCESSIBLE_TYPE")
+@ExperimentalRoborazziApi
+fun captureScreenRoboImage(
+  file: File,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+) {
+  if (!roborazziOptions.taskType.isEnabled()) return
+  // Views needs to be laid out before we can capture them
+  Espresso.onIdle()
+
+  val rootsOracle = RootsOracle_Factory({ Looper.getMainLooper() })
+    .get()
+  // Invoke rootOracle.listActiveRoots() via reflection
+  val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
+  listActiveRoots.isAccessible = true
+  @Suppress("UNCHECKED_CAST") val roots: List<Root> = listActiveRoots.invoke(rootsOracle) as List<Root>
+  debugLog {
+    "captureScreenRoboImage roots: ${roots.joinToString("\n") { it.toString() }}"
+  }
+  capture(
+    rootComponent = RoboComponent.Screen(
+      rootsOrderByDepth = roots.reversed(),
+      roborazziOptions = roborazziOptions
+    ),
+    roborazziOptions = roborazziOptions,
+  ) { canvas ->
+    processOutputImageAndReportWithDefaults(
+      canvas = canvas,
+      goldenFile = file,
+      roborazziOptions = roborazziOptions
+    )
+    canvas.release()
+  }
+}
+
 fun Bitmap.captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
@@ -129,6 +180,9 @@ fun Bitmap.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
+  if (roborazziOptions.captureType is Dump) {
+    throw IllegalStateException("Dump is not supported for Bitmap captureRoboImage()")
+  }
   val image = this
   val canvas = AwtRoboCanvas(
     width = image.width,

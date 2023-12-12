@@ -8,6 +8,7 @@
 
     <toc-element topic="top.md"/>
     <toc-element topic="try_it_out.md"/>
+    <toc-element topic="build_setup.md"/>
     <toc-element topic="how_to_use.md"/>
     <toc-element topic="faq.md"/>
 </instance-profile>
