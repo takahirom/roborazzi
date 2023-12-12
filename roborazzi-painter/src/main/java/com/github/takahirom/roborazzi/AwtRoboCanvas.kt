@@ -44,21 +44,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       )
     }
     updateRightBottom(r.right, r.bottom)
-  }
-
-  fun drawImage(r: Rect, canvas: RoboCanvas) {
-    canvas as AwtRoboCanvas
-    bufferedImage.graphics { graphics2D ->
-      graphics2D.drawImage(
-        canvas.bufferedImage,
-        r.left,
-        r.top,
-        r.width(),
-        r.height(),
-        null
-      )
-    }
-    updateRightBottom(r.right, r.bottom)
+    consumeEmptyPoints(r)
   }
 
   fun drawImage(image: BufferedImage) {
