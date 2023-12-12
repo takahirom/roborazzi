@@ -52,6 +52,9 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
     nodeBounds.right.roundToInt(),
     nodeBounds.bottom.roundToInt()
   )
+  val locationInWindow = IntArray(2)
+  view.getLocationInWindow(locationInWindow)
+  nodeBoundsRect.offset(locationInWindow[0], locationInWindow[1])
   return windowToUse.decorView.fetchImage(recordOptions = recordOptions)?.crop(nodeBoundsRect, recordOptions)
 }
 
