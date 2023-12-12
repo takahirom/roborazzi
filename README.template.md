@@ -3,6 +3,8 @@
 </div>
 <div name="topic_try_it_out">
 </div>
+<div name="topic_build_setup">
+</div>
 <div name="topic_how_to_use">
 </div>
 <div name="topic_faq">
