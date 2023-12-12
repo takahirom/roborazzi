@@ -20,7 +20,8 @@ import kotlin.math.roundToInt
 fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
   val node = this
   val view = (node.root as ViewRootForTest).view
-// If we are in dialog use its window to capture the bitmap
+  //  From AOSP
+  // If we are in dialog use its window to capture the bitmap
   val dialogParentNodeMaybe = node.findClosestParentNode(includeSelf = true) {
     it.config.contains(SemanticsProperties.IsDialog)
   } ?: if (this.isRoot) {
@@ -59,6 +60,7 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
 }
 
 /**
+ * From AOSP
  * Executes [selector] on every parent of this [SemanticsNode] and returns the closest
  * [SemanticsNode] to return `true` from [selector] or null if [selector] returns false
  * for all ancestors.
