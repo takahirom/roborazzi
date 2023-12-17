@@ -40,6 +40,10 @@ fun captureRoboImage(
     val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
     viewRootForTest.view.captureRoboImage(file, roborazziOptions)
   }
+  // Closing the activity is necessary to prevent memory leaks.
+  // If multiple captureRoboImage calls occur in a single test,
+  // they can lead to an activity leak.
+  activityScenario.close()
 }
 
 /**
