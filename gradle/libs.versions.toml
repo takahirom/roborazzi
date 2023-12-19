@@ -6,6 +6,7 @@ mavenPublish = "0.25.3"
 composeCompiler = "1.4.8"
 composeDesktop = "1.4.3"
 robolectric = "4.10.3"
+robolectric-android-all = "Q-robolectric-5415296"
 
 androidx-activity = "1.7.2"
 androidx-appcompat = "1.4.1"
@@ -69,3 +70,4 @@ ktor-serialization-kotlinx-xml = { module = "io.ktor:ktor-serialization-kotlinx-
 squareup-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "squareup-okhttp" }
 squareup-okhttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "squareup-okhttp" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+robolectric-android-all = { module = "org.robolectric:android-all", version.ref = "robolectric-android-all" }

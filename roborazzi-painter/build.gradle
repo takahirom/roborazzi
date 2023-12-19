@@ -15,6 +15,6 @@ dependencies {
   // Please see settings.gradle
   api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
 
-  compileOnly "org.robolectric:android-all:Q-robolectric-5415296"
+  compileOnly libs.robolectric.android.all
   api libs.dropbox.differ
 }
