@@ -22,7 +22,7 @@ dependencies {
   compileOnly "org.jetbrains.kotlin:kotlin-gradle-plugin:" + libs.versions.kotlin.get()
   implementation project(':roborazzi-core')
   implementation 'org.json:json:20230227'
-  integrationTestDepImplementation "com.android.tools.build:gradle:7.3.1"
+  integrationTestDepImplementation libs.android.tools.build.gradle
   integrationTestDepImplementation "org.jetbrains.kotlin:kotlin-gradle-plugin:" + libs.versions.kotlin.get()
   integrationTestDepImplementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
 }
@@ -51,7 +51,7 @@ testing.suites {
       implementation gradleTestKit()
       implementation project(':roborazzi-core')
       implementation "junit:junit:4.13.2"
-      implementation 'com.android.tools.build:gradle:7.3.1'
+      implementation libs.android.tools.build.gradle
       implementation 'org.jetbrains.kotlin:kotlin-gradle-plugin:' + libs.versions.kotlin.get()
       implementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
     }
