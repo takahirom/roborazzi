@@ -17,6 +17,8 @@ androidx-test-ext-junit = "1.1.5"
 
 dropbox-differ = "0.0.1-alpha1"
 
+google-android-material = "1.5.0"
+
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
@@ -41,4 +43,5 @@ android-tools-build-gradle = { module = "com.android.tools.build:gradle", versio
 
 dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-differ" }
 
+google-android-material = { module = "com.google.android.material:material", version.ref = "google-android-material" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
