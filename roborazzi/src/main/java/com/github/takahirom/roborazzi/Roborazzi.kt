@@ -150,7 +150,7 @@ fun captureScreenRoboImage(
   }
   capture(
     rootComponent = RoboComponent.Screen(
-      rootsOrderByDepth = roots.reversed(),
+      rootsOrderByDepth = roots.sortedBy { it.windowLayoutParams.get()?.type },
       roborazziOptions = roborazziOptions
     ),
     roborazziOptions = roborazziOptions,
