@@ -21,7 +21,7 @@ kotlin {
       dependencies {
         // Please see settings.gradle
         api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
-        implementation 'org.json:json:20230227'
+        implementation libs.json
 
         implementation(compose.runtime)
         implementation(compose.desktop.currentOs)

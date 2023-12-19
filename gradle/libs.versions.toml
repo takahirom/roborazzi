@@ -20,6 +20,7 @@ androidx-test-ext-junit = "1.1.5"
 
 dropbox-differ = "0.0.1-alpha1"
 google-android-material = "1.5.0"
+json = "20230227"
 junit = "4.13.2"
 ktor-serialization-kotlinx-xml = "2.3.0"
 squareup-okhttp = "5.0.0-alpha.11"
@@ -52,6 +53,7 @@ android-tools-build-gradle = { module = "com.android.tools.build:gradle", versio
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
 dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-differ" }
 google-android-material = { module = "com.google.android.material:material", version.ref = "google-android-material" }
+json = { module = "org.json:json", version.ref = "json" }
 junit = { module = "junit:junit", version.ref = "junit" }
 ktor-serialization-kotlinx-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor-serialization-kotlinx-xml" }
 squareup-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "squareup-okhttp" }
