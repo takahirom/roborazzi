@@ -62,8 +62,8 @@ android {
 }
 
 dependencies {
-  testImplementation("io.github.takahirom.roborazzi:roborazzi:1.0.0")
-  testImplementation("io.github.takahirom.roborazzi:roborazzi-rule:1.0.0")
+  testImplementation(libs.roborazzi)
+  testImplementation(libs.roborazzi.rule)
   testImplementation(libs.robolectric)
 
   implementation(libs.androidx.core.ktx)
