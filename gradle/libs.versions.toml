@@ -6,7 +6,7 @@ mavenPublish = "0.25.3"
 composeCompiler = "1.4.8"
 robolectric = "4.10.3"
 
-androidx-activity-compose = "1.7.2"
+androidx-activity = "1.7.2"
 androidx-appcompat = "1.4.1"
 androidx-compose-bom = "2023.03.00"
 androidx-compose-material = "1.4.2"
@@ -26,7 +26,8 @@ ktor-serialization-kotlinx-xml = "2.3.0"
 squareup-okhttp = "5.0.0-alpha.11"
 
 [libraries]
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
+androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "androidx-compose-bom" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
