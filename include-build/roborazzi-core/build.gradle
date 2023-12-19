@@ -39,8 +39,8 @@ kotlin {
     }
     commonJvmTest {
       dependencies {
-        implementation("org.jetbrains.kotlin:kotlin-test")
-        implementation("org.jetbrains.kotlin:kotlin-test-junit")
+        implementation libs.kotlin.test
+        implementation libs.kotlin.test.junit
         implementation libs.junit
       }
     }
