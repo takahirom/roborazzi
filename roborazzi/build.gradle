@@ -31,7 +31,7 @@ dependencies {
   api libs.androidx.test.espresso.core
 
   // For fetching device qualifiers from AOSP
-  testImplementation "io.ktor:ktor-serialization-kotlinx-xml:2.3.0"
+  testImplementation libs.ktor.serialization.kotlinx.xml
   testImplementation libs.squareup.okhttp
   testImplementation libs.squareup.okhttp.coroutines
   testImplementation "org.apache.commons:commons-compress:1.23.0"
