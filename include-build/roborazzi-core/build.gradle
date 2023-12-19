@@ -33,7 +33,7 @@ kotlin {
     commonJvmMain {
       dependencies {
         compileOnly 'org.json:json:20230227'
-        api "com.dropbox.differ:differ:0.0.1-alpha1"
+        api libs.dropbox.differ
         implementation 'junit:junit:4.13.2'
       }
     }

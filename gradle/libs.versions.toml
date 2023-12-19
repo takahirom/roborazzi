@@ -15,6 +15,8 @@ androidx-navigation = "2.4.1"
 androidx-test-espresso-core = "3.5.1"
 androidx-test-ext-junit = "1.1.5"
 
+dropbox-differ = "0.0.1-alpha1"
+
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
@@ -36,5 +38,7 @@ androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "a
 androidx-test-ext-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidx-test-ext-junit" }
 
 android-tools-build-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+
+dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-differ" }
 
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
