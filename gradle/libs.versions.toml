@@ -4,6 +4,7 @@ commons-compress = "1.23.0"
 kotlin = "1.8.22"
 mavenPublish = "0.25.3"
 composeCompiler = "1.4.8"
+composeDesktop = "1.4.3"
 robolectric = "4.10.3"
 
 androidx-activity = "1.7.2"
@@ -57,6 +58,9 @@ androidx-test-ext-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.
 
 android-tools-build-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
+compose-gradle-plugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "composeDesktop" }
+compose-ui-graphics-desktop = { module = "org.jetbrains.compose.ui:ui-graphics-desktop", version.ref = "composeDesktop" }
+compose-ui-test-junit4-desktop = { module = "org.jetbrains.compose.ui:ui-test-junit4-desktop", version.ref = "composeDesktop" }
 dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-differ" }
 google-android-material = { module = "com.google.android.material:material", version.ref = "google-android-material" }
 json = { module = "org.json:json", version.ref = "json" }

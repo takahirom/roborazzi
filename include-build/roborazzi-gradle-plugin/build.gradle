@@ -24,7 +24,7 @@ dependencies {
   implementation libs.json
   integrationTestDepImplementation libs.android.tools.build.gradle
   integrationTestDepImplementation libs.kotlin.stdlib.jdk8
-  integrationTestDepImplementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
+  integrationTestDepImplementation libs.compose.gradle.plugin
 }
 
 sourceSets {
@@ -53,7 +53,7 @@ testing.suites {
       implementation libs.junit
       implementation libs.android.tools.build.gradle
       implementation libs.kotlin.gradle.plugin
-      implementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
+      implementation libs.compose.gradle.plugin
     }
 
     targets {
