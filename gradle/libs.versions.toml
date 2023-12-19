@@ -1,5 +1,6 @@
 [versions]
 agp = "7.3.1"
+commons-compress = "1.23.0"
 kotlin = "1.8.22"
 mavenPublish = "0.25.3"
 composeCompiler = "1.4.8"
@@ -42,6 +43,7 @@ androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "a
 androidx-test-ext-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidx-test-ext-junit" }
 
 android-tools-build-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
 dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-differ" }
 google-android-material = { module = "com.google.android.material:material", version.ref = "google-android-material" }
 junit = { module = "junit:junit", version.ref = "junit" }

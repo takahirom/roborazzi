@@ -34,5 +34,5 @@ dependencies {
   testImplementation libs.ktor.serialization.kotlinx.xml
   testImplementation libs.squareup.okhttp
   testImplementation libs.squareup.okhttp.coroutines
-  testImplementation "org.apache.commons:commons-compress:1.23.0"
+  testImplementation libs.commons.compress
 }
