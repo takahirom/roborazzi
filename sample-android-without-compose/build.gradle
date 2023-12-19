@@ -57,7 +57,7 @@ dependencies {
   implementation libs.androidx.navigation.fragment.ktx
   implementation libs.androidx.navigation.ui.ktx
 
-  testImplementation 'junit:junit:4.13.2'
+  testImplementation libs.junit
   testImplementation libs.androidx.test.ext.junit.ktx
   androidTestImplementation libs.androidx.test.ext.junit
   testImplementation libs.androidx.test.espresso.core
