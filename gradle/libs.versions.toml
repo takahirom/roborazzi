@@ -8,7 +8,7 @@ composeDesktop = "1.4.3"
 robolectric = "4.10.3"
 robolectric-android-all = "Q-robolectric-5415296"
 
-roborazzi = "1.0.0"
+roborazzi-for-replacing-by-include-build = "1.0.0"
 
 androidx-activity = "1.7.2"
 androidx-appcompat = "1.4.1"
@@ -30,9 +30,9 @@ ktor-serialization-kotlinx-xml = "2.3.0"
 squareup-okhttp = "5.0.0-alpha.11"
 
 [libraries]
-roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
-roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
-roborazzi-rule = { module = "io.github.takahirom.roborazzi:roborazzi-rule", version.ref = "roborazzi" }
+roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi-for-replacing-by-include-build" }
+roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi-for-replacing-by-include-build" }
+roborazzi-rule = { module = "io.github.takahirom.roborazzi:roborazzi-rule", version.ref = "roborazzi-for-replacing-by-include-build" }
 
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
