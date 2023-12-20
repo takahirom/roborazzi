@@ -23,7 +23,7 @@ dependencies {
   implementation project(':roborazzi-core')
   implementation libs.json
   integrationTestDepImplementation libs.android.tools.build.gradle
-  integrationTestDepImplementation libs.kotlin.stdlib.jdk8
+  integrationTestDepImplementation libs.kotlin.gradle.plugin
   integrationTestDepImplementation libs.compose.gradle.plugin
 }
 
