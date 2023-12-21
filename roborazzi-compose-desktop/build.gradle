@@ -21,21 +21,21 @@ kotlin {
       dependencies {
         // Please see settings.gradle
         api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
-        implementation 'org.json:json:20230227'
+        implementation libs.json
 
         implementation(compose.runtime)
         implementation(compose.desktop.currentOs)
         implementation(project(":roborazzi-painter"))
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-        api 'org.jetbrains.compose.ui:ui-test-junit4-desktop:1.4.3'
-        implementation 'org.jetbrains.compose.ui:ui-graphics-desktop:1.4.3'
+        implementation(libs.kotlin.stdlib.jdk8)
+        api libs.compose.ui.test.junit4.desktop
+        implementation libs.compose.ui.graphics.desktop
       }
     }
     commonTest {
       dependencies {
         implementation(compose.material3)
-        implementation("org.jetbrains.kotlin:kotlin-test")
-        implementation("org.jetbrains.kotlin:kotlin-test-junit")
+        implementation(libs.kotlin.test)
+        implementation(libs.kotlin.test.junit)
       }
     }
     jvmMain {

@@ -18,13 +18,13 @@ def integrationTestDep = sourceSets.create('integrationTestDep')
 
 dependencies {
   compileOnly gradleApi()
-  compileOnly "com.android.tools.build:gradle:7.3.1"
-  compileOnly "org.jetbrains.kotlin:kotlin-gradle-plugin:" + libs.versions.kotlin.get()
+  compileOnly libs.android.tools.build.gradle
+  compileOnly libs.kotlin.gradle.plugin
   implementation project(':roborazzi-core')
-  implementation 'org.json:json:20230227'
-  integrationTestDepImplementation "com.android.tools.build:gradle:7.3.1"
-  integrationTestDepImplementation "org.jetbrains.kotlin:kotlin-gradle-plugin:" + libs.versions.kotlin.get()
-  integrationTestDepImplementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
+  implementation libs.json
+  integrationTestDepImplementation libs.android.tools.build.gradle
+  integrationTestDepImplementation libs.kotlin.gradle.plugin
+  integrationTestDepImplementation libs.compose.gradle.plugin
 }
 
 sourceSets {
@@ -50,10 +50,10 @@ testing.suites {
 //      implementation project()
       implementation gradleTestKit()
       implementation project(':roborazzi-core')
-      implementation "junit:junit:4.13.2"
-      implementation 'com.android.tools.build:gradle:7.3.1'
-      implementation 'org.jetbrains.kotlin:kotlin-gradle-plugin:' + libs.versions.kotlin.get()
-      implementation "org.jetbrains.compose:compose-gradle-plugin:1.4.3"
+      implementation libs.junit
+      implementation libs.android.tools.build.gradle
+      implementation libs.kotlin.gradle.plugin
+      implementation libs.compose.gradle.plugin
     }
 
     targets {

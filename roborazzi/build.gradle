@@ -17,22 +17,22 @@ dependencies {
   // Please see settings.gradle
   api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
 
-  def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
+  def composeBom = platform(libs.androidx.compose.bom)
   implementation composeBom
 
-  testImplementation "androidx.compose.runtime:runtime"
-  compileOnly "androidx.compose.ui:ui-test"
-  compileOnly "androidx.compose.ui:ui-test-junit4"
+  testImplementation libs.androidx.compose.runtime
+  compileOnly libs.androidx.compose.ui.test
+  compileOnly libs.androidx.compose.ui.test.junit4
 
   compileOnly libs.robolectric
-  implementation 'androidx.core:core-ktx:1.8.0'
-  api "com.dropbox.differ:differ:0.0.1-alpha1"
+  implementation libs.androidx.core.ktx
+  api libs.dropbox.differ
 
-  api 'androidx.test.espresso:espresso-core:3.5.1'
+  api libs.androidx.test.espresso.core
 
   // For fetching device qualifiers from AOSP
-  testImplementation "io.ktor:ktor-serialization-kotlinx-xml:2.3.0"
-  testImplementation "com.squareup.okhttp3:okhttp:5.0.0-alpha.11"
-  testImplementation "com.squareup.okhttp3:okhttp-coroutines:5.0.0-alpha.11"
-  testImplementation "org.apache.commons:commons-compress:1.23.0"
+  testImplementation libs.ktor.serialization.kotlinx.xml
+  testImplementation libs.squareup.okhttp
+  testImplementation libs.squareup.okhttp.coroutines
+  testImplementation libs.commons.compress
 }

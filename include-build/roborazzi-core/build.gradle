@@ -32,21 +32,21 @@ kotlin {
     }
     commonJvmMain {
       dependencies {
-        compileOnly 'org.json:json:20230227'
-        api "com.dropbox.differ:differ:0.0.1-alpha1"
-        implementation 'junit:junit:4.13.2'
+        compileOnly libs.json
+        api libs.dropbox.differ
+        implementation libs.junit
       }
     }
     commonJvmTest {
       dependencies {
-        implementation("org.jetbrains.kotlin:kotlin-test")
-        implementation("org.jetbrains.kotlin:kotlin-test-junit")
-        implementation 'junit:junit:4.13.2'
+        implementation libs.kotlin.test
+        implementation libs.kotlin.test.junit
+        implementation libs.junit
       }
     }
     jvmMain {
       dependencies {
-        implementation 'org.json:json:20230227'
+        implementation libs.json
       }
     }
     jvmTest {
@@ -59,10 +59,10 @@ kotlin {
         def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
         implementation composeBom
         compileOnly libs.robolectric
-        compileOnly "androidx.compose.ui:ui-test"
-        compileOnly "androidx.compose.ui:ui-test-junit4"
-        api 'androidx.test.espresso:espresso-core:3.5.1'
-        implementation 'androidx.core:core-ktx:1.8.0'
+        compileOnly libs.androidx.compose.ui.test
+        compileOnly libs.androidx.compose.ui.test.junit4
+        api libs.androidx.test.espresso.core
+        implementation libs.androidx.core.ktx
       }
     }
 
