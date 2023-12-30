@@ -17,9 +17,6 @@ dependencies {
   // Please see settings.gradle
   api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
 
-  def composeBom = platform(libs.androidx.compose.bom)
-  implementation composeBom
-
   testImplementation libs.androidx.compose.runtime
   compileOnly libs.androidx.compose.ui.test
   compileOnly libs.androidx.compose.ui.test.junit4

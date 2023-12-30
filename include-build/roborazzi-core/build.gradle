@@ -34,7 +34,7 @@ kotlin {
       dependencies {
         compileOnly libs.json
         api libs.dropbox.differ
-        implementation libs.junit
+        compileOnly libs.junit
       }
     }
     commonJvmTest {
@@ -56,8 +56,6 @@ kotlin {
 
     androidMain {
       dependencies {
-        def composeBom = platform('androidx.compose:compose-bom:2022.12.00')
-        implementation composeBom
         compileOnly libs.robolectric
         compileOnly libs.androidx.compose.ui.test
         compileOnly libs.androidx.compose.ui.test.junit4
