@@ -12,7 +12,6 @@ roborazzi-for-replacing-by-include-build = "1.0.0"
 
 androidx-activity = "1.7.2"
 androidx-appcompat = "1.4.1"
-androidx-compose-bom = "2023.03.00"
 androidx-compose-material = "1.4.2"
 androidx-compose-material3 = "1.0.1"
 androidx-compose-foundation = "1.4.0"
