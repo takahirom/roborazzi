@@ -34,7 +34,7 @@ kotlin {
       dependencies {
         compileOnly libs.json
         api libs.dropbox.differ
-        compileOnly libs.junit
+        implementation libs.junit
       }
     }
     commonJvmTest {
