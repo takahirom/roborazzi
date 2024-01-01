@@ -15,9 +15,6 @@ android.namespace 'com.github.takahirom.roborazzi.compose'
 dependencies {
   implementation project(':roborazzi')
 
-  def composeBom = platform(libs.androidx.compose.bom)
-  implementation composeBom
-
   testImplementation libs.androidx.compose.runtime
   compileOnly libs.androidx.compose.ui
   compileOnly libs.androidx.activity.compose

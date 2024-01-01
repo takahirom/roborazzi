@@ -20,7 +20,10 @@ dependencies {
   compileOnly gradleApi()
   compileOnly libs.android.tools.build.gradle
   compileOnly libs.kotlin.gradle.plugin
-  implementation project(':roborazzi-core')
+  implementation(project(':roborazzi-core')) {
+    // We don't use junit for plugin
+    exclude group: 'junit', module: 'junit'
+  }
   implementation libs.json
   integrationTestDepImplementation libs.android.tools.build.gradle
   integrationTestDepImplementation libs.kotlin.gradle.plugin
