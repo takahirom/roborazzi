@@ -32,7 +32,7 @@ androidx-test-ext-junit = "1.1.5"
 
 dropbox-differ = "0.0.1"
 google-android-material = "1.5.0"
-json = "20230227"
+json = "20231013"
 junit = "4.13.2"
 ktor-serialization-kotlinx-xml = "2.3.0"
 squareup-okhttp = "5.0.0-alpha.11"
