@@ -107,6 +107,8 @@ private fun View.generateBitmap(
           debugLog {
             e.stackTraceToString()
           }
+          // Material3 ModalBottomSheetWindow doesn't have mWindow field.
+          nullableWindow = null
         }
       }
       if (nullableWindow != null) {
@@ -123,7 +125,8 @@ private fun View.generateBitmap(
         }
       } else {
         println(
-          "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy"
+          "View.captureToImage Could not find window for view. Falling back to View#draw instead of PixelCopy" +
+            "(If you are using Material3 dialogs, this is expected).",
         )
         generateBitmapFromDraw(destBitmap, bitmapFuture)
       }
