@@ -1,0 +1,44 @@
+name: plain-tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx6g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+
+jobs:
+  test:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3.9.0
+        with:
+          distribution: 'zulu'
+          java-version: 19
+
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v2
+
+      - name: tests
+        id: test
+        run: |
+          ./gradlew test --stacktrace
+
+      - name: include build tests
+        id: include-build-test
+        run: |
+          cd include-build
+          ./gradlew test --stacktrace
+
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: tests-reports
+          path: |
+            **/build/reports
+            **/build/outputs/roborazzi
+          retention-days: 30
