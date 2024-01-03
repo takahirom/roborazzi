@@ -26,13 +26,13 @@ jobs:
       - name: tests
         id: test
         run: |
-          ./gradlew test --stacktrace
+          ./gradlew test --stacktrace -x testReleaseUnitTest
 
       - name: include build tests
         id: include-build-test
         run: |
           cd include-build
-          ./gradlew test --stacktrace
+          ./gradlew test --stacktrace -x testReleaseUnitTest
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
