@@ -3,10 +3,10 @@ package io.github.takahirom.roborazzi
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.ResultSummary
-import java.io.File
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.io.File
 
 class CaptureResultTest {
 
