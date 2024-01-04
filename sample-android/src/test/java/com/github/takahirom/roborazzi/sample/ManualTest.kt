@@ -44,6 +44,19 @@ class ManualTest {
   }
 
   @Test
+  @Config(qualifiers = "+land")
+  fun captureScreenLevelImageWithEspressoAndScaleOptions() {
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        roborazziOptions = RoborazziOptions(
+          recordOptions = RoborazziOptions.RecordOptions(
+            resizeScale = 0.5,
+          )
+        )
+      )
+  }
+
+  @Test
   @Config(qualifiers = "+night")
   fun captureScreenLevelNightWithEspresso() {
     onView(ViewMatchers.isRoot())
