@@ -83,7 +83,6 @@ fun SampleComposableFunction() {
       Modifier
         .testTag("SubBoxButton")
         .background(Color.Gray, MaterialTheme.shapes.medium)
-        .border(1.dp, Color.Black, MaterialTheme.shapes.medium)
         .clickable {
           count--
         }
@@ -91,6 +90,7 @@ fun SampleComposableFunction() {
     (0 until count).forEach { index ->
       Box(
         Modifier
+          .border(1.dp, Color.Gray, MaterialTheme.shapes.small)
           .background(Color.Red)
           .testTag("child:$index")
           .size(32.dp)
