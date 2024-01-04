@@ -77,6 +77,12 @@ fun SampleComposableFunction() {
         .testTag("MyColumn")
     ) {
       Text(
+        text = "Hello test!",
+        modifier = Modifier
+          .border(1.dp, Color.Red, MaterialTheme.shapes.medium)
+          .background(Color.Gray)
+      )
+      Text(
         text = "Add",
         Modifier
           .testTag("AddBoxButton")
