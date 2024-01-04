@@ -169,11 +169,19 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
 
   private val croppedImage by lazy {
     drawPendingDraw()
+    val w = minOf(bufferedImage.width, rightBottomPoint.first)
+    val h = minOf(bufferedImage.height, rightBottomPoint.second)
+    if (w == bufferedImage.width && h == bufferedImage.height) {
+      debugLog {
+        "AwtRoboCanvas.croppedImage croppedImage is same size as original image, so return original image without cropping."
+      }
+      return@lazy bufferedImage
+    }
     bufferedImage.getSubimage(
       /* x = */ 0,
       /* y = */ 0,
-      /* w = */ minOf(bufferedImage.width, rightBottomPoint.first),
-      /* h = */ minOf(bufferedImage.height, rightBottomPoint.second)
+      /* w = */ w,
+      /* h = */ h
     )
   }
 
@@ -503,6 +511,12 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
 }
 
 private fun BufferedImage.scale(scale: Double): BufferedImage {
+  if (scale == 1.0) {
+    debugLog {
+      "AwtRoboCanvas.scale scale is 1.0, so return original image without scaling."
+    }
+    return this
+  }
   val before: BufferedImage = this
   val w = before.width * scale
   val h = before.height * scale
