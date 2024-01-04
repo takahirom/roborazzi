@@ -18,6 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
+import com.dropbox.differ.SimpleImageComparator
 import com.github.takahirom.roborazzi.*
 import org.junit.Rule
 import org.junit.Test
@@ -41,6 +42,22 @@ class ManualTest {
   fun captureScreenLevelImageWithEspresso() {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
+  }
+
+  @Test
+  @Config(qualifiers = "+land")
+  fun captureScreenLevelImageWithEspressoAndScaleOptions() {
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        roborazziOptions = RoborazziOptions(
+          compareOptions = RoborazziOptions.CompareOptions(
+            imageComparator = SimpleImageComparator()
+          ),
+          recordOptions = RoborazziOptions.RecordOptions(
+            resizeScale = 0.5,
+          )
+        )
+      )
   }
 
   @Test

@@ -6,7 +6,12 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
-import java.awt.*
+import java.awt.BasicStroke
+import java.awt.Color
+import java.awt.Font
+import java.awt.Graphics2D
+import java.awt.Rectangle
+import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.geom.AffineTransform
@@ -169,11 +174,19 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
 
   private val croppedImage by lazy {
     drawPendingDraw()
+    val w = minOf(bufferedImage.width, rightBottomPoint.first)
+    val h = minOf(bufferedImage.height, rightBottomPoint.second)
+    if (w == bufferedImage.width && h == bufferedImage.height) {
+      debugLog {
+        "AwtRoboCanvas.croppedImage croppedImage is same size as original image, so return original image without cropping."
+      }
+      return@lazy bufferedImage
+    }
     bufferedImage.getSubimage(
       /* x = */ 0,
       /* y = */ 0,
-      /* w = */ minOf(bufferedImage.width, rightBottomPoint.first),
-      /* h = */ minOf(bufferedImage.height, rightBottomPoint.second)
+      /* w = */ w,
+      /* h = */ h
     )
   }
 
@@ -267,7 +280,6 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
 
       data class Grid(
         val goldenCanvas: AwtRoboCanvas,
-        val newCanvas: AwtRoboCanvas,
         override val newCanvasResize: Double,
         override val bufferedImageType: Int,
         override val referenceImage: BufferedImage,
@@ -281,10 +293,10 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
 
         val margin = (16 * oneDpPx).toInt()
         override val comparisonImageWidth: Int
-          get() = goldenCanvas.width + newCanvas.width + diffImage.width + 2 * margin
+          get() = goldenCanvas.width + newImage.width + diffImage.width + 2 * margin
 
         override val comparisonImageHeight: Int
-          get() = goldenCanvas.height.coerceAtLeast(newCanvas.height) + 2 * margin
+          get() = goldenCanvas.height.coerceAtLeast(newImage.height) + 2 * margin
       }
 
       data class Simple(
@@ -321,7 +333,6 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
           return if (comparisonComparisonStyle is RoborazziOptions.CompareOptions.ComparisonStyle.Grid && oneDpPx != null) {
             Grid(
               goldenCanvas = goldenCanvas,
-              newCanvas = newCanvas,
               newCanvasResize = newCanvasResize,
               bufferedImageType = bufferedImageType,
               referenceImage = referenceImage,
@@ -503,6 +514,12 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
 }
 
 private fun BufferedImage.scale(scale: Double): BufferedImage {
+  if (scale == 1.0) {
+    debugLog {
+      "AwtRoboCanvas.scale scale is 1.0, so return original image without scaling."
+    }
+    return this
+  }
   val before: BufferedImage = this
   val w = before.width * scale
   val h = before.height * scale

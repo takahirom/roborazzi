@@ -5,12 +5,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -59,38 +68,50 @@ class FirstFragment : Fragment() {
 @Composable
 fun SampleComposableFunction() {
   var count by remember { mutableStateOf(2) }
-  Column(
-    Modifier
-      .testTag("MyColumn")
+  Surface(
+    shape = RoundedCornerShape(corner = CornerSize(8.dp)),
+    color = MaterialTheme.colorScheme.primaryContainer,
   ) {
-    Text(
-      text = "Add",
+    Column(
       Modifier
-        .testTag("AddBoxButton")
-        .background(Color.Gray)
-        .clickable {
-          count++
-        }
-    )
-    Text(
-      text = "Sub",
-      Modifier
-        .testTag("SubBoxButton")
-        .background(Color.Gray)
-        .clickable {
-          count--
-        }
-    )
-    (0 until count).forEach { index ->
-      Box(
+        .testTag("MyColumn")
+    ) {
+      Text(
+        text = "Hello test!",
+        modifier = Modifier
+          .border(1.dp, Color.Red, MaterialTheme.shapes.medium)
+          .background(Color.Gray)
+      )
+      Text(
+        text = "Add",
         Modifier
-          .background(Color.Red)
-          .testTag("child:$index")
-          .size(32.dp)
-      ){
-        Text(
-          text = "$index/$count"
-        )
+          .testTag("AddBoxButton")
+          .background(Color.Gray)
+          .clickable {
+            count++
+          }
+      )
+      Text(
+        text = "Sub",
+        Modifier
+          .testTag("SubBoxButton")
+          .background(Color.Gray, MaterialTheme.shapes.medium)
+          .clickable {
+            count--
+          }
+      )
+      (0 until count).forEach { index ->
+        Box(
+          Modifier
+            .border(1.dp, Color.Gray, MaterialTheme.shapes.small)
+            .background(Color.Red)
+            .testTag("child:$index")
+            .size(32.dp)
+        ) {
+          Text(
+            text = "$index/$count"
+          )
+        }
       }
     }
   }
