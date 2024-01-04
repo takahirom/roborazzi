@@ -82,8 +82,8 @@ fun SampleComposableFunction() {
       text = "Sub",
       Modifier
         .testTag("SubBoxButton")
-        .border(1.dp, Color.Black, MaterialTheme.shapes.medium)
         .background(Color.Gray)
+        .border(1.dp, Color.Black, MaterialTheme.shapes.medium)
         .clickable {
           count--
         }
