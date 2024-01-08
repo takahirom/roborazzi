@@ -16,7 +16,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.test.SemanticsNodeInteraction
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.core.view.drawToBitmap
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.*
@@ -290,7 +290,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
 }
 
 fun SemanticsNodeInteraction.captureRoboGif(
-  composeRule: AndroidComposeTestRule<*, *>,
+  composeRule: ComposeTestRule,
   filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
@@ -309,7 +309,7 @@ fun SemanticsNodeInteraction.captureRoboGif(
 }
 
 fun SemanticsNodeInteraction.captureRoboGif(
-  composeRule: AndroidComposeTestRule<*, *>,
+  composeRule: ComposeTestRule,
   file: File,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
@@ -474,7 +474,7 @@ private fun saveLastImage(
 
 // Only for library, please don't use this directly
 fun SemanticsNodeInteraction.captureComposeNode(
-  composeRule: AndroidComposeTestRule<*, *>,
+  composeRule: ComposeTestRule,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ): CaptureInternalResult {
