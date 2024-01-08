@@ -1,7 +1,7 @@
 package com.github.takahirom.roborazzi
 
 import androidx.compose.ui.test.SemanticsNodeInteraction
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.test.espresso.ViewInteraction
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
@@ -86,7 +86,7 @@ class RoborazziRule private constructor(
   internal sealed interface CaptureRoot {
     object None : CaptureRoot
     class Compose(
-      val composeRule: AndroidComposeTestRule<*, *>,
+      val composeRule: ComposeTestRule,
       val semanticsNodeInteraction: SemanticsNodeInteraction
     ) : CaptureRoot
 
@@ -102,7 +102,7 @@ class RoborazziRule private constructor(
   )
 
   constructor(
-    composeRule: AndroidComposeTestRule<*, *>,
+    composeRule: ComposeTestRule,
     captureRoot: SemanticsNodeInteraction,
     options: Options = Options()
   ) : this(
