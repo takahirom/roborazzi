@@ -1,11 +1,12 @@
 package com.github.takahirom.roborazzi
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import java.io.File
 import java.io.FileReader
-import org.json.JSONObject
 
 sealed interface CaptureResult {
-  fun toJson(): JSONObject
+  fun toJson(): JsonObject
   val timestampNs: Long
   val compareFile: File?
   val actualFile: File?
@@ -20,11 +21,11 @@ sealed interface CaptureResult {
     override val compareFile: File?
       get() = null
 
-    override fun toJson(): JSONObject {
-      val json = JSONObject()
-      json.put("type", "recorded")
-      json.put("golden_file_path", goldenFile.absolutePath)
-      json.put("timestamp", timestampNs)
+    override fun toJson(): JsonObject {
+      val json = JsonObject()
+      json.addProperty("type", "recorded")
+      json.addProperty("golden_file_path", goldenFile.absolutePath)
+      json.addProperty("timestamp", timestampNs)
       return json
     }
   }
@@ -35,13 +36,13 @@ sealed interface CaptureResult {
     override val goldenFile: File,
     override val timestampNs: Long,
   ) : CaptureResult {
-    override fun toJson(): JSONObject {
-      val json = JSONObject()
-      json.put("type", "added")
-      json.put("compare_file_path", compareFile.absolutePath)
-      json.put("actual_file_path", actualFile.absolutePath)
-      json.put("golden_file_path", goldenFile.absolutePath)
-      json.put("timestamp", timestampNs)
+    override fun toJson(): JsonObject {
+      val json = JsonObject()
+      json.addProperty("type", "added")
+      json.addProperty("compare_file_path", compareFile.absolutePath)
+      json.addProperty("actual_file_path", actualFile.absolutePath)
+      json.addProperty("golden_file_path", goldenFile.absolutePath)
+      json.addProperty("timestamp", timestampNs)
       return json
     }
   }
@@ -52,13 +53,13 @@ sealed interface CaptureResult {
     override val actualFile: File,
     override val timestampNs: Long
   ) : CaptureResult {
-    override fun toJson(): JSONObject {
-      val json = JSONObject()
-      json.put("type", "changed")
-      json.put("compare_file_path", compareFile.absolutePath)
-      json.put("actual_file_path", actualFile.absolutePath)
-      json.put("golden_file_path", goldenFile.absolutePath)
-      json.put("timestamp", timestampNs)
+    override fun toJson(): JsonObject {
+      val json = JsonObject()
+      json.addProperty("type", "changed")
+      json.addProperty("compare_file_path", compareFile.absolutePath)
+      json.addProperty("actual_file_path", actualFile.absolutePath)
+      json.addProperty("golden_file_path", goldenFile.absolutePath)
+      json.addProperty("timestamp", timestampNs)
       return json
     }
   }
@@ -72,27 +73,26 @@ sealed interface CaptureResult {
     override val compareFile: File?
       get() = null
 
-    override fun toJson(): JSONObject {
-      val json = JSONObject()
-      json.put("type", "unchanged")
-      json.put("golden_file_path", goldenFile.absolutePath)
-      json.put("timestamp", timestampNs)
+    override fun toJson(): JsonObject {
+      val json = JsonObject()
+      json.addProperty("type", "unchanged")
+      json.addProperty("golden_file_path", goldenFile.absolutePath)
+      json.addProperty("timestamp", timestampNs)
       return json
     }
   }
 
   companion object {
     fun fromJsonFile(inputPath: String): CaptureResult {
-      val json = JSONObject(FileReader(inputPath).readText())
-      return fromJson(json)
+      return Gson().fromJson(FileReader(inputPath).readText(), CaptureResult::class.java)
     }
 
-    fun fromJson(json: JSONObject): CaptureResult {
-      val type = json.getString("type")
-      val compareFile = json.optString("compare_file_path")?.let { File(it) }
-      val goldenFile = json.optString("golden_file_path")?.let { File(it) }
-      val actualFile = json.optString("actual_file_path")?.let { File(it) }
-      val timestampNs = json.getLong("timestamp")
+    fun fromJson(json: JsonObject): CaptureResult {
+      val type = json.get("type").asString
+      val compareFile = json.get("compare_file_path")?.asString?.let{ File(it) }
+      val goldenFile = json.get("golden_file_path")?.asString?.let{ File(it) }
+      val actualFile = json.get("actual_file_path")?.asString?.let{ File(it) }
+      val timestampNs = json.get("timestamp").asLong
 
       return when (type) {
         "recorded" -> Recorded(

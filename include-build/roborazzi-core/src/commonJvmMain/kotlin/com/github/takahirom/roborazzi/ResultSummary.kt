@@ -1,6 +1,6 @@
 package com.github.takahirom.roborazzi
 
-import org.json.JSONObject
+import com.google.gson.JsonObject
 
 data class ResultSummary(
   val total: Int,
@@ -9,13 +9,13 @@ data class ResultSummary(
   val changed: Int,
   val unchanged: Int
 ) {
-  fun toJson(): JSONObject {
-    val json = JSONObject()
-    json.put("total", total)
-    json.put("recorded", recorded)
-    json.put("added", added)
-    json.put("changed", changed)
-    json.put("unchanged", unchanged)
+  fun toJson(): JsonObject {
+    val json = JsonObject()
+    json.addProperty("total", total)
+    json.addProperty("recorded", recorded)
+    json.addProperty("added", added)
+    json.addProperty("changed", changed)
+    json.addProperty("unchanged", unchanged)
     return json
   }
 
@@ -46,12 +46,12 @@ data class ResultSummary(
   }
 
   companion object {
-    fun fromJson(jsonObject: JSONObject): ResultSummary {
-      val total = jsonObject.getInt("total")
-      val recorded = jsonObject.getInt("recorded")
-      val added = jsonObject.getInt("added")
-      val changed = jsonObject.getInt("changed")
-      val unchanged = jsonObject.getInt("unchanged")
+    fun fromJson(jsonObject: JsonObject): ResultSummary {
+      val total = jsonObject.get("total").asInt
+      val recorded = jsonObject.get("recorded").asInt
+      val added = jsonObject.get("added").asInt
+      val changed = jsonObject.get("changed").asInt
+      val unchanged = jsonObject.get("unchanged").asInt
       return ResultSummary(
         total = total,
         recorded = recorded,

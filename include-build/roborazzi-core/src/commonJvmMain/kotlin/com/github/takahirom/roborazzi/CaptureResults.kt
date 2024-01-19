@@ -1,21 +1,23 @@
 package com.github.takahirom.roborazzi
 
-import org.json.JSONArray
-import org.json.JSONObject
+import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import java.io.File
+import java.io.FileReader
 
 data class CaptureResults(
   val summary: ResultSummary,
   val captureResults: List<CaptureResult>
 ) {
-  fun toJson(): JSONObject {
-    val json = JSONObject()
-    json.put("summary", summary.toJson())
-    val resultsArray = JSONArray()
+  fun toJson(): JsonObject {
+    val json = JsonObject()
+    json.add("summary", summary.toJson())
+    val resultsArray = JsonArray()
     captureResults.forEach { result ->
-      resultsArray.put(result.toJson())
+      resultsArray.add(result.toJson())
     }
-    json.put("results", resultsArray)
+    json.add("results", resultsArray)
     return json
   }
 
@@ -88,17 +90,15 @@ data class CaptureResults(
 
   companion object {
     fun fromJsonFile(inputPath: String): CaptureResults {
-      val fileContents = File(inputPath).readText()
-      val jsonObject = JSONObject(fileContents)
-      return fromJson(jsonObject)
+      return Gson().fromJson(FileReader(inputPath).readText(), CaptureResults::class.java)
     }
 
-    fun fromJson(jsonObject: JSONObject): CaptureResults {
-      val summary = ResultSummary.fromJson(jsonObject.getJSONObject("summary"))
-      val resultsArray = jsonObject.getJSONArray("results")
+    fun fromJson(jsonObject: JsonObject): CaptureResults {
+      val summary = ResultSummary.fromJson(jsonObject.get("summary").asJsonObject)
+      val resultsArray = jsonObject.get("results").asJsonArray
       val captureResults = mutableListOf<CaptureResult>()
-      for (i in 0 until resultsArray.length()) {
-        val resultJson = resultsArray.getJSONObject(i)
+      for (i in 0 until resultsArray.size()) {
+        val resultJson = resultsArray.get(i).asJsonObject
         captureResults.add(CaptureResult.fromJson(resultJson))
       }
       return CaptureResults(summary, captureResults)

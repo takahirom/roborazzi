@@ -3,7 +3,7 @@ package io.github.takahirom.roborazzi
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.ResultSummary
-import org.json.JSONObject
+import com.google.gson.JsonParser
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.File
@@ -39,35 +39,35 @@ class CaptureResultTest {
     val compareReportResult = CaptureResults(summary, captureResults)
 
     val json = compareReportResult.toJson()
-    val jsonSummary = json.getJSONObject("summary")
-    val jsonResults = json.getJSONArray("results")
+    val jsonSummary = json.get("summary").asJsonObject
+    val jsonResults = json.get("results").asJsonArray
 
     // Test summary
-    assertEquals(summary.total, jsonSummary.getInt("total"))
-    assertEquals(summary.recorded, jsonSummary.getInt("recorded"))
-    assertEquals(summary.added, jsonSummary.getInt("added"))
-    assertEquals(summary.changed, jsonSummary.getInt("changed"))
-    assertEquals(summary.unchanged, jsonSummary.getInt("unchanged"))
+    assertEquals(summary.total, jsonSummary.get("total").asInt)
+    assertEquals(summary.recorded, jsonSummary.get("recorded").asInt)
+    assertEquals(summary.added, jsonSummary.get("added").asInt)
+    assertEquals(summary.changed, jsonSummary.get("changed").asInt)
+    assertEquals(summary.unchanged, jsonSummary.get("unchanged").asInt)
 
     // Test capture results
-    assertEquals(captureResults.size, jsonResults.length())
+    assertEquals(captureResults.size, jsonResults.size())
 
-    for (i in 0 until jsonResults.length()) {
-      val jsonResult = jsonResults.getJSONObject(i)
+    for (i in 0 until jsonResults.size()) {
+      val jsonResult = jsonResults.get(i).asJsonObject
       val captureResult = captureResults[i]
 
       assertEquals(
-        captureResult.compareFile?.absolutePath, jsonResult.optString("compare_file_path", null)
+        captureResult.compareFile?.absolutePath, jsonResult.get("compare_file_path")?.asString
       )
       assertEquals(
         captureResult.goldenFile?.absolutePath,
-        jsonResult.optString("golden_file_path", null)
+        jsonResult.get("golden_file_path")?.asString
       )
       assertEquals(
         captureResult.actualFile?.absolutePath,
-        jsonResult.optString("actual_file_path", null)
+        jsonResult.get("actual_file_path")?.asString
       )
-      assertEquals(captureResult.timestampNs, jsonResult.getLong("timestamp"))
+      assertEquals(captureResult.timestampNs, jsonResult.get("timestamp").asLong)
     }
   }
 
@@ -86,31 +86,32 @@ class CaptureResultTest {
                 {
                     "type": "recorded",
                     "golden_file_path": "golden_file",
-                    "timestamp": 123456789,
+                    "timestamp": 123456789
                 },
                 {
                     "type": "added",
                     "compare_file_path": "compare_file",
                     "actual_file_path": "actual_file",
-                    "timestamp": 123456789,
+                    "golden_file_path": "golden_file",
+                    "timestamp": 123456789
                 },
                 {
                     "type": "changed",
                     "compare_file_path": "compare_file",
                     "actual_file_path": "actual_file",
                     "golden_file_path": "golden_file",
-                    "timestamp": 123456789,
+                    "timestamp": 123456789
                 },
                 {
                     "type": "unchanged",
                     "golden_file_path": "golden_file",
-                    "timestamp": 123456789,
+                    "timestamp": 123456789
                 }
             ]
         }
         """.trimIndent()
-
-    val compareReportResult = CaptureResults.fromJson(JSONObject(jsonString))
+    val jsonObject = JsonParser.parseString(jsonString).asJsonObject
+    val compareReportResult = CaptureResults.fromJson(jsonObject)
     val summary = compareReportResult.summary
     val captureResults = compareReportResult.captureResults
 
