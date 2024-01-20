@@ -83,6 +83,24 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun recordWhenRunTwice() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      // files are changed so should not be skipped
+      val output1 = record().output
+      assertNotSkipped(output1)
+      // files are not changed so should be skipped
+      val output2 = record().output
+      assertSkipped(output2)
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
   fun recordWhenRunTwiceWithGradleCustomOutput() {
     RoborazziGradleProject(testProjectDir).apply {
       appBuildFile.customOutputDirPath = "build/outputs/roborazzi_customdir_from_gradle"
