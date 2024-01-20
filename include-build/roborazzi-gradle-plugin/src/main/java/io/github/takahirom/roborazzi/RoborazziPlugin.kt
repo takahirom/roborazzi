@@ -268,6 +268,7 @@ class RoborazziPlugin : Plugin<Project> {
                   !key.startsWith("roborazzi.test")
                 }
               )
+              test.systemProperties["roborazzi.output.dir"] = outputDir.get().asFile.absolutePath
               test.systemProperties["roborazzi.test.record"] =
                 isRecordRun.get() || isVerifyAndRecordRun.get()
               test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()

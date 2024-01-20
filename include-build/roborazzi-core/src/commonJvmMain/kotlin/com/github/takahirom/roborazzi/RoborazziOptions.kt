@@ -5,8 +5,12 @@ import com.dropbox.differ.SimpleImageComparator
 import java.io.File
 import java.io.FileWriter
 
-const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH = "build/outputs/roborazzi"
+val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH get() = roboOutputDirPath()
 var ROBORAZZI_DEBUG = false
+
+fun roboOutputDirPath(): String {
+  return System.getProperty("roborazzi.output.dir", "build/outputs/roborazzi")
+}
 
 @Deprecated(
   message = "Use roborazziSystemPropertyTaskType()",
