@@ -101,7 +101,7 @@ class RoborazziGradleProjectTest {
   @Test
   fun recordWhenRunTwiceWithGradleCustomOutput() {
     RoborazziGradleProject(testProjectDir).apply {
-      val customDirFromGradle = "build/outputs/roborazzi_customdir_from_gradle"
+      val customDirFromGradle = "src/screenshots/roborazzi_customdir_from_gradle"
       appBuildFile.customOutputDirPath = customDirFromGradle
       record()
       // files are changed so should not be skipped

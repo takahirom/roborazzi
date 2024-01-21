@@ -5,11 +5,11 @@ import com.dropbox.differ.SimpleImageComparator
 import java.io.File
 import java.io.FileWriter
 
-val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH get() = roboOutputDirPath()
+val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH get() = "build/outputs/roborazzi"
 var ROBORAZZI_DEBUG = false
 
-fun roboOutputDirPath(): String {
-  return System.getProperty("roborazzi.output.dir", "build/outputs/roborazzi")
+fun roborazziSystemPropertyOutputDirectory(): String {
+  return System.getProperty("roborazzi.output.dir", DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH)
 }
 
 @Deprecated(
@@ -166,7 +166,7 @@ data class RoborazziOptions(
   )
 
   data class CompareOptions(
-    val outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
+    val outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
     val imageComparator: ImageComparator = DefaultImageComparator,
     val comparisonStyle: ComparisonStyle = ComparisonStyle.Grid(),
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
@@ -184,7 +184,7 @@ data class RoborazziOptions(
     }
 
     constructor(
-      outputDirectoryPath: String = DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH,
+      outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
       /**
        * This value determines the threshold of pixel change at which the diff image is output or not.
        * The value should be between 0 and 1

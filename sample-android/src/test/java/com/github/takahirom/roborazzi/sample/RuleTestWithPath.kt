@@ -20,7 +20,7 @@ class RuleTestWithPath {
     captureRoot = onView(isRoot()),
     options = Options(
       captureType = RoborazziRule.CaptureType.LastImage(),
-      outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_outputDirectoryPath",
+      outputDirectoryPath = "${roborazziSystemPropertyOutputDirectory()}/custom_outputDirectoryPath",
       outputFileProvider = { description, directory, fileExtension ->
         File(
           directory,
@@ -29,7 +29,7 @@ class RuleTestWithPath {
       },
       roborazziOptions = RoborazziOptions(
         compareOptions = RoborazziOptions.CompareOptions(
-          outputDirectoryPath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_compare_outputDirectoryPath",
+          outputDirectoryPath = "${roborazziSystemPropertyOutputDirectory()}/custom_compare_outputDirectoryPath",
         )
       )
     ),
@@ -44,7 +44,7 @@ class RuleTestWithPath {
   @Test
   fun captureRoboImageWithPath() {
     launch(MainActivity::class.java)
-    onView(isRoot()).captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/custom_file.png")
+    onView(isRoot()).captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/custom_file.png")
   }
 
   @Test

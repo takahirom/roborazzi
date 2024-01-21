@@ -28,7 +28,7 @@ class FilePathTest {
     boxedEnvironment {
       ROBORAZZI_DEBUG = true
       val expectedOutput =
-        File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/${this::class.qualifiedName}.relativePathShouldNotHaveDuplicatedPath.png")
+        File("${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.relativePathShouldNotHaveDuplicatedPath.png")
       expectedOutput.delete()
       System.setProperty(
         "roborazzi.test.record",
