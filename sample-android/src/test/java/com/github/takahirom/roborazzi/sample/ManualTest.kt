@@ -93,7 +93,7 @@ class ManualTest {
   fun captureSmallComponentImage() {
     onView(withId(R.id.button_first))
       .captureRoboImage(
-        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_small_view_button.png",
+        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_small_view_button.png",
         roborazziOptions = RoborazziOptions(recordOptions = RoborazziOptions.RecordOptions(0.5))
       )
   }
@@ -110,7 +110,7 @@ class ManualTest {
   @Test
   fun captureViewOnWindowImage() {
     composeTestRule.activity.findViewById<View>(R.id.button_first)
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_on_window.png")
+      .captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_view_on_window.png")
   }
 
   @Test
@@ -118,12 +118,12 @@ class ManualTest {
     TextView(composeTestRule.activity).apply {
       text = "Hello View!"
       setTextColor(Color.RED)
-    }.captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_without_window.png")
+    }.captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_view_without_window.png")
   }
 
   @Test
   fun captureComposeLambdaImage() {
-    captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_compose.png") {
+    captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_compose.png") {
       Text("Hello Compose!")
     }
   }
@@ -136,12 +136,12 @@ class ManualTest {
           drawColor(android.graphics.Color.YELLOW)
         }
       }
-      .captureRoboImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_bitmap.png")
+      .captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_bitmap.png")
   }
 
   @Test
   fun captureRoboImageSampleWithQuery() {
-    val filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_view.png"
+    val filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_view.png"
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = filePath,
@@ -159,7 +159,7 @@ class ManualTest {
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
-        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose.png",
+        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_compose.png",
         roborazziOptions = RoborazziOptions(
           captureType = RoborazziOptions.CaptureType.Dump(
             query = withComposeTestTag("child:0"),
@@ -170,7 +170,7 @@ class ManualTest {
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
-        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_first_screen_with_query_compose_custom.png",
+        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_compose_custom.png",
         roborazziOptions = RoborazziOptions(
           captureType = RoborazziOptions.CaptureType.Dump(
             query = { roboComponent ->
@@ -186,7 +186,7 @@ class ManualTest {
 
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
-        filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_view_a11y_dump.png",
+        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_view_a11y_dump.png",
         roborazziOptions = RoborazziOptions(
           captureType = RoborazziOptions.CaptureType.Dump(
             explanation = Dump.AccessibilityExplanation,
@@ -199,7 +199,7 @@ class ManualTest {
   @Test
   fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
-      .captureRoboGif("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_gif.gif") {
+      .captureRoboGif("${roborazziSystemPropertyOutputDirectory()}/manual_gif.gif") {
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
@@ -207,7 +207,7 @@ class ManualTest {
         pressBack()
       }
     onView(ViewMatchers.isRoot())
-      .captureRoboLastImage("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_last.png") {
+      .captureRoboLastImage("${roborazziSystemPropertyOutputDirectory()}/manual_last.png") {
         // move to next page
         onView(withId(R.id.button_first))
           .perform(click())
@@ -218,7 +218,7 @@ class ManualTest {
           .perform(click())
       }
     onView(ViewMatchers.isRoot())
-      .captureRoboAllImage({ File("$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_all_$it.png") }) {
+      .captureRoboAllImage({ File("${roborazziSystemPropertyOutputDirectory()}/manual_all_$it.png") }) {
         // back
         pressBack()
         // move to next page
@@ -240,7 +240,7 @@ class ManualTest {
     composeTestRule.onNodeWithTag("MyColumn")
       .captureRoboGif(
         composeTestRule,
-        "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/manual_captureRoboGifSampleCompose.gif"
+        "${roborazziSystemPropertyOutputDirectory()}/manual_captureRoboGifSampleCompose.gif"
       ) {
         composeTestRule.onNodeWithTag("SubBoxButton")
           .performClick()

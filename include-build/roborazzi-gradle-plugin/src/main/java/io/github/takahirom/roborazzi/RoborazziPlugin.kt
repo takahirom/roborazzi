@@ -158,6 +158,7 @@ class RoborazziPlugin : Plugin<Project> {
           }
         }
       }
+      val outputDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
       val resultDirFileTree =
         project.fileTree(RoborazziReportConst.resultDirPath)
       val resultsSummaryFile =
@@ -268,6 +269,7 @@ class RoborazziPlugin : Plugin<Project> {
                   !key.startsWith("roborazzi.test")
                 }
               )
+              test.systemProperties["roborazzi.output.dir"] = outputDirRelativePathFromProjectProvider.get()
               test.systemProperties["roborazzi.test.record"] =
                 isRecordRun.get() || isVerifyAndRecordRun.get()
               test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
