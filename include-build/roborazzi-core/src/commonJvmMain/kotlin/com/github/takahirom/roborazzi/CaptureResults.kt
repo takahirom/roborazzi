@@ -87,7 +87,8 @@ data class CaptureResults(
 
   companion object {
     fun fromJsonFile(inputPath: String): CaptureResults {
-      return Gson().fromJson(FileReader(inputPath).readText(), CaptureResults::class.java)
+      val jsonObject = JsonParser.parseString(FileReader(inputPath).readText()).asJsonObject
+      return fromJson(jsonObject)
     }
 
     fun fromJson(jsonObject: JsonObject): CaptureResults {
