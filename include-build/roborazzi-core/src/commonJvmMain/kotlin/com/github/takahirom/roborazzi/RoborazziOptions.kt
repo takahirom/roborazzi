@@ -5,9 +5,10 @@ import com.dropbox.differ.SimpleImageComparator
 import java.io.File
 import java.io.FileWriter
 
-val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH get() = "build/outputs/roborazzi"
-var ROBORAZZI_DEBUG = false
+const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH: String = "build/outputs/roborazzi"
+var ROBORAZZI_DEBUG: Boolean = false
 
+@ExperimentalRoborazziApi
 fun roborazziSystemPropertyOutputDirectory(): String {
   return System.getProperty("roborazzi.output.dir", DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH)
 }
