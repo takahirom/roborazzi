@@ -61,6 +61,7 @@ kotlin {
         compileOnly libs.androidx.compose.ui.test.junit4
         api libs.androidx.test.espresso.core
         implementation libs.androidx.core.ktx
+        implementation libs.gson
       }
     }
 
