@@ -29,7 +29,7 @@ class RoborazziTaskTest {
   fun roborazziOptionTask() {
     boxedEnvironment {
       ROBORAZZI_DEBUG = true
-      val prefix = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/${this::class.qualifiedName}.roborazziOptionTask"
+      val prefix = "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.roborazziOptionTask"
       val expectedOutput =
         File("$prefix.png")
       val expectedCompareOutput = File("${prefix}_compare.png")
@@ -55,7 +55,7 @@ class RoborazziTaskTest {
   fun roborazziOptionTaskConvertCompare() {
     boxedEnvironment {
       ROBORAZZI_DEBUG = true
-      val prefix = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/${this::class.qualifiedName}.roborazziOptionTaskConvertCompare"
+      val prefix = "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.roborazziOptionTaskConvertCompare"
       val expectedCompareOutput = File("${prefix}_compare.png")
       expectedCompareOutput.delete()
       val expectedOutput = File("${prefix}.png")
