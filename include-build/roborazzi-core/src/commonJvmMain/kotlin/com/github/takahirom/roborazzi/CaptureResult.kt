@@ -2,6 +2,7 @@ package com.github.takahirom.roborazzi
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import java.io.File
 import java.io.FileReader
 
@@ -22,11 +23,11 @@ sealed interface CaptureResult {
       get() = null
 
     override fun toJson(): JsonObject {
-      val json = JsonObject()
-      json.addProperty("type", "recorded")
-      json.addProperty("golden_file_path", goldenFile.absolutePath)
-      json.addProperty("timestamp", timestampNs)
-      return json
+      val recorded = object {
+        val golden_file_path = goldenFile.absolutePath
+        val timestamp = timestampNs
+      }
+      return JsonParser.parseString(Gson().toJson(recorded)).asJsonObject
     }
   }
 
@@ -37,13 +38,13 @@ sealed interface CaptureResult {
     override val timestampNs: Long,
   ) : CaptureResult {
     override fun toJson(): JsonObject {
-      val json = JsonObject()
-      json.addProperty("type", "added")
-      json.addProperty("compare_file_path", compareFile.absolutePath)
-      json.addProperty("actual_file_path", actualFile.absolutePath)
-      json.addProperty("golden_file_path", goldenFile.absolutePath)
-      json.addProperty("timestamp", timestampNs)
-      return json
+      val added = object {
+        val compare_file_path: String = compareFile.absolutePath
+        val actual_file_path: String = actualFile.absolutePath
+        val golden_file_path: String = goldenFile.absolutePath
+        val timestamp: Long = timestampNs
+      }
+      return JsonParser.parseString(Gson().toJson(added)).asJsonObject
     }
   }
 
@@ -54,13 +55,13 @@ sealed interface CaptureResult {
     override val timestampNs: Long
   ) : CaptureResult {
     override fun toJson(): JsonObject {
-      val json = JsonObject()
-      json.addProperty("type", "changed")
-      json.addProperty("compare_file_path", compareFile.absolutePath)
-      json.addProperty("actual_file_path", actualFile.absolutePath)
-      json.addProperty("golden_file_path", goldenFile.absolutePath)
-      json.addProperty("timestamp", timestampNs)
-      return json
+      val changed = object {
+        val compare_file_path: String = compareFile.absolutePath
+        val actual_file_path: String = actualFile.absolutePath
+        val golden_file_path: String = goldenFile.absolutePath
+        val timestamp: Long = timestampNs
+      }
+      return JsonParser.parseString(Gson().toJson(changed)).asJsonObject
     }
   }
 
@@ -74,11 +75,11 @@ sealed interface CaptureResult {
       get() = null
 
     override fun toJson(): JsonObject {
-      val json = JsonObject()
-      json.addProperty("type", "unchanged")
-      json.addProperty("golden_file_path", goldenFile.absolutePath)
-      json.addProperty("timestamp", timestampNs)
-      return json
+      val unChanged = object {
+        val golden_file_path: String = goldenFile.absolutePath
+        val timestamp: Long = timestampNs
+      }
+      return JsonParser.parseString(Gson().toJson(unChanged)).asJsonObject
     }
   }
 

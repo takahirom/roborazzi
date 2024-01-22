@@ -112,7 +112,7 @@ class CaptureResultTest {
         """.trimIndent()
     val jsonObject = JsonParser.parseString(jsonString).asJsonObject
     val compareReportResult = CaptureResults.fromJson(jsonObject)
-    val summary = compareReportResult.summary
+    val summary = compareReportResult.resultSummary
     val captureResults = compareReportResult.captureResults
 
     // Test summary

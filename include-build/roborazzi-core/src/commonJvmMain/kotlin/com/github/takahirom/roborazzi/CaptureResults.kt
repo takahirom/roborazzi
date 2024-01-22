@@ -1,24 +1,21 @@
 package com.github.takahirom.roborazzi
 
 import com.google.gson.Gson
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import java.io.File
 import java.io.FileReader
 
 data class CaptureResults(
-  val summary: ResultSummary,
+  val resultSummary: ResultSummary,
   val captureResults: List<CaptureResult>
 ) {
   fun toJson(): JsonObject {
-    val json = JsonObject()
-    json.add("summary", summary.toJson())
-    val resultsArray = JsonArray()
-    captureResults.forEach { result ->
-      resultsArray.add(result.toJson())
+    val captureResultsObject = object {
+      val summary = resultSummary
+      val results = captureResults.map { it.toJson() }
     }
-    json.add("results", resultsArray)
-    return json
+    return JsonParser.parseString(Gson().toJson(captureResultsObject)).asJsonObject
   }
 
   fun toHtml(reportDirectoryPath: String): String {
@@ -80,7 +77,7 @@ data class CaptureResults(
       }
     }
     return buildString {
-      append(summary.toHtml())
+      append(resultSummary.toHtml())
       append(buildTable("Recorded images", "recorded", recordedImages))
       append(buildTable("Added images", "added", addedImages))
       append(buildTable("Changed images", "changed", changedImages))
@@ -106,7 +103,7 @@ data class CaptureResults(
 
     fun from(results: List<CaptureResult>): CaptureResults {
       return CaptureResults(
-        summary = ResultSummary(
+        resultSummary = ResultSummary(
           total = results.size,
           recorded = results.count { it is CaptureResult.Recorded },
           added = results.count { it is CaptureResult.Added },

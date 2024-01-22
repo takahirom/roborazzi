@@ -1,6 +1,8 @@
 package com.github.takahirom.roborazzi
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 
 data class ResultSummary(
   val total: Int,
@@ -10,13 +12,7 @@ data class ResultSummary(
   val unchanged: Int
 ) {
   fun toJson(): JsonObject {
-    val json = JsonObject()
-    json.addProperty("total", total)
-    json.addProperty("recorded", recorded)
-    json.addProperty("added", added)
-    json.addProperty("changed", changed)
-    json.addProperty("unchanged", unchanged)
-    return json
+    return JsonParser.parseString(Gson().toJson(this)).asJsonObject
   }
 
   fun toHtml(): String {
