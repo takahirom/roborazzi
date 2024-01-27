@@ -6,11 +6,7 @@ import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.RoborazziReportConst
-import org.gradle.api.Action
-import org.gradle.api.DefaultTask
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.*
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -23,7 +19,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
-import java.util.Locale
+import java.util.*
 import javax.inject.Inject
 
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
@@ -198,16 +194,16 @@ class RoborazziPlugin : Plugin<Project> {
               }
               t.infoln("Save result to ${resultsSummaryFile.absolutePath} with results:${results.size}")
 
-              val roborazziResult = CaptureResults.from(results)
+              val roborazziResults = CaptureResults.from(results)
 
-              val jsonResult = roborazziResult.toJson()
+              val jsonResult = roborazziResults.toJson()
               resultsSummaryFile.parentFile.mkdirs()
-              resultsSummaryFile.writeText(jsonResult.toString())
+              resultsSummaryFile.writeText(jsonResult)
               reportFile.parentFile.mkdirs()
               reportFile.writeText(
                 RoborazziReportConst.reportHtml.replace(
                   oldValue = "REPORT_TEMPLATE_BODY",
-                  newValue = roborazziResult.toHtml(reportFile.parentFile.absolutePath)
+                  newValue = roborazziResults.toHtml(reportFile.parentFile.absolutePath)
                 )
               )
             }

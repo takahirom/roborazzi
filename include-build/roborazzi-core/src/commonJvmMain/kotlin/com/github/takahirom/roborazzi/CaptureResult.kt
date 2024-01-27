@@ -1,8 +1,10 @@
 package com.github.takahirom.roborazzi
 
+import com.github.takahirom.roborazzi.CaptureResults.Companion.gson
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import java.io.File
+import java.io.FileReader
 
 @JsonAdapter(CaptureResult.JsonAdapter::class)
 sealed interface CaptureResult {
@@ -57,7 +59,13 @@ sealed interface CaptureResult {
       get() = null
   }
 
-  companion object JsonAdapter : com.google.gson.JsonSerializer<CaptureResult>,
+  companion object {
+    fun fromJsonFile(filePath: String): CaptureResult {
+      return gson.fromJson(FileReader(filePath), CaptureResult::class.java)
+    }
+  }
+
+  object JsonAdapter : com.google.gson.JsonSerializer<CaptureResult>,
     com.google.gson.JsonDeserializer<CaptureResult> {
     override fun serialize(
       src: CaptureResult,

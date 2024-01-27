@@ -13,6 +13,10 @@ data class CaptureResults(
   val captureResults: List<CaptureResult>
 ) {
 
+  fun toJson(): String {
+    return gson.toJson(this)
+  }
+
   fun toHtml(reportDirectoryPath: String): String {
     fun File.pathFrom(reportDirectoryPath: String): String {
       val reportDirectory = File(reportDirectoryPath)
