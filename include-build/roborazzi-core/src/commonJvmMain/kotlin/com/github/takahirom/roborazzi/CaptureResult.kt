@@ -84,8 +84,8 @@ sealed interface CaptureResult {
       json: com.google.gson.JsonElement,
       typeOfT: java.lang.reflect.Type,
       context: com.google.gson.JsonDeserializationContext
-    ): CaptureResult {
-      val type = json.asJsonObject.get("type").asString
+    ): CaptureResult? {
+      val type = json.asJsonObject.get("type")?.asString ?: return null
       return when (type) {
         "recorded" -> context.deserialize(json, Recorded::class.java)
         "changed" -> context.deserialize(json, Changed::class.java)
