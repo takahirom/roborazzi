@@ -2,6 +2,7 @@ package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
+import com.github.takahirom.roborazzi.CaptureResults.Companion.gson
 import com.github.takahirom.roborazzi.ResultSummary
 import com.google.gson.JsonParser
 import org.junit.Assert.assertEquals
@@ -38,7 +39,7 @@ class CaptureResultTest {
 
     val compareReportResult = CaptureResults(summary, captureResults)
 
-    val json = compareReportResult.toJson()
+    val json = gson.toJsonTree(compareReportResult).asJsonObject
     val jsonSummary = json.get("summary").asJsonObject
     val jsonResults = json.get("results").asJsonArray
 

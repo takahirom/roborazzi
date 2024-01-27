@@ -1,9 +1,5 @@
 package com.github.takahirom.roborazzi
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
-
 data class ResultSummary(
   val total: Int,
   val recorded: Int,
@@ -11,10 +7,6 @@ data class ResultSummary(
   val changed: Int,
   val unchanged: Int
 ) {
-  fun toJson(): JsonObject {
-    return JsonParser.parseString(Gson().toJson(this)).asJsonObject
-  }
-
   fun toHtml(): String {
     return """
         <h3>Summary</h3>
@@ -39,22 +31,5 @@ data class ResultSummary(
             </tbody>
         </table>
     """.trimIndent()
-  }
-
-  companion object {
-    fun fromJson(jsonObject: JsonObject): ResultSummary {
-      val total = jsonObject.get("total").asInt
-      val recorded = jsonObject.get("recorded").asInt
-      val added = jsonObject.get("added").asInt
-      val changed = jsonObject.get("changed").asInt
-      val unchanged = jsonObject.get("unchanged").asInt
-      return ResultSummary(
-        total = total,
-        recorded = recorded,
-        added = added,
-        changed = changed,
-        unchanged = unchanged
-      )
-    }
   }
 }

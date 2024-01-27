@@ -1,22 +1,17 @@
 package com.github.takahirom.roborazzi
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
+import com.google.gson.*
+import com.google.gson.annotations.SerializedName
 import java.io.File
 import java.io.FileReader
+import java.lang.reflect.Type
 
 data class CaptureResults(
+  @SerializedName("summary")
   val resultSummary: ResultSummary,
+  @SerializedName("results")
   val captureResults: List<CaptureResult>
 ) {
-  fun toJson(): JsonObject {
-    val captureResultsObject = object {
-      val summary = resultSummary
-      val results = captureResults.map { it.toJson() }
-    }
-    return JsonParser.parseString(Gson().toJson(captureResultsObject)).asJsonObject
-  }
 
   fun toHtml(reportDirectoryPath: String): String {
     fun File.pathFrom(reportDirectoryPath: String): String {
@@ -92,14 +87,8 @@ data class CaptureResults(
     }
 
     fun fromJson(jsonObject: JsonObject): CaptureResults {
-      val summary = ResultSummary.fromJson(jsonObject.get("summary").asJsonObject)
-      val resultsArray = jsonObject.get("results").asJsonArray
-      val captureResults = mutableListOf<CaptureResult>()
-      for (i in 0 until resultsArray.size()) {
-        val resultJson = resultsArray.get(i).asJsonObject
-        captureResults.add(CaptureResult.fromJson(resultJson))
-      }
-      return CaptureResults(summary, captureResults)
+      // Auto convert using Gson
+      return gson.fromJson(jsonObject, CaptureResults::class.java)
     }
 
     fun from(results: List<CaptureResult>): CaptureResults {
@@ -114,5 +103,19 @@ data class CaptureResults(
         captureResults = results
       )
     }
+
+    val gson = GsonBuilder()
+      .registerTypeAdapter(File::class.java, object : JsonSerializer<File>, JsonDeserializer<File> {
+        override fun serialize(src: File?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+          val absolutePath = src?.absolutePath ?: return JsonNull.INSTANCE
+          return JsonPrimitive(absolutePath)
+        }
+
+        override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): File {
+          val path = json?.asString ?: throw JsonParseException("File path is null")
+          return File(path)
+        }
+      })
+      .create()
   }
 }
