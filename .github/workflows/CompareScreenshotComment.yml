@@ -98,6 +98,9 @@ jobs:
           BRANCH_NAME: companion_${{ github.event.workflow_run.head_branch }}
         shell: bash
         run: |
+          # Escape BRANCH_NAME '#' to '%23'
+          BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/#/%23/g')
+          
           # Find all the files ending with _compare.png in roborazzi folder
           files=$(find . -type f -name "*_compare.png" | grep "roborazzi/" | grep -E "^[a-zA-Z0-9_./-]+$")
           delimiter="$(openssl rand -hex 8)"
