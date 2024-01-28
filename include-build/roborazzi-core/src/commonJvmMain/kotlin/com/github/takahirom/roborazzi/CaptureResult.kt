@@ -77,6 +77,15 @@ sealed interface CaptureResult {
         is Changed -> context.serialize(src, Changed::class.java)
         is Unchanged -> context.serialize(src, Unchanged::class.java)
         is Added -> context.serialize(src, Added::class.java)
+      }.apply {
+        this.asJsonObject.addProperty(
+          "type", when (src) {
+            is Recorded -> "recorded"
+            is Changed -> "changed"
+            is Unchanged -> "unchanged"
+            is Added -> "added"
+          }
+        )
       }
     }
 
@@ -85,7 +94,7 @@ sealed interface CaptureResult {
       typeOfT: java.lang.reflect.Type,
       context: com.google.gson.JsonDeserializationContext
     ): CaptureResult? {
-      val type = json.asJsonObject.get("type")?.asString ?: return null
+      val type = requireNotNull(json.asJsonObject.get("type")?.asString)
       return when (type) {
         "recorded" -> context.deserialize(json, Recorded::class.java)
         "changed" -> context.deserialize(json, Changed::class.java)

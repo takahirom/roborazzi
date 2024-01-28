@@ -85,7 +85,7 @@ data class CaptureResults(
   }
 
   companion object {
-    val gson = GsonBuilder()
+    val gson: Gson = GsonBuilder()
       .registerTypeAdapter(File::class.java, object : JsonSerializer<File>, JsonDeserializer<File> {
         override fun serialize(src: File?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
           val absolutePath = src?.absolutePath ?: return JsonNull.INSTANCE
