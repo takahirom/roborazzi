@@ -8,6 +8,7 @@ import java.io.FileReader
 
 @JsonAdapter(CaptureResult.JsonAdapter::class)
 sealed interface CaptureResult {
+  val type: String
   val timestampNs: Long
   val compareFile: File?
   val actualFile: File?
@@ -19,6 +20,8 @@ sealed interface CaptureResult {
     @SerializedName("timestamp")
     override val timestampNs: Long,
   ) : CaptureResult {
+
+    override val type = "recorded"
     override val actualFile: File?
       get() = null
     override val compareFile: File?
@@ -34,7 +37,9 @@ sealed interface CaptureResult {
     override val goldenFile: File,
     @SerializedName("timestamp")
     override val timestampNs: Long,
-  ) : CaptureResult
+  ) : CaptureResult {
+    override val type = "added"
+  }
 
   data class Changed(
     @SerializedName("compare_file_path")
@@ -45,7 +50,9 @@ sealed interface CaptureResult {
     override val actualFile: File,
     @SerializedName("timestamp")
     override val timestampNs: Long
-  ) : CaptureResult
+  ) : CaptureResult {
+    override val type = "changed"
+  }
 
   data class Unchanged(
     @SerializedName("golden_file_path")
@@ -53,6 +60,7 @@ sealed interface CaptureResult {
     @SerializedName("timestamp")
     override val timestampNs: Long
   ) : CaptureResult {
+    override val type = "unchanged"
     override val actualFile: File?
       get() = null
     override val compareFile: File?
@@ -72,21 +80,13 @@ sealed interface CaptureResult {
       typeOfSrc: java.lang.reflect.Type,
       context: com.google.gson.JsonSerializationContext
     ): com.google.gson.JsonElement {
-      return when (src) {
+      val jsonElement = when (src) {
         is Recorded -> context.serialize(src, Recorded::class.java)
         is Changed -> context.serialize(src, Changed::class.java)
         is Unchanged -> context.serialize(src, Unchanged::class.java)
         is Added -> context.serialize(src, Added::class.java)
-      }.apply {
-        this.asJsonObject.addProperty(
-          "type", when (src) {
-            is Recorded -> "recorded"
-            is Changed -> "changed"
-            is Unchanged -> "unchanged"
-            is Added -> "added"
-          }
-        )
       }
+      return jsonElement
     }
 
     override fun deserialize(

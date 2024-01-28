@@ -58,6 +58,11 @@ class CaptureResultTest {
       val expectedCaptureResult = expectedCaptureResults[i]
 
       assertEquals(
+        expectedCaptureResult.type,
+        actualJsonResult.get("type")?.asString
+      )
+
+      assertEquals(
         expectedCaptureResult.compareFile?.absolutePath, actualJsonResult.get("compare_file_path")?.asString
       )
       assertEquals(
