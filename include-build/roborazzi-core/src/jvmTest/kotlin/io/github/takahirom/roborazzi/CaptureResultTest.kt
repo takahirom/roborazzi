@@ -13,8 +13,8 @@ class CaptureResultTest {
 
   @Test
   fun testJsonSerialization() {
-    val summary = ResultSummary(11, 1, 2, 3, 5)
-    val captureResults = listOf(
+    val expectedSummary = ResultSummary(11, 1, 2, 3, 5)
+    val expectedCaptureResults = listOf(
       CaptureResult.Recorded(
         goldenFile = File("/golden_file"),
         timestampNs = 123456789,
@@ -37,38 +37,38 @@ class CaptureResultTest {
       )
     )
 
-    val compareReportResult = CaptureResults(summary, captureResults)
+    val expectedReportResults = CaptureResults(expectedSummary, expectedCaptureResults)
 
-    val json = gson.toJsonTree(compareReportResult).asJsonObject
-    val jsonSummary = json.get("summary").asJsonObject
-    val jsonResults = json.get("results").asJsonArray
+    val actualJson = gson.toJsonTree(expectedReportResults).asJsonObject
+    val actualJsonSummary = actualJson.get("summary").asJsonObject
+    val actualJsonResults = actualJson.get("results").asJsonArray
 
     // Test summary
-    assertEquals(summary.total, jsonSummary.get("total").asInt)
-    assertEquals(summary.recorded, jsonSummary.get("recorded").asInt)
-    assertEquals(summary.added, jsonSummary.get("added").asInt)
-    assertEquals(summary.changed, jsonSummary.get("changed").asInt)
-    assertEquals(summary.unchanged, jsonSummary.get("unchanged").asInt)
+    assertEquals(expectedSummary.total, actualJsonSummary.get("total").asInt)
+    assertEquals(expectedSummary.recorded, actualJsonSummary.get("recorded").asInt)
+    assertEquals(expectedSummary.added, actualJsonSummary.get("added").asInt)
+    assertEquals(expectedSummary.changed, actualJsonSummary.get("changed").asInt)
+    assertEquals(expectedSummary.unchanged, actualJsonSummary.get("unchanged").asInt)
 
     // Test capture results
-    assertEquals(captureResults.size, jsonResults.size())
+    assertEquals(expectedCaptureResults.size, actualJsonResults.size())
 
-    for (i in 0 until jsonResults.size()) {
-      val jsonResult = jsonResults.get(i).asJsonObject
-      val captureResult = captureResults[i]
+    for (i in 0 until actualJsonResults.size()) {
+      val actualJsonResult = actualJsonResults.get(i).asJsonObject
+      val expectedCaptureResult = expectedCaptureResults[i]
 
       assertEquals(
-        captureResult.compareFile?.absolutePath, jsonResult.get("compare_file_path")?.asString
+        expectedCaptureResult.compareFile?.absolutePath, actualJsonResult.get("compare_file_path")?.asString
       )
       assertEquals(
-        captureResult.goldenFile?.absolutePath,
-        jsonResult.get("golden_file_path")?.asString
+        expectedCaptureResult.goldenFile?.absolutePath,
+        actualJsonResult.get("golden_file_path")?.asString
       )
       assertEquals(
-        captureResult.actualFile?.absolutePath,
-        jsonResult.get("actual_file_path")?.asString
+        expectedCaptureResult.actualFile?.absolutePath,
+        actualJsonResult.get("actual_file_path")?.asString
       )
-      assertEquals(captureResult.timestampNs, jsonResult.get("timestamp").asLong)
+      assertEquals(expectedCaptureResult.timestampNs, actualJsonResult.get("timestamp").asLong)
     }
   }
 
@@ -111,38 +111,38 @@ class CaptureResultTest {
             ]
         }
         """.trimIndent()
-    val jsonObject = JsonParser.parseString(jsonString).asJsonObject
-    val compareReportResult = CaptureResults.fromJson(jsonObject)
-    val summary = compareReportResult.resultSummary
-    val captureResults = compareReportResult.captureResults
+    val actualJsonObject = JsonParser.parseString(jsonString).asJsonObject
+    val actualCaptureResults= CaptureResults.fromJson(actualJsonObject)
+    val actualSummary = actualCaptureResults.resultSummary
+    val actualCaptureResultList = actualCaptureResults.captureResults
 
     // Test summary
-    assertEquals(11, summary.total)
-    assertEquals(1, summary.recorded)
-    assertEquals(2, summary.added)
-    assertEquals(3, summary.changed)
-    assertEquals(5, summary.unchanged)
+    assertEquals(11, actualSummary.total)
+    assertEquals(1, actualSummary.recorded)
+    assertEquals(2, actualSummary.added)
+    assertEquals(3, actualSummary.changed)
+    assertEquals(5, actualSummary.unchanged)
 
     // Test capture results
-    assertEquals(4, captureResults.size)
+    assertEquals(4, actualCaptureResultList.size)
 
-    val recordedResult = captureResults[0] as CaptureResult.Recorded
-    assertEquals(File("golden_file"), recordedResult.goldenFile)
-    assertEquals(123456789, recordedResult.timestampNs)
+    val actualRecordedResult = actualCaptureResultList[0] as CaptureResult.Recorded
+    assertEquals(File("golden_file"), actualRecordedResult.goldenFile)
+    assertEquals(123456789, actualRecordedResult.timestampNs)
 
-    val addedResult = captureResults[1] as CaptureResult.Added
-    assertEquals(File("compare_file"), addedResult.compareFile)
-    assertEquals(File("actual_file"), addedResult.actualFile)
-    assertEquals(123456789, addedResult.timestampNs)
+    val actualAddedResult = actualCaptureResultList[1] as CaptureResult.Added
+    assertEquals(File("compare_file"), actualAddedResult.compareFile)
+    assertEquals(File("actual_file"), actualAddedResult.actualFile)
+    assertEquals(123456789, actualAddedResult.timestampNs)
 
-    val changedResult = captureResults[2] as CaptureResult.Changed
-    assertEquals(File("compare_file"), changedResult.compareFile)
-    assertEquals(File("actual_file"), changedResult.actualFile)
-    assertEquals(File("golden_file"), changedResult.goldenFile)
-    assertEquals(123456789, changedResult.timestampNs)
+    val actualChangedResult = actualCaptureResultList[2] as CaptureResult.Changed
+    assertEquals(File("compare_file"), actualChangedResult.compareFile)
+    assertEquals(File("actual_file"), actualChangedResult.actualFile)
+    assertEquals(File("golden_file"), actualChangedResult.goldenFile)
+    assertEquals(123456789, actualChangedResult.timestampNs)
 
-    val unchangedResult = captureResults[3] as CaptureResult.Unchanged
-    assertEquals(File("golden_file"), unchangedResult.goldenFile)
-    assertEquals(123456789, unchangedResult.timestampNs)
+    val actualUnchangedResult = actualCaptureResultList[3] as CaptureResult.Unchanged
+    assertEquals(File("golden_file"), actualUnchangedResult.goldenFile)
+    assertEquals(123456789, actualUnchangedResult.timestampNs)
   }
 }
