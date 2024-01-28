@@ -85,6 +85,20 @@ data class CaptureResults(
   }
 
   companion object {
+    val gson = GsonBuilder()
+      .registerTypeAdapter(File::class.java, object : JsonSerializer<File>, JsonDeserializer<File> {
+        override fun serialize(src: File?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+          val absolutePath = src?.absolutePath ?: return JsonNull.INSTANCE
+          return JsonPrimitive(absolutePath)
+        }
+
+        override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): File {
+          val path = json?.asString ?: throw JsonParseException("File path is null")
+          return File(path)
+        }
+      })
+      .create()
+
     fun fromJsonFile(inputPath: String): CaptureResults {
       val jsonObject = JsonParser.parseString(FileReader(inputPath).readText()).asJsonObject
       return fromJson(jsonObject)
@@ -107,19 +121,5 @@ data class CaptureResults(
         captureResults = results
       )
     }
-
-    val gson = GsonBuilder()
-      .registerTypeAdapter(File::class.java, object : JsonSerializer<File>, JsonDeserializer<File> {
-        override fun serialize(src: File?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-          val absolutePath = src?.absolutePath ?: return JsonNull.INSTANCE
-          return JsonPrimitive(absolutePath)
-        }
-
-        override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): File {
-          val path = json?.asString ?: throw JsonParseException("File path is null")
-          return File(path)
-        }
-      })
-      .create()
   }
 }
