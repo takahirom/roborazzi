@@ -114,7 +114,8 @@ jobs:
           for file in $files; do
             # Get the file name and insert newlines every 20 characters
             fileName=$(basename "$file" | sed -r 's/(.{20})/\1<br>/g')
-            echo "| [$fileName](https://github.com/${{ github.repository }}/blob/$BRANCH_NAME/$file) | ![](https://github.com/${{ github.repository }}/blob/$BRANCH_NAME/$file?raw=true) |" >> "$GITHUB_OUTPUT"
+            urlPart="${BRANCH_NAME//#/%23}/${file//#/%23}"
+            echo "| [$fileName](https://github.com/${{ github.repository }}/blob/$urlPart) | ![](https://github.com/${{ github.repository }}/blob/$urlPart?raw=true) |" >> "$GITHUB_OUTPUT"
           done
           echo "${delimiter}" >> "$GITHUB_OUTPUT"
       - name: Find Comment
