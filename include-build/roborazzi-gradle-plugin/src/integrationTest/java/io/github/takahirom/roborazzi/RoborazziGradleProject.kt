@@ -311,18 +311,18 @@ dependencies {
   ) {
     val recordedFile =
       testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
-    val results = CaptureResults.fromJsonFile(recordedFile.absolutePath)
-    assert(results.summary.recorded == recorded) {
-      "Expected count: $recorded, actual count: ${results.summary.recorded} summary:${results.summary}"
+    val resutls = CaptureResults.fromJsonFile(recordedFile.absolutePath)
+    assert(resutls.resultSummary.recorded == recorded) {
+      "Expected count: $recorded, actual count: ${resutls.resultSummary.recorded} summary:${resutls.resultSummary}"
     }
-    assert(results.summary.added == added) {
-      "Expected count: $added, actual count: ${results.summary.added} summary:${results.summary}"
+    assert(resutls.resultSummary.added == added) {
+      "Expected count: $added, actual count: ${resutls.resultSummary.added} summary:${resutls.resultSummary}"
     }
-    assert(results.summary.changed == changed) {
-      "Expected count: $changed, actual count: ${results.summary.changed} summary:${results.summary}"
+    assert(resutls.resultSummary.changed == changed) {
+      "Expected count: $changed, actual count: ${resutls.resultSummary.changed} summary:${resutls.resultSummary}"
     }
-    assert(results.summary.unchanged == unchanged) {
-      "Expected count: $unchanged, actual count: ${results.summary.unchanged} summary:${results.summary}"
+    assert(resutls.resultSummary.unchanged == unchanged) {
+      "Expected count: $unchanged, actual count: ${resutls.resultSummary.unchanged} summary:${resutls.resultSummary}"
     }
   }
 

@@ -1,22 +1,20 @@
 package com.github.takahirom.roborazzi
 
-import org.json.JSONArray
-import org.json.JSONObject
+import com.google.gson.*
+import com.google.gson.annotations.SerializedName
 import java.io.File
+import java.io.FileReader
+import java.lang.reflect.Type
 
 data class CaptureResults(
-  val summary: ResultSummary,
+  @SerializedName("summary")
+  val resultSummary: ResultSummary,
+  @SerializedName("results")
   val captureResults: List<CaptureResult>
 ) {
-  fun toJson(): JSONObject {
-    val json = JSONObject()
-    json.put("summary", summary.toJson())
-    val resultsArray = JSONArray()
-    captureResults.forEach { result ->
-      resultsArray.put(result.toJson())
-    }
-    json.put("results", resultsArray)
-    return json
+
+  fun toJson(): String {
+    return gson.toJson(this)
   }
 
   fun toHtml(reportDirectoryPath: String): String {
@@ -78,7 +76,7 @@ data class CaptureResults(
       }
     }
     return buildString {
-      append(summary.toHtml())
+      append(resultSummary.toHtml())
       append(buildTable("Recorded images", "recorded", recordedImages))
       append(buildTable("Added images", "added", addedImages))
       append(buildTable("Changed images", "changed", changedImages))
@@ -87,26 +85,33 @@ data class CaptureResults(
   }
 
   companion object {
+    val gson: Gson = GsonBuilder()
+      .registerTypeAdapter(File::class.java, object : JsonSerializer<File>, JsonDeserializer<File> {
+        override fun serialize(src: File?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+          val absolutePath = src?.absolutePath ?: return JsonNull.INSTANCE
+          return JsonPrimitive(absolutePath)
+        }
+
+        override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): File {
+          val path = json?.asString ?: throw JsonParseException("File path is null")
+          return File(path)
+        }
+      })
+      .create()
+
     fun fromJsonFile(inputPath: String): CaptureResults {
-      val fileContents = File(inputPath).readText()
-      val jsonObject = JSONObject(fileContents)
+      val jsonObject = JsonParser.parseString(FileReader(inputPath).readText()).asJsonObject
       return fromJson(jsonObject)
     }
 
-    fun fromJson(jsonObject: JSONObject): CaptureResults {
-      val summary = ResultSummary.fromJson(jsonObject.getJSONObject("summary"))
-      val resultsArray = jsonObject.getJSONArray("results")
-      val captureResults = mutableListOf<CaptureResult>()
-      for (i in 0 until resultsArray.length()) {
-        val resultJson = resultsArray.getJSONObject(i)
-        captureResults.add(CaptureResult.fromJson(resultJson))
-      }
-      return CaptureResults(summary, captureResults)
+    fun fromJson(jsonObject: JsonObject): CaptureResults {
+      // Auto convert using Gson
+      return gson.fromJson(jsonObject, CaptureResults::class.java)
     }
 
     fun from(results: List<CaptureResult>): CaptureResults {
       return CaptureResults(
-        summary = ResultSummary(
+        resultSummary = ResultSummary(
           total = results.size,
           recorded = results.count { it is CaptureResult.Recorded },
           added = results.count { it is CaptureResult.Added },

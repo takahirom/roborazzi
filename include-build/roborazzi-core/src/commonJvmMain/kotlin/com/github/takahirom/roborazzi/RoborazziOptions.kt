@@ -2,6 +2,7 @@ package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
+import com.github.takahirom.roborazzi.CaptureResults.Companion.gson
 import java.io.File
 import java.io.FileWriter
 
@@ -241,7 +242,7 @@ data class RoborazziOptions(
         val reportFileName =
           "$absolutePath/${captureResult.timestampNs}_$nameWithoutExtension.json"
 
-        val jsonResult = captureResult.toJson()
+        val jsonResult = gson.toJson(captureResult)
         FileWriter(reportFileName).use { it.write(jsonResult.toString()) }
         debugLog { "JsonResult file($reportFileName) has been written" }
       }

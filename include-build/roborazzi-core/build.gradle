@@ -32,7 +32,7 @@ kotlin {
     }
     commonJvmMain {
       dependencies {
-        compileOnly libs.json
+        compileOnly libs.gson
         api libs.dropbox.differ
         implementation libs.junit
       }
@@ -46,7 +46,7 @@ kotlin {
     }
     jvmMain {
       dependencies {
-        implementation libs.json
+        implementation libs.gson
       }
     }
     jvmTest {
@@ -61,6 +61,7 @@ kotlin {
         compileOnly libs.androidx.compose.ui.test.junit4
         api libs.androidx.test.espresso.core
         implementation libs.androidx.core.ktx
+        implementation libs.gson
       }
     }
 
