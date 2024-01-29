@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     // for making diff
-    // setTheme(com.google.android.material.R.style.Theme_Material3_Dark_NoActionBar)
+    setTheme(com.google.android.material.R.style.Theme_Material3_Dark_NoActionBar)
     super.onCreate(savedInstanceState)
 
     binding = ActivityMainBinding.inflate(layoutInflater)
