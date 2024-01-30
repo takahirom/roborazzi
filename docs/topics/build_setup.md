@@ -5,6 +5,7 @@ Roborazzi is available on maven central.
 This plugin simply creates Gradle tasks record, verify, compare and passes the configuration to the
 test.
 
+**build.gradle**
 <table>
 <tr><td>plugins</td><td>buildscript</td></tr>
 <tr><td>
@@ -50,6 +51,54 @@ apply plugin: "io.github.takahirom.roborazzi"
 
 </table>
 
+**build.gradle.kts**
+<table>
+<tr><td>plugins</td><td>buildscript</td></tr>
+<tr><td>
+
+Define plugin in root build.gradle.kts
+
+```kotlin
+plugins {
+  ...
+  id("io.github.takahirom.roborazzi") version "[version]" apply false
+}
+```
+
+Apply plugin in module build.gradle.kts
+
+```kotlin
+plugins {
+  ...
+  id("io.github.takahirom.roborazzi")
+}
+```
+
+</td><td>
+
+root build.gradle.kts
+
+```kotlin
+buildscript {
+  dependencies {
+    ...
+    classpath("io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[version]")
+  }
+}
+```
+
+module build.gradle.kts
+
+```kotlin
+plugins {
+    ...
+    id("io.github.takahirom.roborazzi")
+}
+```
+
+</td></tr>
+
+</table>
 
 <table>
 <tr>
