@@ -5,52 +5,6 @@ Roborazzi is available on maven central.
 This plugin simply creates Gradle tasks record, verify, compare and passes the configuration to the
 test.
 
-**build.gradle**
-<table>
-<tr><td>plugins</td><td>buildscript</td></tr>
-<tr><td>
-
-Define plugin in root build.gradle
-
-```groovy
-plugins {
-  ...
-  id "io.github.takahirom.roborazzi" version "[version]" apply false
-}
-```
-
-Apply plugin in module build.gradle
-
-```groovy
-plugins {
-  ...
-  id 'io.github.takahirom.roborazzi'
-}
-```
-
-</td><td>
-
-root build.gradle
-
-```groovy
-buildscript {
-  dependencies {
-    ...
-    classpath "io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[version]"
-  }
-}
-```
-
-module build.gradle
-
-```groovy
-apply plugin: "io.github.takahirom.roborazzi"
-```
-
-</td></tr>
-
-</table>
-
 **build.gradle.kts**
 <table>
 <tr><td>plugins</td><td>buildscript</td></tr>
@@ -99,6 +53,54 @@ plugins {
 </td></tr>
 
 </table>
+
+<details>
+<summary>build.gradle version</summary>
+<table>
+<tr><td>plugins</td><td>buildscript</td></tr>
+<tr><td>
+
+Define plugin in root build.gradle
+
+```groovy
+plugins {
+  ...
+  id "io.github.takahirom.roborazzi" version "[version]" apply false
+}
+```
+
+Apply plugin in module build.gradle
+
+```groovy
+plugins {
+  ...
+  id 'io.github.takahirom.roborazzi'
+}
+```
+
+</td><td>
+
+root build.gradle
+
+```groovy
+buildscript {
+  dependencies {
+    ...
+    classpath "io.github.takahirom.roborazzi:roborazzi-gradle-plugin:[version]"
+  }
+}
+```
+
+module build.gradle
+
+```groovy
+apply plugin: "io.github.takahirom.roborazzi"
+```
+
+</td></tr>
+
+</table>
+</details>
 
 <table>
 <tr>
