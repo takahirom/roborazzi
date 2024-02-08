@@ -145,6 +145,7 @@ data class RoborazziOptions(
    * https://github.com/takahirom/roborazzi/issues/215
    */
   val taskType: RoborazziTaskType = roborazziSystemPropertyTaskType(),
+  val additionalData: Map<String, Any> = emptyMap(),
   val captureType: CaptureType = if (canScreenshot()) CaptureType.Screenshot() else defaultCaptureType(),
   val reportOptions: ReportOptions = ReportOptions(),
   val compareOptions: CompareOptions = CompareOptions(),

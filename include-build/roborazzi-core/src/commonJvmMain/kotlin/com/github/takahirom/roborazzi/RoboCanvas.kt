@@ -8,7 +8,11 @@ interface RoboCanvas {
   val croppedHeight: Int
   val width: Int
   val height: Int
-  fun save(file: File, resizeScale: Double)
+  fun save(
+    file: File,
+    resizeScale: Double,
+    contextData: Map<String, Any>,
+  )
   fun differ(other: RoboCanvas, resizeScale: Double, imageComparator: ImageComparator): ImageComparator.ComparisonResult
   fun release()
 
