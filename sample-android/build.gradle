@@ -81,4 +81,5 @@ dependencies {
   testImplementation libs.androidx.compose.material
   testImplementation libs.androidx.test.espresso.core
   testImplementation libs.robolectric
+  testImplementation(libs.kim)
 }

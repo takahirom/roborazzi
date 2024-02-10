@@ -232,10 +232,10 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     writer.write(IIOImage(scaledBufferedImage, null, meta))
   }
 
-  private fun ImageWriter?.writeMetadata(
+  private fun ImageWriter.writeMetadata(
     contextData: Map<String, Any>
   ): IIOMetadata? {
-    val meta = this!!.getDefaultImageMetadata(ImageTypeSpecifier(croppedImage), null)
+    val meta = getDefaultImageMetadata(ImageTypeSpecifier(croppedImage), null)
 
     val root = IIOMetadataNode(IIOMetadataFormatImpl.standardMetadataFormatName)
     contextData.forEach { (key, value) ->
