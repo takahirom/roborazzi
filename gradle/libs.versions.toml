@@ -29,6 +29,7 @@ androidx-lifecycle = "2.6.1"
 androidx-navigation = "2.4.1"
 androidx-test-espresso-core = "3.5.1"
 androidx-test-ext-junit = "1.1.5"
+kim = "0.13.2"
 
 dropbox-differ = "0.0.1"
 google-android-material = "1.5.0"
@@ -69,6 +70,7 @@ androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx",
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso-core" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
 androidx-test-ext-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidx-test-ext-junit" }
+kim = { module = "com.ashampoo:kim", version.ref = "kim" }
 
 android-tools-build-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }

@@ -13,12 +13,15 @@ sealed interface CaptureResult {
   val compareFile: File?
   val actualFile: File?
   val goldenFile: File?
+  val contextData: Map<String, Any>
 
   data class Recorded(
     @SerializedName("golden_file_path")
     override val goldenFile: File,
     @SerializedName("timestamp")
     override val timestampNs: Long,
+    @SerializedName("context_data")
+    override val contextData: Map<String, Any>
   ) : CaptureResult {
 
     override val type = "recorded"
@@ -37,6 +40,8 @@ sealed interface CaptureResult {
     override val goldenFile: File,
     @SerializedName("timestamp")
     override val timestampNs: Long,
+    @SerializedName("context_data")
+    override val contextData: Map<String, Any>
   ) : CaptureResult {
     override val type = "added"
   }
@@ -49,7 +54,9 @@ sealed interface CaptureResult {
     @SerializedName("actual_file_path")
     override val actualFile: File,
     @SerializedName("timestamp")
-    override val timestampNs: Long
+    override val timestampNs: Long,
+    @SerializedName("context_data")
+    override val contextData: Map<String, Any>
   ) : CaptureResult {
     override val type = "changed"
   }
@@ -58,7 +65,9 @@ sealed interface CaptureResult {
     @SerializedName("golden_file_path")
     override val goldenFile: File,
     @SerializedName("timestamp")
-    override val timestampNs: Long
+    override val timestampNs: Long,
+    @SerializedName("context_data")
+    override val contextData: Map<String, Any>
   ) : CaptureResult {
     override val type = "unchanged"
     override val actualFile: File?

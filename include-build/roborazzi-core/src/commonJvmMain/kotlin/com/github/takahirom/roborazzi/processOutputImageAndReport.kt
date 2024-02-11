@@ -101,7 +101,8 @@ fun processOutputImageAndReport(
       comparisonCanvas
         .save(
           file = comparisonFile,
-          resizeScale = resizeScale
+          resizeScale = resizeScale,
+          contextData = roborazziOptions.contextData
         )
       debugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
@@ -121,7 +122,8 @@ fun processOutputImageAndReport(
       newRoboCanvas
         .save(
           file = actualFile,
-          resizeScale = resizeScale
+          resizeScale = resizeScale,
+          contextData = roborazziOptions.contextData
         )
       debugLog {
         "processOutputImageAndReport(): actualCanvas is saved " +
@@ -133,6 +135,7 @@ fun processOutputImageAndReport(
           actualFile = actualFile,
           goldenFile = goldenFile,
           timestampNs = System.nanoTime(),
+          contextData = roborazziOptions.contextData,
         )
       } else {
         CaptureResult.Added(
@@ -140,12 +143,14 @@ fun processOutputImageAndReport(
           actualFile = actualFile,
           goldenFile = goldenFile,
           timestampNs = System.nanoTime(),
+          contextData = roborazziOptions.contextData,
         )
       }
     } else {
       CaptureResult.Unchanged(
         goldenFile = goldenFile,
         timestampNs = System.nanoTime(),
+        contextData = roborazziOptions.contextData,
       )
     }
     debugLog {
@@ -160,7 +165,11 @@ fun processOutputImageAndReport(
     )
   } else {
     // roborazzi.record is checked before
-    newRoboCanvas.save(goldenFile, resizeScale)
+    newRoboCanvas.save(
+      file = goldenFile,
+      resizeScale = resizeScale,
+      contextData = roborazziOptions.contextData
+    )
     debugLog {
       "processOutputImageAndReport: \n" +
         " record goldenFile: $goldenFile\n"
@@ -168,7 +177,8 @@ fun processOutputImageAndReport(
     roborazziOptions.reportOptions.captureResultReporter.report(
       captureResult = CaptureResult.Recorded(
         goldenFile = goldenFile,
-        timestampNs = System.nanoTime()
+        timestampNs = System.nanoTime(),
+        contextData = roborazziOptions.contextData,
       ),
       roborazziTaskType = taskType
     )
