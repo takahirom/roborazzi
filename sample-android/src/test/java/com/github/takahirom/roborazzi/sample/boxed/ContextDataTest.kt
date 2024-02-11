@@ -6,6 +6,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ashampoo.kim.format.png.PngChunkType
 import com.ashampoo.kim.format.png.PngImageParser
+import com.ashampoo.kim.format.png.chunk.PngChunk
 import com.ashampoo.kim.format.png.chunk.PngTextChunk
 import com.ashampoo.kim.input.KotlinIoSourceByteReader
 import com.ashampoo.kim.input.use
@@ -47,11 +48,16 @@ class ContextDataTest {
         "roborazzi.test.record",
         "true"
       )
+      val testKey1 = "test_key"
+      val testValue1 = "test_value"
+      val testKey2 = "test_key2"
+      val testValue2 = 10
       onView(ViewMatchers.isRoot())
         .captureRoboImage(
           roborazziOptions = provideRoborazziContext().options.copy(
             contextData = mapOf(
-              "test_key" to "test_value"
+              testKey1 to testValue1,
+              testKey2 to testValue2
             )
           )
         )
@@ -65,13 +71,8 @@ class ContextDataTest {
       KotlinIoSourceByteReader.read(Path(expectedOutput.absolutePath)) { byteReader ->
         byteReader?.use {
           val chunks = PngImageParser.readChunks(it, listOf(PngChunkType.TEXT))
-          chunks.filterIsInstance<PngTextChunk>()
-            .first { it.getKeyword() == "test_key" }
-            .let { chunk ->
-              assert(chunk.getText() == "test_value") {
-                "Expected test_value but got ${chunk.getText()}"
-              }
-            }
+          chunks.verifyKeyValueExistsInImage(testKey1, testValue1)
+          chunks.verifyKeyValueExistsInImage(testKey2, testValue2.toString())
         }
       }
       File("build/test-results/roborazzi/results")
@@ -80,11 +81,40 @@ class ContextDataTest {
         .let {
           CaptureResult.fromJsonFile(it.path)
             .let { result ->
-              assert(result.contextData["test_key"] == "test_value") {
-                "Expected test_value but got ${result.contextData["test_key"]}"
-              }
+              result.verifyKeyValueExistsInJson(testKey1, testValue1)
+              result.verifyKeyValueExistsInJson(testKey2, testValue2.toString())
             }
         }
     }
+  }
+
+  private fun CaptureResult.verifyKeyValueExistsInJson(
+    key: String,
+    value: String
+  ) {
+    val any = contextData[key]
+    if (any is Double) {
+      // gson always parse number as double
+      assert(any.toInt() == value.toInt()) {
+        "Expected $value but got $any"
+      }
+      return
+    }
+    assert(any == value) {
+      "Expected $value but got $any"
+    }
+  }
+
+  private fun List<PngChunk>.verifyKeyValueExistsInImage(
+    key: String,
+    value: String
+  ) {
+    filterIsInstance<PngTextChunk>()
+      .first { it.getKeyword() == key }
+      .let { chunk ->
+        assert(chunk.getText() == value) {
+          "Expected $value but got ${chunk.getText()}"
+        }
+      }
   }
 }
