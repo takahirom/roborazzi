@@ -14,6 +14,12 @@ fun roborazziSystemPropertyOutputDirectory(): String {
   return System.getProperty("roborazzi.output.dir", DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH)
 }
 
+@ExperimentalRoborazziApi
+// This will be removed when we found if this is safe.
+fun roborazziEnableContextData(): Boolean {
+  return System.getProperty("roborazzi.contextdata", "true").toBoolean()
+}
+
 @Deprecated(
   message = "Use roborazziSystemPropertyTaskType()",
   replaceWith = ReplaceWith("roborazziSystemPropertyTaskType().isEnabled()"),

@@ -4,6 +4,26 @@ object RoborazziReportConst {
   const val resultsSummaryFilePath = "build/test-results/roborazzi/results-summary.json"
   const val resultDirPath = "build/test-results/roborazzi/results/"
   const val reportFilePath = "build/reports/roborazzi/index.html"
+
+  sealed interface DefaultContextData {
+    val key: String
+    val title: String
+
+    object DescriptionClass : DefaultContextData {
+      override val key = "roborazzi_description_class"
+      override val title = "Class"
+    }
+
+    companion object {
+      fun keyToTitle(key: String): String {
+        return when (key) {
+          DescriptionClass.key -> DescriptionClass.title
+          else -> key
+        }
+      }
+    }
+  }
+
   const val reportHtml = """
 <!DOCTYPE html>
 <html lang="en">
@@ -93,6 +113,7 @@ REPORT_TEMPLATE_BODY
 <script>
     M.AutoInit();
     document.addEventListener('DOMContentLoaded', function() {
+        M.Tabs.getInstance(document.getElementsByClassName("tabs")[0]).select('results');
         var modalInstance = M.Modal.init(document.getElementById('imageBottomSheet'), {});
         var modal = document.getElementById('imageBottomSheet');
         var modalImage = document.getElementById('modalImage');

@@ -19,7 +19,18 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
-import com.github.takahirom.roborazzi.*
+import com.github.takahirom.roborazzi.Dump
+import com.github.takahirom.roborazzi.RoboComponent
+import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import com.github.takahirom.roborazzi.RoborazziOptions
+import com.github.takahirom.roborazzi.captureRoboAllImage
+import com.github.takahirom.roborazzi.captureRoboGif
+import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureRoboLastImage
+import com.github.takahirom.roborazzi.roboOutputName
+import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
+import com.github.takahirom.roborazzi.withComposeTestTag
+import com.github.takahirom.roborazzi.withViewId
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -81,6 +92,18 @@ class ManualTest {
       .captureRoboImage()
   }
 
+  @Test
+  @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
+  fun captureScreenWithMetadata() {
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        roborazziOptions = RoborazziOptions(
+          contextData = mapOf(
+            "context_data_key" to "context_data_value"
+          )
+        )
+      )
+  }
 
   @Test
   fun captureComposeImage() {
