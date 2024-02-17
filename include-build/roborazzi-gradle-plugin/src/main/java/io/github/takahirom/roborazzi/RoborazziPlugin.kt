@@ -100,6 +100,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
       testTaskName: String,
       skippedTestTaskFinishEventsServiceProvider: Provider<SkippedTestTaskFinishEventsService>
     ) {
+      skippedTestTaskFinishEventsServiceProvider.get().addExpectingTestTaskName(testTaskName)
       val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
       val intermediateDirForEachVariant =
         testTaskOutputDirForEachVariant.convention(
@@ -196,7 +197,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
             t.doLast { finalizeTask ->
               val isTestSkipped =
                 skippedTestTaskFinishEventsServiceProvider.get().skipped
-              t.infoln("Roborazzi: roborazziTestFinalizer.doLast input:${finalizeTask.inputs.properties}")
+              t.infoln("Roborazzi: roborazziTestFinalizer.doLast $isTestSkipped")
               if (isTestSkipped) {
                 // If the test is skipped, we need to use cached files
                 t.infoln("Roborazzi: finalizeTestRoborazziTask isTestSkipped:$isTestSkipped Copy files from ${intermediateDir.get()} to ${outputDir.get()}")
@@ -433,18 +434,27 @@ abstract class RoborazziPlugin : Plugin<Project> {
 abstract class SkippedTestTaskFinishEventsService : BuildService<BuildServiceParameters.None?>,
   OperationCompletionListener {
   var skipped = false
+  private val expectingTestNames = mutableListOf<String>()
+  fun addExpectingTestTaskName(testName: String) {
+    expectingTestNames.add(testName)
+  }
+
   override fun onFinish(finishEvent: FinishEvent) {
     val displayName = finishEvent.displayName
-    println("Roborazzi: SkippedTestTaskFinishEventsService: displayName:$displayName")
-    if (displayName.contains("test", ignoreCase = true)
-      && displayName.contains("skipped", ignoreCase = true)
-    ) {
-      println("Roborazzi: SkippedTestTaskFinishEventsService: Skipped test task $displayName")
+//    println("Roborazzi: onFinish " +
+//      "expectingTestNames:$expectingTestNames" +
+//      "displayName:$displayName " +
+//      "finishEvent:$finishEvent " +
+//      "finishEvent.descriptor:${finishEvent.descriptor}" +
+//      "finishEvent.descriptor.name:${finishEvent.descriptor.name}")
+    if (expectingTestNames.any {
+        displayName.contains(it, ignoreCase = true) &&
+          displayName.contains("skipped", ignoreCase = true)
+      }) {
       skipped = true
     }
   }
 }
-
 
 fun Task.infoln(format: String) =
   logger.info(format)

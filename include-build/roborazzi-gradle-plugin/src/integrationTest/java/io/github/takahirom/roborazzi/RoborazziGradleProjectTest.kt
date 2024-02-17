@@ -313,7 +313,6 @@ class RoborazziGradleProjectTest {
     }
   }
 
-
   @Test
   fun verifyAndRecord_nochange() {
     RoborazziGradleProject(testProjectDir).apply {
