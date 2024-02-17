@@ -190,6 +190,26 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun verify_changeDetectRevertCache() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      compare()
+      resetScreen()
+      clean()
+      record()
+      changeScreen()
+      compare()
+
+      checkResultsSummaryFileExists()
+//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+      checkResultCount(changed = 1)
+    }
+  }
+
+  @Test
   fun verify_addDetect() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
