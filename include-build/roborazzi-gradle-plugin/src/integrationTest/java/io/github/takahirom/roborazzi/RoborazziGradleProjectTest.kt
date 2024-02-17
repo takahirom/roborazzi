@@ -190,7 +190,7 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
-  fun verify_changeDetectRevertCache() {
+  fun checkRevertCache() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
       changeScreen()
