@@ -88,6 +88,62 @@ class ContextDataTest {
     }
   }
 
+  @Test
+  fun disableContextTest() {
+    boxedEnvironment {
+      ROBORAZZI_DEBUG = true
+      val methodSignature =
+        "${this::class.qualifiedName}.disableContextTest"
+      val expectedOutput =
+        File("${roborazziSystemPropertyOutputDirectory()}/$methodSignature.png")
+      expectedOutput.delete()
+      System.setProperty(
+        "roborazzi.test.record",
+        "true"
+      )
+      System.setProperty(
+        "roborazzi.contextdata",
+        "false"
+      )
+      val testKey1 = "test_key"
+      val testValue1 = "test_value"
+      onView(ViewMatchers.isRoot())
+        .captureRoboImage(
+          roborazziOptions = provideRoborazziContext().options.copy(
+            contextData = mapOf(
+              testKey1 to testValue1
+            )
+          )
+        )
+
+      assert(
+        expectedOutput
+          .exists()
+      ) {
+        "File not found: ${expectedOutput.absolutePath} \n"
+      }
+      KotlinIoSourceByteReader.read(Path(expectedOutput.absolutePath)) { byteReader ->
+        byteReader?.use {
+          val chunks = PngImageParser.readChunks(it, listOf(PngChunkType.TEXT))
+          assert(chunks.isEmpty()) {
+            "Expected no chunks but got $chunks"
+          }
+        }
+      }
+      File("build/test-results/roborazzi/results")
+        .listFiles()!!
+        .first { it.name.contains(methodSignature) && it.name.endsWith(".json") }
+        .let {
+          CaptureResult.fromJsonFile(it.path)
+            .let { result ->
+              assert(result.contextData.isEmpty()) {
+                "Expected no context data but got ${result.contextData}"
+              }
+            }
+        }
+    }
+  }
+
   private fun CaptureResult.verifyKeyValueExistsInJson(
     key: String,
     value: String

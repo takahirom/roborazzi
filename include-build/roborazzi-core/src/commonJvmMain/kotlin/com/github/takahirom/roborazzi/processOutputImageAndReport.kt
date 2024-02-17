@@ -59,6 +59,18 @@ fun processOutputImageAndReport(
   }
   val recordOptions = roborazziOptions.recordOptions
   val resizeScale = recordOptions.resizeScale
+  val contextData = if (roborazziEnableContextData()) {
+    val className = provideRoborazziContext().description?.className
+    val classNameMap: Map<out String, Any> = className?.let {
+      mapOf(
+        RoborazziReportConst.DefaultContextData.DescriptionClass.key to className.toString()
+      )
+    } ?: mapOf()
+    roborazziOptions.contextData + classNameMap
+  } else {
+    // This will be removed when we found if this is safe.
+    mapOf()
+  }
   if (taskType.isVerifying() || taskType.isComparing()) {
     val width = (newRoboCanvas.croppedWidth * resizeScale).toInt()
     val height = (newRoboCanvas.croppedHeight * resizeScale).toInt()
@@ -102,7 +114,7 @@ fun processOutputImageAndReport(
         .save(
           file = comparisonFile,
           resizeScale = resizeScale,
-          contextData = roborazziOptions.contextData
+          contextData = contextData
         )
       debugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
@@ -123,7 +135,7 @@ fun processOutputImageAndReport(
         .save(
           file = actualFile,
           resizeScale = resizeScale,
-          contextData = roborazziOptions.contextData
+          contextData = contextData
         )
       debugLog {
         "processOutputImageAndReport(): actualCanvas is saved " +
@@ -135,7 +147,7 @@ fun processOutputImageAndReport(
           actualFile = actualFile,
           goldenFile = goldenFile,
           timestampNs = System.nanoTime(),
-          contextData = roborazziOptions.contextData,
+          contextData = contextData,
         )
       } else {
         CaptureResult.Added(
@@ -143,14 +155,14 @@ fun processOutputImageAndReport(
           actualFile = actualFile,
           goldenFile = goldenFile,
           timestampNs = System.nanoTime(),
-          contextData = roborazziOptions.contextData,
+          contextData = contextData,
         )
       }
     } else {
       CaptureResult.Unchanged(
         goldenFile = goldenFile,
         timestampNs = System.nanoTime(),
-        contextData = roborazziOptions.contextData,
+        contextData = contextData,
       )
     }
     debugLog {
@@ -168,7 +180,7 @@ fun processOutputImageAndReport(
     newRoboCanvas.save(
       file = goldenFile,
       resizeScale = resizeScale,
-      contextData = roborazziOptions.contextData
+      contextData = contextData
     )
     debugLog {
       "processOutputImageAndReport: \n" +
@@ -178,7 +190,7 @@ fun processOutputImageAndReport(
       captureResult = CaptureResult.Recorded(
         goldenFile = goldenFile,
         timestampNs = System.nanoTime(),
-        contextData = roborazziOptions.contextData,
+        contextData = contextData,
       ),
       roborazziTaskType = taskType
     )

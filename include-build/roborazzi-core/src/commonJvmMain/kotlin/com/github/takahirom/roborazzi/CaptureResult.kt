@@ -15,6 +15,14 @@ sealed interface CaptureResult {
   val goldenFile: File?
   val contextData: Map<String, Any>
 
+  val reportFile: File
+    get() = when (val result = this) {
+      is Added -> result.actualFile
+      is Changed -> result.compareFile
+      is Recorded -> result.goldenFile
+      is Unchanged -> result.goldenFile
+    }
+
   data class Recorded(
     @SerializedName("golden_file_path")
     override val goldenFile: File,
