@@ -98,9 +98,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
     fun configureRoborazziTasks(
       variantSlug: String,
       testTaskName: String,
-      skippedTestTaskFinishEventsServiceProvider: Provider<SkippedTestTaskFinishEventsService>
+      testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider>
     ) {
-      skippedTestTaskFinishEventsServiceProvider.get().addExpectingTestTaskName(testTaskName)
+      testTaskSkipEventsServiceProvider.get().addExpectingTestTaskName(testTaskName)
       val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
       val intermediateDirForEachVariant =
         testTaskOutputDirForEachVariant.convention(
@@ -187,16 +187,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
         /* name = */ "finalizeTestRoborazzi$variantSlug",
         /* configurationAction = */ object : Action<Task> {
           override fun execute(t: Task) {
-            val testTaskCollectionInputKey = "testTaskCollection"
-
             t.onlyIf {
               val doesRoborazziRun = doesRoborazziRunProvider.get()
               t.infoln("Roborazzi: roborazziTestFinalizer.onlyIf doesRoborazziRun $doesRoborazziRun")
               doesRoborazziRun
             }
-            t.doLast { finalizeTask ->
+            t.doLast {
               val isTestSkipped =
-                skippedTestTaskFinishEventsServiceProvider.get().skipped
+                testTaskSkipEventsServiceProvider.get().skipped
               t.infoln("Roborazzi: roborazziTestFinalizer.doLast $isTestSkipped")
               if (isTestSkipped) {
                 // If the test is skipped, we need to use cached files
@@ -216,9 +214,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 }
               }
               val resultsSummaryFile = resultSummaryFileProperty.asFile
-              t.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} items:{$results}")
 
               val roborazziResults = CaptureResults.from(results)
+              t.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
 
               val jsonResult = roborazziResults.toJson()
               resultsSummaryFile.parentFile.mkdirs()
@@ -338,11 +336,13 @@ abstract class RoborazziPlugin : Plugin<Project> {
       verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
     }
 
-    val skippedTestTaskFinishEventsServiceProvider: Provider<SkippedTestTaskFinishEventsService> =
+    val testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider> =
       project.gradle.sharedServices.registerIfAbsent(
-        "roborazziTestTaskEvents", SkippedTestTaskFinishEventsService::class.java
-      ) { spec -> spec.parameters }
-    getEventsListenerRegistry().onTaskCompletion(skippedTestTaskFinishEventsServiceProvider)
+        "roborazziTestTaskEvents", TestTaskSkipEventsServiceProvider::class.java
+      ) { spec ->
+        // do nothing
+      }
+    getEventsListenerRegistry().onTaskCompletion(testTaskSkipEventsServiceProvider)
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
@@ -352,9 +352,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
         // e.g. testDebugUnitTest -> recordRoborazziDebug
         configureRoborazziTasks(
-          variantSlug,
-          "test$testVariantSlug",
-          skippedTestTaskFinishEventsServiceProvider
+          variantSlug = variantSlug,
+          testTaskName = "test$testVariantSlug",
+          testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
         )
       }
     }
@@ -369,7 +369,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
       // e.g. test -> recordRoborazziJvm
-      configureRoborazziTasks("Jvm", "test", skippedTestTaskFinishEventsServiceProvider)
+      configureRoborazziTasks(
+        variantSlug = "Jvm",
+        testTaskName = "test",
+        testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
+      )
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
       val kotlinMppExtension = checkNotNull(
@@ -382,9 +386,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
           target.testRuns.all { testRun ->
             // e.g. desktopTest -> recordRoborazziDesktop
             configureRoborazziTasks(
-              target.name.capitalizeUS(),
-              testRun.executionTask.name,
-              skippedTestTaskFinishEventsServiceProvider
+              variantSlug = target.name.capitalizeUS(),
+              testTaskName = testRun.executionTask.name,
+              testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
             )
           }
         }
@@ -431,7 +435,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
  * We can't get whether the test is skipped or not from the test task itself
  * because of the configuration cache
  */
-abstract class SkippedTestTaskFinishEventsService : BuildService<BuildServiceParameters.None?>,
+abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServiceParameters.None?>,
   OperationCompletionListener {
   var skipped = false
   private val expectingTestNames = mutableListOf<String>()

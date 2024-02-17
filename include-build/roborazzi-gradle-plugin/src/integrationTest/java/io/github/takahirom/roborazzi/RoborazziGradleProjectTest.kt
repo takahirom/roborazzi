@@ -189,6 +189,10 @@ class RoborazziGradleProjectTest {
     }
   }
 
+  /**
+   * This test is for the issue
+   * https://github.com/takahirom/roborazzi/issues/261
+   */
   @Test
   fun checkRevertCache() {
     RoborazziGradleProject(testProjectDir).apply {
