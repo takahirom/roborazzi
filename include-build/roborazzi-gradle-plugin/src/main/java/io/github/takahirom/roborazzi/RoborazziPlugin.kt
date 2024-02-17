@@ -441,15 +441,18 @@ abstract class SkippedTestTaskFinishEventsService : BuildService<BuildServicePar
 
   override fun onFinish(finishEvent: FinishEvent) {
     val displayName = finishEvent.displayName
-//    println("Roborazzi: onFinish " +
-//      "expectingTestNames:$expectingTestNames" +
-//      "displayName:$displayName " +
-//      "finishEvent:$finishEvent " +
-//      "finishEvent.descriptor:${finishEvent.descriptor}" +
-//      "finishEvent.descriptor.name:${finishEvent.descriptor.name}")
+//    println(
+//      "Roborazzi: onFinish " +
+//        "expectingTestNames:$expectingTestNames" +
+//        "displayName:$displayName " +
+//        "finishEvent:$finishEvent " +
+//        "finishEvent.descriptor:${finishEvent.descriptor}" +
+//        "finishEvent.descriptor.name:${finishEvent.descriptor.name}"
+//    )
     if (expectingTestNames.any {
         displayName.contains(it, ignoreCase = true) &&
-          displayName.contains("skipped", ignoreCase = true)
+          (displayName.contains("skipped", ignoreCase = true) ||
+            displayName.contains("FROM-CACHE", ignoreCase = true))
       }) {
       skipped = true
     }
