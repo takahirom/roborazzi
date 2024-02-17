@@ -14,14 +14,19 @@ import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
+import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
+import org.gradle.tooling.events.FinishEvent
+import org.gradle.tooling.events.OperationCompletionListener
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import java.util.Locale
@@ -40,7 +45,9 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
-class RoborazziPlugin : Plugin<Project> {
+abstract class RoborazziPlugin : Plugin<Project> {
+  @Inject abstract fun getEventsListenerRegistry(): BuildEventsListenerRegistry
+
   override fun apply(project: Project) {
     val extension = project.extensions.create("roborazzi", RoborazziExtension::class.java)
 
@@ -88,7 +95,11 @@ class RoborazziPlugin : Plugin<Project> {
       return roborazziProperties["roborazzi.test.record"] == "true" || roborazziProperties["roborazzi.test.verify"] == "true" || roborazziProperties["roborazzi.test.compare"] == "true"
     }
 
-    fun configureRoborazziTasks(variantSlug: String, testTaskName: String) {
+    fun configureRoborazziTasks(
+      variantSlug: String,
+      testTaskName: String,
+      skippedTestTaskFinishEventsServiceProvider: Provider<SkippedTestTaskFinishEventsService>
+    ) {
       val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
       val intermediateDirForEachVariant =
         testTaskOutputDirForEachVariant.convention(
@@ -176,21 +187,16 @@ class RoborazziPlugin : Plugin<Project> {
         /* configurationAction = */ object : Action<Task> {
           override fun execute(t: Task) {
             val testTaskCollectionInputKey = "testTaskCollection"
-            t.inputs.properties(
-              mapOf(
-                testTaskCollectionInputKey to testTaskProvider
-              )
-            )
+
             t.onlyIf {
               val doesRoborazziRun = doesRoborazziRunProvider.get()
               t.infoln("Roborazzi: roborazziTestFinalizer.onlyIf doesRoborazziRun $doesRoborazziRun")
               doesRoborazziRun
             }
             t.doLast { finalizeTask ->
-              val testTaskCollection =
-                (finalizeTask.inputs.properties[testTaskCollectionInputKey] as TaskCollection<Test>).toList()
+              val isTestSkipped =
+                skippedTestTaskFinishEventsServiceProvider.get().skipped
               t.infoln("Roborazzi: roborazziTestFinalizer.doLast input:${finalizeTask.inputs.properties}")
-              val isTestSkipped = testTaskCollection.any { test -> test.state.skipped }
               if (isTestSkipped) {
                 // If the test is skipped, we need to use cached files
                 t.infoln("Roborazzi: finalizeTestRoborazziTask isTestSkipped:$isTestSkipped Copy files from ${intermediateDir.get()} to ${outputDir.get()}")
@@ -331,6 +337,12 @@ class RoborazziPlugin : Plugin<Project> {
       verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
     }
 
+    val skippedTestTaskFinishEventsServiceProvider: Provider<SkippedTestTaskFinishEventsService> =
+      project.gradle.sharedServices.registerIfAbsent(
+        "roborazziTestTaskEvents", SkippedTestTaskFinishEventsService::class.java
+      ) { spec -> spec.parameters }
+    getEventsListenerRegistry().onTaskCompletion(skippedTestTaskFinishEventsServiceProvider)
+
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
         val unitTest = variant.unitTest ?: return@onVariants
@@ -338,7 +350,11 @@ class RoborazziPlugin : Plugin<Project> {
         val testVariantSlug = unitTest.name.capitalizeUS()
 
         // e.g. testDebugUnitTest -> recordRoborazziDebug
-        configureRoborazziTasks(variantSlug, "test$testVariantSlug")
+        configureRoborazziTasks(
+          variantSlug,
+          "test$testVariantSlug",
+          skippedTestTaskFinishEventsServiceProvider
+        )
       }
     }
 
@@ -352,7 +368,7 @@ class RoborazziPlugin : Plugin<Project> {
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
       // e.g. test -> recordRoborazziJvm
-      configureRoborazziTasks("Jvm", "test")
+      configureRoborazziTasks("Jvm", "test", skippedTestTaskFinishEventsServiceProvider)
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
       val kotlinMppExtension = checkNotNull(
@@ -364,7 +380,11 @@ class RoborazziPlugin : Plugin<Project> {
         if (target is KotlinJvmTarget) {
           target.testRuns.all { testRun ->
             // e.g. desktopTest -> recordRoborazziDesktop
-            configureRoborazziTasks(target.name.capitalizeUS(), testRun.executionTask.name)
+            configureRoborazziTasks(
+              target.name.capitalizeUS(),
+              testRun.executionTask.name,
+              skippedTestTaskFinishEventsServiceProvider
+            )
           }
         }
       }
@@ -405,6 +425,26 @@ class RoborazziPlugin : Plugin<Project> {
     }
   }
 }
+
+/**
+ * We can't get whether the test is skipped or not from the test task itself
+ * because of the configuration cache
+ */
+abstract class SkippedTestTaskFinishEventsService : BuildService<BuildServiceParameters.None?>,
+  OperationCompletionListener {
+  var skipped = false
+  override fun onFinish(finishEvent: FinishEvent) {
+    val displayName = finishEvent.displayName
+    println("Roborazzi: SkippedTestTaskFinishEventsService: displayName:$displayName")
+    if (displayName.contains("test", ignoreCase = true)
+      && displayName.contains("skipped", ignoreCase = true)
+    ) {
+      println("Roborazzi: SkippedTestTaskFinishEventsService: Skipped test task $displayName")
+      skipped = true
+    }
+  }
+}
+
 
 fun Task.infoln(format: String) =
   logger.info(format)
