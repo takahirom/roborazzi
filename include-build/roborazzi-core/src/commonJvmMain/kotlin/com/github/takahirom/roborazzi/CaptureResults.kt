@@ -82,9 +82,10 @@ data class CaptureResults(
           "<div class=\"col s12\">\n" +
           "<ul class=\"tabs\">"
       )
-      tabs.forEach { tab ->
+      tabs.forEachIndexed { tabIndex, tab ->
         // <li class="tab col s3"><a href="#test1">Test 1</a></li>
-        append("""<li class="tab col s3"><a href="#${tab.id}">${tab.title}</a></li>""")
+        val activeClass = if (tabIndex == 0) """class="active" """ else ""
+        append("""<li class="tab col s3"><a $activeClass href="#${tab.id}">${tab.title}</a></li>""")
       }
       append("</ul>\n</div>")
       tabs.forEach { tab ->
