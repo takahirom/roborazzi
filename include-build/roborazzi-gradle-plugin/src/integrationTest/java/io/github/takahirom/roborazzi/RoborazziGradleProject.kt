@@ -92,6 +92,11 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task)
   }
 
+  fun clean(): BuildResult {
+    val task = "clean"
+    return runTask(task)
+  }
+
   fun compareWithSystemParameter(): BuildResult {
     val task = "testDebugUnitTest"
     return runTask(task, additionalParameters = arrayOf("-Proborazzi.test.compare=true"))
@@ -360,6 +365,28 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     setContentView(TextView(this).apply{
       text = "■■■■■■■■■■■■■■■■  Roborazzi!!Detect this change!!!! ■■■■■■■■■■"
+    })
+  }
+}
+"""
+    )
+  }
+
+  fun resetScreen() {
+    val file =
+      testProjectDir.root.resolve("app/src/main/java/com/github/takahirom/integration_test_project/MainActivity.kt")
+    file.writeText(
+      """package com.github.takahirom.integration_test_project
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import android.widget.TextView
+
+class MainActivity : ComponentActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContentView(TextView(this).apply{
+      text = "Hello World!"
     })
   }
 }

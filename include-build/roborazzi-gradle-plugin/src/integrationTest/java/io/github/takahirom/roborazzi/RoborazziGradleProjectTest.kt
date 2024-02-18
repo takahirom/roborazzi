@@ -189,6 +189,30 @@ class RoborazziGradleProjectTest {
     }
   }
 
+  /**
+   * This test is for the issue
+   * https://github.com/takahirom/roborazzi/issues/261
+   */
+  @Test
+  fun checkRevertCache() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      compare()
+      resetScreen()
+      clean()
+      record()
+      changeScreen()
+      compare()
+
+      checkResultsSummaryFileExists()
+//      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+      checkResultCount(changed = 1)
+    }
+  }
+
   @Test
   fun verify_addDetect() {
     RoborazziGradleProject(testProjectDir).apply {
@@ -292,7 +316,6 @@ class RoborazziGradleProjectTest {
       checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
     }
   }
-
 
   @Test
   fun verifyAndRecord_nochange() {

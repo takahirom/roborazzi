@@ -6,20 +6,30 @@ import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.RoborazziReportConst
-import org.gradle.api.*
+import org.gradle.api.Action
+import org.gradle.api.DefaultTask
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.Test
+import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
+import org.gradle.tooling.events.FinishEvent
+import org.gradle.tooling.events.OperationCompletionListener
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
-import java.util.*
+import java.util.Locale
 import javax.inject.Inject
 
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
@@ -35,7 +45,9 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
-class RoborazziPlugin : Plugin<Project> {
+abstract class RoborazziPlugin : Plugin<Project> {
+  @Inject abstract fun getEventsListenerRegistry(): BuildEventsListenerRegistry
+
   override fun apply(project: Project) {
     val extension = project.extensions.create("roborazzi", RoborazziExtension::class.java)
 
@@ -83,7 +95,12 @@ class RoborazziPlugin : Plugin<Project> {
       return roborazziProperties["roborazzi.test.record"] == "true" || roborazziProperties["roborazzi.test.verify"] == "true" || roborazziProperties["roborazzi.test.compare"] == "true"
     }
 
-    fun configureRoborazziTasks(variantSlug: String, testTaskName: String) {
+    fun configureRoborazziTasks(
+      variantSlug: String,
+      testTaskName: String,
+      testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider>
+    ) {
+      testTaskSkipEventsServiceProvider.get().addExpectingTestTaskName(testTaskName)
       val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
       val intermediateDirForEachVariant =
         testTaskOutputDirForEachVariant.convention(
@@ -157,14 +174,18 @@ class RoborazziPlugin : Plugin<Project> {
       val outputDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
       val resultDirFileTree =
         project.fileTree(RoborazziReportConst.resultDirPath)
-      val resultsSummaryFile =
-        project.file(RoborazziReportConst.resultsSummaryFilePath)
-      val reportFile =
-        project.file(RoborazziReportConst.reportFilePath)
+      val resultDirFileProperty =
+        project.layout.projectDirectory.dir(
+          RoborazziReportConst.resultDirPath
+        )
+      val resultSummaryFileProperty =
+        project.layout.projectDirectory.file(RoborazziReportConst.resultsSummaryFilePath)
+      val reportFileProperty =
+        project.layout.projectDirectory.file(RoborazziReportConst.reportFilePath)
 
       val finalizeTestRoborazziTask = project.tasks.register(
-        "finalizeTestRoborazzi$variantSlug",
-        object : Action<Task> {
+        /* name = */ "finalizeTestRoborazzi$variantSlug",
+        /* configurationAction = */ object : Action<Task> {
           override fun execute(t: Task) {
             t.onlyIf {
               val doesRoborazziRun = doesRoborazziRunProvider.get()
@@ -172,18 +193,18 @@ class RoborazziPlugin : Plugin<Project> {
               doesRoborazziRun
             }
             t.doLast {
-              t.infoln("Roborazzi: roborazziTestFinalizer.doLast")
-              // Copy all files from outputDir to intermediateDir
-              // so that we can use Gradle's output caching
-              t.infoln("Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
-              // outputDir.get().asFileTree.forEach {
-              //   println("Copy file ${it.absolutePath} to ${intermediateDir.get()}")
-              // }
-              outputDir.get().asFile.mkdirs()
-              outputDir.get().asFile.copyRecursively(
-                target = intermediateDir.get().asFile,
-                overwrite = true
-              )
+              val isTestSkipped =
+                testTaskSkipEventsServiceProvider.get().skipped
+              t.infoln("Roborazzi: roborazziTestFinalizer.doLast $isTestSkipped")
+              if (isTestSkipped) {
+                // If the test is skipped, we need to use cached files
+                t.infoln("Roborazzi: finalizeTestRoborazziTask isTestSkipped:$isTestSkipped Copy files from ${intermediateDir.get()} to ${outputDir.get()}")
+                intermediateDir.get().asFile.mkdirs()
+                intermediateDir.get().asFile.copyRecursively(
+                  target = outputDir.get().asFile,
+                  overwrite = true
+                )
+              }
 
               val results: List<CaptureResult> = resultDirFileTree.mapNotNull {
                 if (it.name.endsWith(".json")) {
@@ -192,13 +213,15 @@ class RoborazziPlugin : Plugin<Project> {
                   null
                 }
               }
-              t.infoln("Save result to ${resultsSummaryFile.absolutePath} with results:${results.size}")
+              val resultsSummaryFile = resultSummaryFileProperty.asFile
 
               val roborazziResults = CaptureResults.from(results)
+              t.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
 
               val jsonResult = roborazziResults.toJson()
               resultsSummaryFile.parentFile.mkdirs()
               resultsSummaryFile.writeText(jsonResult)
+              val reportFile = reportFileProperty.asFile
               reportFile.parentFile.mkdirs()
               reportFile.writeText(
                 RoborazziReportConst.reportHtml.replace(
@@ -229,7 +252,22 @@ class RoborazziPlugin : Plugin<Project> {
               it
             })
           }
-          test.outputs.dir(intermediateDirForEachVariant)
+          test.outputs.dir(intermediateDirForEachVariant.map {
+            test.infoln("Roborazzi: Set output dir $it to test task")
+            it
+          })
+          test.outputs.dir(resultDirFileProperty.let {
+            test.infoln("Roborazzi: Set output dir $it to test task")
+            it
+          })
+          test.outputs.file(resultSummaryFileProperty.let {
+            test.infoln("Roborazzi: Set output file $it to test task")
+            it
+          })
+          test.outputs.file(reportFileProperty.let {
+            test.infoln("Roborazzi: Set output file $it to test task")
+            it
+          })
 
           test.inputs.properties(
             mapOf(
@@ -265,7 +303,8 @@ class RoborazziPlugin : Plugin<Project> {
                   !key.startsWith("roborazzi.test")
                 }
               )
-              test.systemProperties["roborazzi.output.dir"] = outputDirRelativePathFromProjectProvider.get()
+              test.systemProperties["roborazzi.output.dir"] =
+                outputDirRelativePathFromProjectProvider.get()
               test.systemProperties["roborazzi.test.record"] =
                 isRecordRun.get() || isVerifyAndRecordRun.get()
               test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
@@ -274,6 +313,19 @@ class RoborazziPlugin : Plugin<Project> {
             }
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
+          }
+          test.doLast {
+            // Copy all files from outputDir to intermediateDir
+            // so that we can use Gradle's output caching
+            it.infoln("Roborazzi: test.doLast Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
+            // outputDir.get().asFileTree.forEach {
+            //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
+            // }
+            outputDir.get().asFile.mkdirs()
+            outputDir.get().asFile.copyRecursively(
+              target = intermediateDir.get().asFile,
+              overwrite = true
+            )
           }
           test.finalizedBy(finalizeTestRoborazziTask)
         }
@@ -284,6 +336,14 @@ class RoborazziPlugin : Plugin<Project> {
       verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
     }
 
+    val testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider> =
+      project.gradle.sharedServices.registerIfAbsent(
+        "roborazziTestTaskEvents", TestTaskSkipEventsServiceProvider::class.java
+      ) { spec ->
+        // do nothing
+      }
+    getEventsListenerRegistry().onTaskCompletion(testTaskSkipEventsServiceProvider)
+
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
         val unitTest = variant.unitTest ?: return@onVariants
@@ -291,7 +351,11 @@ class RoborazziPlugin : Plugin<Project> {
         val testVariantSlug = unitTest.name.capitalizeUS()
 
         // e.g. testDebugUnitTest -> recordRoborazziDebug
-        configureRoborazziTasks(variantSlug, "test$testVariantSlug")
+        configureRoborazziTasks(
+          variantSlug = variantSlug,
+          testTaskName = "test$testVariantSlug",
+          testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
+        )
       }
     }
 
@@ -305,7 +369,11 @@ class RoborazziPlugin : Plugin<Project> {
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
       // e.g. test -> recordRoborazziJvm
-      configureRoborazziTasks("Jvm", "test")
+      configureRoborazziTasks(
+        variantSlug = "Jvm",
+        testTaskName = "test",
+        testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
+      )
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
       val kotlinMppExtension = checkNotNull(
@@ -317,7 +385,11 @@ class RoborazziPlugin : Plugin<Project> {
         if (target is KotlinJvmTarget) {
           target.testRuns.all { testRun ->
             // e.g. desktopTest -> recordRoborazziDesktop
-            configureRoborazziTasks(target.name.capitalizeUS(), testRun.executionTask.name)
+            configureRoborazziTasks(
+              variantSlug = target.name.capitalizeUS(),
+              testTaskName = testRun.executionTask.name,
+              testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
+            )
           }
         }
       }
@@ -340,6 +412,7 @@ class RoborazziPlugin : Plugin<Project> {
     fun copy() {
       val outputDirFile = outputDir.get().asFile
       if (outputDirFile.exists() && outputDirFile.listFiles().isNotEmpty()) return
+      this.infoln("Roborazzi RestoreOutputDirRoborazziTask: Copy files from ${inputDir.get()} to ${outputDirFile}")
       inputDir.get().asFile.copyRecursively(outputDirFile)
     }
   }
@@ -354,6 +427,38 @@ class RoborazziPlugin : Plugin<Project> {
         it.setTestNameIncludePatterns(testNamePattern)
       }
       return this
+    }
+  }
+}
+
+/**
+ * We can't get whether the test is skipped or not from the test task itself
+ * because of the configuration cache
+ */
+abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServiceParameters.None?>,
+  OperationCompletionListener {
+  var skipped = false
+  private val expectingTestNames = mutableListOf<String>()
+  fun addExpectingTestTaskName(testName: String) {
+    expectingTestNames.add(testName)
+  }
+
+  override fun onFinish(finishEvent: FinishEvent) {
+    val displayName = finishEvent.displayName
+//    println(
+//      "Roborazzi: onFinish " +
+//        "expectingTestNames:$expectingTestNames" +
+//        "displayName:$displayName " +
+//        "finishEvent:$finishEvent " +
+//        "finishEvent.descriptor:${finishEvent.descriptor}" +
+//        "finishEvent.descriptor.name:${finishEvent.descriptor.name}"
+//    )
+    if (expectingTestNames.any {
+        displayName.contains(it, ignoreCase = true) &&
+          (displayName.contains("skipped", ignoreCase = true) ||
+            displayName.contains("FROM-CACHE", ignoreCase = true))
+      }) {
+      skipped = true
     }
   }
 }
