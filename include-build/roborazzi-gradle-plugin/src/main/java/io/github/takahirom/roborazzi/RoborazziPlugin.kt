@@ -100,7 +100,17 @@ abstract class RoborazziPlugin : Plugin<Project> {
       testTaskName: String,
       testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider>
     ) {
-      testTaskSkipEventsServiceProvider.get().addExpectingTestTaskName(testTaskName)
+      try {
+        testTaskSkipEventsServiceProvider.get().addExpectingTestTaskName(testTaskName)
+      } catch (e: ClassCastException) {
+        throw IllegalStateException(
+          """You should use `id("io.github.takahirom.roborazzi") version "[version]" apply false` in the root project 
+            |to ensure the build cache property functions correctly. 
+            |This is a temporary workaround, 
+            |and we are awaiting a permanent fix from the Gradle core.""".trimMargin(),
+          e
+        )
+      }
       val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
       val intermediateDirForEachVariant =
         testTaskOutputDirForEachVariant.convention(
