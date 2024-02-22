@@ -47,8 +47,8 @@ enum class RoborazziTaskType {
         isRecording && isVerifying -> VerifyAndRecord
         isRecording && isComparing -> CompareAndRecord
         isRecording -> Record
-        isComparing -> Compare
         isVerifying -> Verify
+        isComparing -> Compare
         else -> None
       }
     }
