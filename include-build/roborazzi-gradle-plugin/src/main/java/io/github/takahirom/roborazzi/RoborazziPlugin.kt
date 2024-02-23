@@ -189,7 +189,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
         project.layout.buildDirectory.dir(RoborazziReportConst.resultDirPathFromBuildDir)
       val resultDirFileTree =
         resultDirFileProperty.map { it.asFileTree }
-      val resultDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
+      val resultDirRelativePathFromProjectProvider =
+        resultDirFileProperty.map { project.relativePath(it) }
       val resultSummaryFileProperty =
         project.layout.buildDirectory.file(RoborazziReportConst.resultsSummaryFilePathFromBuildDir)
       val reportFileProperty =
@@ -315,16 +316,17 @@ abstract class RoborazziPlugin : Plugin<Project> {
                   !key.startsWith("roborazzi.test")
                 }
               )
-              test.systemProperties["roborazzi.output.dir"] =
-                outputDirRelativePathFromProjectProvider.get()
-              test.systemProperties["roborazzi.result.dir"] =
-                resultDirRelativePathFromProjectProvider.get()
               test.systemProperties["roborazzi.test.record"] =
                 isRecordRun.get() || isVerifyAndRecordRun.get()
               test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
               test.systemProperties["roborazzi.test.verify"] =
                 isVerifyRun.get() || isVerifyAndRecordRun.get()
             }
+            test.systemProperties["roborazzi.output.dir"] =
+              outputDirRelativePathFromProjectProvider.get()
+            test.systemProperties["roborazzi.result.dir"] =
+              resultDirRelativePathFromProjectProvider.get()
+            test.infoln("Roborazzi: Plugin passed system properties " + test.systemProperties + " to the test")
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
           }
