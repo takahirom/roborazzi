@@ -15,6 +15,13 @@ fun roborazziSystemPropertyOutputDirectory(): String {
 }
 
 @ExperimentalRoborazziApi
+fun roborazziSystemPropertyResultDirectory(): String {
+  return System.getProperty("roborazzi.result.dir",
+    "build/${RoborazziReportConst.resultDirPathFromBuildDir}"
+  )
+}
+
+@ExperimentalRoborazziApi
 // This will be removed when we found if this is safe.
 fun roborazziEnableContextData(): Boolean {
   return System.getProperty("roborazzi.contextdata", "true").toBoolean()
@@ -235,11 +242,11 @@ data class RoborazziOptions(
     class JsonOutputCaptureResultReporter : CaptureResultReporter {
 
       init {
-        File(RoborazziReportConst.resultDirPath).mkdirs()
+        File(roborazziSystemPropertyResultDirectory()).mkdirs()
       }
 
       override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
-        val absolutePath = File(RoborazziReportConst.resultDirPath).absolutePath
+        val absolutePath = File(roborazziSystemPropertyResultDirectory()).absolutePath
         val nameWithoutExtension = when (captureResult) {
           is CaptureResult.Added -> captureResult.compareFile
           is CaptureResult.Changed -> captureResult.goldenFile

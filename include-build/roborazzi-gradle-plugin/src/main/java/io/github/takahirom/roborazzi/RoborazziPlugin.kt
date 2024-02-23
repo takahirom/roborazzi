@@ -5,6 +5,7 @@ import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
+import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
@@ -48,6 +49,7 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 abstract class RoborazziPlugin : Plugin<Project> {
   @Inject abstract fun getEventsListenerRegistry(): BuildEventsListenerRegistry
 
+  @OptIn(InternalRoborazziApi::class)
   override fun apply(project: Project) {
     val extension = project.extensions.create("roborazzi", RoborazziExtension::class.java)
 
@@ -183,16 +185,15 @@ abstract class RoborazziPlugin : Plugin<Project> {
         }
       }
       val outputDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
-      val resultDirFileTree =
-        project.fileTree(RoborazziReportConst.resultDirPath)
       val resultDirFileProperty =
-        project.layout.projectDirectory.dir(
-          RoborazziReportConst.resultDirPath
-        )
+        project.layout.buildDirectory.dir(RoborazziReportConst.resultDirPathFromBuildDir)
+      val resultDirFileTree =
+        resultDirFileProperty.map { it.asFileTree }
+      val resultDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
       val resultSummaryFileProperty =
-        project.layout.projectDirectory.file(RoborazziReportConst.resultsSummaryFilePath)
+        project.layout.buildDirectory.file(RoborazziReportConst.resultsSummaryFilePathFromBuildDir)
       val reportFileProperty =
-        project.layout.projectDirectory.file(RoborazziReportConst.reportFilePath)
+        project.layout.buildDirectory.file(RoborazziReportConst.reportFilePathFromBuildDir)
 
       val finalizeTestRoborazziTask = project.tasks.register(
         /* name = */ "finalizeTestRoborazzi$variantSlug",
@@ -217,14 +218,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 )
               }
 
-              val results: List<CaptureResult> = resultDirFileTree.mapNotNull {
+              val results: List<CaptureResult> = resultDirFileTree.get().mapNotNull {
                 if (it.name.endsWith(".json")) {
                   CaptureResult.fromJsonFile(it.path)
                 } else {
                   null
                 }
               }
-              val resultsSummaryFile = resultSummaryFileProperty.asFile
+              val resultsSummaryFile = resultSummaryFileProperty.get().asFile
 
               val roborazziResults = CaptureResults.from(results)
               t.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
@@ -232,7 +233,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               val jsonResult = roborazziResults.toJson()
               resultsSummaryFile.parentFile.mkdirs()
               resultsSummaryFile.writeText(jsonResult)
-              val reportFile = reportFileProperty.asFile
+              val reportFile = reportFileProperty.get().asFile
               reportFile.parentFile.mkdirs()
               reportFile.writeText(
                 RoborazziReportConst.reportHtml.replace(
@@ -245,7 +246,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         })
       testTaskProvider
         .configureEach { test ->
-          val resultsDir = project.file(RoborazziReportConst.resultDirPath)
+          val resultsDir = resultDirFileProperty.get().asFile
           if (restoreOutputDirRoborazziTaskProvider.isPresent) {
             test.inputs.dir(restoreOutputDirRoborazziTaskProvider.map {
               if (!it.outputDir.get().asFile.exists()) {
@@ -316,6 +317,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
               )
               test.systemProperties["roborazzi.output.dir"] =
                 outputDirRelativePathFromProjectProvider.get()
+              test.systemProperties["roborazzi.result.dir"] =
+                resultDirRelativePathFromProjectProvider.get()
               test.systemProperties["roborazzi.test.record"] =
                 isRecordRun.get() || isVerifyAndRecordRun.get()
               test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
