@@ -4,7 +4,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-
 /**
  * Run this test with `cd include-build` and `./gradlew roborazzi-gradle-plugin:check`
  */
@@ -14,23 +13,32 @@ class RoborazziGradleProjectTest {
   val testProjectDir = TemporaryFolder()
 
   private val className = "com.github.takahirom.integration_test_project.RoborazziTest"
-  private val screenshotAndName =
-    "app/build/outputs/roborazzi/$className"
 
-  private val defaultRoborazziOutputDir = "build/outputs/roborazzi"
-  private val customReferenceScreenshotAndName =
-    "app/$defaultRoborazziOutputDir/customdir/custom_file"
-  private val customCompareScreenshotAndName =
-    "app/$defaultRoborazziOutputDir/custom_compare_outputDirectoryPath/custom_file"
-  private val customReferenceScreenshotAndNameWithRoborazziContext =
-    "app/$defaultRoborazziOutputDir/custom_outputDirectoryPath_from_rule/$defaultRoborazziOutputDir/customdir/custom_file"
-  private val customCompareScreenshotAndNameWithRoborazziContext =
-    "app/$defaultRoborazziOutputDir/custom_compare_outputDirectoryPath/custom_file"
+  private var defaultBuildDir = "build"
 
-  private val addedScreenshotAndName =
-    "app/$defaultRoborazziOutputDir/com.github.takahirom.integration_test_project.AddedRoborazziTest"
+  private val screenshotAndName
+    get() =
+      "app/$defaultBuildDir/outputs/roborazzi/$className"
 
-  private val resultFileSuffix = "$className.testCapture.json"
+  private val defaultRoborazziOutputDir get() = "$defaultBuildDir/outputs/roborazzi"
+  private val customReferenceScreenshotAndName
+    get() =
+      "app/$defaultRoborazziOutputDir/customdir/custom_file"
+  private val customCompareScreenshotAndName
+    get() =
+      "app/$defaultRoborazziOutputDir/custom_compare_outputDirectoryPath/custom_file"
+  private val customReferenceScreenshotAndNameWithRoborazziContext
+    get() =
+      "app/$defaultRoborazziOutputDir/custom_outputDirectoryPath_from_rule/$defaultRoborazziOutputDir/customdir/custom_file"
+  private val customCompareScreenshotAndNameWithRoborazziContext
+    get() =
+      "app/$defaultRoborazziOutputDir/custom_compare_outputDirectoryPath/custom_file"
+
+  private val addedScreenshotAndName
+    get() =
+      "app/$defaultRoborazziOutputDir/com.github.takahirom.integration_test_project.AddedRoborazziTest"
+
+  private val resultFileSuffix get() = "$className.testCapture.json"
 
   @Test
   fun record() {
@@ -117,7 +125,6 @@ class RoborazziGradleProjectTest {
       checkRecordedFileNotExists("$$screenshotAndName.testCapture_actual.png")
     }
   }
-
 
   @Test
   fun unitTestWhenRunTwice() {
@@ -284,8 +291,11 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
-  fun verify_nochange() {
+  fun verify_nochange_with_changed_build_dir() {
     RoborazziGradleProject(testProjectDir).apply {
+      val buildDirName = "testCustomBuildDirName"
+      changeBuildDir(buildDirName)
+      defaultBuildDir = buildDirName
       record()
       verify()
 
@@ -294,9 +304,9 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+      checkResultCount(unchanged = 1)
     }
   }
-
 
   @Test
   fun verifyAndRecord_changeDetect() {

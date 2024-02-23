@@ -72,6 +72,7 @@ class RoborazziContextImpl {
   override fun toString(): String {
     return """
       RoborazziContext(
+        outputDirectory=$outputDirectory,
         ruleOverrideOutputDirectory=$ruleOverrideOutputDirectory,
         ruleOverrideRoborazziOptions=$ruleOverrideRoborazziOptions,
         ruleOverrideFileProvider=$ruleOverrideFileProvider,

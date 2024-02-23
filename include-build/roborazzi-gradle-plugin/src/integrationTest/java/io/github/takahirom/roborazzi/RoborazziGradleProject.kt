@@ -7,6 +7,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
+  var buildDirName = "build"
   init {
     File("./src/integrationTest/projects").copyRecursively(testProjectDir.root, true)
   }
@@ -103,12 +104,12 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
   }
 
   fun removeRoborazziOutputDir() {
-    File(testProjectDir.root, "app/build/outputs/roborazzi").deleteRecursively()
+    File(testProjectDir.root, "app/$buildDirName/outputs/roborazzi").deleteRecursively()
   }
 
   fun removeRoborazziAndIntermediateOutputDir() {
-    File(testProjectDir.root, "app/build/outputs/roborazzi").deleteRecursively()
-    File(testProjectDir.root, "app/build/intermediates/roborazzi").deleteRecursively()
+    File(testProjectDir.root, "app/$buildDirName/outputs/roborazzi").deleteRecursively()
+    File(testProjectDir.root, "app/$buildDirName/intermediates/roborazzi").deleteRecursively()
   }
 
   fun assertNotSkipped(output: String) {
@@ -278,13 +279,13 @@ dependencies {
   }
 
   fun checkResultFileExists(nameSuffix: String) {
-    testProjectDir.root.resolve("app/build/test-results/roborazzi/results/").listFiles()
+    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results/").listFiles()
       .firstOrNull { it.name.endsWith(nameSuffix) }
       ?: error("File not found: $nameSuffix")
   }
 
   fun checkResultFileNotExists(nameSuffix: String) {
-    testProjectDir.root.resolve("app/build/test-results/roborazzi/results/").listFiles()
+    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results/").listFiles()
       ?.firstOrNull { it.name.endsWith(nameSuffix) }
       ?.let {
         error("File exists: $nameSuffix")
@@ -294,7 +295,7 @@ dependencies {
 
   fun checkResultsSummaryFileNotExists() {
     val recordedFile =
-      testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
+      testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
     assert(!recordedFile.exists()) {
       "File exists: ${recordedFile.absolutePath}"
     }
@@ -302,7 +303,7 @@ dependencies {
 
   fun checkResultsSummaryFileExists() {
     val recordedFile =
-      testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
+      testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
     assert(recordedFile.exists()) {
       "File not exists: ${recordedFile.absolutePath}"
     }
@@ -315,7 +316,7 @@ dependencies {
     unchanged: Int = 0
   ) {
     val recordedFile =
-      testProjectDir.root.resolve("app/build/test-results/roborazzi/results-summary.json")
+      testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
     val resutls = CaptureResults.fromJsonFile(recordedFile.absolutePath)
     assert(resutls.resultSummary.recorded == recorded) {
       "Expected count: $recorded, actual count: ${resutls.resultSummary.recorded} summary:${resutls.resultSummary}"
@@ -348,6 +349,13 @@ dependencies {
     assert(!recordedFile.exists()) {
       "File exists: $path"
     }
+  }
+
+  fun changeBuildDir(buildDirName: String) {
+    testProjectDir.root.resolve("gradle.properties").appendText(
+      "\nbuildDir=$buildDirName"
+    )
+    this.buildDirName = buildDirName
   }
 
   fun changeScreen() {
