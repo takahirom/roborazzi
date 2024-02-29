@@ -50,7 +50,7 @@ class ManualTest {
 
   init {
     val USE_HARDWARE_RENDERER_NATIVE_ENV = "robolectric.screenshot.hwrdr.native"
-    System.setProperty(USE_HARDWARE_RENDERER_NATIVE_ENV, "false")
+    System.setProperty(USE_HARDWARE_RENDERER_NATIVE_ENV, "true")
   }
 
   @Test
