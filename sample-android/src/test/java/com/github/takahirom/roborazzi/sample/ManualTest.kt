@@ -41,12 +41,17 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
-  sdk = [30],
+  sdk = [33],
   qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
 class ManualTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
+
+  init {
+    val USE_HARDWARE_RENDERER_NATIVE_ENV = "robolectric.screenshot.hwrdr.native"
+    System.setProperty(USE_HARDWARE_RENDERER_NATIVE_ENV, "false")
+  }
 
   @Test
   @Config(qualifiers = "+land")
