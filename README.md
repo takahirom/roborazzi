@@ -1197,7 +1197,8 @@ roborazzi {
 
 **A:** First, please check if you are using the correct version of the Android SDK. Consider using API level 28 or higher because it seems that Robolectric Native Graphics doesn't work property on older SDK versions.
 
-You can specify the SDK version like `@Config(sdk = [33])` or by using `robolectric.properties` with `sdk=33`.
+You can specify the SDK version like `@Config(sdk = [33])` or by using `robolectric.properties` with `sdk=33`.  
+[https://robolectric.org/configuring/](https://robolectric.org/configuring/)  
 
 If your images are mostly fine but there are some drawing issues like shadows or shape graphics, you can try using Robolectric's Hardware Rendering mode. Please refer to [this issue](https://github.com/takahirom/roborazzi/issues/255#issuecomment-1914783987).
 </div>
