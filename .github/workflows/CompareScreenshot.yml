@@ -31,14 +31,16 @@ jobs:
         uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629 # v2.4.2
         with:
           gradle-version: wrapper
-
+      - name: Get base branch HEAD commit
+        id: get_base_branch_head
+        run: echo "sha=$(git rev-parse origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
 
       - uses: dawidd6/action-download-artifact@v2
         continue-on-error: true
         with:
           name: screenshot
           workflow: StoreScreenshot.yml
-          branch: main
+          commit: ${{ steps.get_base_branch_head.outputs.sha }}
 
       - name: compare screenshot test
         id: compare-screenshot-test
