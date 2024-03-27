@@ -3,5 +3,6 @@
   <!-- Base application theme. -->
   <style name="RoborazziTransparentTheme">
     <item name="android:colorBackground">@android:color/transparent</item>
+    <item name="android:windowActionBar">false</item>
   </style>
 </resources>
