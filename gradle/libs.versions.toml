@@ -5,7 +5,7 @@ kotlin = "1.8.22"
 mavenPublish = "0.25.3"
 composeCompiler = "1.4.8"
 composeDesktop = "1.4.3"
-robolectric = "4.10.3"
+robolectric = "4.12.1"
 robolectric-android-all = "Q-robolectric-5415296"
 
 roborazzi-for-replacing-by-include-build = "1.0.0"
