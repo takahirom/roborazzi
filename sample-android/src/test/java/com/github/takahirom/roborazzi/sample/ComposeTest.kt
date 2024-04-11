@@ -101,6 +101,7 @@ class ComposeTest {
     composeTestRule.setContent {
       Column(
         Modifier
+          .background(Color.White)
           .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
