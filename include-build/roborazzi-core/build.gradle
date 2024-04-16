@@ -13,6 +13,8 @@ java {
   }
 }
 
+android.compileSdk(33)
+
 kotlin {
   targetHierarchy.custom {
     it.common {
