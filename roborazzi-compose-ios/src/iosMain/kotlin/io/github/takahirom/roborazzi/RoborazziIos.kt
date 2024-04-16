@@ -262,6 +262,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   val nameWithoutExtension = filePathWithOutExtension.substringAfterLast("/")
 
   val actualFilePath = "$baseOutputPath${filePathWithOutExtension}_actual.$ext"
+  val compareFilePath = "$baseOutputPath${filePathWithOutExtension}_compare.$ext"
   val goldenFilePath = baseOutputPath + filePath
   when (roborazziTaskType) {
     RoborazziTaskType.None -> return
@@ -273,6 +274,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
       val oldImage = loadOldImage(baseOutputPath, filePath)
       if (oldImage == null) {
         writeImage(newImage, actualFilePath)
+        // TODO: Generate compare file
+        writeImage(newImage, compareFilePath)
         val result = CaptureResult.Added(
           compareFile = actualFilePath,
           actualFile = actualFilePath,
@@ -285,6 +288,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       if (hasChangedPixel(oldImage, newImage)) {
         writeImage(newImage, actualFilePath)
+        // TODO: Generate compare file
+        writeImage(newImage, compareFilePath)
         val result = CaptureResult.Changed(
           compareFile = actualFilePath,
           actualFile = actualFilePath,
@@ -307,6 +312,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
       val oldImage = loadOldImage(baseOutputPath, filePath)
       if (oldImage == null) {
         writeImage(newImage, actualFilePath)
+        // TODO: Generate compare file
+        writeImage(newImage, compareFilePath)
         val result = CaptureResult.Added(
           compareFile = actualFilePath,
           actualFile = actualFilePath,
@@ -319,6 +326,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       if (hasChangedPixel(oldImage, newImage)) {
         writeImage(newImage, actualFilePath)
+        // TODO: Generate compare file
+        writeImage(newImage, compareFilePath)
         val result = CaptureResult.Changed(
           compareFile = actualFilePath,
           actualFile = actualFilePath,
@@ -341,6 +350,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
       val oldImage = loadOldImage(baseOutputPath, filePath)
       if (oldImage == null) {
         writeImage(newImage, goldenFilePath)
+        // TODO: Generate compare file
+        writeImage(newImage, compareFilePath)
         val result = CaptureResult.Added(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
@@ -353,6 +364,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       if (hasChangedPixel(oldImage, newImage)) {
         writeImage(newImage, goldenFilePath)
+        // TODO: Generate compare file
+        writeImage(newImage, compareFilePath)
         val result = CaptureResult.Changed(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
@@ -376,6 +389,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
       val oldImage = loadOldImage(baseOutputPath, filePath)
       if (oldImage == null) {
         writeImage(newImage, goldenFilePath)
+        // TODO: Generate compare file
+        writeImage(newImage, compareFilePath)
         val result = CaptureResult.Added(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
@@ -388,6 +403,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       if (hasChangedPixel(oldImage, newImage)) {
         writeImage(newImage, goldenFilePath)
+        // TODO: Generate compare file
+        writeImage(newImage, compareFilePath)
         val result = CaptureResult.Changed(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
@@ -407,19 +424,6 @@ fun SemanticsNodeInteraction.captureRoboImage(
       writeImage(newImage, goldenFilePath)
     }
   }
-  try {
-    val oldImage = convertImageFormat(UIImage(goldenFilePath))
-    if (oldImage != null) {
-      println("hasChangedPixel:" + hasChangedPixel(oldImage, newImage))
-      writeImage(newImage, goldenFilePath)
-      return
-    }
-  } catch (e: Exception) {
-    e.printStackTrace()
-    println("oldImage not found")
-  }
-
-  writeImage(newImage, projectDir + filePath)
 }
 
 private fun writeImage(newImage: UIImage, path: String) {
