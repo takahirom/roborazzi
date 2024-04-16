@@ -1,0 +1,3 @@
+class RoborazziCompile {
+  // for compile
+}

@@ -1,5 +1,6 @@
 plugins {
   id "org.jetbrains.kotlin.multiplatform"
+  id("io.github.terrakok.kmp-hierarchy").version("1.1")
   id "com.android.library"
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
@@ -16,11 +17,20 @@ kotlin {
   targetHierarchy.custom {
     it.common {
       it.group("commonJvm") {
-        it.withAndroid()
+        it.withAndroidTarget()
         it.withJvm()
+      }
+      it.group("ios") {
+        it.withIosX64()
+        it.withIosArm64()
+        it.withIosSimulatorArm64()
       }
     }
   }
+
+  iosX64()
+  iosArm64()
+  iosSimulatorArm64()
 
   jvm()
   android {
@@ -29,11 +39,22 @@ kotlin {
 
   sourceSets {
     commonMain {
+      dependencies {
+      }
+    }
+    iosX64 {
+      dependsOn(commonMain)
+    }
+    iosArm64 {
+      dependsOn(commonMain)
+    }
+    iosSimulatorArm64 {
+      dependsOn(commonMain)
     }
     commonJvmMain {
       dependencies {
-        compileOnly libs.gson
         api libs.dropbox.differ
+        compileOnly libs.gson
         implementation libs.junit
       }
     }
@@ -50,8 +71,7 @@ kotlin {
       }
     }
     jvmTest {
-      dependencies {
-      }
+      dependencies {}
     }
 
     androidMain {
@@ -64,7 +84,6 @@ kotlin {
         implementation libs.gson
       }
     }
-
   }
   sourceSets.all {
     it.languageSettings {
@@ -89,15 +108,13 @@ android {
     sourceCompatibility JavaVersion.VERSION_11
     targetCompatibility JavaVersion.VERSION_11
   }
-  buildFeatures {
-  }
+  buildFeatures {}
   testOptions {
     unitTests {
       includeAndroidResources = true
     }
   }
 }
-
 
 dependencies {
   compileOnly gradleApi()
