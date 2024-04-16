@@ -12,7 +12,7 @@ dependencyResolutionManagement {
       from(files("$roborazziRootPath/gradle/libs.versions.toml"))
     }
   }
-  repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+  repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
   repositories {
     google()
     mavenCentral()
