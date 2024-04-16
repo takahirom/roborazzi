@@ -33,7 +33,7 @@ kotlin {
   iosSimulatorArm64()
 
   jvm()
-  android {
+  androidTarget {
     publishLibraryVariants("release")
   }
 
