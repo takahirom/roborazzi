@@ -1,9 +1,9 @@
 [versions]
 agp = "7.3.1"
 commons-compress = "1.23.0"
-kotlin = "1.9.23"
+kotlin = "1.9.20"
 mavenPublish = "0.25.3"
-composeCompiler = "1.5.11"
+composeCompiler = "1.5.5"
 composeMultiplatform = "1.6.1"
 robolectric = "4.12.1"
 robolectric-android-all = "Q-robolectric-5415296"

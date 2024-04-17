@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
-import androidx.compose.ui.test.SkikoComposeUiTest
+import androidx.compose.ui.test.captureToImage
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.getReportFileName
@@ -321,9 +321,9 @@ fun String.data(): NSData {
   return (this as NSString).dataUsingEncoding(NSUTF8StringEncoding)!!
 }
 
-context(ComposeUiTest)
 @OptIn(ExperimentalTestApi::class, ExperimentalForeignApi::class, ExperimentalRoborazziApi::class)
-fun SemanticsNodeInteraction.captureRoboImage(
+fun ComposeUiTest.captureRoboImage(
+  semanticsNodeInteraction: SemanticsNodeInteraction,
   filePath: String,
 ) {
   val projectDir = roborazziSystemPropertyProjectPath()
@@ -331,13 +331,12 @@ fun SemanticsNodeInteraction.captureRoboImage(
   // So we use SkikoComposeUiTest.captureToImage() instead
   // But we can't capture node image with SkikoComposeUiTest.captureToImage()
   // FIXME: We need to find a way to capture node image with SemanticsNodeInteraction.captureToImage()
-  val newImage: UIImage = (this as SkikoComposeUiTest).captureToImage().toPixelMap().toUIImage()!!
+  val newImage: UIImage = semanticsNodeInteraction.captureToImage().toPixelMap().toUIImage()!!
   val outputDir = roborazziSystemPropertyOutputDirectory()
   val baseOutputPath = "$projectDir/$outputDir/"
   val resultsDir = "$projectDir/${roborazziSystemPropertyResultDirectory()}"
 
   val roborazziTaskType = roborazziSystemPropertyTaskType()
-  println("roborazziTaskType:$roborazziTaskType")
   val ext = filePath.substringAfterLast(".")
   val filePathWithOutExtension = filePath.substringBeforeLast(".")
   val nameWithoutExtension = filePathWithOutExtension.substringAfterLast("/")
@@ -475,7 +474,6 @@ fun SemanticsNodeInteraction.captureRoboImage(
         contextData = emptyMap()
       )
       writeJson(result, resultsDir, nameWithoutExtension)
-      writeImage(newImage, goldenFilePath)
     }
 
     RoborazziTaskType.CompareAndRecord -> {
@@ -518,7 +516,6 @@ fun SemanticsNodeInteraction.captureRoboImage(
         contextData = emptyMap()
       )
       writeJson(result, resultsDir, nameWithoutExtension)
-      writeImage(newImage, goldenFilePath)
     }
   }
 }

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -30,7 +31,7 @@ class IosTest {
                 Button(
                   modifier = Modifier.alpha(alpha),
                   onClick = { /*TODO*/ }) {
-                  Text("Hello World")
+                  Text("Hello World5")
                 }
                 Box(
                   modifier = Modifier
@@ -52,7 +53,8 @@ class IosTest {
           }
         }
       }
-      onRoot().captureRoboImage(filePath = "ios.png")
+      captureRoboImage(onRoot(), filePath = "ios.png")
+      captureRoboImage(onAllNodesWithText("Hello World", substring = true)[0], filePath = "ios_button.png")
 
 //      NSLog("NSProcessInfo: %@", NSProcessInfo.processInfo.arguments[0]);
 //      println("test:"+NSFileManager.defaultManager.currentDirectoryPath())
