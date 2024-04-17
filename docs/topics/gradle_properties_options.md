@@ -1,4 +1,4 @@
-## Roborazzi gradle.properties Options
+# Roborazzi gradle.properties Options
 
 You can configure the following options in your `gradle.properties` file:
 
