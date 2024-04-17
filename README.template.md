@@ -7,6 +7,10 @@
 </div>
 <div name="topic_how_to_use">
 </div>
+<div name="topic_compose_multiplatform">
+</div>
+<div name="topic_gradle_properties_options">
+</div>
 <div name="topic_faq">
 </div>
 

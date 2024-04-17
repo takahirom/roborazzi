@@ -35,12 +35,12 @@ kotlin {
         api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
         implementation(project(":roborazzi-painter"))
         implementation(libs.kotlinx.serialization.json)
+        api(project.compose.dependencies.uiTest)
+        implementation(compose.runtime)
       }
     }
     iosMain {
       dependencies {
-        implementation(compose.runtime)
-        implementation(project.compose.dependencies.uiTest)
       }
     }
     iosTest {

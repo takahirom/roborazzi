@@ -58,10 +58,6 @@ class IosTest {
         this,
         filePath = "ios_button.png"
       )
-
-//      NSLog("NSProcessInfo: %@", NSProcessInfo.processInfo.arguments[0]);
-//      println("test:"+NSFileManager.defaultManager.currentDirectoryPath())
-//      println("pwd:"+NSProcessInfo.processInfo.environment["PWD"]);
     }
   }
 }
