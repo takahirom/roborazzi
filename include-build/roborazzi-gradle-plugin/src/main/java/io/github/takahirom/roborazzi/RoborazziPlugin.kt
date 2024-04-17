@@ -23,15 +23,21 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
+import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.Test
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.gradle.tooling.events.FinishEvent
 import org.gradle.tooling.events.OperationCompletionListener
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.ExecutionTaskHolder
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
+import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.reflect.KClass
 
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
 private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
@@ -48,6 +54,22 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 abstract class RoborazziPlugin : Plugin<Project> {
   @Inject abstract fun getEventsListenerRegistry(): BuildEventsListenerRegistry
+
+  val AbstractTestTask.systemProperties: MutableMap<String, Any?>
+    get() = when (this) {
+      is Test -> systemProperties
+      is KotlinNativeTest -> object : AbstractMutableMap<String, Any?>() {
+        override fun put(key: String, value: Any?): Any? {
+          environment("SIMCTL_CHILD_" + key, value.toString())
+          return null
+        }
+
+        override val entries: MutableSet<MutableMap.MutableEntry<String, Any?>>
+          get() = environment.mapValues { it.value as Any? }.toMutableMap().entries
+      }
+
+      else -> throw IllegalStateException("Unsupported test task type: $this")
+    }
 
   @OptIn(InternalRoborazziApi::class)
   override fun apply(project: Project) {
@@ -100,7 +122,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
     fun configureRoborazziTasks(
       variantSlug: String,
       testTaskName: String,
-      testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider>
+      testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider>,
+      testTaskClass: KClass<out AbstractTestTask> = Test::class
     ) {
       try {
         testTaskSkipEventsServiceProvider.get().addExpectingTestTaskName(testTaskName)
@@ -167,11 +190,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
         isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
       }
 
-      val testTaskProvider = project.tasks.withType(Test::class.java)
+      val testTaskProvider = project.tasks.withType(testTaskClass.java)
         .matching {
           it.name == testTaskName
         }
-      val roborazziProperties =
+      val roborazziProperties: Map<String, Any?> =
         project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
 
       val doesRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
@@ -183,6 +206,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
             }
           }
         }
+      }
+      val projectAbsolutePathProvider = project.providers.provider {
+        project.projectDir.absolutePath
       }
       val outputDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
       val resultDirFileProperty =
@@ -303,9 +329,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
             if (!doesRoborazziRun) {
               return@doFirst
             }
-            test.infoln("Roborazzi: test.doFirst")
+            test.infoln("Roborazzi: test.doFirst ${test.name}")
             val isTaskPresent =
               isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
+            // Task properties
             if (!isTaskPresent) {
               test.systemProperties.putAll(roborazziProperties)
             } else {
@@ -322,10 +349,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
               test.systemProperties["roborazzi.test.verify"] =
                 isVerifyRun.get() || isVerifyAndRecordRun.get()
             }
+
+            // Other properties
             test.systemProperties["roborazzi.output.dir"] =
               outputDirRelativePathFromProjectProvider.get()
             test.systemProperties["roborazzi.result.dir"] =
               resultDirRelativePathFromProjectProvider.get()
+            test.systemProperties["roborazzi.project.path"] =
+              projectAbsolutePathProvider.get()
             test.infoln("Roborazzi: Plugin passed system properties " + test.systemProperties + " to the test")
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
@@ -405,6 +436,17 @@ abstract class RoborazziPlugin : Plugin<Project> {
               variantSlug = target.name.capitalizeUS(),
               testTaskName = testRun.executionTask.name,
               testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
+            )
+          }
+        }
+        if (target is KotlinNativeTargetWithTests<*>) {
+          target.testRuns.all { testRun: KotlinNativeBinaryTestRun ->
+            // e.g. desktopTest -> recordRoborazziDesktop
+            configureRoborazziTasks(
+              variantSlug = target.name.capitalizeUS(),
+              testTaskName = (testRun as ExecutionTaskHolder<*>).executionTask.name,
+              testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider,
+              testTaskClass = KotlinNativeTest::class
             )
           }
         }

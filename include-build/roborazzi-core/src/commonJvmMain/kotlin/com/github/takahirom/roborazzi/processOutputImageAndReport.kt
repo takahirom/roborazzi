@@ -92,10 +92,10 @@ fun processOutputImageAndReport(
           imageComparator = roborazziOptions.compareOptions.imageComparator
         )
       val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
-      log("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
+      reportLog("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
-      log("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
+      reportLog("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
       true
     }
 
@@ -195,8 +195,4 @@ fun processOutputImageAndReport(
       roborazziTaskType = taskType
     )
   }
-}
-
-private fun log(message: String) {
-  println("Roborazzi: $message")
 }

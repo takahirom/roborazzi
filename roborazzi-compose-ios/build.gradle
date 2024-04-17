@@ -1,0 +1,61 @@
+plugins {
+  id 'org.jetbrains.kotlin.multiplatform'
+  id 'org.jetbrains.compose'
+  id 'io.github.takahirom.roborazzi'
+  id("org.jetbrains.kotlin.plugin.serialization")
+    .version(libs.versions.kotlin)
+}
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
+}
+
+kotlin {
+  targetHierarchy.custom {
+    it.common {
+      it.group("ios") {
+        it.withIosX64()
+        it.withIosArm64()
+        it.withIosSimulatorArm64()
+      }
+      it.withJvm()
+    }
+  }
+
+
+  iosX64()
+  iosArm64()
+  iosSimulatorArm64()
+
+  jvm()
+
+  sourceSets {
+    commonMain {
+      dependencies {
+        // Please see settings.gradle
+        api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
+        implementation(project(":roborazzi-painter"))
+        implementation(libs.kotlinx.serialization.json)
+        api(project.compose.dependencies.uiTest)
+        implementation(compose.runtime)
+      }
+    }
+    iosMain {
+      dependencies {
+      }
+    }
+    iosTest {
+      dependencies {
+        implementation(compose.material3)
+        implementation(libs.kotlin.test)
+        implementation(libs.kotlin.test.junit)
+      }
+    }
+  }
+}
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(11))
+  }
+}
+

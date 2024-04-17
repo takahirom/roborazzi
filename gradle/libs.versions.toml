@@ -1,10 +1,10 @@
 [versions]
 agp = "7.3.1"
 commons-compress = "1.23.0"
-kotlin = "1.8.22"
+kotlin = "1.9.21"
 mavenPublish = "0.25.3"
-composeCompiler = "1.4.8"
-composeDesktop = "1.4.3"
+composeCompiler = "1.5.6"
+composeMultiplatform = "1.6.1"
 robolectric = "4.12.1"
 robolectric-android-all = "Q-robolectric-5415296"
 
@@ -31,11 +31,12 @@ androidx-test-espresso-core = "3.5.1"
 androidx-test-ext-junit = "1.1.5"
 kim = "0.13.2"
 
-dropbox-differ = "0.0.1"
+dropbox-differ = "0.0.2"
 google-android-material = "1.5.0"
 gson = "2.10.1"
 junit = "4.13.2"
 ktor-serialization-kotlinx-xml = "2.3.0"
+kotlinx-serialization = "1.6.3"
 squareup-okhttp = "5.0.0-alpha.11"
 
 [libraries]
@@ -74,13 +75,14 @@ kim = { module = "com.ashampoo:kim", version.ref = "kim" }
 
 android-tools-build-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
-compose-gradle-plugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "composeDesktop" }
-compose-ui-graphics-desktop = { module = "org.jetbrains.compose.ui:ui-graphics-desktop", version.ref = "composeDesktop" }
-compose-ui-test-junit4-desktop = { module = "org.jetbrains.compose.ui:ui-test-junit4-desktop", version.ref = "composeDesktop" }
+compose-gradle-plugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "composeMultiplatform" }
+compose-ui-graphics-desktop = { module = "org.jetbrains.compose.ui:ui-graphics-desktop", version.ref = "composeMultiplatform" }
+compose-ui-test-junit4-desktop = { module = "org.jetbrains.compose.ui:ui-test-junit4-desktop", version.ref = "composeMultiplatform" }
 dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-differ" }
 google-android-material = { module = "com.google.android.material:material", version.ref = "google-android-material" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson"}
 junit = { module = "junit:junit", version.ref = "junit" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor-serialization-kotlinx-xml" }
 squareup-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "squareup-okhttp" }
 squareup-okhttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "squareup-okhttp" }
