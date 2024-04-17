@@ -26,7 +26,7 @@ class IosTest {
       setContent {
         MaterialTheme {
           Row {
-            listOf(1.0F, 0.2F, 0.0F).forEach {alpha->
+            listOf(1.0F, 0.2F, 0.0F).forEach { alpha ->
               Column {
                 Button(
                   modifier = Modifier.alpha(alpha),
@@ -53,8 +53,11 @@ class IosTest {
           }
         }
       }
-      captureRoboImage(onRoot(), filePath = "ios.png")
-      captureRoboImage(onAllNodesWithText("Hello World", substring = true)[0], filePath = "ios_button.png")
+      onRoot().captureRoboImage(this, filePath = "ios.png")
+      onAllNodesWithText("Hello World", substring = true)[0].captureRoboImage(
+        this,
+        filePath = "ios_button.png"
+      )
 
 //      NSLog("NSProcessInfo: %@", NSProcessInfo.processInfo.arguments[0]);
 //      println("test:"+NSFileManager.defaultManager.currentDirectoryPath())

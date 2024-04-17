@@ -9,6 +9,7 @@ import androidx.compose.ui.test.captureToImage
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.getReportFileName
+import com.github.takahirom.roborazzi.reportLog
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
@@ -144,7 +145,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val bitmapInfo = CGImageGetBitmapInfo(cgImage)
 
   val context = CGBitmapContextCreate(null, width, height, 8u, bytesPerRow, colorSpace, bitmapInfo)
-  if (context == null) return null
+    ?: return null
 
   CGContextDrawImage(context, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()), cgImage)
   val data = CGBitmapContextGetData(context)?.reinterpret<UByteVar>()
@@ -167,6 +168,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   return CGBitmapContextCreateImage(context)
 }
 
+// FIXME We want to use RoboCanvas here so we have to avoid using JVM APIs
 @OptIn(ExperimentalForeignApi::class) private fun generateCompareImage(
   goldenImage: UIImage?,
   newImage: UIImage
@@ -279,7 +281,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
         abs((oldPtr[oldPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
         abs((oldPtr[oldPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
       ) {
-        println("Pixel changed at ($x, $y) from rgba(${oldPtr[oldPixelIndex]}, ${oldPtr[oldPixelIndex + 1]}, ${oldPtr[oldPixelIndex + 2]}, ${oldPtr[oldPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
+        reportLog("Pixel changed at ($x, $y) from rgba(${oldPtr[oldPixelIndex]}, ${oldPtr[oldPixelIndex + 1]}, ${oldPtr[oldPixelIndex + 2]}, ${oldPtr[oldPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
         val stringBuilder = StringBuilder()
 
         // properties
@@ -307,7 +309,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
         stringBuilder.appendLine("new CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(newCgImage))
         stringBuilder.appendLine("old CGImageGetBytesPerRow" + CGImageGetBytesPerRow(oldCgImage))
         stringBuilder.appendLine("new CGImageGetBytesPerRow" + CGImageGetBytesPerRow(newCgImage))
-        println(stringBuilder.toString())
+        reportLog(stringBuilder.toString())
 
         return true
       }
@@ -317,27 +319,33 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   return false
 }
 
-fun String.data(): NSData {
+fun String.toNsData(): NSData {
+  @Suppress("CAST_NEVER_SUCCEEDS")
   return (this as NSString).dataUsingEncoding(NSUTF8StringEncoding)!!
 }
 
+/**
+ * TODO: Commonize RoborazziOptions with JVM and iOS
+ */
+@ExperimentalRoborazziApi
+class RoborazziOptions(
+  val taskType: RoborazziTaskType = roborazziSystemPropertyTaskType(),
+)
+
 @ExperimentalRoborazziApi
 @OptIn(ExperimentalTestApi::class, ExperimentalForeignApi::class, ExperimentalRoborazziApi::class)
-fun ComposeUiTest.captureRoboImage(
-  semanticsNodeInteraction: SemanticsNodeInteraction,
+fun SemanticsNodeInteraction.captureRoboImage(
+  composeUiTest: ComposeUiTest,
   filePath: String,
+  roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   val projectDir = roborazziSystemPropertyProjectPath()
-  // SemanticsNodeInteraction.captureToImage() causes segmentation fault
-  // So we use SkikoComposeUiTest.captureToImage() instead
-  // But we can't capture node image with SkikoComposeUiTest.captureToImage()
-  // FIXME: We need to find a way to capture node image with SemanticsNodeInteraction.captureToImage()
-  val newImage: UIImage = semanticsNodeInteraction.captureToImage().toPixelMap().toUIImage()!!
+  val newImage: UIImage = captureToImage().toPixelMap().toUIImage()!!
   val outputDir = roborazziSystemPropertyOutputDirectory()
   val baseOutputPath = "$projectDir/$outputDir/"
   val resultsDir = "$projectDir/${roborazziSystemPropertyResultDirectory()}"
 
-  val roborazziTaskType = roborazziSystemPropertyTaskType()
+  val roborazziTaskType = roborazziOptions.taskType
   val ext = filePath.substringAfterLast(".")
   val filePathWithOutExtension = filePath.substringBeforeLast(".")
   val nameWithoutExtension = filePathWithOutExtension.substringAfterLast("/")
@@ -526,7 +534,7 @@ private fun writeImage(newImage: UIImage, path: String) {
     path,
     true
   )
-  println("Image is saved $path")
+  reportLog("Image is saved $path")
 }
 
 private fun loadOldImage(
@@ -539,11 +547,11 @@ private fun loadOldImage(
   @Suppress("USELESS_CAST")
   val image: UIImage? = UIImage(baseOutputPath + filePath) as UIImage?
   if (image == null) {
-    println("can't load old image from $baseOutputPath$filePath")
+    reportLog("can't load old image from $baseOutputPath$filePath")
   }
   val oldImage = image?.let { convertImageFormat(it) }
   if (oldImage == null) {
-    println("can't convert old image from $baseOutputPath$filePath")
+    reportLog("can't convert old image from $baseOutputPath$filePath")
   }
   return oldImage
 }
@@ -571,7 +579,7 @@ private fun writeJson(
   }
   json.encodeToJsonElement(PolymorphicSerializer(CaptureResult::class), result)
     .toString()
-    .data()
+    .toNsData()
     .writeToFile(
       path = getReportFileName(
         absolutePath = resultsDir,
@@ -580,7 +588,7 @@ private fun writeJson(
       ), atomically = true
     )
 
-  println(
+  reportLog(
     "Report file is saved ${
       getReportFileName(
         absolutePath = resultsDir,
