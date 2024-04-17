@@ -29,6 +29,8 @@ import kotlinx.serialization.modules.SerializersModule
 import platform.CoreFoundation.CFAbsoluteTimeGetCurrent
 import platform.CoreFoundation.CFDataCreate
 import platform.CoreFoundation.CFDataGetBytePtr
+import platform.CoreFoundation.CFDataRef
+import platform.CoreFoundation.CFRelease
 import platform.CoreGraphics.CGBitmapContextCreate
 import platform.CoreGraphics.CGBitmapContextCreateImage
 import platform.CoreGraphics.CGBitmapContextGetData
@@ -36,7 +38,10 @@ import platform.CoreGraphics.CGColorRenderingIntent
 import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
 import platform.CoreGraphics.CGColorSpaceGetName
 import platform.CoreGraphics.CGContextDrawImage
+import platform.CoreGraphics.CGContextFillRect
+import platform.CoreGraphics.CGContextMoveToPoint
 import platform.CoreGraphics.CGContextRelease
+import platform.CoreGraphics.CGContextSetFillColorWithColor
 import platform.CoreGraphics.CGDataProviderCopyData
 import platform.CoreGraphics.CGDataProviderCreateWithCFData
 import platform.CoreGraphics.CGDataProviderRef
@@ -59,6 +64,7 @@ import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.dataUsingEncoding
 import platform.Foundation.writeToFile
+import platform.UIKit.UIColor
 import platform.UIKit.UIImage
 import platform.UIKit.UIImagePNGRepresentation
 import platform.posix.abs
@@ -161,6 +167,80 @@ fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   return CGBitmapContextCreateImage(context)
 }
 
+@OptIn(ExperimentalForeignApi::class) fun generateCompareImage(
+  goldenImage: UIImage?,
+  newImage: UIImage
+): CGImageRef? {
+  if (goldenImage == null) return newImage.CIImage?.CGImage
+
+  val goldenCgImage = unpremultiplyAlpha(goldenImage.CGImage!!)!!
+  val newCgImage = newImage.CGImage!!
+
+  val compareWidth = CGImageGetWidth(goldenCgImage) * 3u
+  val sectionWidth = CGImageGetWidth(goldenCgImage).toInt()
+  val height = CGImageGetHeight(goldenCgImage)
+  val colorSpace = CGImageGetColorSpace(newCgImage)
+  val compareBytesPerRow = CGImageGetBytesPerRow(goldenCgImage) * 3u
+  val bitmapInfo = CGImageGetBitmapInfo(goldenCgImage)
+
+  // reference, diff, new
+  val context = CGBitmapContextCreate(
+    null,
+    compareWidth,
+    height,
+    8u,
+    compareBytesPerRow,
+    colorSpace,
+    bitmapInfo
+  )
+  if (context == null) return null
+
+  // Diff
+  val goldenRef: CFDataRef? = CGDataProviderCopyData(CGImageGetDataProvider(goldenCgImage))
+  val newRef: CFDataRef? = CGDataProviderCopyData(CGImageGetDataProvider(newCgImage))
+  val goldenData = CFDataGetBytePtr(goldenRef)!!.reinterpret<UByteVar>()
+  val newData = CFDataGetBytePtr(newRef)!!.reinterpret<UByteVar>()
+  CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
+  for (y in 0 until height.toInt()) {
+    for (x in 0 until compareWidth.toInt() / 3) {
+      CGContextMoveToPoint(context, sectionWidth.toDouble(), 0.0)
+      val goldenPixelIndex = y * (compareBytesPerRow.toInt() / 3) + x * 4
+      val newPixelIndex = y * (compareBytesPerRow.toInt() / 3) + x * 4
+      val colorDistance = 2
+      if (
+        abs((goldenData[goldenPixelIndex] - newData[newPixelIndex]).toInt()) > colorDistance ||
+        abs((goldenData[goldenPixelIndex + 1] - newData[newPixelIndex + 1]).toInt()) > colorDistance ||
+        abs((goldenData[goldenPixelIndex + 2] - newData[newPixelIndex + 2]).toInt()) > colorDistance ||
+        abs((goldenData[goldenPixelIndex + 3] - newData[newPixelIndex + 3]).toInt()) > colorDistance
+      ) {
+        CGContextFillRect(
+          context,
+          CGRectMake(x.toDouble() + sectionWidth, height.toDouble() - y.toDouble(), 1.0, 1.0)
+        )
+      }
+    }
+  }
+  CFRelease(goldenRef)
+  CFRelease(newRef)
+
+  // Reference
+  CGContextDrawImage(
+    context,
+    CGRectMake(0.0, 0.0, sectionWidth.toDouble(), height.toDouble()),
+    goldenCgImage
+  )
+
+  // New
+  CGContextDrawImage(
+    context,
+    CGRectMake(compareWidth.toDouble() * 2 / 3, 0.0, sectionWidth.toDouble(), height.toDouble()),
+    newCgImage
+  )
+
+
+  return CGBitmapContextCreateImage(context)
+}
+
 @OptIn(ExperimentalForeignApi::class) fun hasChangedPixel(
   oldImage: UIImage,
   newImage: UIImage
@@ -176,10 +256,10 @@ fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val newBytesPerRow = CGImageGetBytesPerRow(newCgImage)
 
   val oldDataProvider = CGImageGetDataProvider(oldCgImage)!!
-  val newDataPRovider = CGImageGetDataProvider(newCgImage)!!
+  val newDataProvider = CGImageGetDataProvider(newCgImage)!!
 
   val oldData = CGDataProviderCopyData(oldDataProvider)!!
-  val newData = CGDataProviderCopyData(newDataPRovider)!!
+  val newData = CGDataProviderCopyData(newDataProvider)!!
 
   val oldPtr = CFDataGetBytePtr(oldData)!!.reinterpret<UByteVar>()
   val newPtr = CFDataGetBytePtr(newData)!!.reinterpret<UByteVar>()
@@ -257,6 +337,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   val resultsDir = "$projectDir/${roborazziSystemPropertyResultDirectory()}"
 
   val roborazziTaskType = roborazziSystemPropertyTaskType()
+  println("roborazziTaskType:$roborazziTaskType")
   val ext = filePath.substringAfterLast(".")
   val filePathWithOutExtension = filePath.substringBeforeLast(".")
   val nameWithoutExtension = filePathWithOutExtension.substringAfterLast("/")
@@ -274,8 +355,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
       val oldImage = loadOldImage(baseOutputPath, filePath)
       if (oldImage == null) {
         writeImage(newImage, actualFilePath)
-        // TODO: Generate compare file
-        writeImage(newImage, compareFilePath)
+        writeImage(
+          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          path = compareFilePath
+        )
         val result = CaptureResult.Added(
           compareFile = actualFilePath,
           actualFile = actualFilePath,
@@ -288,8 +371,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       if (hasChangedPixel(oldImage, newImage)) {
         writeImage(newImage, actualFilePath)
-        // TODO: Generate compare file
-        writeImage(newImage, compareFilePath)
+        writeImage(
+          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          path = compareFilePath
+        )
         val result = CaptureResult.Changed(
           compareFile = actualFilePath,
           actualFile = actualFilePath,
@@ -312,8 +397,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
       val oldImage = loadOldImage(baseOutputPath, filePath)
       if (oldImage == null) {
         writeImage(newImage, actualFilePath)
-        // TODO: Generate compare file
-        writeImage(newImage, compareFilePath)
+        writeImage(
+          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          path = compareFilePath
+        )
         val result = CaptureResult.Added(
           compareFile = actualFilePath,
           actualFile = actualFilePath,
@@ -326,8 +413,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       if (hasChangedPixel(oldImage, newImage)) {
         writeImage(newImage, actualFilePath)
-        // TODO: Generate compare file
-        writeImage(newImage, compareFilePath)
+        writeImage(
+          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          path = compareFilePath
+        )
         val result = CaptureResult.Changed(
           compareFile = actualFilePath,
           actualFile = actualFilePath,
@@ -350,8 +439,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
       val oldImage = loadOldImage(baseOutputPath, filePath)
       if (oldImage == null) {
         writeImage(newImage, goldenFilePath)
-        // TODO: Generate compare file
-        writeImage(newImage, compareFilePath)
+        writeImage(
+          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          path = compareFilePath
+        )
         val result = CaptureResult.Added(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
@@ -364,8 +455,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       if (hasChangedPixel(oldImage, newImage)) {
         writeImage(newImage, goldenFilePath)
-        // TODO: Generate compare file
-        writeImage(newImage, compareFilePath)
+        writeImage(
+          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          path = compareFilePath
+        )
         val result = CaptureResult.Changed(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
@@ -389,8 +482,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
       val oldImage = loadOldImage(baseOutputPath, filePath)
       if (oldImage == null) {
         writeImage(newImage, goldenFilePath)
-        // TODO: Generate compare file
-        writeImage(newImage, compareFilePath)
+        writeImage(
+          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          path = compareFilePath
+        )
         val result = CaptureResult.Added(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
@@ -403,8 +498,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       if (hasChangedPixel(oldImage, newImage)) {
         writeImage(newImage, goldenFilePath)
-        // TODO: Generate compare file
-        writeImage(newImage, compareFilePath)
+        writeImage(
+          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          path = compareFilePath
+        )
         val result = CaptureResult.Changed(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
@@ -431,6 +528,7 @@ private fun writeImage(newImage: UIImage, path: String) {
     path,
     true
   )
+  println("Image is saved $path")
 }
 
 private fun loadOldImage(
@@ -459,8 +557,16 @@ private fun writeJson(
 ) {
   val module = SerializersModule {
     polymorphic(CaptureResult::class, CaptureResult.Added::class, CaptureResult.Added.serializer())
-    polymorphic(CaptureResult::class, CaptureResult.Changed::class, CaptureResult.Changed.serializer())
-    polymorphic(CaptureResult::class, CaptureResult.Unchanged::class, CaptureResult.Unchanged.serializer())
+    polymorphic(
+      CaptureResult::class,
+      CaptureResult.Changed::class,
+      CaptureResult.Changed.serializer()
+    )
+    polymorphic(
+      CaptureResult::class,
+      CaptureResult.Unchanged::class,
+      CaptureResult.Unchanged.serializer()
+    )
   }
   val json = Json {
     serializersModule = module
@@ -476,5 +582,13 @@ private fun writeJson(
       ), atomically = true
     )
 
-  println("Report file is saved ${getReportFileName(absolutePath = resultsDir, timestampNs = result.timestampNs, nameWithoutExtension = nameWithoutExtension)}")
+  println(
+    "Report file is saved ${
+      getReportFileName(
+        absolutePath = resultsDir,
+        timestampNs = result.timestampNs,
+        nameWithoutExtension = nameWithoutExtension
+      )
+    }"
+  )
 }

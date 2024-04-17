@@ -52,7 +52,7 @@ class IosTest {
           }
         }
       }
-      onRoot().captureRoboImage(filePath = "test.png")
+      onRoot().captureRoboImage(filePath = "ios.png")
 
 //      NSLog("NSProcessInfo: %@", NSProcessInfo.processInfo.arguments[0]);
 //      println("test:"+NSFileManager.defaultManager.currentDirectoryPath())
