@@ -71,7 +71,7 @@ import platform.posix.abs
 import platform.posix.memcpy
 
 @OptIn(ExperimentalForeignApi::class)
-fun PixelMap.toCGDataProvider(): CGDataProviderRef? {
+private fun PixelMap.toCGDataProvider(): CGDataProviderRef? {
   val bytes = this.buffer
   val size = (this.width * this.height * 4).convert<ULong>()  // Assuming 4 bytes per pixel (RGBA)
   return memScoped {
@@ -83,7 +83,7 @@ fun PixelMap.toCGDataProvider(): CGDataProviderRef? {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-fun PixelMap.toUIImage(): UIImage? {
+private fun PixelMap.toUIImage(): UIImage? {
   memScoped {
     val dataProvider = this@toUIImage.toCGDataProvider()
 
@@ -112,7 +112,7 @@ fun PixelMap.toUIImage(): UIImage? {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-fun convertImageFormat(image: UIImage): UIImage? {
+private fun convertImageFormat(image: UIImage): UIImage? {
   val cgImage = image.CGImage ?: return null
 
   val colorSpace = CGColorSpaceCreateDeviceRGB()
@@ -136,7 +136,7 @@ fun convertImageFormat(image: UIImage): UIImage? {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
+private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val width = CGImageGetWidth(cgImage)
   val height = CGImageGetHeight(cgImage)
   val colorSpace = CGImageGetColorSpace(cgImage) ?: return null
@@ -167,7 +167,7 @@ fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   return CGBitmapContextCreateImage(context)
 }
 
-@OptIn(ExperimentalForeignApi::class) fun generateCompareImage(
+@OptIn(ExperimentalForeignApi::class) private fun generateCompareImage(
   goldenImage: UIImage?,
   newImage: UIImage
 ): CGImageRef? {
@@ -241,7 +241,7 @@ fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   return CGBitmapContextCreateImage(context)
 }
 
-@OptIn(ExperimentalForeignApi::class) fun hasChangedPixel(
+@OptIn(ExperimentalForeignApi::class) private fun hasChangedPixel(
   oldImage: UIImage,
   newImage: UIImage
 ): Boolean {
@@ -321,6 +321,7 @@ fun String.data(): NSData {
   return (this as NSString).dataUsingEncoding(NSUTF8StringEncoding)!!
 }
 
+@ExperimentalRoborazziApi
 @OptIn(ExperimentalTestApi::class, ExperimentalForeignApi::class, ExperimentalRoborazziApi::class)
 fun ComposeUiTest.captureRoboImage(
   semanticsNodeInteraction: SemanticsNodeInteraction,
