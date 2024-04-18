@@ -366,9 +366,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
   val filePathWithOutExtension = filePath.substringBeforeLast(".")
   val nameWithoutExtension = filePathWithOutExtension.substringAfterLast("/")
 
-  val actualFilePath = "$compareDirPath${filePathWithOutExtension}_actual.$ext"
-  val compareFilePath = "$compareDirPath${filePathWithOutExtension}_compare.$ext"
-  val goldenFilePath = baseOutputPath + filePath
+  val actualFilePath = "$compareDirPath/${filePathWithOutExtension}_actual.$ext"
+  val compareFilePath = "$compareDirPath/${filePathWithOutExtension}_compare.$ext"
+  val goldenFilePath = "$baseOutputPath/$filePath"
   when (roborazziTaskType) {
     RoborazziTaskType.None -> return
     RoborazziTaskType.Record -> {
