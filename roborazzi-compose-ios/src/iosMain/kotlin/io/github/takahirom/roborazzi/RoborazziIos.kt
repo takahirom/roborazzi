@@ -330,7 +330,20 @@ fun String.toNsData(): NSData {
 @ExperimentalRoborazziApi
 class RoborazziOptions(
   val taskType: RoborazziTaskType = roborazziSystemPropertyTaskType(),
+  val compareOptions: CompareOptions = CompareOptions(),
 )
+
+data class CompareOptions(
+  val outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
+)
+
+fun String.toAbsolutePath(projectPath: String): String {
+  if (this.startsWith("/")) {
+    return this
+  } else {
+    return "$projectPath/$this"
+  }
+}
 
 @ExperimentalRoborazziApi
 @OptIn(ExperimentalTestApi::class, ExperimentalForeignApi::class, ExperimentalRoborazziApi::class)
@@ -342,21 +355,30 @@ fun SemanticsNodeInteraction.captureRoboImage(
   val projectDir = roborazziSystemPropertyProjectPath()
   val newImage: UIImage = captureToImage().toPixelMap().toUIImage()!!
   val outputDir = roborazziSystemPropertyOutputDirectory()
-  val baseOutputPath = "$projectDir/$outputDir/"
-  val resultsDir = "$projectDir/${roborazziSystemPropertyResultDirectory()}"
+  // This will be changed to use fileWithRecordFilePathStrategy
+  val baseOutputPath = outputDir.toAbsolutePath(projectDir)
+  val compareDir = roborazziOptions.compareOptions.outputDirectoryPath
+  val compareDirPath = compareDir.toAbsolutePath(projectDir)
+  val resultsDir = roborazziSystemPropertyResultDirectory().toAbsolutePath(projectDir)
 
   val roborazziTaskType = roborazziOptions.taskType
   val ext = filePath.substringAfterLast(".")
   val filePathWithOutExtension = filePath.substringBeforeLast(".")
   val nameWithoutExtension = filePathWithOutExtension.substringAfterLast("/")
 
-  val actualFilePath = "$baseOutputPath${filePathWithOutExtension}_actual.$ext"
-  val compareFilePath = "$baseOutputPath${filePathWithOutExtension}_compare.$ext"
+  val actualFilePath = "$compareDirPath${filePathWithOutExtension}_actual.$ext"
+  val compareFilePath = "$compareDirPath${filePathWithOutExtension}_compare.$ext"
   val goldenFilePath = baseOutputPath + filePath
   when (roborazziTaskType) {
     RoborazziTaskType.None -> return
     RoborazziTaskType.Record -> {
       writeImage(newImage, goldenFilePath)
+      val result = CaptureResult.Recorded(
+        goldenFile = "$baseOutputPath$filePath",
+        timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+        contextData = emptyMap()
+      )
+      writeJson(result, resultsDir, nameWithoutExtension)
     }
 
     RoborazziTaskType.Compare -> {
@@ -562,7 +584,16 @@ private fun writeJson(
   nameWithoutExtension: String
 ) {
   val module = SerializersModule {
-    polymorphic(CaptureResult::class, CaptureResult.Added::class, CaptureResult.Added.serializer())
+    polymorphic(
+      CaptureResult::class,
+      CaptureResult.Recorded::class,
+      CaptureResult.Recorded.serializer()
+    )
+    polymorphic(
+      CaptureResult::class,
+      CaptureResult.Added::class,
+      CaptureResult.Added.serializer()
+    )
     polymorphic(
       CaptureResult::class,
       CaptureResult.Changed::class,
