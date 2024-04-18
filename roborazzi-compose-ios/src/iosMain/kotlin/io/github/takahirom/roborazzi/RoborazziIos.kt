@@ -374,7 +374,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
     RoborazziTaskType.Record -> {
       writeImage(newImage, goldenFilePath)
       val result = CaptureResult.Recorded(
-        goldenFile = "$baseOutputPath$filePath",
+        goldenFile = goldenFilePath,
         timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
         contextData = emptyMap()
       )
@@ -390,9 +390,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
           path = compareFilePath
         )
         val result = CaptureResult.Added(
-          compareFile = actualFilePath,
+          compareFile = compareFilePath,
           actualFile = actualFilePath,
-          goldenFile = "$baseOutputPath$filePath",
+          goldenFile = goldenFilePath,
           timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
           contextData = emptyMap()
         )
@@ -406,9 +406,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
           path = compareFilePath
         )
         val result = CaptureResult.Changed(
-          compareFile = actualFilePath,
+          compareFile = compareFilePath,
           actualFile = actualFilePath,
-          goldenFile = "$baseOutputPath$filePath",
+          goldenFile = goldenFilePath,
           timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
           contextData = emptyMap()
         )
@@ -416,7 +416,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         return
       }
       val result = CaptureResult.Unchanged(
-        goldenFile = "$baseOutputPath$filePath",
+        goldenFile = goldenFilePath,
         timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
         contextData = emptyMap()
       )
@@ -432,9 +432,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
           path = compareFilePath
         )
         val result = CaptureResult.Added(
-          compareFile = actualFilePath,
+          compareFile = compareFilePath,
           actualFile = actualFilePath,
-          goldenFile = "$baseOutputPath$filePath",
+          goldenFile = goldenFilePath,
           timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
           contextData = emptyMap()
         )
@@ -448,9 +448,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
           path = compareFilePath
         )
         val result = CaptureResult.Changed(
-          compareFile = actualFilePath,
+          compareFile = compareFilePath,
           actualFile = actualFilePath,
-          goldenFile = "$baseOutputPath$filePath",
+          goldenFile = goldenFilePath,
           timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
           contextData = emptyMap()
         )
@@ -458,7 +458,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         throw AssertionError("Pixel changed for $filePath")
       }
       val result = CaptureResult.Unchanged(
-        goldenFile = "$baseOutputPath$filePath",
+        goldenFile = goldenFilePath,
         timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
         contextData = emptyMap()
       )
@@ -476,7 +476,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         val result = CaptureResult.Added(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
-          goldenFile = "$baseOutputPath$filePath",
+          goldenFile = goldenFilePath,
           timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
           contextData = emptyMap()
         )
@@ -492,7 +492,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         val result = CaptureResult.Changed(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
-          goldenFile = "$baseOutputPath$filePath",
+          goldenFile = goldenFilePath,
           timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
           contextData = emptyMap()
         )
@@ -500,7 +500,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         throw AssertionError("Pixel changed for $filePath")
       }
       val result = CaptureResult.Unchanged(
-        goldenFile = "$baseOutputPath$filePath",
+        goldenFile = goldenFilePath,
         timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
         contextData = emptyMap()
       )
@@ -518,7 +518,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         val result = CaptureResult.Added(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
-          goldenFile = "$baseOutputPath$filePath",
+          goldenFile = goldenFilePath,
           timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
           contextData = emptyMap()
         )
@@ -534,7 +534,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         val result = CaptureResult.Changed(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
-          goldenFile = "$baseOutputPath$filePath",
+          goldenFile = goldenFilePath,
           timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
           contextData = emptyMap()
         )
@@ -542,7 +542,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         return
       }
       val result = CaptureResult.Unchanged(
-        goldenFile = "$baseOutputPath$filePath",
+        goldenFile = goldenFilePath,
         timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
         contextData = emptyMap()
       )
