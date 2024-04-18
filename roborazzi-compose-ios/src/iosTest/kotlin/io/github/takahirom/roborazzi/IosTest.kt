@@ -31,7 +31,7 @@ class IosTest {
                 Button(
                   modifier = Modifier.alpha(alpha),
                   onClick = { /*TODO*/ }) {
-                  Text("Hello World6")
+                  Text("Hello iOS")
                 }
                 Box(
                   modifier = Modifier
