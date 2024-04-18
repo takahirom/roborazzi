@@ -54,7 +54,7 @@ class IosTest {
         }
       }
       onRoot().captureRoboImage(this, filePath = "ios.png")
-      onAllNodesWithText("Hello World", substring = true)[0].captureRoboImage(
+      onAllNodesWithText("Hello", substring = true)[0].captureRoboImage(
         this,
         filePath = "ios_button.png"
       )
