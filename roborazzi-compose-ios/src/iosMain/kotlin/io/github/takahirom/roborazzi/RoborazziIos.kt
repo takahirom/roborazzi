@@ -244,10 +244,10 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
 }
 
 @OptIn(ExperimentalForeignApi::class) private fun hasChangedPixel(
-  oldImage: UIImage,
+  goldenImage: UIImage,
   newImage: UIImage
 ): Boolean {
-  val oldCgImage = unpremultiplyAlpha(oldImage.CGImage!!)!!
+  val oldCgImage = unpremultiplyAlpha(goldenImage.CGImage!!)!!
   val newCgImage = newImage.CGImage!!
 
   if (CGImageGetWidth(oldCgImage) != CGImageGetWidth(newCgImage) ||
@@ -375,41 +375,41 @@ fun SemanticsNodeInteraction.captureRoboImage(
       writeImage(newImage, goldenFilePath)
       val result = CaptureResult.Recorded(
         goldenFile = goldenFilePath,
-        timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+        timestampNs = getNanoTime(),
         contextData = emptyMap()
       )
       writeJson(result, resultsDir, nameWithoutExtension)
     }
 
     RoborazziTaskType.Compare -> {
-      val oldImage = loadOldImage(baseOutputPath, filePath)
-      if (oldImage == null) {
+      val goldenImage = loadGoldenImage(goldenFilePath)
+      if (goldenImage == null) {
         writeImage(newImage, actualFilePath)
         writeImage(
-          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          newImage = generateCompareImage(goldenImage, newImage)?.let { UIImage(it) } ?: newImage,
           path = compareFilePath
         )
         val result = CaptureResult.Added(
           compareFile = compareFilePath,
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
-          timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+          timestampNs = getNanoTime(),
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
         return
       }
-      if (hasChangedPixel(oldImage, newImage)) {
+      if (hasChangedPixel(goldenImage, newImage)) {
         writeImage(newImage, actualFilePath)
         writeImage(
-          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          newImage = generateCompareImage(goldenImage, newImage)?.let { UIImage(it) } ?: newImage,
           path = compareFilePath
         )
         val result = CaptureResult.Changed(
           compareFile = compareFilePath,
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
-          timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+          timestampNs = getNanoTime(),
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -417,41 +417,41 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       val result = CaptureResult.Unchanged(
         goldenFile = goldenFilePath,
-        timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+        timestampNs = getNanoTime(),
         contextData = emptyMap()
       )
       writeJson(result, resultsDir, nameWithoutExtension)
     }
 
     RoborazziTaskType.Verify -> {
-      val oldImage = loadOldImage(baseOutputPath, filePath)
-      if (oldImage == null) {
+      val goldenImage = loadGoldenImage(goldenFilePath)
+      if (goldenImage == null) {
         writeImage(newImage, actualFilePath)
         writeImage(
-          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          newImage = generateCompareImage(goldenImage, newImage)?.let { UIImage(it) } ?: newImage,
           path = compareFilePath
         )
         val result = CaptureResult.Added(
           compareFile = compareFilePath,
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
-          timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+          timestampNs = getNanoTime(),
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
         throw AssertionError("Golden file not found for $filePath")
       }
-      if (hasChangedPixel(oldImage, newImage)) {
+      if (hasChangedPixel(goldenImage, newImage)) {
         writeImage(newImage, actualFilePath)
         writeImage(
-          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          newImage = generateCompareImage(goldenImage, newImage)?.let { UIImage(it) } ?: newImage,
           path = compareFilePath
         )
         val result = CaptureResult.Changed(
           compareFile = compareFilePath,
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
-          timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+          timestampNs = getNanoTime(),
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -459,41 +459,41 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       val result = CaptureResult.Unchanged(
         goldenFile = goldenFilePath,
-        timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+        timestampNs = getNanoTime(),
         contextData = emptyMap()
       )
       writeJson(result, resultsDir, nameWithoutExtension)
     }
 
     RoborazziTaskType.VerifyAndRecord -> {
-      val oldImage = loadOldImage(baseOutputPath, filePath)
-      if (oldImage == null) {
+      val goldenImage = loadGoldenImage(goldenFilePath)
+      if (goldenImage == null) {
         writeImage(newImage, goldenFilePath)
         writeImage(
-          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          newImage = generateCompareImage(goldenImage, newImage)?.let { UIImage(it) } ?: newImage,
           path = compareFilePath
         )
         val result = CaptureResult.Added(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
-          timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+          timestampNs = getNanoTime(),
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
         throw AssertionError("Golden file not found for $filePath")
       }
-      if (hasChangedPixel(oldImage, newImage)) {
+      if (hasChangedPixel(goldenImage, newImage)) {
         writeImage(newImage, goldenFilePath)
         writeImage(
-          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          newImage = generateCompareImage(goldenImage, newImage)?.let { UIImage(it) } ?: newImage,
           path = compareFilePath
         )
         val result = CaptureResult.Changed(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
-          timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+          timestampNs = getNanoTime(),
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -501,41 +501,41 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       val result = CaptureResult.Unchanged(
         goldenFile = goldenFilePath,
-        timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+        timestampNs = getNanoTime(),
         contextData = emptyMap()
       )
       writeJson(result, resultsDir, nameWithoutExtension)
     }
 
     RoborazziTaskType.CompareAndRecord -> {
-      val oldImage = loadOldImage(baseOutputPath, filePath)
-      if (oldImage == null) {
+      val goldenImage = loadGoldenImage(goldenFilePath)
+      if (goldenImage == null) {
         writeImage(newImage, goldenFilePath)
         writeImage(
-          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          newImage = generateCompareImage(goldenImage, newImage)?.let { UIImage(it) } ?: newImage,
           path = compareFilePath
         )
         val result = CaptureResult.Added(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
-          timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+          timestampNs = getNanoTime(),
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
         return
       }
-      if (hasChangedPixel(oldImage, newImage)) {
+      if (hasChangedPixel(goldenImage, newImage)) {
         writeImage(newImage, goldenFilePath)
         writeImage(
-          newImage = generateCompareImage(oldImage, newImage)?.let { UIImage(it) } ?: newImage,
+          newImage = generateCompareImage(goldenImage, newImage)?.let { UIImage(it) } ?: newImage,
           path = compareFilePath
         )
         val result = CaptureResult.Changed(
           compareFile = goldenFilePath,
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
-          timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+          timestampNs = getNanoTime(),
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -543,7 +543,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
       }
       val result = CaptureResult.Unchanged(
         goldenFile = goldenFilePath,
-        timestampNs = CFAbsoluteTimeGetCurrent().toLong(),
+        timestampNs = getNanoTime(),
         contextData = emptyMap()
       )
       writeJson(result, resultsDir, nameWithoutExtension)
@@ -559,23 +559,22 @@ private fun writeImage(newImage: UIImage, path: String) {
   reportLog("Image is saved $path")
 }
 
-private fun loadOldImage(
-  baseOutputPath: String,
+private fun loadGoldenImage(
   filePath: String
 ): UIImage? {
-  if (!NSFileManager.defaultManager.fileExistsAtPath(baseOutputPath + filePath)) {
+  if (!NSFileManager.defaultManager.fileExistsAtPath(filePath)) {
     return null
   }
   @Suppress("USELESS_CAST")
-  val image: UIImage? = UIImage(baseOutputPath + filePath) as UIImage?
+  val image: UIImage? = UIImage(filePath) as UIImage?
   if (image == null) {
-    reportLog("can't load old image from $baseOutputPath$filePath")
+    reportLog("can't load old image from $filePath")
   }
-  val oldImage = image?.let { convertImageFormat(it) }
-  if (oldImage == null) {
-    reportLog("can't convert old image from $baseOutputPath$filePath")
+  val goldenImage = image?.let { convertImageFormat(it) }
+  if (goldenImage == null) {
+    reportLog("can't convert old image from $filePath")
   }
-  return oldImage
+  return goldenImage
 }
 
 private fun writeJson(
@@ -628,4 +627,8 @@ private fun writeJson(
       )
     }"
   )
+}
+
+private fun getNanoTime(): Long {
+  return (CFAbsoluteTimeGetCurrent() * 1e6).toLong()
 }
