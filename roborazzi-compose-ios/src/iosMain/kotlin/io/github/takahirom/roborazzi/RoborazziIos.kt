@@ -584,7 +584,16 @@ private fun writeJson(
   nameWithoutExtension: String
 ) {
   val module = SerializersModule {
-    polymorphic(CaptureResult::class, CaptureResult.Added::class, CaptureResult.Added.serializer())
+    polymorphic(
+      CaptureResult::class,
+      CaptureResult.Recorded::class,
+      CaptureResult.Recorded.serializer()
+    )
+    polymorphic(
+      CaptureResult::class,
+      CaptureResult.Added::class,
+      CaptureResult.Added.serializer()
+    )
     polymorphic(
       CaptureResult::class,
       CaptureResult.Changed::class,
