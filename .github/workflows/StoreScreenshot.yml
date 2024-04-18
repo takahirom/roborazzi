@@ -10,7 +10,7 @@ permissions: {}
 
 jobs:
   store-screenshot-test:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     timeout-minutes: 20
 
     permissions:
@@ -39,7 +39,7 @@ jobs:
           cd include-build; 
           ./gradlew roborazzi-core:test
           cd ..
-          ./gradlew recordRoborazziDebug recordRoborazziDesktop recordRoborazziJvm --stacktrace
+          ./gradlew recordRoborazziDebug recordRoborazziDesktop recordRoborazziJvm compareRoborazziIosX64 --stacktrace
 
       - uses: actions/upload-artifact@v3
         if: ${{ always() }}
