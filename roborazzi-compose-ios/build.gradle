@@ -17,16 +17,12 @@ kotlin {
         it.withIosArm64()
         it.withIosSimulatorArm64()
       }
-      it.withJvm()
     }
   }
-
 
   iosX64()
   iosArm64()
   iosSimulatorArm64()
-
-  jvm()
 
   sourceSets {
     commonMain {
