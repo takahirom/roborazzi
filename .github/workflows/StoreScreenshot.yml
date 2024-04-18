@@ -10,7 +10,7 @@ permissions: {}
 
 jobs:
   store-screenshot-test:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     timeout-minutes: 20
 
     permissions:
