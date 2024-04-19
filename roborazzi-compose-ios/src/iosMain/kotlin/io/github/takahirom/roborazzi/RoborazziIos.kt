@@ -30,7 +30,6 @@ import kotlinx.serialization.modules.SerializersModule
 import platform.CoreFoundation.CFAbsoluteTimeGetCurrent
 import platform.CoreFoundation.CFDataCreate
 import platform.CoreFoundation.CFDataGetBytePtr
-import platform.CoreFoundation.CFDataRef
 import platform.CoreFoundation.CFRelease
 import platform.CoreGraphics.CGBitmapContextCreate
 import platform.CoreGraphics.CGBitmapContextCreateImage
@@ -203,10 +202,14 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   if (context == null) return null
 
   // Diff
-  val goldenRef: CFDataRef? = CGDataProviderCopyData(CGImageGetDataProvider(goldenCgImage))
-  val newRef: CFDataRef? = CGDataProviderCopyData(CGImageGetDataProvider(newCgImage))
-  val goldenData = CFDataGetBytePtr(goldenRef)!!.reinterpret<UByteVar>()
-  val newData = CFDataGetBytePtr(newRef)!!.reinterpret<UByteVar>()
+  val goldenDataProvider = CGImageGetDataProvider(goldenCgImage)!!
+  val newDataProvider = CGImageGetDataProvider(newCgImage)!!
+
+  val goldenData = CGDataProviderCopyData(goldenDataProvider)!!
+  val newData = CGDataProviderCopyData(newDataProvider)!!
+
+  val goldenPtr = CFDataGetBytePtr(goldenData)!!.reinterpret<UByteVar>()
+  val newPtr = CFDataGetBytePtr(newData)!!.reinterpret<UByteVar>()
   CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
   for (y in 1..height.toInt()) {
     if (goldenHeight.toInt() < y || newHeight.toInt() < y) {
@@ -240,10 +243,10 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
       val goldenPixelIndex = yGoldenPixelOffset + x * 4
       val newPixelIndex = yNewPixelOffset + x * 4
       if (
-        abs((goldenData[goldenPixelIndex] - newData[newPixelIndex]).toInt()) > colorDistance ||
-        abs((goldenData[goldenPixelIndex + 1] - newData[newPixelIndex + 1]).toInt()) > colorDistance ||
-        abs((goldenData[goldenPixelIndex + 2] - newData[newPixelIndex + 2]).toInt()) > colorDistance ||
-        abs((goldenData[goldenPixelIndex + 3] - newData[newPixelIndex + 3]).toInt()) > colorDistance
+        abs((goldenPtr[goldenPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
+        abs((goldenPtr[goldenPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
+        abs((goldenPtr[goldenPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
+        abs((goldenPtr[goldenPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
       ) {
         CGContextFillRect(
           context,
@@ -257,8 +260,8 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
       }
     }
   }
-  CFRelease(goldenRef)
-  CFRelease(newRef)
+  CFRelease(goldenData)
+  CFRelease(newData)
 
   // Reference
   CGContextDrawImage(
