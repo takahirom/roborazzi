@@ -45,7 +45,7 @@ class IosTest {
                 )
                 Box(
                   modifier = Modifier
-                    .background(Color.Blue.copy(alpha = alpha), MaterialTheme.shapes.small)
+                    .background(Color.Yellow.copy(alpha = alpha), MaterialTheme.shapes.small)
                     .size(100.dp),
                 )
               }

@@ -221,6 +221,8 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
       )
       continue
     }
+    val yGoldenPixelOffset = (y - 1) * goldenBytePerRow.toInt()
+    val yNewPixelOffset = (y - 1) * newBytePerRow.toInt()
     for (x in 0 until compareWidth.toInt() / 3) {
       if (goldenWidth.toInt() < x || newWidth.toInt() < x) {
         CGContextFillRect(
@@ -235,8 +237,8 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
         continue
       }
       val colorDistance = 2
-      val goldenPixelIndex = (y - 1) * goldenBytePerRow.toInt() + x * 4
-      val newPixelIndex = (y - 1) * newBytePerRow.toInt() + x * 4
+      val goldenPixelIndex = yGoldenPixelOffset + x * 4
+      val newPixelIndex = yNewPixelOffset + x * 4
       if (
         abs((goldenData[goldenPixelIndex] - newData[newPixelIndex]).toInt()) > colorDistance ||
         abs((goldenData[goldenPixelIndex + 1] - newData[newPixelIndex + 1]).toInt()) > colorDistance ||
@@ -314,18 +316,20 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   // Waiting for https://github.com/dropbox/differ/pull/16
   try {
     for (y in 0 until goldenImageHeight.toInt()) {
+      val yGoldenPixelOffset = y * goldenBytesPerRow.toInt()
+      val yNewPixelOffset = y * newBytesPerRow.toInt()
       for (x in 0 until goldenImageWidth.toInt()) {
-        val oldPixelIndex = y * goldenBytesPerRow.toInt() + x * 4
-        val newPixelIndex = y * newBytesPerRow.toInt() + x * 4
+        val goldenPixelIndex = yGoldenPixelOffset + x * 4
+        val newPixelIndex = yNewPixelOffset + x * 4
         // unpremultiplyAlpha can cause a little error
         val colorDistance = 2
         if (
-          abs((goldenPtr[oldPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
-          abs((goldenPtr[oldPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
-          abs((goldenPtr[oldPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
-          abs((goldenPtr[oldPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
+          abs((goldenPtr[goldenPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
+          abs((goldenPtr[goldenPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
+          abs((goldenPtr[goldenPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
+          abs((goldenPtr[goldenPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
         ) {
-          reportLog("Pixel changed at ($x, $y) from rgba(${goldenPtr[oldPixelIndex]}, ${goldenPtr[oldPixelIndex + 1]}, ${goldenPtr[oldPixelIndex + 2]}, ${goldenPtr[oldPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
+          reportLog("Pixel changed at ($x, $y) from rgba(${goldenPtr[goldenPixelIndex]}, ${goldenPtr[goldenPixelIndex + 1]}, ${goldenPtr[goldenPixelIndex + 2]}, ${goldenPtr[goldenPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
           val stringBuilder = StringBuilder()
 
           // properties
