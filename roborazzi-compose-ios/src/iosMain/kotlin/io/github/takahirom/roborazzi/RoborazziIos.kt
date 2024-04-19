@@ -37,6 +37,7 @@ import platform.CoreGraphics.CGBitmapContextCreateImage
 import platform.CoreGraphics.CGBitmapContextGetData
 import platform.CoreGraphics.CGColorRenderingIntent
 import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
+import platform.CoreGraphics.CGColorSpaceCreateWithName
 import platform.CoreGraphics.CGColorSpaceGetName
 import platform.CoreGraphics.CGContextDrawImage
 import platform.CoreGraphics.CGContextFillRect
@@ -57,6 +58,7 @@ import platform.CoreGraphics.CGImageGetWidth
 import platform.CoreGraphics.CGImageRef
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.kCGBitmapByteOrder32Little
+import platform.CoreGraphics.kCGColorSpaceSRGB
 import platform.Foundation.CFBridgingRelease
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
@@ -170,9 +172,8 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
 @OptIn(ExperimentalForeignApi::class) fun multiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val width = CGImageGetWidth(cgImage)
   val height = CGImageGetHeight(cgImage)
-  val colorSpace = CGColorSpaceCreateDeviceRGB()
-  val bitmapInfo =
-    CGImageAlphaInfo.kCGImageAlphaPremultipliedFirst.value or kCGBitmapByteOrder32Little
+  val colorSpace =  CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
+  val bitmapInfo = 1u
   val bytesPerRow = CGImageGetBytesPerRow(cgImage)
 
   val context = CGBitmapContextCreate(null, width, height, 8u, bytesPerRow, colorSpace, bitmapInfo)
@@ -670,7 +671,7 @@ private fun loadGoldenImage(
   if (image == null) {
     reportLog("can't load reference image from $filePath")
   }
-  val goldenImage = image?.let { convertImageFormat(it) }
+  val goldenImage = image //?.let { convertImageFormat(it) }
   if (goldenImage == null) {
     reportLog("can't convert reference image from $filePath")
   }
