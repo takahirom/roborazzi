@@ -15,6 +15,7 @@ import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType
 import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.UByteVar
 import kotlinx.cinterop.allocArray
@@ -166,6 +167,23 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   return CGBitmapContextCreateImage(context)
 }
 
+@OptIn(ExperimentalForeignApi::class) fun multiplyAlpha(cgImage: CGImageRef): CGImageRef? {
+  val width = CGImageGetWidth(cgImage)
+  val height = CGImageGetHeight(cgImage)
+  val colorSpace = CGColorSpaceCreateDeviceRGB()
+  val bitmapInfo =
+    CGImageAlphaInfo.kCGImageAlphaPremultipliedFirst.value or kCGBitmapByteOrder32Little
+  val bytesPerRow = CGImageGetBytesPerRow(cgImage)
+
+  val context = CGBitmapContextCreate(null, width, height, 8u, bytesPerRow, colorSpace, bitmapInfo)
+    ?: return null
+
+  // It seems that we don't need to unpremultiplyAlpha here because the image is premultiplied automatically
+  CGContextDrawImage(context, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()), cgImage)
+
+  return CGBitmapContextCreateImage(context)
+}
+
 // FIXME We want to use RoboCanvas here so we have to avoid using JVM APIs
 @OptIn(ExperimentalForeignApi::class) private fun generateCompareImage(
   goldenImage: UIImage?,
@@ -173,8 +191,8 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
 ): CGImageRef? {
   if (goldenImage == null) return newImage.CIImage?.CGImage
 
-  val goldenCgImage = unpremultiplyAlpha(goldenImage.CGImage!!)!!
-  val newCgImage = newImage.CGImage!!
+  val goldenCgImage = goldenImage.CGImage!!
+  val newCgImage = multiplyAlpha(newImage.CGImage!!)!!
 
   val goldenWidth = CGImageGetWidth(goldenCgImage)
   val newWidth = CGImageGetWidth(newCgImage)
@@ -239,14 +257,15 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
         )
         continue
       }
-      val colorDistance = 2
       val goldenPixelIndex = yGoldenPixelOffset + x * 4
       val newPixelIndex = yNewPixelOffset + x * 4
       if (
-        abs((goldenPtr[goldenPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
-        abs((goldenPtr[goldenPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
-        abs((goldenPtr[goldenPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
-        abs((goldenPtr[goldenPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
+        isTheSamePixel(
+          goldenPtr = goldenPtr,
+          goldenPixelIndex = goldenPixelIndex,
+          newPtr = newPtr,
+          newPixelIndex = newPixelIndex,
+        )
       ) {
         CGContextFillRect(
           context,
@@ -295,8 +314,8 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   goldenImage: UIImage,
   newImage: UIImage
 ): Boolean {
-  val goldenCgImage = unpremultiplyAlpha(goldenImage.CGImage!!)!!
-  val newCgImage = newImage.CGImage!!
+  val goldenCgImage = goldenImage.CGImage!!
+  val newCgImage = multiplyAlpha(newImage.CGImage!!)!!
 
   if (CGImageGetWidth(goldenCgImage) != CGImageGetWidth(newCgImage) ||
     CGImageGetHeight(goldenCgImage) != CGImageGetHeight(newCgImage)
@@ -324,13 +343,13 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
       for (x in 0 until goldenImageWidth.toInt()) {
         val goldenPixelIndex = yGoldenPixelOffset + x * 4
         val newPixelIndex = yNewPixelOffset + x * 4
-        // unpremultiplyAlpha can cause a little error
-        val colorDistance = 2
         if (
-          abs((goldenPtr[goldenPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
-          abs((goldenPtr[goldenPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
-          abs((goldenPtr[goldenPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
-          abs((goldenPtr[goldenPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
+          isTheSamePixel(
+            goldenPtr = goldenPtr,
+            goldenPixelIndex = goldenPixelIndex,
+            newPtr = newPtr,
+            newPixelIndex = newPixelIndex,
+          )
         ) {
           reportLog("Pixel changed at ($x, $y) from rgba(${goldenPtr[goldenPixelIndex]}, ${goldenPtr[goldenPixelIndex + 1]}, ${goldenPtr[goldenPixelIndex + 2]}, ${goldenPtr[goldenPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
           val stringBuilder = StringBuilder()
@@ -354,11 +373,23 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
               )
             )
           )
-          stringBuilder.appendLine("reference CGImageGetBitmapInfo" + CGImageGetBitmapInfo(goldenCgImage))
+          stringBuilder.appendLine(
+            "reference CGImageGetBitmapInfo" + CGImageGetBitmapInfo(
+              goldenCgImage
+            )
+          )
           stringBuilder.appendLine("new CGImageGetBitmapInfo" + CGImageGetBitmapInfo(newCgImage))
-          stringBuilder.appendLine("reference CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(goldenCgImage))
+          stringBuilder.appendLine(
+            "reference CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(
+              goldenCgImage
+            )
+          )
           stringBuilder.appendLine("new CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(newCgImage))
-          stringBuilder.appendLine("reference CGImageGetBytesPerRow" + CGImageGetBytesPerRow(goldenCgImage))
+          stringBuilder.appendLine(
+            "reference CGImageGetBytesPerRow" + CGImageGetBytesPerRow(
+              goldenCgImage
+            )
+          )
           stringBuilder.appendLine("new CGImageGetBytesPerRow" + CGImageGetBytesPerRow(newCgImage))
           reportLog(stringBuilder.toString())
 
@@ -372,6 +403,20 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
     CFRelease(goldenData)
     CFRelease(newData)
   }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private inline fun isTheSamePixel(
+  goldenPtr: CPointer<UByteVar>,
+  goldenPixelIndex: Int,
+  newPtr: CPointer<UByteVar>,
+  newPixelIndex: Int,
+  colorDistance: Int = 2
+): Boolean {
+  return abs((goldenPtr[goldenPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
+    abs((goldenPtr[goldenPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
+    abs((goldenPtr[goldenPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
+    abs((goldenPtr[goldenPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
 }
 
 fun String.toNsData(): NSData {
