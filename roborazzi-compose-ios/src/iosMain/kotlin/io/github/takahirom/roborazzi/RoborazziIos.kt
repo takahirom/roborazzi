@@ -40,7 +40,6 @@ import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
 import platform.CoreGraphics.CGColorSpaceGetName
 import platform.CoreGraphics.CGContextDrawImage
 import platform.CoreGraphics.CGContextFillRect
-import platform.CoreGraphics.CGContextMoveToPoint
 import platform.CoreGraphics.CGContextRelease
 import platform.CoreGraphics.CGContextSetFillColorWithColor
 import platform.CoreGraphics.CGDataProviderCopyData
@@ -178,11 +177,18 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val goldenCgImage = unpremultiplyAlpha(goldenImage.CGImage!!)!!
   val newCgImage = newImage.CGImage!!
 
-  val compareWidth = CGImageGetWidth(goldenCgImage) * 3u
-  val sectionWidth = CGImageGetWidth(goldenCgImage).toInt()
-  val height = CGImageGetHeight(goldenCgImage)
+  val goldenWidth = CGImageGetWidth(goldenCgImage)
+  val newWidth = CGImageGetWidth(newCgImage)
+  val sectionWidth = maxOf(goldenWidth, newWidth)
+  val compareWidth = sectionWidth * 3u
+  val goldenHeight = CGImageGetHeight(goldenCgImage)
+  val newHeight = CGImageGetHeight(newCgImage)
+  val height = maxOf(goldenHeight, newHeight)
+  println("goldenWidth: $goldenWidth, newWidth: $newWidth, sectionWidth: $sectionWidth, compareWidth: $compareWidth, goldenHeight: $goldenHeight, newHeight: $newHeight, height: $height")
   val colorSpace = CGImageGetColorSpace(newCgImage)
-  val compareBytesPerRow = CGImageGetBytesPerRow(goldenCgImage) * 3u
+  val goldenBytePerRow = CGImageGetBytesPerRow(goldenCgImage)
+  val newBytePerRow = CGImageGetBytesPerRow(newCgImage)
+  val compareBytesPerRow = maxOf(goldenBytePerRow, newBytePerRow) * 3u
   val bitmapInfo = CGImageGetBitmapInfo(goldenCgImage)
 
   // reference, diff, new
@@ -203,12 +209,35 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val goldenData = CFDataGetBytePtr(goldenRef)!!.reinterpret<UByteVar>()
   val newData = CFDataGetBytePtr(newRef)!!.reinterpret<UByteVar>()
   CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
-  for (y in 0 until height.toInt()) {
+  for (y in 0..height.toInt()) {
+    if (goldenHeight.toInt() < y || newHeight.toInt() < y) {
+      CGContextFillRect(
+        context,
+        CGRectMake(
+          sectionWidth.toDouble(),
+          height.toDouble() - y.toDouble(),
+          sectionWidth.toDouble(),
+          1.0
+        )
+      )
+      continue
+    }
     for (x in 0 until compareWidth.toInt() / 3) {
-      CGContextMoveToPoint(context, sectionWidth.toDouble(), 0.0)
-      val goldenPixelIndex = y * (compareBytesPerRow.toInt() / 3) + x * 4
-      val newPixelIndex = y * (compareBytesPerRow.toInt() / 3) + x * 4
+      if (goldenWidth.toInt() < x || newWidth.toInt() < x) {
+        CGContextFillRect(
+          context,
+          CGRectMake(
+            x.toDouble() + sectionWidth.toDouble(),
+            height.toDouble() - y.toDouble(),
+            1.0,
+            1.0
+          )
+        )
+        continue
+      }
       val colorDistance = 2
+      val goldenPixelIndex = y * goldenBytePerRow.toInt() + x * 4
+      val newPixelIndex = y * newBytePerRow.toInt() + x * 4
       if (
         abs((goldenData[goldenPixelIndex] - newData[newPixelIndex]).toInt()) > colorDistance ||
         abs((goldenData[goldenPixelIndex + 1] - newData[newPixelIndex + 1]).toInt()) > colorDistance ||
@@ -217,7 +246,12 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
       ) {
         CGContextFillRect(
           context,
-          CGRectMake(x.toDouble() + sectionWidth, height.toDouble() - y.toDouble(), 1.0, 1.0)
+          CGRectMake(
+            x.toDouble() + sectionWidth.toDouble(),
+            height.toDouble() - y.toDouble(),
+            1.0,
+            1.0
+          )
         )
       }
     }
@@ -228,14 +262,24 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   // Reference
   CGContextDrawImage(
     context,
-    CGRectMake(0.0, 0.0, sectionWidth.toDouble(), height.toDouble()),
+    CGRectMake(
+      x = 0.0,
+      y = -goldenHeight.toDouble() + height.toDouble(),
+      width = goldenWidth.toDouble(),
+      height = goldenHeight.toDouble()
+    ),
     goldenCgImage
   )
 
   // New
   CGContextDrawImage(
     context,
-    CGRectMake(compareWidth.toDouble() * 2 / 3, 0.0, sectionWidth.toDouble(), height.toDouble()),
+    CGRectMake(
+      x = compareWidth.toDouble() * 2 / 3,
+      y = -newHeight.toDouble() + height.toDouble(),
+      width = newWidth.toDouble(),
+      height = newHeight.toDouble()
+    ),
     newCgImage
   )
 

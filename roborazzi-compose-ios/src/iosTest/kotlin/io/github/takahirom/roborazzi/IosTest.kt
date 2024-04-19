@@ -31,7 +31,7 @@ class IosTest {
                 Button(
                   modifier = Modifier.alpha(alpha),
                   onClick = { /*TODO*/ }) {
-                  Text("Hello World5")
+                  Text("Hello World")
                 }
                 Box(
                   modifier = Modifier
@@ -53,10 +53,13 @@ class IosTest {
           }
         }
       }
-      onRoot().captureRoboImage(this, filePath = "ios.png")
-      onAllNodesWithText("Hello World", substring = true)[0].captureRoboImage(
-        this,
+      onAllNodesWithText("Hello", substring = true)[0].captureRoboImage(
+        composeUiTest = this,
         filePath = "ios_button.png"
+      )
+      onRoot().captureRoboImage(
+        composeUiTest = this,
+        filePath = "ios.png"
       )
     }
   }
