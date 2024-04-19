@@ -208,11 +208,8 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val goldenData = CFDataGetBytePtr(goldenRef)!!.reinterpret<UByteVar>()
   val newData = CFDataGetBytePtr(newRef)!!.reinterpret<UByteVar>()
   CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
-  println("Segmentation fault here? 1")
   for (y in 1..height.toInt()) {
-    println("Segmentation fault here? 2 y:$y")
     if (goldenHeight.toInt() < y || newHeight.toInt() < y) {
-      println("Segmentation fault here? 2.1y:$y")
       CGContextFillRect(
         context,
         CGRectMake(
@@ -226,7 +223,6 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
     }
     for (x in 0 until compareWidth.toInt() / 3) {
       if (goldenWidth.toInt() < x || newWidth.toInt() < x) {
-        println("Segmentation fault here? 2.2 x:$x y:$y")
         CGContextFillRect(
           context,
           CGRectMake(
@@ -238,7 +234,6 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
         )
         continue
       }
-      println("Segmentation fault here? 2.4 x:$x y:$y")
       val colorDistance = 2
       val goldenPixelIndex = (y - 1) * goldenBytePerRow.toInt() + x * 4
       val newPixelIndex = (y - 1) * newBytePerRow.toInt() + x * 4
@@ -248,7 +243,6 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
         abs((goldenData[goldenPixelIndex + 2] - newData[newPixelIndex + 2]).toInt()) > colorDistance ||
         abs((goldenData[goldenPixelIndex + 3] - newData[newPixelIndex + 3]).toInt()) > colorDistance
       ) {
-        println("Segmentation fault here? 2.3 x:$x y:$y")
         CGContextFillRect(
           context,
           CGRectMake(
@@ -263,7 +257,6 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   }
   CFRelease(goldenRef)
   CFRelease(newRef)
-  println("Segmentation fault here? 3")
 
   // Reference
   CGContextDrawImage(
@@ -276,7 +269,6 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
     ),
     goldenCgImage
   )
-  println("Segmentation fault here? 4")
 
   // New
   CGContextDrawImage(
@@ -298,50 +290,50 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   goldenImage: UIImage,
   newImage: UIImage
 ): Boolean {
-  val oldCgImage = unpremultiplyAlpha(goldenImage.CGImage!!)!!
+  val goldenCgImage = unpremultiplyAlpha(goldenImage.CGImage!!)!!
   val newCgImage = newImage.CGImage!!
 
-  if (CGImageGetWidth(oldCgImage) != CGImageGetWidth(newCgImage) ||
-    CGImageGetHeight(oldCgImage) != CGImageGetHeight(newCgImage)
+  if (CGImageGetWidth(goldenCgImage) != CGImageGetWidth(newCgImage) ||
+    CGImageGetHeight(goldenCgImage) != CGImageGetHeight(newCgImage)
   ) return true
 
-  val oldBytesPerRow = CGImageGetBytesPerRow(oldCgImage)
+  val goldenBytesPerRow = CGImageGetBytesPerRow(goldenCgImage)
   val newBytesPerRow = CGImageGetBytesPerRow(newCgImage)
 
-  val oldDataProvider = CGImageGetDataProvider(oldCgImage)!!
+  val goldenDataProvider = CGImageGetDataProvider(goldenCgImage)!!
   val newDataProvider = CGImageGetDataProvider(newCgImage)!!
 
-  val oldData = CGDataProviderCopyData(oldDataProvider)!!
+  val goldenData = CGDataProviderCopyData(goldenDataProvider)!!
   val newData = CGDataProviderCopyData(newDataProvider)!!
 
-  val oldPtr = CFDataGetBytePtr(oldData)!!.reinterpret<UByteVar>()
+  val goldenPtr = CFDataGetBytePtr(goldenData)!!.reinterpret<UByteVar>()
   val newPtr = CFDataGetBytePtr(newData)!!.reinterpret<UByteVar>()
 
-  val width = CGImageGetWidth(oldCgImage)
-  val height = CGImageGetHeight(oldCgImage)
+  val goldenImageWidth = CGImageGetWidth(goldenCgImage)
+  val goldenImageHeight = CGImageGetHeight(goldenCgImage)
   // Waiting for https://github.com/dropbox/differ/pull/16
   try {
-    for (y in 0 until height.toInt()) {
-      for (x in 0 until width.toInt()) {
-        val oldPixelIndex = y * oldBytesPerRow.toInt() + x * 4
+    for (y in 0 until goldenImageHeight.toInt()) {
+      for (x in 0 until goldenImageWidth.toInt()) {
+        val oldPixelIndex = y * goldenBytesPerRow.toInt() + x * 4
         val newPixelIndex = y * newBytesPerRow.toInt() + x * 4
         // unpremultiplyAlpha can cause a little error
         val colorDistance = 2
         if (
-          abs((oldPtr[oldPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
-          abs((oldPtr[oldPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
-          abs((oldPtr[oldPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
-          abs((oldPtr[oldPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
+          abs((goldenPtr[oldPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
+          abs((goldenPtr[oldPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
+          abs((goldenPtr[oldPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
+          abs((goldenPtr[oldPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
         ) {
-          reportLog("Pixel changed at ($x, $y) from rgba(${oldPtr[oldPixelIndex]}, ${oldPtr[oldPixelIndex + 1]}, ${oldPtr[oldPixelIndex + 2]}, ${oldPtr[oldPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
+          reportLog("Pixel changed at ($x, $y) from rgba(${goldenPtr[oldPixelIndex]}, ${goldenPtr[oldPixelIndex + 1]}, ${goldenPtr[oldPixelIndex + 2]}, ${goldenPtr[oldPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
           val stringBuilder = StringBuilder()
 
           // properties
           stringBuilder.appendLine(
-            "old CGImageGetColorSpace" + CFBridgingRelease(
+            "reference CGImageGetColorSpace" + CFBridgingRelease(
               CGColorSpaceGetName(
                 CGImageGetColorSpace(
-                  oldCgImage
+                  goldenCgImage
                 )
               )
             )
@@ -355,11 +347,11 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
               )
             )
           )
-          stringBuilder.appendLine("old CGImageGetBitmapInfo" + CGImageGetBitmapInfo(oldCgImage))
+          stringBuilder.appendLine("reference CGImageGetBitmapInfo" + CGImageGetBitmapInfo(goldenCgImage))
           stringBuilder.appendLine("new CGImageGetBitmapInfo" + CGImageGetBitmapInfo(newCgImage))
-          stringBuilder.appendLine("old CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(oldCgImage))
+          stringBuilder.appendLine("reference CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(goldenCgImage))
           stringBuilder.appendLine("new CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(newCgImage))
-          stringBuilder.appendLine("old CGImageGetBytesPerRow" + CGImageGetBytesPerRow(oldCgImage))
+          stringBuilder.appendLine("reference CGImageGetBytesPerRow" + CGImageGetBytesPerRow(goldenCgImage))
           stringBuilder.appendLine("new CGImageGetBytesPerRow" + CGImageGetBytesPerRow(newCgImage))
           reportLog(stringBuilder.toString())
 
@@ -370,7 +362,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
 
     return false
   } finally {
-    CFRelease(oldData)
+    CFRelease(goldenData)
     CFRelease(newData)
   }
 }
@@ -624,11 +616,11 @@ private fun loadGoldenImage(
   @Suppress("USELESS_CAST")
   val image: UIImage? = UIImage(filePath) as UIImage?
   if (image == null) {
-    reportLog("can't load old image from $filePath")
+    reportLog("can't load reference image from $filePath")
   }
   val goldenImage = image?.let { convertImageFormat(it) }
   if (goldenImage == null) {
-    reportLog("can't convert old image from $filePath")
+    reportLog("can't convert reference image from $filePath")
   }
   return goldenImage
 }
