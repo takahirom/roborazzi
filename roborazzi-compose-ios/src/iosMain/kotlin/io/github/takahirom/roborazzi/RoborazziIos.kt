@@ -238,9 +238,10 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
         )
         continue
       }
+      println("Segmentation fault here? 2.4 x:$x y:$y")
       val colorDistance = 2
-      val goldenPixelIndex = y * goldenBytePerRow.toInt() + x * 4
-      val newPixelIndex = y * newBytePerRow.toInt() + x * 4
+      val goldenPixelIndex = (y - 1) * goldenBytePerRow.toInt() + x * 4
+      val newPixelIndex = (y - 1) * newBytePerRow.toInt() + x * 4
       if (
         abs((goldenData[goldenPixelIndex] - newData[newPixelIndex]).toInt()) > colorDistance ||
         abs((goldenData[goldenPixelIndex + 1] - newData[newPixelIndex + 1]).toInt()) > colorDistance ||
