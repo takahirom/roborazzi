@@ -208,8 +208,11 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val goldenData = CFDataGetBytePtr(goldenRef)!!.reinterpret<UByteVar>()
   val newData = CFDataGetBytePtr(newRef)!!.reinterpret<UByteVar>()
   CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
+  println("Segmentation fault here? 1")
   for (y in 1..height.toInt()) {
+    println("Segmentation fault here? 2 y:$y")
     if (goldenHeight.toInt() < y || newHeight.toInt() < y) {
+      println("Segmentation fault here? 2.1y:$y")
       CGContextFillRect(
         context,
         CGRectMake(
@@ -223,6 +226,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
     }
     for (x in 0 until compareWidth.toInt() / 3) {
       if (goldenWidth.toInt() < x || newWidth.toInt() < x) {
+        println("Segmentation fault here? 2.2 x:$x y:$y")
         CGContextFillRect(
           context,
           CGRectMake(
@@ -243,6 +247,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
         abs((goldenData[goldenPixelIndex + 2] - newData[newPixelIndex + 2]).toInt()) > colorDistance ||
         abs((goldenData[goldenPixelIndex + 3] - newData[newPixelIndex + 3]).toInt()) > colorDistance
       ) {
+        println("Segmentation fault here? 2.3 x:$x y:$y")
         CGContextFillRect(
           context,
           CGRectMake(
@@ -257,6 +262,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   }
   CFRelease(goldenRef)
   CFRelease(newRef)
+  println("Segmentation fault here? 3")
 
   // Reference
   CGContextDrawImage(
@@ -269,6 +275,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
     ),
     goldenCgImage
   )
+  println("Segmentation fault here? 4")
 
   // New
   CGContextDrawImage(
