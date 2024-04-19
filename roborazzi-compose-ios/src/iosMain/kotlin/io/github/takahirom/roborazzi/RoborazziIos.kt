@@ -184,7 +184,6 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val goldenHeight = CGImageGetHeight(goldenCgImage)
   val newHeight = CGImageGetHeight(newCgImage)
   val height = maxOf(goldenHeight, newHeight)
-  println("goldenWidth: $goldenWidth, newWidth: $newWidth, sectionWidth: $sectionWidth, compareWidth: $compareWidth, goldenHeight: $goldenHeight, newHeight: $newHeight, height: $height")
   val colorSpace = CGImageGetColorSpace(newCgImage)
   val goldenBytePerRow = CGImageGetBytesPerRow(goldenCgImage)
   val newBytePerRow = CGImageGetBytesPerRow(newCgImage)
@@ -209,7 +208,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val goldenData = CFDataGetBytePtr(goldenRef)!!.reinterpret<UByteVar>()
   val newData = CFDataGetBytePtr(newRef)!!.reinterpret<UByteVar>()
   CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
-  for (y in 0..height.toInt()) {
+  for (y in 1..height.toInt()) {
     if (goldenHeight.toInt() < y || newHeight.toInt() < y) {
       CGContextFillRect(
         context,
@@ -313,54 +312,59 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val width = CGImageGetWidth(oldCgImage)
   val height = CGImageGetHeight(oldCgImage)
   // Waiting for https://github.com/dropbox/differ/pull/16
-  for (y in 0 until height.toInt()) {
-    for (x in 0 until width.toInt()) {
-      val oldPixelIndex = y * oldBytesPerRow.toInt() + x * 4
-      val newPixelIndex = y * newBytesPerRow.toInt() + x * 4
-      // unpremultiplyAlpha can cause a little error
-      val colorDistance = 2
-      if (
-        abs((oldPtr[oldPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
-        abs((oldPtr[oldPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
-        abs((oldPtr[oldPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
-        abs((oldPtr[oldPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
-      ) {
-        reportLog("Pixel changed at ($x, $y) from rgba(${oldPtr[oldPixelIndex]}, ${oldPtr[oldPixelIndex + 1]}, ${oldPtr[oldPixelIndex + 2]}, ${oldPtr[oldPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
-        val stringBuilder = StringBuilder()
+  try {
+    for (y in 0 until height.toInt()) {
+      for (x in 0 until width.toInt()) {
+        val oldPixelIndex = y * oldBytesPerRow.toInt() + x * 4
+        val newPixelIndex = y * newBytesPerRow.toInt() + x * 4
+        // unpremultiplyAlpha can cause a little error
+        val colorDistance = 2
+        if (
+          abs((oldPtr[oldPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
+          abs((oldPtr[oldPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
+          abs((oldPtr[oldPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
+          abs((oldPtr[oldPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
+        ) {
+          reportLog("Pixel changed at ($x, $y) from rgba(${oldPtr[oldPixelIndex]}, ${oldPtr[oldPixelIndex + 1]}, ${oldPtr[oldPixelIndex + 2]}, ${oldPtr[oldPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
+          val stringBuilder = StringBuilder()
 
-        // properties
-        stringBuilder.appendLine(
-          "old CGImageGetColorSpace" + CFBridgingRelease(
-            CGColorSpaceGetName(
-              CGImageGetColorSpace(
-                oldCgImage
+          // properties
+          stringBuilder.appendLine(
+            "old CGImageGetColorSpace" + CFBridgingRelease(
+              CGColorSpaceGetName(
+                CGImageGetColorSpace(
+                  oldCgImage
+                )
               )
             )
           )
-        )
-        stringBuilder.appendLine(
-          "new CGImageGetColorSpace" + CFBridgingRelease(
-            CGColorSpaceGetName(
-              CGImageGetColorSpace(
-                newCgImage
+          stringBuilder.appendLine(
+            "new CGImageGetColorSpace" + CFBridgingRelease(
+              CGColorSpaceGetName(
+                CGImageGetColorSpace(
+                  newCgImage
+                )
               )
             )
           )
-        )
-        stringBuilder.appendLine("old CGImageGetBitmapInfo" + CGImageGetBitmapInfo(oldCgImage))
-        stringBuilder.appendLine("new CGImageGetBitmapInfo" + CGImageGetBitmapInfo(newCgImage))
-        stringBuilder.appendLine("old CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(oldCgImage))
-        stringBuilder.appendLine("new CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(newCgImage))
-        stringBuilder.appendLine("old CGImageGetBytesPerRow" + CGImageGetBytesPerRow(oldCgImage))
-        stringBuilder.appendLine("new CGImageGetBytesPerRow" + CGImageGetBytesPerRow(newCgImage))
-        reportLog(stringBuilder.toString())
+          stringBuilder.appendLine("old CGImageGetBitmapInfo" + CGImageGetBitmapInfo(oldCgImage))
+          stringBuilder.appendLine("new CGImageGetBitmapInfo" + CGImageGetBitmapInfo(newCgImage))
+          stringBuilder.appendLine("old CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(oldCgImage))
+          stringBuilder.appendLine("new CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(newCgImage))
+          stringBuilder.appendLine("old CGImageGetBytesPerRow" + CGImageGetBytesPerRow(oldCgImage))
+          stringBuilder.appendLine("new CGImageGetBytesPerRow" + CGImageGetBytesPerRow(newCgImage))
+          reportLog(stringBuilder.toString())
 
-        return true
+          return true
+        }
       }
     }
-  }
 
-  return false
+    return false
+  } finally {
+    CFRelease(oldData)
+    CFRelease(newData)
+  }
 }
 
 fun String.toNsData(): NSData {
