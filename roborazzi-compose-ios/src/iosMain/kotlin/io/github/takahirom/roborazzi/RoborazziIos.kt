@@ -171,7 +171,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
 @OptIn(ExperimentalForeignApi::class) fun multiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   val width = CGImageGetWidth(cgImage)
   val height = CGImageGetHeight(cgImage)
-  val colorSpace =  CGColorSpaceCreateWithName(kCGColorSpaceSRGB))
+  val colorSpace =  CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
   val bitmapInfo = CGImageAlphaInfo.kCGImageAlphaPremultipliedFirst.value or kCGBitmapByteOrder32Little
   val bytesPerRow = CGImageGetBytesPerRow(cgImage)
 
