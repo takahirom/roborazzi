@@ -189,7 +189,10 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   goldenImage: UIImage?,
   newImage: UIImage
 ): CGImageRef? {
-  if (goldenImage == null) return newImage.CIImage?.CGImage
+  if (goldenImage == null) {
+    reportLog("CompareImage Golden image is null")
+    return newImage.CIImage?.CGImage
+  }
 
   val goldenCgImage = goldenImage.CGImage!!
   val newCgImage = multiplyAlpha(newImage.CGImage!!)!!
@@ -217,7 +220,10 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
     colorSpace,
     bitmapInfo
   )
-  if (context == null) return null
+  if (context == null) {
+    reportLog("CompareImage Failed to create context")
+    return null
+  }
 
   // Diff
   val goldenDataProvider = CGImageGetDataProvider(goldenCgImage)!!
@@ -306,8 +312,11 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
     newCgImage
   )
 
-
-  return CGBitmapContextCreateImage(context)
+  val cgBitmapContextCreateImage = CGBitmapContextCreateImage(context)
+  if (cgBitmapContextCreateImage == null) {
+    reportLog("CompareImage Failed to create image")
+  }
+  return cgBitmapContextCreateImage
 }
 
 @OptIn(ExperimentalForeignApi::class) private fun hasChangedPixel(
