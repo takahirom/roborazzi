@@ -15,6 +15,7 @@ import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType
 import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.UByteVar
 import kotlinx.cinterop.allocArray
@@ -30,17 +31,15 @@ import kotlinx.serialization.modules.SerializersModule
 import platform.CoreFoundation.CFAbsoluteTimeGetCurrent
 import platform.CoreFoundation.CFDataCreate
 import platform.CoreFoundation.CFDataGetBytePtr
-import platform.CoreFoundation.CFDataRef
 import platform.CoreFoundation.CFRelease
 import platform.CoreGraphics.CGBitmapContextCreate
 import platform.CoreGraphics.CGBitmapContextCreateImage
 import platform.CoreGraphics.CGBitmapContextGetData
 import platform.CoreGraphics.CGColorRenderingIntent
-import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
+import platform.CoreGraphics.CGColorSpaceCreateWithName
 import platform.CoreGraphics.CGColorSpaceGetName
 import platform.CoreGraphics.CGContextDrawImage
 import platform.CoreGraphics.CGContextFillRect
-import platform.CoreGraphics.CGContextMoveToPoint
 import platform.CoreGraphics.CGContextRelease
 import platform.CoreGraphics.CGContextSetFillColorWithColor
 import platform.CoreGraphics.CGDataProviderCopyData
@@ -58,6 +57,7 @@ import platform.CoreGraphics.CGImageGetWidth
 import platform.CoreGraphics.CGImageRef
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.kCGBitmapByteOrder32Little
+import platform.CoreGraphics.kCGColorSpaceSRGB
 import platform.Foundation.CFBridgingRelease
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
@@ -88,7 +88,7 @@ private fun PixelMap.toUIImage(): UIImage? {
   memScoped {
     val dataProvider = this@toUIImage.toCGDataProvider()
 
-    val colorSpace = CGColorSpaceCreateDeviceRGB()
+    val colorSpace =  CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
     val bitmapInfo = CGImageAlphaInfo.kCGImageAlphaFirst.value or
       kCGBitmapByteOrder32Little
 
@@ -116,7 +116,7 @@ private fun PixelMap.toUIImage(): UIImage? {
 private fun convertImageFormat(image: UIImage): UIImage? {
   val cgImage = image.CGImage ?: return null
 
-  val colorSpace = CGColorSpaceCreateDeviceRGB()
+  val colorSpace =  CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
   val width = CGImageGetWidth(cgImage)
   val height = CGImageGetHeight(cgImage)
   val bytesPerPixel = 4u
@@ -168,21 +168,46 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   return CGBitmapContextCreateImage(context)
 }
 
+@OptIn(ExperimentalForeignApi::class) fun multiplyAlpha(cgImage: CGImageRef): CGImageRef? {
+  val width = CGImageGetWidth(cgImage)
+  val height = CGImageGetHeight(cgImage)
+  val colorSpace =  CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
+  val bitmapInfo = CGImageAlphaInfo.kCGImageAlphaPremultipliedFirst.value or kCGBitmapByteOrder32Little
+  val bytesPerRow = CGImageGetBytesPerRow(cgImage)
+
+  val context = CGBitmapContextCreate(null, width, height, 8u, bytesPerRow, colorSpace, bitmapInfo)
+    ?: return null
+
+  // It seems that we don't need to unpremultiplyAlpha here because the image is premultiplied automatically
+  CGContextDrawImage(context, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()), cgImage)
+
+  return CGBitmapContextCreateImage(context)
+}
+
 // FIXME We want to use RoboCanvas here so we have to avoid using JVM APIs
 @OptIn(ExperimentalForeignApi::class) private fun generateCompareImage(
   goldenImage: UIImage?,
   newImage: UIImage
 ): CGImageRef? {
-  if (goldenImage == null) return newImage.CIImage?.CGImage
+  if (goldenImage == null) {
+    reportLog("CompareImage Golden image is null")
+    return newImage.CIImage?.CGImage
+  }
 
-  val goldenCgImage = unpremultiplyAlpha(goldenImage.CGImage!!)!!
-  val newCgImage = newImage.CGImage!!
+  val goldenCgImage = goldenImage.CGImage!!
+  val newCgImage = multiplyAlpha(newImage.CGImage!!)!!
 
-  val compareWidth = CGImageGetWidth(goldenCgImage) * 3u
-  val sectionWidth = CGImageGetWidth(goldenCgImage).toInt()
-  val height = CGImageGetHeight(goldenCgImage)
+  val goldenWidth = CGImageGetWidth(goldenCgImage)
+  val newWidth = CGImageGetWidth(newCgImage)
+  val sectionWidth = maxOf(goldenWidth, newWidth)
+  val compareWidth = sectionWidth * 3u
+  val goldenHeight = CGImageGetHeight(goldenCgImage)
+  val newHeight = CGImageGetHeight(newCgImage)
+  val height = maxOf(goldenHeight, newHeight)
   val colorSpace = CGImageGetColorSpace(newCgImage)
-  val compareBytesPerRow = CGImageGetBytesPerRow(goldenCgImage) * 3u
+  val goldenBytePerRow = CGImageGetBytesPerRow(goldenCgImage)
+  val newBytePerRow = CGImageGetBytesPerRow(newCgImage)
+  val compareBytesPerRow = maxOf(goldenBytePerRow, newBytePerRow) * 3u
   val bitmapInfo = CGImageGetBitmapInfo(goldenCgImage)
 
   // reference, diff, new
@@ -195,128 +220,212 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
     colorSpace,
     bitmapInfo
   )
-  if (context == null) return null
+  if (context == null) {
+    reportLog("CompareImage Failed to create context")
+    return null
+  }
 
   // Diff
-  val goldenRef: CFDataRef? = CGDataProviderCopyData(CGImageGetDataProvider(goldenCgImage))
-  val newRef: CFDataRef? = CGDataProviderCopyData(CGImageGetDataProvider(newCgImage))
-  val goldenData = CFDataGetBytePtr(goldenRef)!!.reinterpret<UByteVar>()
-  val newData = CFDataGetBytePtr(newRef)!!.reinterpret<UByteVar>()
+  val goldenDataProvider = CGImageGetDataProvider(goldenCgImage)!!
+  val newDataProvider = CGImageGetDataProvider(newCgImage)!!
+
+  val goldenData = CGDataProviderCopyData(goldenDataProvider)!!
+  val newData = CGDataProviderCopyData(newDataProvider)!!
+
+  val goldenPtr = CFDataGetBytePtr(goldenData)!!.reinterpret<UByteVar>()
+  val newPtr = CFDataGetBytePtr(newData)!!.reinterpret<UByteVar>()
   CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
-  for (y in 0 until height.toInt()) {
+  for (y in 1..height.toInt()) {
+    if (goldenHeight.toInt() < y || newHeight.toInt() < y) {
+      CGContextFillRect(
+        context,
+        CGRectMake(
+          sectionWidth.toDouble(),
+          height.toDouble() - y.toDouble(),
+          sectionWidth.toDouble(),
+          1.0
+        )
+      )
+      continue
+    }
+    val yGoldenPixelOffset = (y - 1) * goldenBytePerRow.toInt()
+    val yNewPixelOffset = (y - 1) * newBytePerRow.toInt()
     for (x in 0 until compareWidth.toInt() / 3) {
-      CGContextMoveToPoint(context, sectionWidth.toDouble(), 0.0)
-      val goldenPixelIndex = y * (compareBytesPerRow.toInt() / 3) + x * 4
-      val newPixelIndex = y * (compareBytesPerRow.toInt() / 3) + x * 4
-      val colorDistance = 2
+      if (goldenWidth.toInt() < x || newWidth.toInt() < x) {
+        CGContextFillRect(
+          context,
+          CGRectMake(
+            x.toDouble() + sectionWidth.toDouble(),
+            height.toDouble() - y.toDouble(),
+            1.0,
+            1.0
+          )
+        )
+        continue
+      }
+      val goldenPixelIndex = yGoldenPixelOffset + x * 4
+      val newPixelIndex = yNewPixelOffset + x * 4
       if (
-        abs((goldenData[goldenPixelIndex] - newData[newPixelIndex]).toInt()) > colorDistance ||
-        abs((goldenData[goldenPixelIndex + 1] - newData[newPixelIndex + 1]).toInt()) > colorDistance ||
-        abs((goldenData[goldenPixelIndex + 2] - newData[newPixelIndex + 2]).toInt()) > colorDistance ||
-        abs((goldenData[goldenPixelIndex + 3] - newData[newPixelIndex + 3]).toInt()) > colorDistance
+        isTheSamePixel(
+          goldenPtr = goldenPtr,
+          goldenPixelIndex = goldenPixelIndex,
+          newPtr = newPtr,
+          newPixelIndex = newPixelIndex,
+        )
       ) {
         CGContextFillRect(
           context,
-          CGRectMake(x.toDouble() + sectionWidth, height.toDouble() - y.toDouble(), 1.0, 1.0)
+          CGRectMake(
+            x.toDouble() + sectionWidth.toDouble(),
+            height.toDouble() - y.toDouble(),
+            1.0,
+            1.0
+          )
         )
       }
     }
   }
-  CFRelease(goldenRef)
-  CFRelease(newRef)
+  CFRelease(goldenData)
+  CFRelease(newData)
 
   // Reference
   CGContextDrawImage(
     context,
-    CGRectMake(0.0, 0.0, sectionWidth.toDouble(), height.toDouble()),
+    CGRectMake(
+      x = 0.0,
+      y = -goldenHeight.toDouble() + height.toDouble(),
+      width = goldenWidth.toDouble(),
+      height = goldenHeight.toDouble()
+    ),
     goldenCgImage
   )
 
   // New
   CGContextDrawImage(
     context,
-    CGRectMake(compareWidth.toDouble() * 2 / 3, 0.0, sectionWidth.toDouble(), height.toDouble()),
+    CGRectMake(
+      x = compareWidth.toDouble() * 2 / 3,
+      y = -newHeight.toDouble() + height.toDouble(),
+      width = newWidth.toDouble(),
+      height = newHeight.toDouble()
+    ),
     newCgImage
   )
 
-
-  return CGBitmapContextCreateImage(context)
+  val cgBitmapContextCreateImage = CGBitmapContextCreateImage(context)
+  if (cgBitmapContextCreateImage == null) {
+    reportLog("CompareImage Failed to create image")
+  }
+  return cgBitmapContextCreateImage
 }
 
 @OptIn(ExperimentalForeignApi::class) private fun hasChangedPixel(
   goldenImage: UIImage,
   newImage: UIImage
 ): Boolean {
-  val oldCgImage = unpremultiplyAlpha(goldenImage.CGImage!!)!!
-  val newCgImage = newImage.CGImage!!
+  val goldenCgImage = goldenImage.CGImage!!
+  val newCgImage = multiplyAlpha(newImage.CGImage!!)!!
 
-  if (CGImageGetWidth(oldCgImage) != CGImageGetWidth(newCgImage) ||
-    CGImageGetHeight(oldCgImage) != CGImageGetHeight(newCgImage)
+  if (CGImageGetWidth(goldenCgImage) != CGImageGetWidth(newCgImage) ||
+    CGImageGetHeight(goldenCgImage) != CGImageGetHeight(newCgImage)
   ) return true
 
-  val oldBytesPerRow = CGImageGetBytesPerRow(oldCgImage)
+  val goldenBytesPerRow = CGImageGetBytesPerRow(goldenCgImage)
   val newBytesPerRow = CGImageGetBytesPerRow(newCgImage)
 
-  val oldDataProvider = CGImageGetDataProvider(oldCgImage)!!
+  val goldenDataProvider = CGImageGetDataProvider(goldenCgImage)!!
   val newDataProvider = CGImageGetDataProvider(newCgImage)!!
 
-  val oldData = CGDataProviderCopyData(oldDataProvider)!!
+  val goldenData = CGDataProviderCopyData(goldenDataProvider)!!
   val newData = CGDataProviderCopyData(newDataProvider)!!
 
-  val oldPtr = CFDataGetBytePtr(oldData)!!.reinterpret<UByteVar>()
+  val goldenPtr = CFDataGetBytePtr(goldenData)!!.reinterpret<UByteVar>()
   val newPtr = CFDataGetBytePtr(newData)!!.reinterpret<UByteVar>()
 
-  val width = CGImageGetWidth(oldCgImage)
-  val height = CGImageGetHeight(oldCgImage)
+  val goldenImageWidth = CGImageGetWidth(goldenCgImage)
+  val goldenImageHeight = CGImageGetHeight(goldenCgImage)
   // Waiting for https://github.com/dropbox/differ/pull/16
-  for (y in 0 until height.toInt()) {
-    for (x in 0 until width.toInt()) {
-      val oldPixelIndex = y * oldBytesPerRow.toInt() + x * 4
-      val newPixelIndex = y * newBytesPerRow.toInt() + x * 4
-      // unpremultiplyAlpha can cause a little error
-      val colorDistance = 2
-      if (
-        abs((oldPtr[oldPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
-        abs((oldPtr[oldPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
-        abs((oldPtr[oldPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
-        abs((oldPtr[oldPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
-      ) {
-        reportLog("Pixel changed at ($x, $y) from rgba(${oldPtr[oldPixelIndex]}, ${oldPtr[oldPixelIndex + 1]}, ${oldPtr[oldPixelIndex + 2]}, ${oldPtr[oldPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
-        val stringBuilder = StringBuilder()
+  try {
+    for (y in 0 until goldenImageHeight.toInt()) {
+      val yGoldenPixelOffset = y * goldenBytesPerRow.toInt()
+      val yNewPixelOffset = y * newBytesPerRow.toInt()
+      for (x in 0 until goldenImageWidth.toInt()) {
+        val goldenPixelIndex = yGoldenPixelOffset + x * 4
+        val newPixelIndex = yNewPixelOffset + x * 4
+        if (
+          isTheSamePixel(
+            goldenPtr = goldenPtr,
+            goldenPixelIndex = goldenPixelIndex,
+            newPtr = newPtr,
+            newPixelIndex = newPixelIndex,
+          )
+        ) {
+          reportLog("Pixel changed at ($x, $y) from rgba(${goldenPtr[goldenPixelIndex]}, ${goldenPtr[goldenPixelIndex + 1]}, ${goldenPtr[goldenPixelIndex + 2]}, ${goldenPtr[goldenPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
+          val stringBuilder = StringBuilder()
 
-        // properties
-        stringBuilder.appendLine(
-          "old CGImageGetColorSpace" + CFBridgingRelease(
-            CGColorSpaceGetName(
-              CGImageGetColorSpace(
-                oldCgImage
+          // properties
+          stringBuilder.appendLine(
+            "reference CGImageGetColorSpace" + CFBridgingRelease(
+              CGColorSpaceGetName(
+                CGImageGetColorSpace(
+                  goldenCgImage
+                )
               )
             )
           )
-        )
-        stringBuilder.appendLine(
-          "new CGImageGetColorSpace" + CFBridgingRelease(
-            CGColorSpaceGetName(
-              CGImageGetColorSpace(
-                newCgImage
+          stringBuilder.appendLine(
+            "new CGImageGetColorSpace" + CFBridgingRelease(
+              CGColorSpaceGetName(
+                CGImageGetColorSpace(
+                  newCgImage
+                )
               )
             )
           )
-        )
-        stringBuilder.appendLine("old CGImageGetBitmapInfo" + CGImageGetBitmapInfo(oldCgImage))
-        stringBuilder.appendLine("new CGImageGetBitmapInfo" + CGImageGetBitmapInfo(newCgImage))
-        stringBuilder.appendLine("old CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(oldCgImage))
-        stringBuilder.appendLine("new CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(newCgImage))
-        stringBuilder.appendLine("old CGImageGetBytesPerRow" + CGImageGetBytesPerRow(oldCgImage))
-        stringBuilder.appendLine("new CGImageGetBytesPerRow" + CGImageGetBytesPerRow(newCgImage))
-        reportLog(stringBuilder.toString())
+          stringBuilder.appendLine(
+            "reference CGImageGetBitmapInfo" + CGImageGetBitmapInfo(
+              goldenCgImage
+            )
+          )
+          stringBuilder.appendLine("new CGImageGetBitmapInfo" + CGImageGetBitmapInfo(newCgImage))
+          stringBuilder.appendLine(
+            "reference CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(
+              goldenCgImage
+            )
+          )
+          stringBuilder.appendLine("new CGImageGetBitsPerPixel" + CGImageGetBitsPerPixel(newCgImage))
+          stringBuilder.appendLine(
+            "reference CGImageGetBytesPerRow" + CGImageGetBytesPerRow(
+              goldenCgImage
+            )
+          )
+          stringBuilder.appendLine("new CGImageGetBytesPerRow" + CGImageGetBytesPerRow(newCgImage))
+          reportLog(stringBuilder.toString())
 
-        return true
+          return true
+        }
       }
     }
-  }
 
-  return false
+    return false
+  } finally {
+    CFRelease(goldenData)
+    CFRelease(newData)
+  }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private inline fun isTheSamePixel(
+  goldenPtr: CPointer<UByteVar>,
+  goldenPixelIndex: Int,
+  newPtr: CPointer<UByteVar>,
+  newPixelIndex: Int,
+  colorDistance: Int = 2
+): Boolean {
+  return abs((goldenPtr[goldenPixelIndex] - newPtr[newPixelIndex]).toInt()) > colorDistance ||
+    abs((goldenPtr[goldenPixelIndex + 1] - newPtr[newPixelIndex + 1]).toInt()) > colorDistance ||
+    abs((goldenPtr[goldenPixelIndex + 2] - newPtr[newPixelIndex + 2]).toInt()) > colorDistance ||
+    abs((goldenPtr[goldenPixelIndex + 3] - newPtr[newPixelIndex + 3]).toInt()) > colorDistance
 }
 
 fun String.toNsData(): NSData {
@@ -568,11 +677,11 @@ private fun loadGoldenImage(
   @Suppress("USELESS_CAST")
   val image: UIImage? = UIImage(filePath) as UIImage?
   if (image == null) {
-    reportLog("can't load old image from $filePath")
+    reportLog("can't load reference image from $filePath")
   }
-  val goldenImage = image?.let { convertImageFormat(it) }
+  val goldenImage = image ?.let { convertImageFormat(it) }
   if (goldenImage == null) {
-    reportLog("can't convert old image from $filePath")
+    reportLog("can't convert reference image from $filePath")
   }
   return goldenImage
 }
