@@ -18,7 +18,7 @@ kotlin {
     ...
     val appleTest by getting {
       dependencies {
-        implementation(project("io.github.takahirom.roborazzi:roborazzi-compose-ios:[1.12.0 or higher]"))
+        implementation(project("io.github.takahirom.roborazzi:roborazzi-compose-ios:[1.13.0 or higher]"))
         implementation(kotlin("test"))
       }
     }

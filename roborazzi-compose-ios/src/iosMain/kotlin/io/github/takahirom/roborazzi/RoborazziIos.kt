@@ -71,6 +71,23 @@ import platform.UIKit.UIImagePNGRepresentation
 import platform.posix.abs
 import platform.posix.memcpy
 
+/**
+ * This is a temporary implementation for iOS.
+ * We need to transition these implementations to Kotlin Multiplatform and RoboCanvas.
+ *
+ * Here's the basic approach for the image format:
+ * 1. Capture the image using:
+ *    ```
+ *    val colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
+ *    val bitmapInfo = CGImageAlphaInfo.kCGImageAlphaFirst.value or kCGBitmapByteOrder32Little
+ *    ```
+ * 2. Convert the image to a comparable format:
+ *    ```
+ *    val colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
+ *    val bitmapInfo = CGImageAlphaInfo.kCGImageAlphaPremultipliedFirst.value or kCGBitmapByteOrder32Little
+ *    ```
+ * 3. For comparison tasks, load the image from a file and convert it to the format described in the second step.
+ */
 @OptIn(ExperimentalForeignApi::class)
 private fun PixelMap.toCGDataProvider(): CGDataProviderRef? {
   val bytes = this.buffer
