@@ -45,7 +45,7 @@ class IosTest {
                 )
                 Box(
                   modifier = Modifier
-                    .background(Color.Blue.copy(alpha = alpha), MaterialTheme.shapes.small)
+                    .background(Color.Yellow.copy(alpha = alpha), MaterialTheme.shapes.small)
                     .size(100.dp),
                 )
               }
@@ -53,10 +53,13 @@ class IosTest {
           }
         }
       }
-      onRoot().captureRoboImage(this, filePath = "ios.png")
       onAllNodesWithText("Hello", substring = true)[0].captureRoboImage(
-        this,
+        composeUiTest = this,
         filePath = "ios_button.png"
+      )
+      onRoot().captureRoboImage(
+        composeUiTest = this,
+        filePath = "ios.png"
       )
     }
   }
