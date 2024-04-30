@@ -29,6 +29,10 @@ import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.gradle.tooling.events.FinishEvent
 import org.gradle.tooling.events.OperationCompletionListener
+import org.gradle.tooling.events.task.TaskFailureResult
+import org.gradle.tooling.events.task.TaskFinishEvent
+import org.gradle.tooling.events.task.TaskSkippedResult
+import org.gradle.tooling.events.task.TaskSuccessResult
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.ExecutionTaskHolder
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
@@ -511,11 +515,31 @@ abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServicePara
 //        "finishEvent.descriptor:${finishEvent.descriptor}" +
 //        "finishEvent.descriptor.name:${finishEvent.descriptor.name}"
 //    )
-    if (expectingTestNames.any {
-        displayName.contains(it, ignoreCase = true) &&
-          (displayName.contains("skipped", ignoreCase = true) ||
-            displayName.contains("FROM-CACHE", ignoreCase = true))
+    if (finishEvent !is TaskFinishEvent) {
+      return
+    }
+    if (!expectingTestNames.any {
+        displayName.contains(it, ignoreCase = true)
       }) {
+      return
+    }
+    val result = finishEvent.result
+    if (when (result) {
+        is TaskSuccessResult -> {
+          if (result.isFromCache) {
+            true
+          } else if (result.isUpToDate) {
+            true
+          } else {
+            false
+          }
+        }
+
+        is TaskFailureResult -> false
+        is TaskSkippedResult -> true
+        else -> false
+      }
+    ) {
       skipped = true
     }
   }
