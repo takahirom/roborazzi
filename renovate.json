@@ -8,6 +8,11 @@
       "matchCurrentAge": "> 3 months",
       "groupName": "quarterly-updates",
       "schedule": ["every weekend"]
+    },
+    {
+      "matchDepTypes": ["action"],
+      "excludePackagePrefixes": ["actions/"],
+      "pinDigests": true
     }
   ]
 }
