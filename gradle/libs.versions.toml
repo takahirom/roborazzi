@@ -29,7 +29,7 @@ androidx-lifecycle = "2.6.1"
 androidx-navigation = "2.4.1"
 androidx-test-espresso-core = "3.5.1"
 androidx-test-ext-junit = "1.1.5"
-kim = "0.13.2"
+kim = "0.17.7"
 
 dropbox-differ = "0.0.2"
 google-android-material = "1.5.0"
