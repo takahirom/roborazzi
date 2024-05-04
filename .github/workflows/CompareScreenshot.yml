@@ -39,7 +39,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
-      - uses: dawidd6/action-download-artifact@v2
+      - uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
         continue-on-error: true
         with:
           name: screenshot
@@ -51,7 +51,7 @@ jobs:
         run: |
           ./gradlew compareRoborazziDebug compareRoborazziDesktop compareRoborazziJvm compareRoborazziIosX64  --stacktrace --info
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
         if: ${{ always() }}
         with:
           name: screenshot-diff
@@ -59,7 +59,7 @@ jobs:
             **/build/outputs/roborazzi
           retention-days: 30
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
         if: ${{ always() }}
         with:
           name: screenshot-diff-reports
@@ -68,7 +68,7 @@ jobs:
             **/build/outputs/roborazzi
           retention-days: 30
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
         if: ${{ always() }}
         with:
           name: screenshot-diff-test-results
@@ -81,7 +81,7 @@ jobs:
         run: |
           mkdir -p ./pr
           echo ${{ github.event.number }} > ./pr/NR
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2
         with:
           name: pr
           path: pr/
