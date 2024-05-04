@@ -1,18 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
-  ],
-  "packageRules": [
-    {
-      "matchCurrentAge": "> 3 months",
-      "groupName": "quarterly-updates",
-      "schedule": ["every weekend"]
-    },
-    {
-      "matchDepTypes": ["action"],
-      "excludePackagePrefixes": ["actions/"],
-      "pinDigests": true
-    }
+    "config:best-practices"
   ]
 }
