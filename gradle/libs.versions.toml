@@ -1,12 +1,12 @@
 [versions]
-agp = "7.3.1"
+agp = "8.4.0"
 commons-compress = "1.23.0"
 kotlin = "1.9.21"
 mavenPublish = "0.25.3"
 composeCompiler = "1.5.6"
 composeMultiplatform = "1.6.2"
 robolectric = "4.12.1"
-robolectric-android-all = "Q-robolectric-5415296"
+robolectric-android-all = "14-robolectric-10818077"
 
 roborazzi-for-replacing-by-include-build = "1.0.0"
 

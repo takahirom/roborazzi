@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
+      - uses: dawidd6/action-download-artifact@09f2f74827fd3a8607589e5ad7f9398816f540fe # v3.1.4
         with:
           name: pr
           run_id: ${{ github.event.workflow_run.id }}
@@ -40,7 +40,7 @@ jobs:
           echo "pull_request_number=$(cat NR)" >> "$GITHUB_OUTPUT"
       - name: main checkout
         id: checkout-main
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: main
       - id: switch-companion-branch
@@ -51,7 +51,7 @@ jobs:
           git branch -D "$BRANCH_NAME" || true
           git checkout --orphan "$BRANCH_NAME"
           git rm -rf .
-      - uses: dawidd6/action-download-artifact@246dbf436b23d7c49e21a7ab8204ca9ecd1fe615 # v2.27.0
+      - uses: dawidd6/action-download-artifact@09f2f74827fd3a8607589e5ad7f9398816f540fe # v3.1.4
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: screenshot-diff
@@ -119,7 +119,7 @@ jobs:
           done
           echo "${delimiter}" >> "$GITHUB_OUTPUT"
       - name: Find Comment
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3
         id: fc
         if: steps.generate-diff-reports.outputs.reports != ''
         with:
@@ -128,7 +128,7 @@ jobs:
           body-includes: Snapshot diff report
 
       - name: Add or update comment on PR
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4
         if: steps.generate-diff-reports.outputs.reports != ''
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}

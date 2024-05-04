@@ -14,14 +14,14 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3.9.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4.2.1
         with:
           distribution: 'zulu'
           java-version: 19
 
       - name: Gradle cache
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@4c39dd82cd5e1ec7c6fa0173bb41b4b6bb3b86ff # v3
 
       - name: integration test
         id: integration-test
@@ -29,14 +29,14 @@ jobs:
           cd include-build
           ./gradlew roborazzi-gradle-plugin:check --stacktrace
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: test-reports
           path: include-build/roborazzi-gradle-plugin/build/reports
           retention-days: 30
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: test-test-results

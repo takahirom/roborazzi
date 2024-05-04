@@ -14,16 +14,16 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3.9.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4.2.1
         with:
           distribution: 'zulu'
           java-version: 19
 
       - name: Gradle cache
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@4c39dd82cd5e1ec7c6fa0173bb41b4b6bb3b86ff # v3
 
-      - uses: dawidd6/action-download-artifact@v2
+      - uses: dawidd6/action-download-artifact@09f2f74827fd3a8607589e5ad7f9398816f540fe # v3
         with:
           name: screenshot
           path: sample-android/build/outputs/roborazzi
@@ -64,21 +64,21 @@ jobs:
           echo "Roborazzi should verify changes"
           exit 1
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: screenshot-diff
           path: sample-android/build/outputs/roborazzi
           retention-days: 30
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: screenshot-diff-reports
           path: sample-android/build/reports
           retention-days: 30
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: screenshot-diff-test-results

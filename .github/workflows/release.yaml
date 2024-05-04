@@ -15,14 +15,14 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3.9.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4.2.1
         with:
           distribution: 'zulu'
           java-version: 19
 
       - name: Build and publish artifacts
-        uses: nick-fields/retry@v2.8.3
+        uses: nick-fields/retry@7152eba30c6575329ac0576536151aca5a72780e # v3.0.0
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
