@@ -10,7 +10,7 @@ plugins {
   id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
   // Just for Gradle Build, included build will be applied
-  id("io.github.takahirom.roborazzi") version "1.0.0" apply false
+  id("io.github.takahirom.roborazzi") version "1.13.0" apply false
 }
 
 allprojects {

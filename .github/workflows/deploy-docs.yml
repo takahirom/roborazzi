@@ -68,7 +68,7 @@ jobs:
                 path: artifacts
 
             - name: Test documentation
-              uses: JetBrains/writerside-checker-action@v1
+              uses: JetBrains/writerside-checker-action@8e11963855941a93dff60b8e39a2ffd4a2c0b767 # v1
               with:
                 instance: ${{ env.INSTANCE }}
 
@@ -86,7 +86,7 @@ jobs:
                 name: docs
 
             - name: Unzip artifact
-              uses: montudor/action-zip@v1
+              uses: montudor/action-zip@a8e75c9faefcd80fac3baf53ef40b9b119d5b702 # v1
               with:
                 args: unzip -qq ${{ env.ARTIFACT }} -d dir
 

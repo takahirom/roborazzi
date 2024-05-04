@@ -15,15 +15,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3.9.0
+      - uses: actions/setup-java@v3.13.0
         with:
           distribution: 'zulu'
           java-version: 19
 
       - name: Gradle cache
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa # v2
 
-      - uses: dawidd6/action-download-artifact@v2
+      - uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
         with:
           name: screenshot
           path: sample-android/build/outputs/roborazzi
