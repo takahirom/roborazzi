@@ -185,7 +185,7 @@ plugins {
 
 android {
   namespace = "com.github.takahirom.integration_test_project"
-  compileSdk = 33
+  compileSdk = 34
 
   defaultConfig {
     applicationId = "com.github.takahirom.integration_test_project"
