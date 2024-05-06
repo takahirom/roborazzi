@@ -247,7 +247,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               val isTestSkipped = if (currentIsTestSkipped == null) {
                 // BuildService could cause race condition
                 // https://github.com/gradle/gradle/issues/24887
-                Thread.sleep(100
+                Thread.sleep(100)
                 val new = testTaskSkipEventsServiceProvider.get().skippedTestTaskMap[taskPath + testTaskName]
                 finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast test task result doesn't exits. currentIsTestSkipped:$currentIsTestSkipped new:$new currentTimeMillis:${System.currentTimeMillis()}")
                 new ?: false
@@ -541,17 +541,8 @@ abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServicePara
       return
     }
     val result = finishEvent.result
-    println("result:$result")
-    println("finishEvent.displayName:${finishEvent.displayName}")
-    println("finishEvent.descriptor.name:${finishEvent.descriptor.name}")
-    println("finishEvent.descriptor.displayName:${finishEvent.descriptor.displayName}")
-    println("finishEvent.descriptor:${finishEvent.descriptor}")
-    println("result is TaskSuccessResult:${result is TaskSuccessResult}")
     if (when (result) {
         is TaskSuccessResult -> {
-          println("result.isFromCache:${result.isFromCache}")
-          println("result.isUpToDate:${result.isUpToDate}")
-          println("result.isSkipped:${result.isIncremental}")
           if (result.isFromCache) {
             true
           } else if (result.isUpToDate) {
