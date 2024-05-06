@@ -245,13 +245,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
             }
             finalizeTestTask.doLast {
               val taskSkipEventsService = testTaskSkipEventsServiceProvider.get()
+              val buildFinishCountDownLatch = taskSkipEventsService.countDownLatch
               val currentIsTestSkipped =
                 taskSkipEventsService.skippedTestTaskMap[taskPath + testTaskName]
               val isTestSkipped = if (currentIsTestSkipped == null) {
                 // BuildService could cause race condition
                 // https://github.com/gradle/gradle/issues/24887
                 finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast test task result doesn't exits. currentIsTestSkipped:$currentIsTestSkipped currentTimeMillis:${System.currentTimeMillis()}")
-                val waitSuccess = taskSkipEventsService.countDownLatch.await(200, TimeUnit.MILLISECONDS)
+                val waitSuccess = buildFinishCountDownLatch.await(200, TimeUnit.MILLISECONDS)
                 val new =
                   taskSkipEventsService.skippedTestTaskMap[taskPath + testTaskName]
                 finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast wait end currentIsTestSkipped:$currentIsTestSkipped new:$new waitSuccess:$waitSuccess currentTimeMillis:${System.currentTimeMillis()}")
