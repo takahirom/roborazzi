@@ -13,6 +13,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -235,15 +236,25 @@ abstract class RoborazziPlugin : Plugin<Project> {
               finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.onlyIf doesRoborazziRun $doesRoborazziRun")
               doesRoborazziRun
             }
-            val taskPath = if(project.path == ":") {
+            val taskPath = if (project.path == ":") {
               ":"
             } else {
               project.path + ":"
             }
             finalizeTestTask.doLast {
-              val isTestSkipped =
-                testTaskSkipEventsServiceProvider.get().skippedMap[taskPath + testTaskName] ?: false
-              finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast $isTestSkipped")
+              val currentIsTestSkipped =
+                testTaskSkipEventsServiceProvider.get().skippedTestTaskMap[taskPath + testTaskName]
+              val isTestSkipped = if (currentIsTestSkipped == null) {
+                // BuildService could cause race condition
+                // https://github.com/gradle/gradle/issues/24887
+                Thread.sleep(100
+                val new = testTaskSkipEventsServiceProvider.get().skippedTestTaskMap[taskPath + testTaskName]
+                finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast test task result doesn't exits. currentIsTestSkipped:$currentIsTestSkipped new:$new currentTimeMillis:${System.currentTimeMillis()}")
+                new ?: false
+              } else {
+                currentIsTestSkipped
+              }
+              finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast isTestSkipped:$isTestSkipped")
               if (isTestSkipped) {
                 // If the test is skipped, we need to use cached files
                 finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask isTestSkipped:$isTestSkipped Copy files from ${intermediateDir.get()} to ${outputDir.get()}")
@@ -504,7 +515,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
  */
 abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServiceParameters.None?>,
   OperationCompletionListener {
-  val skippedMap = mutableMapOf<String, Boolean>()
+  val skippedTestTaskMap = mutableMapOf<String, Boolean>()
+  private val logger = Logging.getLogger(this::class.java)
   private val expectingTestNames = mutableListOf<String>()
   fun addExpectingTestTaskName(testName: String) {
     expectingTestNames.add(testName)
@@ -554,7 +566,11 @@ abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServicePara
         else -> false
       }
     ) {
-      skippedMap[finishEvent.descriptor.name] = true
+      logger.info("Roborazzi: Skip test ${finishEvent.descriptor.name} ${System.currentTimeMillis()}")
+      skippedTestTaskMap[finishEvent.descriptor.name] = true
+    }else {
+      logger.info("Roborazzi: Don't skip test ${finishEvent.descriptor.name} ${System.currentTimeMillis()}")
+      skippedTestTaskMap[finishEvent.descriptor.name] = false
     }
   }
 }
