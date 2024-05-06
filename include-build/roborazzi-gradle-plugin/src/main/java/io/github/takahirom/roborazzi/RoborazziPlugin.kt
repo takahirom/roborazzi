@@ -41,6 +41,8 @@ import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import java.util.Locale
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -242,14 +244,17 @@ abstract class RoborazziPlugin : Plugin<Project> {
               project.path + ":"
             }
             finalizeTestTask.doLast {
+              val taskSkipEventsService = testTaskSkipEventsServiceProvider.get()
               val currentIsTestSkipped =
-                testTaskSkipEventsServiceProvider.get().skippedTestTaskMap[taskPath + testTaskName]
+                taskSkipEventsService.skippedTestTaskMap[taskPath + testTaskName]
               val isTestSkipped = if (currentIsTestSkipped == null) {
                 // BuildService could cause race condition
                 // https://github.com/gradle/gradle/issues/24887
-                Thread.sleep(100)
-                val new = testTaskSkipEventsServiceProvider.get().skippedTestTaskMap[taskPath + testTaskName]
-                finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast test task result doesn't exits. currentIsTestSkipped:$currentIsTestSkipped new:$new currentTimeMillis:${System.currentTimeMillis()}")
+                finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast test task result doesn't exits. currentIsTestSkipped:$currentIsTestSkipped currentTimeMillis:${System.currentTimeMillis()}")
+                val waitSuccess = taskSkipEventsService.countDownLatch.await(200, TimeUnit.MILLISECONDS)
+                val new =
+                  taskSkipEventsService.skippedTestTaskMap[taskPath + testTaskName]
+                finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast wait end currentIsTestSkipped:$currentIsTestSkipped new:$new waitSuccess:$waitSuccess currentTimeMillis:${System.currentTimeMillis()}")
                 new ?: false
               } else {
                 currentIsTestSkipped
@@ -516,6 +521,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
 abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServiceParameters.None?>,
   OperationCompletionListener {
   val skippedTestTaskMap = mutableMapOf<String, Boolean>()
+  var countDownLatch = CountDownLatch(1)
+    private set
   private val logger = Logging.getLogger(this::class.java)
   private val expectingTestNames = mutableListOf<String>()
   fun addExpectingTestTaskName(testName: String) {
@@ -559,10 +566,12 @@ abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServicePara
     ) {
       logger.info("Roborazzi: Skip test ${finishEvent.descriptor.name} ${System.currentTimeMillis()}")
       skippedTestTaskMap[finishEvent.descriptor.name] = true
-    }else {
+    } else {
       logger.info("Roborazzi: Don't skip test ${finishEvent.descriptor.name} ${System.currentTimeMillis()}")
       skippedTestTaskMap[finishEvent.descriptor.name] = false
     }
+    countDownLatch.countDown()
+    countDownLatch = CountDownLatch(1)
   }
 }
 
