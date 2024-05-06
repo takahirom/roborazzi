@@ -25,6 +25,10 @@ include ':sample-android-without-compose'
 include ':sample-compose-desktop-multiplatform'
 include ':sample-compose-desktop-jvm'
 
+include ':emulator-proto'
+include ':emulator-server'
+include ':emulator-client'
+
 includeBuild("include-build") {
   dependencySubstitution {
     substitute(module("io.github.takahirom.roborazzi:roborazzi-gradle-plugin")).using(project(":roborazzi-gradle-plugin"))

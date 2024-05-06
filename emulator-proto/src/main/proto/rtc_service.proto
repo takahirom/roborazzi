@@ -1,0 +1,117 @@
+// Copyright (C) 2018 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Note that if you add/remove methods in this file you must update
+// the metrics sql as well by running ./android/scripts/gen-grpc-sql.py
+//
+// Please group deleted methods in a block including the date (MM/DD/YY)
+// it was removed. This enables us to easily keep metrics around after removal
+//
+// List of deleted methods
+// rpc iWasDeleted (03/12/12)
+// ...
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.android.emulator.control";
+option objc_class_prefix = "AEC";
+
+package android.emulation.control;
+import "google/protobuf/empty.proto";
+
+// An RTC service lets you interact with the emulator through WebRTC
+// Note that this is currently an experimental feature, and that the
+// service definition might change without notice. Use at your own risk!
+//
+// The following endpoints are needed to establish the webrtc protocol
+// Due to limitiations in Javascript we cannot make use of bidirectional
+// endpoints See this [blog](https://grpc.io/blog/state-of-grpc-web) for
+// details.
+service Rtc {
+  // This function will generate a new identifier that the client
+  // should use for further interaction. It will initiate the
+  // JSEP protocol on the server side.
+  rpc requestRtcStream(google.protobuf.Empty) returns (RtcId) {}
+
+  // Sends the given JsepMsg to the server. The RtcId in the
+  // message should point to an active stream negotiation in
+  // progress, otherwise the message will be ignored.
+  rpc sendJsepMessage(JsepMsg) returns (google.protobuf.Empty) {}
+
+  // Reads an available jsep messages for the given client id,
+  // blocking until one becomes available. Do not use the polling version
+  // above if you opt for this one.
+  //
+  // The ice candidates for example will trickle in on this callback,
+  // as will the SDP negotation.
+  rpc receiveJsepMessages(RtcId) returns (stream JsepMsg) {}
+
+
+  // [DEPRECATED] This is only here as the go grpc webproxy used
+  // by fuchsia does not support server side streaming. This method
+  // will be removed in the future and should not be relied upon.
+  //
+  // Reads an available jsep messages for the given client id,
+  // blocking until one becomes available. Do not use the polling version
+  // above if you opt for this one.
+  //
+  // The ice candidates for example will trickle in on this callback,
+  // as will the SDP negotation.
+  rpc receiveJsepMessage(RtcId) returns (JsepMsg) {}
+}
+
+message RtcId {
+  // The unique identifier of this connection. You will have to use the
+  // same identifier when sending/receiving messages. The server will
+  // generate a guid when receiving the start message.
+  string guid = 1;
+}
+
+message JsepMsg {
+  // The unique identifier of this connection. You will have to use the
+  // same identifier when sending/receiving messages. The server will
+  // generate a guid when receiving the start message.
+  RtcId id = 1;
+  // The JSON payload. This usually can be directly handled by the
+  // Javascript library.
+  //
+  // The dictionary can contain the following properties
+  //
+  // - bye:
+  //        You can hang up now. No new message expected for you.
+  //        The server has stopped the RTC stream.
+  //
+  // - start:
+  //        An RTCConfiguration dictionary providing options to
+  //        configure the new connection. This can include the
+  //        turn configuration the serve is using. This dictionary can be
+  //        passed in directly to the
+  //        [RTCPeerConnection](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection)
+  //        object.
+  //
+  // - candidate:
+  //        The WebRTC API's RTCIceCandidateInit dictionary, which
+  //        contains the information needed to fundamentally describe an
+  //        RTCIceCandidate. See
+  //        [RTCIceCandidate](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidate)
+  //        and [Session
+  //        Lifetime](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Session_lifetime)
+  //        for more details.
+  //
+  // - sdp:
+  //        RTCSessionDescriptionInit dictionary containing the values
+  //        to that can be assigned to a
+  //        [RTCSessionDescription](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription)
+  string message = 2;
+}

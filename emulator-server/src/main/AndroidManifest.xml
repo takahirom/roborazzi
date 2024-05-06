@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="org.robolectric">
+  <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="34"/>
+
+  <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+
+  <uses-permission android:name="android.permission.INTERNET"/>
+</manifest>

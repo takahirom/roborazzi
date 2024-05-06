@@ -1,12 +1,16 @@
 [versions]
+core = "1.13.1"
 javaToolchain = "17"
 javaTarget = "11"
 agp = "7.3.1"
 commons-compress = "1.23.0"
+grpcKotlinStub = "1.4.1"
+grpcProtobuf = "1.62.2"
 kotlin = "1.9.22"
 mavenPublish = "0.25.3"
 composeCompiler = "1.5.10"
 composeMultiplatform = "1.6.2"
+monitor = "1.7.0-beta01"
 robolectric = "4.12.2"
 robolectric-android-all = "Q-robolectric-5415296"
 
@@ -38,10 +42,23 @@ google-android-material = "1.5.0"
 junit = "4.13.2"
 ktor-serialization-kotlinx-xml = "2.3.0"
 kotlinx-serialization = "1.6.3"
+server = "1.0.0-alpha03"
+serverGenerator = "1.0.0-alpha03"
 squareup-okhttp = "5.0.0-alpha.11"
 kotlinx-io = "0.3.3"
+uiautomator = "2.3.0"
+
+kotlinxCoroutine = "1.8.0"
+wireGrpcClient = "4.9.9"
 
 [libraries]
+androidx-core = { module = "androidx.core:core", version.ref = "core" }
+androidx-monitor = { module = "androidx.test:monitor", version.ref = "monitor" }
+androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
+grpc-kotlin-stub = { module = "io.grpc:grpc-kotlin-stub", version.ref = "grpcKotlinStub" }
+grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpcProtobuf" }
+grpc-netty = { module = "io.grpc:grpc-netty", version.ref = "grpcProtobuf" }
+grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpcProtobuf" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi-for-replacing-by-include-build" }
 roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi-for-replacing-by-include-build" }
 roborazzi-rule = { module = "io.github.takahirom.roborazzi:roborazzi-rule", version.ref = "roborazzi-for-replacing-by-include-build" }
@@ -50,6 +67,12 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit" }
+
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutine" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutine" }
+kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "kotlinxCoroutine" }
+kotlinx-coroutines-playservices = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutine" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutine" }
 
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -85,8 +108,11 @@ google-android-material = { module = "com.google.android.material:material", ver
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor-serialization-kotlinx-xml" }
+server = { module = "com.squareup.wiregrpcserver:server", version.ref = "server" }
+server-generator = { module = "com.squareup.wiregrpcserver:server-generator", version.ref = "serverGenerator" }
 squareup-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "squareup-okhttp" }
 squareup-okhttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "squareup-okhttp" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 robolectric-android-all = { module = "org.robolectric:android-all", version.ref = "robolectric-android-all" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
+wire-grpc-client = { module = "com.squareup.wire:wire-grpc-client", version.ref = "wireGrpcClient" }
