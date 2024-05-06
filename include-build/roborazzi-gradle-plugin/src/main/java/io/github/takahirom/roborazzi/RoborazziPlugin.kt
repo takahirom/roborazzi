@@ -524,8 +524,17 @@ abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServicePara
       return
     }
     val result = finishEvent.result
+    println("result:$result")
+    println("finishEvent.displayName:${finishEvent.displayName}")
+    println("finishEvent.descriptor.name:${finishEvent.descriptor.name}")
+    println("finishEvent.descriptor.displayName:${finishEvent.descriptor.displayName}")
+    println("finishEvent.descriptor:${finishEvent.descriptor}")
+    println("result is TaskSuccessResult:${result is TaskSuccessResult}")
     if (when (result) {
         is TaskSuccessResult -> {
+          println("result.isFromCache:${result.isFromCache}")
+          println("result.isUpToDate:${result.isUpToDate}")
+          println("result.isSkipped:${result.isIncremental}")
           if (result.isFromCache) {
             true
           } else if (result.isUpToDate) {
