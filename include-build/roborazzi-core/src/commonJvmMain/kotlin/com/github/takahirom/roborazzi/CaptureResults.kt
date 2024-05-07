@@ -214,8 +214,6 @@ object AnySerializer : KSerializer<Any> {
     val input = decoder.decodeString()
     return when {
       input== "true" || input == "false" -> input.toBoolean()
-      input.toIntOrNull() != null -> input.toInt()
-      input.toLongOrNull() != null -> input.toLong()
       else -> input
     }
   }

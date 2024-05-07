@@ -12,6 +12,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.serializer
@@ -102,7 +103,8 @@ sealed interface CaptureResult {
 
   companion object {
     fun fromJsonFile(filePath: String): CaptureResult {
-      return json.decodeFromString<CaptureResult>(FileReader(filePath).readText())
+      val jsonElement = json.parseToJsonElement(FileReader(filePath).readText())
+      return json.decodeFromJsonElement<CaptureResult>(jsonElement)
     }
   }
 
