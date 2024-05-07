@@ -150,7 +150,6 @@ class ContextDataTest {
   ) {
     val any = contextData[key]
     if (any is Double) {
-      // gson always parse number as double
       assert(any.toInt() == value.toInt()) {
         "Expected $value but got $any"
       }

@@ -1,31 +1,33 @@
 package com.github.takahirom.roborazzi
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import com.google.gson.JsonNull
-import com.google.gson.JsonObject
-import com.google.gson.JsonParseException
-import com.google.gson.JsonParser
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.ContextualSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.modules.SerializersModule
 import java.io.File
-import java.io.FileReader
-import java.lang.reflect.Type
 
+@Serializable
 data class CaptureResults(
-  @SerializedName("summary")
+  @SerialName("summary")
   val resultSummary: ResultSummary,
-  @SerializedName("results")
+  @SerialName("results")
   val captureResults: List<CaptureResult>
 ) {
 
   fun toJson(): String {
-    return gson.toJson(this)
+    return Json.encodeToString(this)
   }
 
   class Tab(
@@ -150,36 +152,38 @@ data class CaptureResults(
   }
 
   companion object {
-    val gson: Gson = GsonBuilder()
-      .registerTypeAdapter(File::class.java, object : JsonSerializer<File>, JsonDeserializer<File> {
-        override fun serialize(
-          src: File?,
-          typeOfSrc: Type?,
-          context: JsonSerializationContext?
-        ): JsonElement {
-          val absolutePath = src?.absolutePath ?: return JsonNull.INSTANCE
-          return JsonPrimitive(absolutePath)
-        }
+    val json = Json {
+      isLenient = true
+      encodeDefaults = true
+      ignoreUnknownKeys = true
+      classDiscriminator = "#class"
+      serializersModule = SerializersModule {
+        contextual(File::class,
+          object : KSerializer<File> {
+            override val descriptor: SerialDescriptor =
+              PrimitiveSerialDescriptor("FileSerializer", PrimitiveKind.STRING)
 
-        override fun deserialize(
-          json: JsonElement?,
-          typeOfT: Type?,
-          context: JsonDeserializationContext?
-        ): File {
-          val path = json?.asString ?: throw JsonParseException("File path is null")
-          return File(path)
-        }
-      })
-      .create()
+            override fun serialize(encoder: Encoder, value: File) {
+              encoder.encodeString(value.absolutePath)
+            }
 
-    fun fromJsonFile(inputPath: String): CaptureResults {
-      val jsonObject = JsonParser.parseString(FileReader(inputPath).readText()).asJsonObject
-      return fromJson(jsonObject)
+            override fun deserialize(decoder: Decoder): File {
+              val path = decoder.decodeString()
+              return File(path)
+            }
+          }
+        )
+        contextual(Any::class, AnySerializer)
+      }
     }
 
-    fun fromJson(jsonObject: JsonObject): CaptureResults {
-      // Auto convert using Gson
-      return gson.fromJson(jsonObject, CaptureResults::class.java)
+    fun fromJsonFile(inputPath: String): CaptureResults {
+      val jsonString = File(inputPath).readText()
+      return json.decodeFromString(jsonString)
+    }
+
+    fun fromJson(jsonString: JsonObject): CaptureResults {
+      return json.decodeFromJsonElement(jsonString)
     }
 
     fun from(results: List<CaptureResult>): CaptureResults {
@@ -193,6 +197,26 @@ data class CaptureResults(
         ),
         captureResults = results
       )
+    }
+  }
+}
+
+object AnySerializer : KSerializer<Any> {
+  @OptIn(ExperimentalSerializationApi::class)
+  override val descriptor: SerialDescriptor
+    get() = ContextualSerializer(Any::class, null, emptyArray()).descriptor
+
+  override fun serialize(encoder: Encoder, value: Any) {
+    encoder.encodeString(value.toString())
+  }
+
+  override fun deserialize(decoder: Decoder): Any {
+    val input = decoder.decodeString()
+    return when {
+      input== "true" || input == "false" -> input.toBoolean()
+      input.toIntOrNull() != null -> input.toInt()
+      input.toLongOrNull() != null -> input.toLong()
+      else -> input
     }
   }
 }

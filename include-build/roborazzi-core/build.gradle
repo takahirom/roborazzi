@@ -1,6 +1,7 @@
 plugins {
   id "org.jetbrains.kotlin.multiplatform"
   id "com.android.library"
+  id("org.jetbrains.kotlin.plugin.serialization") version libs.versions.kotlin
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
@@ -55,7 +56,7 @@ kotlin {
     commonJvmMain {
       dependencies {
         api libs.dropbox.differ
-        compileOnly libs.gson
+        compileOnly libs.kotlinx.serialization.json
         implementation libs.junit
       }
     }
@@ -68,7 +69,7 @@ kotlin {
     }
     jvmMain {
       dependencies {
-        implementation libs.gson
+        implementation libs.kotlinx.serialization.json
       }
     }
     jvmTest {
@@ -82,7 +83,7 @@ kotlin {
         compileOnly libs.androidx.compose.ui.test.junit4
         api libs.androidx.test.espresso.core
         implementation libs.androidx.core.ktx
-        implementation libs.gson
+        implementation libs.kotlinx.serialization.json
       }
     }
   }

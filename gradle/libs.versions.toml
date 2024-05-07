@@ -33,7 +33,6 @@ kim = "0.17.7"
 
 dropbox-differ = "0.0.2"
 google-android-material = "1.5.0"
-gson = "2.10.1"
 junit = "4.13.2"
 ktor-serialization-kotlinx-xml = "2.3.0"
 kotlinx-serialization = "1.6.3"
@@ -80,7 +79,6 @@ compose-ui-graphics-desktop = { module = "org.jetbrains.compose.ui:ui-graphics-d
 compose-ui-test-junit4-desktop = { module = "org.jetbrains.compose.ui:ui-test-junit4-desktop", version.ref = "composeMultiplatform" }
 dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-differ" }
 google-android-material = { module = "com.google.android.material:material", version.ref = "google-android-material" }
-gson = { module = "com.google.code.gson:gson", version.ref = "gson"}
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-serialization-kotlinx-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor-serialization-kotlinx-xml" }

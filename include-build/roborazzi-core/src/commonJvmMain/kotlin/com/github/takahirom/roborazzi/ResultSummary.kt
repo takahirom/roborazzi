@@ -1,5 +1,8 @@
 package com.github.takahirom.roborazzi
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class ResultSummary(
   val total: Int,
   val recorded: Int,
