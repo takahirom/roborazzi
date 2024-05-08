@@ -1301,6 +1301,13 @@ roborazzi {
 }
 ```
 
+### Q: Why do my screenshot tests fail inconsistently across different operating systems like MacOS, Ubuntu, and Windows?
+
+**A:** This is a known issue caused by variations in how graphics libraries render components on different platforms.
+This issue is due to variations in how graphics libraries render components on different platforms. 
+As we've seen with [Now in Android](https://github.com/android/nowinandroid/issues/1242#issuecomment-2032962982), there are no guarantees for identical rendering across all environments. 
+To ensure more consistent results, consider configuring your continuous integration (CI) environment to both record and test screenshots. This setup minimizes discrepancies by using the same settings and resources for all tests.
+
 ### Q: The images taken from Roborazzi seem broken
 
 **A:** First, please check if you are using the correct version of the Android SDK. Consider using API level 28 or higher because it seems that Robolectric Native Graphics doesn't work property on older SDK versions.
