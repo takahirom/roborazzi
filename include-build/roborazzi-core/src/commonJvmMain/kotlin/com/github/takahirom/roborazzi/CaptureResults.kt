@@ -27,7 +27,7 @@ data class CaptureResults(
 ) {
 
   fun toJson(): String {
-    return Json.encodeToString(this)
+    return json.encodeToString(this)
   }
 
   class Tab(
