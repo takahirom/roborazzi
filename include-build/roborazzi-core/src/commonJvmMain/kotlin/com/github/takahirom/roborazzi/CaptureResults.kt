@@ -178,8 +178,8 @@ data class CaptureResults(
     }
 
     fun fromJsonFile(inputPath: String): CaptureResults {
-      val jsonString = File(inputPath).readText()
-      return json.decodeFromString(jsonString)
+      val jsonElement = json.parseToJsonElement(File(inputPath).readText())
+      return json.decodeFromJsonElement(jsonElement)
     }
 
     fun fromJson(jsonString: JsonObject): CaptureResults {
