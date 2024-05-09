@@ -2,7 +2,6 @@ package com.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,10 +14,8 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.serializer
 import java.io.File
 import java.io.FileReader
-import java.lang.IllegalArgumentException
 
 @Serializable(with = CaptureResult.CaptureResultSerializer::class)
 sealed interface CaptureResult {
@@ -112,24 +109,22 @@ sealed interface CaptureResult {
     override val descriptor: SerialDescriptor
       get() = PrimitiveSerialDescriptor("CaptureResult", PrimitiveKind.STRING)
 
-    @OptIn(InternalSerializationApi::class)
     override fun serialize(encoder: Encoder, value: CaptureResult) =
       when (value) {
-        is Recorded -> encoder.encodeSerializableValue(Recorded::class.serializer(), value)
-        is Changed -> encoder.encodeSerializableValue(Changed::class.serializer(), value)
-        is Unchanged -> encoder.encodeSerializableValue(Unchanged::class.serializer(), value)
-        is Added -> encoder.encodeSerializableValue(Added::class.serializer(), value)
+        is Recorded -> encoder.encodeSerializableValue(Recorded.serializer(), value)
+        is Changed -> encoder.encodeSerializableValue(Changed.serializer(), value)
+        is Unchanged -> encoder.encodeSerializableValue(Unchanged.serializer(), value)
+        is Added -> encoder.encodeSerializableValue(Added.serializer(), value)
       }
 
-    @OptIn(InternalSerializationApi::class)
     override fun deserialize(decoder: Decoder): CaptureResult {
       require(decoder is JsonDecoder)
       val type = decoder.decodeJsonElement().jsonObject["type"]!!.jsonPrimitive.content
       return when (type) {
-      "recorded" -> decoder.decodeSerializableValue(Recorded::class.serializer())
-      "changed" -> decoder.decodeSerializableValue(Changed::class.serializer())
-      "unchanged" -> decoder.decodeSerializableValue(Unchanged::class.serializer())
-      "added" -> decoder.decodeSerializableValue(Added::class.serializer())
+      "recorded" -> decoder.decodeSerializableValue(Recorded.serializer())
+      "changed" -> decoder.decodeSerializableValue(Changed.serializer())
+      "unchanged" -> decoder.decodeSerializableValue(Unchanged.serializer())
+      "added" -> decoder.decodeSerializableValue(Added.serializer())
       else -> throw IllegalArgumentException("Unknown type $type")
       }
     }
