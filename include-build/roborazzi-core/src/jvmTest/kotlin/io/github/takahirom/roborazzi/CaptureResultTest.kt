@@ -180,7 +180,7 @@ class CaptureResultTest {
     assertEquals(File("compare_file"), actualAddedResult.compareFile)
     assertEquals(File("actual_file"), actualAddedResult.actualFile)
     assertEquals(123456789, actualAddedResult.timestampNs)
-    assertEquals(2, (actualAddedResult.contextData["key"].toString().toDouble()).toInt())
+    assertEquals(2, actualAddedResult.contextData["key"])
 
     val actualChangedResult = actualCaptureResultList[2] as CaptureResult.Changed
     assertEquals(File("compare_file"), actualChangedResult.compareFile)

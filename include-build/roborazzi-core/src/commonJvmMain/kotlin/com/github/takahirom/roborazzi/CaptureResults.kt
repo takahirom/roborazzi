@@ -207,13 +207,22 @@ object AnySerializer : KSerializer<Any> {
     get() = ContextualSerializer(Any::class, null, emptyArray()).descriptor
 
   override fun serialize(encoder: Encoder, value: Any) {
-    encoder.encodeString(value.toString())
+    when (value) {
+      is String -> encoder.encodeString(value)
+      is Int -> encoder.encodeInt(value)
+      is Long -> encoder.encodeLong(value)
+      is Double -> encoder.encodeDouble(value.toDouble())
+      is Boolean -> encoder.encodeBoolean(value)
+      else -> IllegalArgumentException("Unknown type: ${value::class.qualifiedName}")
+    }
   }
 
   override fun deserialize(decoder: Decoder): Any {
     val input = decoder.decodeString()
     return when {
       input== "true" || input == "false" -> input.toBoolean()
+      input.toIntOrNull() != null -> input.toInt()
+      input.toLongOrNull() != null -> input.toLong()
       else -> input
     }
   }

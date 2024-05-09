@@ -155,7 +155,7 @@ class ContextDataTest {
       }
       return
     }
-    assert(any == value) {
+    assert(any.toString() == value) {
       "Expected $value but got $any"
     }
   }
