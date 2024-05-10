@@ -2,16 +2,20 @@ package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
-import com.github.takahirom.roborazzi.ResultSummary
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
+import com.github.takahirom.roborazzi.ResultSummary
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.File
@@ -32,7 +36,10 @@ class CaptureResultTest {
         actualFile = File("/actual_file"),
         goldenFile = File("/golden_file"),
         timestampNs = 123456789,
-        contextData = mapOf("key" to 2),
+        contextData = mapOf(
+          "key" to 2,
+          "keyDouble" to 2.5,
+        ),
       ),
       CaptureResult.Changed(
         compareFile = File("/compare_file"),
@@ -83,16 +90,20 @@ class CaptureResultTest {
         expectedCaptureResult.actualFile?.absolutePath,
         actualJsonResult["actual_file_path"]?.jsonPrimitive?.content
       )
-      assertEquals(expectedCaptureResult.timestampNs, actualJsonResult["timestamp"]?.jsonPrimitive?.long)
+      assertEquals(
+        expectedCaptureResult.timestampNs,
+        actualJsonResult["timestamp"]?.jsonPrimitive?.long
+      )
       assertEquals(
         expectedCaptureResult.contextData.entries.map { it.key to it.value },
         (actualJsonResult["context_data"]?.jsonObject?.entries
           ?.associate {
             it.key to when (expectedCaptureResult.contextData[it.key]) {
-              is Number -> if (it.value.jsonPrimitive.long > Int.MAX_VALUE) {
-                it.value.jsonPrimitive.long
-              } else {
-                it.value.jsonPrimitive.int
+              is Number -> when {
+                it.value.jsonPrimitive.intOrNull != null -> it.value.jsonPrimitive.int
+                it.value.jsonPrimitive.longOrNull != null -> it.value.jsonPrimitive.long
+                it.value.jsonPrimitive.doubleOrNull != null -> it.value.jsonPrimitive.double
+                else -> error("Unsupported type")
               }
 
               is String -> it.value.jsonPrimitive.content
@@ -132,7 +143,8 @@ class CaptureResultTest {
                     "golden_file_path": "golden_file",
                     "timestamp": 123456789,
                     "context_data": {
-                        "key": 2
+                        "key": 2,
+                        "keyDouble": 2.5
                     }
                 },
                 {
@@ -181,14 +193,14 @@ class CaptureResultTest {
     assertEquals(File("actual_file"), actualAddedResult.actualFile)
     assertEquals(123456789, actualAddedResult.timestampNs)
     assertEquals(2, actualAddedResult.contextData["key"])
+    assertEquals(2.5, actualAddedResult.contextData["keyDouble"])
 
     val actualChangedResult = actualCaptureResultList[2] as CaptureResult.Changed
     assertEquals(File("compare_file"), actualChangedResult.compareFile)
     assertEquals(File("actual_file"), actualChangedResult.actualFile)
     assertEquals(File("golden_file"), actualChangedResult.goldenFile)
     assertEquals(123456789, actualChangedResult.timestampNs)
-    // Currently long value is deserialized as double so we can't handle long value correctly
-//    assertEquals(9223372036854775707, (actualChangedResult.contextData["key"] as Double).toLong())
+    assertEquals(9223372036854775707, actualChangedResult.contextData["key"])
 
     val actualUnchangedResult = actualCaptureResultList[3] as CaptureResult.Unchanged
     assertEquals(File("golden_file"), actualUnchangedResult.goldenFile)

@@ -13,7 +13,16 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.modules.SerializersModule
 import java.io.File
 
@@ -205,6 +214,8 @@ object AnySerializer : KSerializer<Any> {
   override val descriptor: SerialDescriptor
     get() = ContextualSerializer(Any::class, null, emptyArray()).descriptor
 
+  private val delegateSerializer = JsonPrimitive.serializer()
+
   override fun serialize(encoder: Encoder, value: Any) {
     when (value) {
       is String -> encoder.encodeString(value)
@@ -217,12 +228,14 @@ object AnySerializer : KSerializer<Any> {
   }
 
   override fun deserialize(decoder: Decoder): Any {
-    val input = decoder.decodeString()
+    val input = decoder.decodeSerializableValue(delegateSerializer)
     return when {
-      input== "true" || input == "false" -> input.toBoolean()
-      input.toIntOrNull() != null -> input.toInt()
-      input.toLongOrNull() != null -> input.toLong()
-      else -> input
+      input.isString -> input.content
+      input.booleanOrNull != null -> input.boolean
+      input.intOrNull != null -> input.int
+      input.longOrNull != null -> input.long
+      input.doubleOrNull != null -> input.double
+      else -> throw IllegalArgumentException("Unknown type: ${input::class.qualifiedName}")
     }
   }
 }
