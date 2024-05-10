@@ -12,7 +12,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.modules.SerializersModule
@@ -213,7 +212,7 @@ object AnySerializer : KSerializer<Any> {
       is Long -> encoder.encodeLong(value)
       is Double -> encoder.encodeDouble(value.toDouble())
       is Boolean -> encoder.encodeBoolean(value)
-      else -> IllegalArgumentException("Unknown type: ${value::class.qualifiedName}")
+      else -> throw IllegalArgumentException("Unknown type: ${value::class.qualifiedName}")
     }
   }
 
