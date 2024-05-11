@@ -1,0 +1,29 @@
+plugins {
+  id 'org.jetbrains.kotlin.jvm'
+}
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
+}
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(11))
+  }
+}
+
+test {
+  useJUnitPlatform()
+  systemProperty("junit.jupiter.extensions.autodetection.enabled", true)
+}
+
+dependencies {
+  // Please see settings.gradle
+  implementation "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
+  implementation libs.junit.jupiter.api
+
+  testImplementation libs.junit
+  testImplementation libs.junit.jupiter.api
+  testImplementation libs.junit.jupiter.params
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.vintage.engine
+}
