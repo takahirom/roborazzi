@@ -343,12 +343,12 @@ abstract class RoborazziPlugin : Plugin<Project> {
               "roborazziProperties" to roborazziProperties,
             )
           )
-          test.outputs.upToDateWhen {
-            val doesRoborazziRun = doesRoborazziRunProvider.get()
-            val inputDirEmpty = outputDir.get().asFile.listFiles()?.isEmpty() ?: true
-            test.infoln("Roborazzi: test.outputs.upToDateWhen !(doesRoborazziRun:$doesRoborazziRun && inputDirEmpty:$inputDirEmpty)")
-            !(doesRoborazziRun && inputDirEmpty)
-          }
+//          test.outputs.upToDateWhen {
+//            val doesRoborazziRun = doesRoborazziRunProvider.get()
+//            val inputDirEmpty = outputDir.get().asFile.listFiles()?.isEmpty() ?: true
+//            test.infoln("Roborazzi: test.outputs.upToDateWhen !(doesRoborazziRun:$doesRoborazziRun && inputDirEmpty:$inputDirEmpty)")
+//            !(doesRoborazziRun && inputDirEmpty)
+//          }
           test.doFirst {
             val doesRoborazziRun =
               doesRoborazziRunProvider.get()
