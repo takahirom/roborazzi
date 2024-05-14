@@ -11,6 +11,7 @@ group = "com.github.takahirom.roborazzi.compose.desktop.jvm.sample"
 version = "1.0-SNAPSHOT"
 tasks.test {
   useJUnitPlatform()
+  systemProperty("junit.jupiter.extensions.autodetection.enabled", true)
 }
 
 dependencies {
@@ -20,8 +21,12 @@ dependencies {
   // With compose.desktop.common you will also lose @Preview functionality
   implementation(compose.desktop.currentOs)
   testImplementation(project(":roborazzi-compose-desktop"))
+  testImplementation(project(":roborazzi-junit5"))
 
   testImplementation(kotlin("test"))
+  testImplementation(libs.junit.jupiter.api)
+  testImplementation(libs.junit.jupiter.params)
+  testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 compose.desktop {
