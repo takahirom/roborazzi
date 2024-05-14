@@ -300,23 +300,23 @@ abstract class RoborazziPlugin : Plugin<Project> {
       testTaskProvider
         .configureEach { test ->
           val resultsDir = resultDirFileProperty.get().asFile
-          if (restoreOutputDirRoborazziTaskProvider.isPresent) {
-            test.inputs.dir(restoreOutputDirRoborazziTaskProvider.map {
-              if (!it.outputDir.get().asFile.exists()) {
-                it.outputDir.get().asFile.mkdirs()
-              }
-              test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
-              it.outputDir
-            })
-          } else {
-            test.inputs.dir(outputDir.map {
-              if (!it.asFile.exists()) {
-                it.asFile.mkdirs()
-              }
-              test.infoln("Roborazzi: Set input dir $it to test task")
-              it
-            })
-          }
+//          if (restoreOutputDirRoborazziTaskProvider.isPresent) {
+//            test.inputs.dir(restoreOutputDirRoborazziTaskProvider.map {
+//              if (!it.outputDir.get().asFile.exists()) {
+//                it.outputDir.get().asFile.mkdirs()
+//              }
+//              test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
+//              it.outputDir
+//            })
+//          } else {
+//            test.inputs.dir(outputDir.map {
+//              if (!it.asFile.exists()) {
+//                it.asFile.mkdirs()
+//              }
+//              test.infoln("Roborazzi: Set input dir $it to test task")
+//              it
+//            })
+//          }
           test.outputs.dir(intermediateDirForEachVariant.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
