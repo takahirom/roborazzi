@@ -6,8 +6,6 @@ plugins {
   id("tech.apter.junit5.jupiter.robolectric-extension-gradle-plugin")
 }
 
-val jvmVersion = JavaVersion.VERSION_17
-
 android {
   namespace = "com.github.takahirom.roborazzi.sample"
   compileSdk = 34
@@ -19,15 +17,6 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
-  compileOptions {
-    sourceCompatibility = jvmVersion
-    targetCompatibility = jvmVersion
-  }
-
-  kotlinOptions {
-    jvmTarget = jvmVersion.toString()
-  }
-
   buildFeatures {
     viewBinding = true
   }
@@ -36,12 +25,6 @@ android {
     unitTests {
       isIncludeAndroidResources = true
     }
-  }
-}
-
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(jvmVersion.toString()))
   }
 }
 

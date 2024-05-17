@@ -5,12 +5,6 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
-  }
-}
-
 test {
   useJUnitPlatform()
   systemProperty("junit.jupiter.extensions.autodetection.enabled", true)
