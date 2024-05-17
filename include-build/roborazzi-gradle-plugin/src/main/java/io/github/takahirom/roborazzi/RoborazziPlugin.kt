@@ -47,7 +47,6 @@ import javax.inject.Inject
 import kotlin.reflect.KClass
 
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
-private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 
 /**
  * Experimental API
@@ -90,30 +89,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
     // For fixing unexpected skip test
     val outputDir =
       extension.outputDir.convention(project.layout.buildDirectory.dir(DEFAULT_OUTPUT_DIR))
-    val testTaskOutputDir: DirectoryProperty = project.objects.directoryProperty()
-    val intermediateDir =
-      testTaskOutputDir.convention(project.layout.buildDirectory.dir(DEFAULT_TEMP_DIR))
-
-    val restoreOutputDirRoborazziTaskProvider =
-      project.tasks.register(
-        "restoreOutputDirRoborazzi",
-        RestoreOutputDirRoborazziTask::class.java
-      ) { task ->
-
-        task.inputDir.set(intermediateDir.map {
-          if (!it.asFile.exists()) {
-            it.asFile.mkdirs()
-          }
-          it
-        })
-        task.outputDir.set(outputDir)
-        task.onlyIf {
-          val outputDirFile = task.outputDir.asFile.get()
-          val inputDirFile = task.inputDir.asFile.get()
-          (outputDirFile.listFiles()?.isEmpty() ?: true)
-            && (inputDirFile.listFiles()?.isNotEmpty() ?: false)
-        }
-      }
 
     fun isAnyTaskRun(
       isRecordRun: Property<Boolean>,
@@ -129,32 +104,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
     fun configureRoborazziTasks(
       variantSlug: String,
       testTaskName: String,
-      testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider>,
       testTaskClass: KClass<out AbstractTestTask> = Test::class
     ) {
-      try {
-        testTaskSkipEventsServiceProvider.get().addExpectingTestTaskName(testTaskName)
-      } catch (e: ClassCastException) {
-        throw IllegalStateException(
-          """You should use `id("io.github.takahirom.roborazzi") version "[version]" apply false` in the root project 
-            |to ensure the build cache property functions correctly. 
-            |This is a temporary workaround, 
-            |and we are awaiting a permanent fix from the Gradle core.
-            |https://github.com/takahirom/roborazzi/issues/266""".trimMargin(),
-          e
-        )
-      }
-      val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
-      val intermediateDirForEachVariant =
-        testTaskOutputDirForEachVariant.convention(
-          project.layout.buildDirectory.dir(
-            DEFAULT_TEMP_DIR
-          )
-        )
-
-      //      val reportOutputDir = project.layout.buildDirectory.dir("reports/roborazzi")
-      //      val snapshotOutputDir = project.layout.projectDirectory.dir("src/test/snapshots")
-
       val recordTaskProvider =
         project.tasks.register("recordRoborazzi$variantSlug", RoborazziTask::class.java) {
           it.group = VERIFICATION_GROUP
@@ -238,39 +189,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.onlyIf doesRoborazziRun $doesRoborazziRun")
               doesRoborazziRun
             }
-            val taskPath = if (project.path == ":") {
-              ":"
-            } else {
-              project.path + ":"
-            }
             finalizeTestTask.doLast {
-              val taskSkipEventsService = testTaskSkipEventsServiceProvider.get()
-              val buildFinishCountDownLatch = taskSkipEventsService.countDownLatch
-              val currentIsTestSkipped =
-                taskSkipEventsService.skippedTestTaskMap[taskPath + testTaskName]
-              val isTestSkipped = if (currentIsTestSkipped == null) {
-                // BuildService could cause race condition
-                // https://github.com/gradle/gradle/issues/24887
-                finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast test task result doesn't exits. currentIsTestSkipped:$currentIsTestSkipped currentTimeMillis:${System.currentTimeMillis()}")
-                val waitSuccess = buildFinishCountDownLatch.await(200, TimeUnit.MILLISECONDS)
-                val new =
-                  taskSkipEventsService.skippedTestTaskMap[taskPath + testTaskName]
-                finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast wait end currentIsTestSkipped:$currentIsTestSkipped new:$new waitSuccess:$waitSuccess currentTimeMillis:${System.currentTimeMillis()}")
-                new ?: false
-              } else {
-                currentIsTestSkipped
-              }
-              finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast isTestSkipped:$isTestSkipped")
-              if (isTestSkipped) {
-                // If the test is skipped, we need to use cached files
-                finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask isTestSkipped:$isTestSkipped Copy files from ${intermediateDir.get()} to ${outputDir.get()}")
-                intermediateDir.get().asFile.mkdirs()
-                intermediateDir.get().asFile.copyRecursively(
-                  target = outputDir.get().asFile,
-                  overwrite = true
-                )
-              }
-
               val results: List<CaptureResult> = resultDirFileTree.get().mapNotNull {
                 if (it.name.endsWith(".json")) {
                   CaptureResult.fromJsonFile(it.path)
@@ -300,7 +219,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
       testTaskProvider
         .configureEach { test ->
           val resultsDir = resultDirFileProperty.get().asFile
-          test.outputs.dir(intermediateDirForEachVariant.map {
+          test.outputs.dir(outputDir.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
           })
@@ -364,19 +283,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
           }
-          test.doLast {
-            // Copy all files from outputDir to intermediateDir
-            // so that we can use Gradle's output caching
-            it.infoln("Roborazzi: test.doLast Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
-            // outputDir.get().asFileTree.forEach {
-            //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
-            // }
-            outputDir.get().asFile.mkdirs()
-            outputDir.get().asFile.copyRecursively(
-              target = intermediateDir.get().asFile,
-              overwrite = true
-            )
-          }
           test.finalizedBy(finalizeTestRoborazziTask)
         }
 
@@ -385,14 +291,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
       verifyTaskProvider.configure { it.dependsOn(testTaskProvider) }
       verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
     }
-
-    val testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider> =
-      project.gradle.sharedServices.registerIfAbsent(
-        "roborazziTestTaskEvents", TestTaskSkipEventsServiceProvider::class.java
-      ) { spec ->
-        // do nothing
-      }
-    getEventsListenerRegistry().onTaskCompletion(testTaskSkipEventsServiceProvider)
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
@@ -403,8 +301,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         // e.g. testDebugUnitTest -> recordRoborazziDebug
         configureRoborazziTasks(
           variantSlug = variantSlug,
-          testTaskName = "test$testVariantSlug",
-          testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
+          testTaskName = "test$testVariantSlug"
         )
       }
     }
@@ -421,8 +318,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
       // e.g. test -> recordRoborazziJvm
       configureRoborazziTasks(
         variantSlug = "Jvm",
-        testTaskName = "test",
-        testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
+        testTaskName = "test"
       )
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
@@ -437,8 +333,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
             // e.g. desktopTest -> recordRoborazziDesktop
             configureRoborazziTasks(
               variantSlug = target.name.capitalizeUS(),
-              testTaskName = testRun.executionTask.name,
-              testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider
+              testTaskName = testRun.executionTask.name
             )
           }
         }
@@ -448,7 +343,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
             configureRoborazziTasks(
               variantSlug = target.name.capitalizeUS(),
               testTaskName = (testRun as ExecutionTaskHolder<*>).executionTask.name,
-              testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider,
               testTaskClass = KotlinNativeTest::class
             )
           }
@@ -459,24 +353,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
   private fun String.capitalizeUS() =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
-
-  abstract class RestoreOutputDirRoborazziTask @Inject constructor(objects: ObjectFactory) :
-    DefaultTask() {
-    @get:InputDirectory
-    @Optional
-    val inputDir: DirectoryProperty = objects.directoryProperty()
-
-    @get:OutputDirectory
-    val outputDir: DirectoryProperty = objects.directoryProperty()
-
-    @TaskAction
-    fun copy() {
-      val outputDirFile = outputDir.get().asFile
-      if (outputDirFile.exists() && outputDirFile.listFiles().isNotEmpty()) return
-      this.infoln("Roborazzi RestoreOutputDirRoborazziTask: Copy files from ${inputDir.get()} to ${outputDirFile}")
-      inputDir.get().asFile.copyRecursively(outputDirFile)
-    }
-  }
 
   open class RoborazziTask : DefaultTask() {
     @Option(
@@ -489,67 +365,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
       }
       return this
     }
-  }
-}
-
-/**
- * We can't get whether the test is skipped or not from the test task itself
- * because of the configuration cache
- */
-abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServiceParameters.None?>,
-  OperationCompletionListener {
-  val skippedTestTaskMap = mutableMapOf<String, Boolean>()
-  var countDownLatch = CountDownLatch(1)
-    private set
-  private val logger = Logging.getLogger(this::class.java)
-  private val expectingTestNames = mutableListOf<String>()
-  fun addExpectingTestTaskName(testName: String) {
-    expectingTestNames.add(testName)
-  }
-
-  override fun onFinish(finishEvent: FinishEvent) {
-    val displayName = finishEvent.displayName
-//    println(
-//      "Roborazzi: onFinish " +
-//        "expectingTestNames:$expectingTestNames" +
-//        "displayName:$displayName " +
-//        "finishEvent:$finishEvent " +
-//        "finishEvent.descriptor:${finishEvent.descriptor}" +
-//        "finishEvent.descriptor.name:${finishEvent.descriptor.name}"
-//    )
-    if (finishEvent !is TaskFinishEvent) {
-      return
-    }
-    if (!expectingTestNames.any {
-        displayName.contains(it, ignoreCase = true)
-      }) {
-      return
-    }
-    val result = finishEvent.result
-    if (when (result) {
-        is TaskSuccessResult -> {
-          if (result.isFromCache) {
-            true
-          } else if (result.isUpToDate) {
-            true
-          } else {
-            false
-          }
-        }
-
-        is TaskFailureResult -> false
-        is TaskSkippedResult -> true
-        else -> false
-      }
-    ) {
-      logger.info("Roborazzi: Skip test ${finishEvent.descriptor.name} ${System.currentTimeMillis()}")
-      skippedTestTaskMap[finishEvent.descriptor.name] = true
-    } else {
-      logger.info("Roborazzi: Don't skip test ${finishEvent.descriptor.name} ${System.currentTimeMillis()}")
-      skippedTestTaskMap[finishEvent.descriptor.name] = false
-    }
-    countDownLatch.countDown()
-    countDownLatch = CountDownLatch(1)
   }
 }
 
