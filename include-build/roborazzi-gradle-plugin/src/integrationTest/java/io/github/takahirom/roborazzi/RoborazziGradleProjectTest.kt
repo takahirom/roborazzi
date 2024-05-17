@@ -54,14 +54,12 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
-  fun recordWhenRemovedOutput() {
+  fun whenRecordAndRemovedOutputAndRecordThenSkipAndRestoreTheImages() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
       removeRoborazziOutputDir()
-      // should not be skipped even if tests and sources are not changed
-      // when output directory is removed
       val output = record().output
-      assertNotSkipped(output)
+      assertSkipped(output)
 
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
@@ -92,10 +90,6 @@ class RoborazziGradleProjectTest {
   fun recordWhenRunTwice() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
-      // files are changed so should not be skipped
-      val output1 = record().output
-      assertNotSkipped(output1)
-      // files are not changed so should be skipped
       val output2 = record().output
       assertSkipped(output2)
 
@@ -112,10 +106,6 @@ class RoborazziGradleProjectTest {
       val customDirFromGradle = "src/screenshots/roborazzi_customdir_from_gradle"
       appBuildFile.customOutputDirPath = customDirFromGradle
       record()
-      // files are changed so should not be skipped
-      val output1 = record().output
-      assertNotSkipped(output1)
-      // files are not changed so should be skipped
       val output2 = record().output
       assertSkipped(output2)
 
