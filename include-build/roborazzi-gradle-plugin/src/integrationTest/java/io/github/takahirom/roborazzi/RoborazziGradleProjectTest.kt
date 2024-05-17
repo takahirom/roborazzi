@@ -59,7 +59,7 @@ class RoborazziGradleProjectTest {
       record()
       removeRoborazziOutputDir()
       val output = record().output
-      assertSkipped(output)
+      assertNotSkipped(output)
 
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
@@ -90,6 +90,8 @@ class RoborazziGradleProjectTest {
   fun recordWhenRunTwice() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
+      val output1 = record().output
+      assertNotSkipped(output1)
       val output2 = record().output
       assertSkipped(output2)
 
@@ -106,6 +108,8 @@ class RoborazziGradleProjectTest {
       val customDirFromGradle = "src/screenshots/roborazzi_customdir_from_gradle"
       appBuildFile.customOutputDirPath = customDirFromGradle
       record()
+      val output1 = record().output
+      assertNotSkipped(output1)
       val output2 = record().output
       assertSkipped(output2)
 
@@ -183,6 +187,21 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
       checkResultCount(changed = 1)
+    }
+  }
+
+  @Test
+  fun checkIfOutputIsUsed() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      compare()
+      removeRoborazziOutputDir()
+      record()
+      compare()
+
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkResultCount(unchanged = 1)
     }
   }
 
