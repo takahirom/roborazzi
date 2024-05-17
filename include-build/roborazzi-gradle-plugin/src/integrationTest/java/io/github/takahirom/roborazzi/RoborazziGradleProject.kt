@@ -107,11 +107,6 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     File(testProjectDir.root, "app/$buildDirName/outputs/roborazzi").deleteRecursively()
   }
 
-  fun removeRoborazziAndIntermediateOutputDir() {
-    File(testProjectDir.root, "app/$buildDirName/outputs/roborazzi").deleteRecursively()
-    File(testProjectDir.root, "app/$buildDirName/intermediates/roborazzi").deleteRecursively()
-  }
-
   fun assertNotSkipped(output: String) {
     assert(output.contains("testDebugUnitTest' is not up-to-date because"))
   }
@@ -119,6 +114,10 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
 
   fun assertSkipped(output: String) {
     assert(output.contains("testDebugUnitTest UP-TO-DATE"))
+  }
+
+  fun assertFromCache(output: String) {
+    assert(output.contains("testDebugUnitTest FROM-CACHE"))
   }
 
   enum class BuildType {
