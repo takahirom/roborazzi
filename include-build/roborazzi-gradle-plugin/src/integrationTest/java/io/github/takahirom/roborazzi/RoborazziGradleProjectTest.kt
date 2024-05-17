@@ -186,6 +186,23 @@ class RoborazziGradleProjectTest {
     }
   }
 
+  @Test
+  fun checkIfOutputIsUsed() {
+    RoborazziGradleProject(testProjectDir).apply {
+      record()
+      changeScreen()
+      compare()
+      removeRoborazziOutputDir()
+      record()
+      compare()
+
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+      checkResultCount(unchanged = 1)
+    }
+  }
+
   /**
    * This test is for the issue
    * https://github.com/takahirom/roborazzi/issues/261
