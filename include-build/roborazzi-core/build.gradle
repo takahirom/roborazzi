@@ -7,12 +7,6 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
-  }
-}
-
 android.compileSdk(34)
 
 kotlin {
@@ -105,10 +99,6 @@ android {
     targetSdk 32
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-  }
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_11
-    targetCompatibility JavaVersion.VERSION_11
   }
   buildFeatures {}
   testOptions {

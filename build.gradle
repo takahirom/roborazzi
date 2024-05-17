@@ -14,10 +14,43 @@ plugins {
 }
 
 allprojects {
+  // Apply the same Java compatibility for each module
+  def javaVersion = libs.versions.javaTarget.get()
+  def toolchainVersion = libs.versions.javaToolchain.get()
+
+  def javaTargetVersion = JavaVersion.toVersion(javaVersion)
+  def jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.@Companion.fromTarget(javaVersion)
+
+  plugins.withId("java") {
+    java {
+      toolchain {
+        languageVersion.set(JavaLanguageVersion.of(toolchainVersion))
+      }
+    }
+  }
+
+  plugins.withType(com.android.build.gradle.BasePlugin).configureEach {
+    android {
+      compileOptions {
+        sourceCompatibility javaTargetVersion
+        targetCompatibility javaTargetVersion
+      }
+    }
+  }
+
+  tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
+    sourceCompatibility = javaTargetVersion
+    targetCompatibility = javaTargetVersion
+  }
+
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-      freeCompilerArgs += "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi"
-      freeCompilerArgs += "-Xopt-in=com.github.takahirom.roborazzi.ExperimentalRoborazziApi"
+    compilerOptions {
+      jvmTarget.set(jvmTargetVersion)
+
+      freeCompilerArgs.addAll(
+        "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi",
+        "-Xopt-in=com.github.takahirom.roborazzi.ExperimentalRoborazziApi",
+      )
     }
   }
 
