@@ -112,12 +112,9 @@ data class CaptureResults2(
     reportDirectoryPath: String
   ): String {
     fun Path.pathFrom(reportDirectoryPath: String): String {
-      /*
-      TODO fix relativeTo Path
       val reportDirectory = Path(reportDirectoryPath)
-      val relativePath = relativeTo(reportDirectory)
-      return relativePath.path*/
-      return Path(reportDirectoryPath).toString()
+      val relativePath =  relativeTo(reportDirectory)
+      return relativePath.toString()
     }
     if (images.isEmpty()) return ""
     return buildString {

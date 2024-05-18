@@ -8,7 +8,11 @@ import kotlinx.io.readString
 import kotlinx.io.write
 
 val Path.absolutePath: String
-  get() = SystemFileSystem.resolve(this).toString()
+  get() = this.toString()
+
+fun Path.relativeTo(base: Path): Path {
+  return Path(SystemFileSystem.resolve(base))
+}
 
 @OptIn(ExperimentalStdlibApi::class)
 object KotlinIo {
