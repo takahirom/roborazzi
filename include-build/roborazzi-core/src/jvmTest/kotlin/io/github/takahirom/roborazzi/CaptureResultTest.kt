@@ -3,7 +3,7 @@ package io.github.takahirom.roborazzi
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import com.github.takahirom.roborazzi.CaptureResults
-import com.github.takahirom.roborazzi.ResultSummary2
+import com.github.takahirom.roborazzi.ResultSummary
 import com.github.takahirom.roborazzi.absolutePath
 import kotlinx.io.files.Path
 import kotlinx.serialization.json.JsonObject
@@ -25,7 +25,7 @@ class CaptureResultTest {
 
   @Test
   fun testJsonSerialization() {
-    val expectedSummary = ResultSummary2(11, 1, 2, 3, 5)
+    val expectedSummary = ResultSummary(11, 1, 2, 3, 5)
     val expectedCaptureResults = listOf(
       CaptureResult.Recorded(
         goldenFile = Path("/golden_file"),

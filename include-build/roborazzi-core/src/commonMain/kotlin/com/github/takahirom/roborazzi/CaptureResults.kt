@@ -29,7 +29,7 @@ import kotlinx.serialization.modules.SerializersModule
 @Serializable
 data class CaptureResults(
   @SerialName("summary")
-  val resultSummary: ResultSummary2,
+  val resultSummary: ResultSummary,
   @SerialName("results")
   val captureResults: List<CaptureResult>
 ) {
@@ -197,7 +197,7 @@ data class CaptureResults(
 
     fun from(results: List<CaptureResult>): CaptureResults {
       return CaptureResults(
-        resultSummary = ResultSummary2(
+        resultSummary = ResultSummary(
           total = results.size,
           recorded = results.count { it is CaptureResult.Recorded },
           added = results.count { it is CaptureResult.Added },
