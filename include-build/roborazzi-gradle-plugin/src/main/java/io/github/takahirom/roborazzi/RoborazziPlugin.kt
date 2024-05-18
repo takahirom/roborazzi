@@ -207,6 +207,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
       val reportFileProperty =
         project.layout.buildDirectory.file(RoborazziReportConst.reportFilePathFromBuildDir)
 
+      // The difference between finalizedTask and afterSuite is that
+      // finalizedTask is called even if the test is skipped.
       val finalizeTestRoborazziTask = project.tasks.register(
         /* name = */ "finalizeTestRoborazzi$variantSlug",
         /* configurationAction = */ object : Action<Task> {
@@ -348,6 +350,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
               // Do nothing
             }
 
+            // The reason why we use afterSuite() instead of task.doLast is that
+            // task.doLast is not called if the test is failed.
+            // And why we use afterSuite() instead of finalizedBy is that
+            // we want to change the tasks' output in the task execution phase.
             override fun afterSuite(suite: TestDescriptor?, result: TestResult?) {
               // Copy all files from outputDir to intermediateDir
               // so that we can use Gradle's output caching
