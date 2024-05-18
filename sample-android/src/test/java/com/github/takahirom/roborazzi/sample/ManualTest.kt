@@ -49,8 +49,8 @@ class ManualTest {
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
   init {
-    val USE_HARDWARE_RENDERER_NATIVE_ENV = "robolectric.screenshot.hwrdr.native"
-    System.setProperty(USE_HARDWARE_RENDERER_NATIVE_ENV, "true")
+    val USE_HARDWARE_RENDERER_NATIVE_ENV = "robolectric.pixelCopyRenderMode"
+    System.setProperty(USE_HARDWARE_RENDERER_NATIVE_ENV, "hardware")
   }
 
   @Test
