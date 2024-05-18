@@ -1,8 +1,8 @@
 package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResult
-import com.github.takahirom.roborazzi.CaptureResults2.Companion.json
-import com.github.takahirom.roborazzi.CaptureResults2
+import com.github.takahirom.roborazzi.CaptureResults.Companion.json
+import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.ResultSummary2
 import com.github.takahirom.roborazzi.absolutePath
 import kotlinx.io.files.Path
@@ -56,7 +56,7 @@ class CaptureResultTest {
       )
     )
 
-    val expectedReportResults = CaptureResults2(expectedSummary, expectedCaptureResults)
+    val expectedReportResults = CaptureResults(expectedSummary, expectedCaptureResults)
 
     val actualJson = json.encodeToJsonElement(expectedReportResults) as JsonObject
     val actualJsonSummary = actualJson["summary"]!!.jsonObject
@@ -170,7 +170,7 @@ class CaptureResultTest {
         }
         """.trimIndent()
     val actualJsonObject = json.parseToJsonElement(jsonString).jsonObject
-    val actualCaptureResults = CaptureResults2.fromJson(actualJsonObject)
+    val actualCaptureResults = CaptureResults.fromJson(actualJsonObject)
     val actualSummary = actualCaptureResults.resultSummary
     val actualCaptureResultList = actualCaptureResults.captureResults
 

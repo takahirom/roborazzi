@@ -31,7 +31,6 @@ kotlin {
         api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
         implementation(project(":roborazzi-painter"))
         implementation(libs.kotlinx.serialization.json)
-        implementation libs.dropbox.differ
         api(project.compose.dependencies.uiTest)
         implementation(compose.runtime)
       }

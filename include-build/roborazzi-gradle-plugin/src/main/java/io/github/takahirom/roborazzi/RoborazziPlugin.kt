@@ -4,7 +4,7 @@ import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.github.takahirom.roborazzi.CaptureResult
-import com.github.takahirom.roborazzi.CaptureResults2
+import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import org.gradle.api.Action
@@ -241,7 +241,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               }
               val resultsSummaryFile = resultSummaryFileProperty.get().asFile
 
-              val roborazziResults = CaptureResults2.from(results)
+              val roborazziResults = CaptureResults.from(results)
               finalizeTestTask.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
 
               val jsonResult = roborazziResults.toJson()

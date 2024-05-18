@@ -1,6 +1,6 @@
 package com.github.takahirom.roborazzi
 
-import com.github.takahirom.roborazzi.CaptureResults2.Companion.json
+import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import kotlinx.io.files.Path
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
@@ -99,7 +99,7 @@ sealed interface CaptureResult {
 
   companion object {
     fun fromJsonFile(filePath: String): CaptureResult {
-      val string = KotlinIo.readText(Path(filePath))
+      val string = KotlinxIo.readText(Path(filePath))
       val jsonElement = json.parseToJsonElement(string)
       return json.decodeFromJsonElement<CaptureResult>(jsonElement)
     }

@@ -90,4 +90,3 @@ squareup-okhttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines"
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 robolectric-android-all = { module = "org.robolectric:android-all", version.ref = "robolectric-android-all" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
-kotlinx-io-bytestring = { module = "org.jetbrains.kotlinx:kotlinx-io-bytestring", version.ref = "kotlinx-io" }

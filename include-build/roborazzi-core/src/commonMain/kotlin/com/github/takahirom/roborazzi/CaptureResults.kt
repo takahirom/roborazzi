@@ -27,7 +27,7 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.modules.SerializersModule
 
 @Serializable
-data class CaptureResults2(
+data class CaptureResults(
   @SerialName("summary")
   val resultSummary: ResultSummary2,
   @SerialName("results")
@@ -185,18 +185,18 @@ data class CaptureResults2(
       }
     }
 
-    fun fromJsonFile(inputPath: String): CaptureResults2 {
-      val string = KotlinIo.readText(Path(inputPath))
+    fun fromJsonFile(inputPath: String): CaptureResults {
+      val string = KotlinxIo.readText(Path(inputPath))
       val jsonElement = json.parseToJsonElement(string)
       return json.decodeFromJsonElement(jsonElement)
     }
 
-    fun fromJson(jsonString: JsonObject): CaptureResults2 {
+    fun fromJson(jsonString: JsonObject): CaptureResults {
       return json.decodeFromJsonElement(jsonString)
     }
 
-    fun from(results: List<CaptureResult>): CaptureResults2 {
-      return CaptureResults2(
+    fun from(results: List<CaptureResult>): CaptureResults {
+      return CaptureResults(
         resultSummary = ResultSummary2(
           total = results.size,
           recorded = results.count { it is CaptureResult.Recorded },

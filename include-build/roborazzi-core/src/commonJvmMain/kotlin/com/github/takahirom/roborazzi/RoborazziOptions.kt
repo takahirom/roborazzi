@@ -2,10 +2,10 @@ package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
-import com.github.takahirom.roborazzi.CaptureResults2.Companion.json
-import kotlinx.io.files.Path
+import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import kotlinx.serialization.json.encodeToJsonElement
 import java.io.File
+import kotlinx.io.files.Path
 
 
 @ExperimentalRoborazziApi
@@ -174,8 +174,7 @@ data class RoborazziOptions(
           getReportFileName(absolutePath, captureResult.timestampNs, nameWithoutExtension)
 
         val jsonResult = json.encodeToJsonElement(captureResult)
-        println(jsonResult.toString())
-        //KotlinIo.writeText(Path(reportFileName), jsonResult.toString())
+        KotlinxIo.writeText(Path(reportFileName), jsonResult.toString())
         debugLog { "JsonResult file($reportFileName) has been written" }
       }
 

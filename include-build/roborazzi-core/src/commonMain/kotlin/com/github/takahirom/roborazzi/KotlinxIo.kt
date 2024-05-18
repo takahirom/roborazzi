@@ -18,7 +18,7 @@ val Path.nameWithoutExtension: String
   get() = name.substringBeforeLast(".")
 
 @OptIn(ExperimentalStdlibApi::class)
-object KotlinIo {
+object KotlinxIo {
 
 
   fun readText(path: Path): String {
