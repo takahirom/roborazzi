@@ -102,7 +102,7 @@ fun processOutputImageAndReport(
       true
     }
 
-    val result: CaptureResult2 = if (changed) {
+    val result: CaptureResult = if (changed) {
       val comparisonFile = File(
         roborazziOptions.compareOptions.outputDirectoryPath,
         goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
@@ -145,7 +145,7 @@ fun processOutputImageAndReport(
           "actualFile:${actualFile.absolutePath}"
       }
       if (goldenFile.exists()) {
-        CaptureResult2.Changed(
+        CaptureResult.Changed(
           compareFile = comparisonFile.toIoPath(),
           actualFile = actualFile.toIoPath(),
           goldenFile = goldenFile.toIoPath(),
@@ -153,7 +153,7 @@ fun processOutputImageAndReport(
           contextData = contextData,
         )
       } else {
-        CaptureResult2.Added(
+        CaptureResult.Added(
           compareFile = comparisonFile.toIoPath(),
           actualFile = actualFile.toIoPath(),
           goldenFile = goldenFile.toIoPath(),
@@ -162,7 +162,7 @@ fun processOutputImageAndReport(
         )
       }
     } else {
-      CaptureResult2.Unchanged(
+      CaptureResult.Unchanged(
         goldenFile = goldenFile.toIoPath(),
         timestampNs = System.nanoTime(),
         contextData = contextData,
@@ -190,7 +190,7 @@ fun processOutputImageAndReport(
         " record goldenFile: $goldenFile\n"
     }
     roborazziOptions.reportOptions.captureResultReporter.report(
-      captureResult = CaptureResult2.Recorded(
+      captureResult = CaptureResult.Recorded(
         goldenFile = goldenFile.toIoPath(),
         timestampNs = System.nanoTime(),
         contextData = contextData,

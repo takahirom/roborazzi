@@ -10,7 +10,7 @@ import com.ashampoo.kim.format.png.chunk.PngChunk
 import com.ashampoo.kim.format.png.chunk.PngTextChunk
 import com.ashampoo.kim.input.KotlinIoSourceByteReader
 import com.ashampoo.kim.input.use
-import com.github.takahirom.roborazzi.CaptureResult2
+import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -90,7 +90,7 @@ class ContextDataTest {
         .first { it.name.contains(methodSignature) && it.name.endsWith(".json") }
         .let {
           println(it.readText())
-          CaptureResult2.fromJsonFile(it.path)
+          CaptureResult.fromJsonFile(it.path)
             .let { result ->
               result.verifyKeyValueExistsInJson(testKey1, testValue1)
               result.verifyKeyValueExistsInJson(testKey2, testValue2)
@@ -147,7 +147,7 @@ class ContextDataTest {
         .listFiles()!!
         .first { it.name.contains(methodSignature) && it.name.endsWith(".json") }
         .let {
-          CaptureResult2.fromJsonFile(it.path)
+          CaptureResult.fromJsonFile(it.path)
             .let { result ->
               assert(result.contextData.isEmpty()) {
                 "Expected no context data but got ${result.contextData}"
@@ -157,7 +157,7 @@ class ContextDataTest {
     }
   }
 
-  private fun CaptureResult2.verifyKeyValueExistsInJson(
+  private fun CaptureResult.verifyKeyValueExistsInJson(
     key: String,
     value: Any
   ) {

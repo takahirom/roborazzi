@@ -16,8 +16,8 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-@Serializable(with = CaptureResult2.CaptureResultSerializer::class)
-sealed interface CaptureResult2 {
+@Serializable(with = CaptureResult.CaptureResultSerializer::class)
+sealed interface CaptureResult {
   val type: String
   val timestampNs: Long
   val compareFile: Path?
@@ -41,7 +41,7 @@ sealed interface CaptureResult2 {
     override val timestampNs: Long,
     @SerialName("context_data")
     override val contextData: Map<String,@Contextual Any>
-  ) : CaptureResult2 {
+  ) : CaptureResult {
     override val type = "recorded"
     override val actualFile: Path?
       get() = null
@@ -61,7 +61,7 @@ sealed interface CaptureResult2 {
     override val timestampNs: Long,
     @SerialName("context_data")
     override val contextData: Map<String,@Contextual Any>
-  ) : CaptureResult2 {
+  ) : CaptureResult {
     override val type = "added"
   }
 
@@ -77,7 +77,7 @@ sealed interface CaptureResult2 {
     override val timestampNs: Long,
     @SerialName("context_data")
     override val contextData: Map<String,@Contextual Any>
-  ) : CaptureResult2 {
+  ) : CaptureResult {
     override val type = "changed"
   }
 
@@ -89,7 +89,7 @@ sealed interface CaptureResult2 {
     override val timestampNs: Long,
     @SerialName("context_data")
     override val contextData: Map<String,@Contextual Any>
-  ) : CaptureResult2 {
+  ) : CaptureResult {
     override val type = "unchanged"
     override val actualFile: Path?
       get() = null
@@ -98,18 +98,18 @@ sealed interface CaptureResult2 {
   }
 
   companion object {
-    fun fromJsonFile(filePath: String): CaptureResult2 {
+    fun fromJsonFile(filePath: String): CaptureResult {
       val string = KotlinIo.readText(Path(filePath))
       val jsonElement = json.parseToJsonElement(string)
-      return json.decodeFromJsonElement<CaptureResult2>(jsonElement)
+      return json.decodeFromJsonElement<CaptureResult>(jsonElement)
     }
   }
 
-  object CaptureResultSerializer : KSerializer<CaptureResult2> {
+  object CaptureResultSerializer : KSerializer<CaptureResult> {
     override val descriptor: SerialDescriptor
       get() = PrimitiveSerialDescriptor("CaptureResult", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: CaptureResult2) =
+    override fun serialize(encoder: Encoder, value: CaptureResult) =
       when (value) {
         is Recorded -> encoder.encodeSerializableValue(Recorded.serializer(), value)
         is Changed -> encoder.encodeSerializableValue(Changed.serializer(), value)
@@ -117,7 +117,7 @@ sealed interface CaptureResult2 {
         is Added -> encoder.encodeSerializableValue(Added.serializer(), value)
       }
 
-    override fun deserialize(decoder: Decoder): CaptureResult2 {
+    override fun deserialize(decoder: Decoder): CaptureResult {
       require(decoder is JsonDecoder)
       val type = decoder.decodeJsonElement().jsonObject["type"]!!.jsonPrimitive.content
       return when (type) {

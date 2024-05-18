@@ -138,7 +138,7 @@ data class RoborazziOptions(
 
   @ExperimentalRoborazziApi
   interface CaptureResultReporter {
-    fun report(captureResult: CaptureResult2, roborazziTaskType: RoborazziTaskType)
+    fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType)
 
     companion object {
       operator fun invoke(): CaptureResultReporter {
@@ -147,7 +147,7 @@ data class RoborazziOptions(
     }
 
     class DefaultCaptureResultReporter : CaptureResultReporter {
-      override fun report(captureResult: CaptureResult2, roborazziTaskType: RoborazziTaskType) {
+      override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
         if (roborazziTaskType.isVerifying()) {
           VerifyCaptureResultReporter().report(captureResult, roborazziTaskType)
         } else {
@@ -162,19 +162,20 @@ data class RoborazziOptions(
         File(roborazziSystemPropertyResultDirectory()).mkdirs()
       }
 
-      override fun report(captureResult: CaptureResult2, roborazziTaskType: RoborazziTaskType) {
+      override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
         val absolutePath = File(roborazziSystemPropertyResultDirectory()).absolutePath
         val nameWithoutExtension = when (captureResult) {
-          is CaptureResult2.Added -> captureResult.compareFile
-          is CaptureResult2.Changed -> captureResult.goldenFile
-          is CaptureResult2.Unchanged -> captureResult.goldenFile
-          is CaptureResult2.Recorded -> captureResult.goldenFile
+          is CaptureResult.Added -> captureResult.compareFile
+          is CaptureResult.Changed -> captureResult.goldenFile
+          is CaptureResult.Unchanged -> captureResult.goldenFile
+          is CaptureResult.Recorded -> captureResult.goldenFile
         }.nameWithoutExtension
         val reportFileName =
           getReportFileName(absolutePath, captureResult.timestampNs, nameWithoutExtension)
 
         val jsonResult = json.encodeToJsonElement(captureResult)
-        KotlinIo.writeText(Path(reportFileName), jsonResult.toString())
+        println(jsonResult.toString())
+        //KotlinIo.writeText(Path(reportFileName), jsonResult.toString())
         debugLog { "JsonResult file($reportFileName) has been written" }
       }
 
@@ -183,7 +184,7 @@ data class RoborazziOptions(
     @InternalRoborazziApi
     class VerifyCaptureResultReporter : CaptureResultReporter {
       private val jsonOutputCaptureResultReporter = JsonOutputCaptureResultReporter()
-      override fun report(captureResult: CaptureResult2, roborazziTaskType: RoborazziTaskType) {
+      override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
         jsonOutputCaptureResultReporter.report(captureResult, roborazziTaskType)
         val assertErrorOrNull = getAssertErrorOrNull(captureResult)
         if (assertErrorOrNull != null) {
@@ -218,19 +219,19 @@ expect fun canScreenshot(): Boolean
 
 expect fun defaultCaptureType(): RoborazziOptions.CaptureType
 
-private fun getAssertErrorOrNull(captureResult: CaptureResult2): AssertionError? =
+private fun getAssertErrorOrNull(captureResult: CaptureResult): AssertionError? =
   when (captureResult) {
-    is CaptureResult2.Added -> AssertionError(
+    is CaptureResult.Added -> AssertionError(
       "Roborazzi: The original file(${captureResult.goldenFile.absolutePath}) was not found.\n" +
         "See the actual image at ${captureResult.actualFile.absolutePath}"
     )
 
-    is CaptureResult2.Changed -> AssertionError(
+    is CaptureResult.Changed -> AssertionError(
       "Roborazzi: ${captureResult.goldenFile.absolutePath} is changed.\n" +
         "See the compare image at ${captureResult.compareFile.absolutePath}"
     )
 
-    is CaptureResult2.Unchanged, is CaptureResult2.Recorded -> {
+    is CaptureResult.Unchanged, is CaptureResult.Recorded -> {
       null
     }
   }

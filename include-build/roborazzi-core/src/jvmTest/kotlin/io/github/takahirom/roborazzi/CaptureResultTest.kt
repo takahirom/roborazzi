@@ -1,9 +1,11 @@
 package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResult
-import com.github.takahirom.roborazzi.CaptureResults
-import com.github.takahirom.roborazzi.CaptureResults.Companion.json
-import com.github.takahirom.roborazzi.ResultSummary
+import com.github.takahirom.roborazzi.CaptureResults2.Companion.json
+import com.github.takahirom.roborazzi.CaptureResults2
+import com.github.takahirom.roborazzi.ResultSummary2
+import com.github.takahirom.roborazzi.absolutePath
+import kotlinx.io.files.Path
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.double
@@ -18,23 +20,22 @@ import kotlinx.serialization.json.long
 import kotlinx.serialization.json.longOrNull
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.io.File
 
 class CaptureResultTest {
 
   @Test
   fun testJsonSerialization() {
-    val expectedSummary = ResultSummary(11, 1, 2, 3, 5)
+    val expectedSummary = ResultSummary2(11, 1, 2, 3, 5)
     val expectedCaptureResults = listOf(
       CaptureResult.Recorded(
-        goldenFile = File("/golden_file"),
+        goldenFile = Path("/golden_file"),
         timestampNs = 123456789,
         contextData = mapOf("key" to "value1"),
       ),
       CaptureResult.Added(
-        compareFile = File("/compare_file"),
-        actualFile = File("/actual_file"),
-        goldenFile = File("/golden_file"),
+        compareFile = Path("/compare_file"),
+        actualFile = Path("/actual_file"),
+        goldenFile = Path("/golden_file"),
         timestampNs = 123456789,
         contextData = mapOf(
           "key" to 2,
@@ -42,20 +43,20 @@ class CaptureResultTest {
         ),
       ),
       CaptureResult.Changed(
-        compareFile = File("/compare_file"),
-        goldenFile = File("/golden_file"),
-        actualFile = File("/actual_file"),
+        compareFile = Path("/compare_file"),
+        goldenFile = Path("/golden_file"),
+        actualFile = Path("/actual_file"),
         timestampNs = 123456789,
         contextData = mapOf("key" to Long.MAX_VALUE - 100),
       ),
       CaptureResult.Unchanged(
-        goldenFile = File("/golden_file"),
+        goldenFile = Path("/golden_file"),
         timestampNs = 123456789,
         contextData = mapOf("key" to true),
       )
     )
 
-    val expectedReportResults = CaptureResults(expectedSummary, expectedCaptureResults)
+    val expectedReportResults = CaptureResults2(expectedSummary, expectedCaptureResults)
 
     val actualJson = json.encodeToJsonElement(expectedReportResults) as JsonObject
     val actualJsonSummary = actualJson["summary"]!!.jsonObject
@@ -169,7 +170,7 @@ class CaptureResultTest {
         }
         """.trimIndent()
     val actualJsonObject = json.parseToJsonElement(jsonString).jsonObject
-    val actualCaptureResults = CaptureResults.fromJson(actualJsonObject)
+    val actualCaptureResults = CaptureResults2.fromJson(actualJsonObject)
     val actualSummary = actualCaptureResults.resultSummary
     val actualCaptureResultList = actualCaptureResults.captureResults
 
@@ -184,26 +185,26 @@ class CaptureResultTest {
     assertEquals(4, actualCaptureResultList.size)
 
     val actualRecordedResult = actualCaptureResultList[0] as CaptureResult.Recorded
-    assertEquals(File("golden_file"), actualRecordedResult.goldenFile)
+    assertEquals(Path("golden_file"), actualRecordedResult.goldenFile)
     assertEquals(123456789, actualRecordedResult.timestampNs)
     assertEquals("value1", actualRecordedResult.contextData["key"])
 
     val actualAddedResult = actualCaptureResultList[1] as CaptureResult.Added
-    assertEquals(File("compare_file"), actualAddedResult.compareFile)
-    assertEquals(File("actual_file"), actualAddedResult.actualFile)
+    assertEquals(Path("compare_file"), actualAddedResult.compareFile)
+    assertEquals(Path("actual_file"), actualAddedResult.actualFile)
     assertEquals(123456789, actualAddedResult.timestampNs)
     assertEquals(2, actualAddedResult.contextData["key"])
     assertEquals(2.5, actualAddedResult.contextData["keyDouble"])
 
     val actualChangedResult = actualCaptureResultList[2] as CaptureResult.Changed
-    assertEquals(File("compare_file"), actualChangedResult.compareFile)
-    assertEquals(File("actual_file"), actualChangedResult.actualFile)
-    assertEquals(File("golden_file"), actualChangedResult.goldenFile)
+    assertEquals(Path("compare_file"), actualChangedResult.compareFile)
+    assertEquals(Path("actual_file"), actualChangedResult.actualFile)
+    assertEquals(Path("golden_file"), actualChangedResult.goldenFile)
     assertEquals(123456789, actualChangedResult.timestampNs)
     assertEquals(9223372036854775707, actualChangedResult.contextData["key"])
 
     val actualUnchangedResult = actualCaptureResultList[3] as CaptureResult.Unchanged
-    assertEquals(File("golden_file"), actualUnchangedResult.goldenFile)
+    assertEquals(Path("golden_file"), actualUnchangedResult.goldenFile)
     assertEquals(123456789, actualUnchangedResult.timestampNs)
     assertEquals(true, actualUnchangedResult.contextData["key"])
   }
