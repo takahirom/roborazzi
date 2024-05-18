@@ -10,12 +10,34 @@ import kotlinx.io.write
 val Path.absolutePath: String
   get() = this.toString()
 
-fun Path.relativeTo(base: Path): Path {
-  return Path(SystemFileSystem.resolve(base))
-}
-
 val Path.nameWithoutExtension: String
   get() = name.substringBeforeLast(".")
+
+fun Path.relativeTo(base: Path): Path {
+  if (this == base) return Path("")
+
+  val thisSegments = this.absolutePath.segments()
+  val baseSegments = base.absolutePath.segments()
+
+  // Find the common prefix length
+  var i = 0
+  while (i < thisSegments.size && i < baseSegments.size && thisSegments[i] == baseSegments[i]) {
+    i++
+  }
+
+  // Build the relative path by going back in base directory and adding remaining segments of this path
+  val path = buildString {
+    repeat(baseSegments.size - i) {
+      append("..")
+      append("/")
+    }
+    append(thisSegments.subList(i, thisSegments.size).joinToString("/") { it })
+  }
+
+  return Path(path)
+}
+
+private fun String.segments(): List<String> = split("/")
 
 @OptIn(ExperimentalStdlibApi::class)
 object KotlinxIo {
