@@ -9,7 +9,7 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 
 android {
   namespace 'com.github.takahirom.roborazzi.junit.rule'
-  compileSdk 33
+  compileSdk 34
 
   defaultConfig {
     minSdk 21
@@ -23,13 +23,6 @@ android {
       minifyEnabled false
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
-  }
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_11
-    targetCompatibility JavaVersion.VERSION_11
-  }
-  kotlinOptions {
-    jvmTarget = '11'
   }
   buildFeatures {
   }

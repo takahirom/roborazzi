@@ -51,13 +51,19 @@ class ContextDataTest {
       val testKey1 = "test_key"
       val testValue1 = "test_value"
       val testKey2 = "test_key2"
+      val testKey3 = "test_key3_double"
+      val testKey4 = "test_key3_long"
       val testValue2 = 10
+      val testValue3 = 5.5
+      val testValue4 = Long.MAX_VALUE - 100
       onView(ViewMatchers.isRoot())
         .captureRoboImage(
           roborazziOptions = provideRoborazziContext().options.copy(
             contextData = mapOf(
               testKey1 to testValue1,
-              testKey2 to testValue2
+              testKey2 to testValue2,
+              testKey3 to testValue3,
+              testKey4 to testValue4,
             )
           )
         )
@@ -73,16 +79,23 @@ class ContextDataTest {
           val chunks = PngImageParser.readChunks(it, listOf(PngChunkType.TEXT))
           chunks.verifyKeyValueExistsInImage(testKey1, testValue1)
           chunks.verifyKeyValueExistsInImage(testKey2, testValue2.toString())
+          chunks.verifyKeyValueExistsInImage(testKey3, testValue3.toString())
+          chunks.verifyKeyValueExistsInImage(testKey4, testValue4.toString())
         }
       }
       File("build/test-results/roborazzi/results")
         .listFiles()!!
+        .sortedBy { it.name }
+        .reversed()
         .first { it.name.contains(methodSignature) && it.name.endsWith(".json") }
         .let {
+          println(it.readText())
           CaptureResult.fromJsonFile(it.path)
             .let { result ->
               result.verifyKeyValueExistsInJson(testKey1, testValue1)
-              result.verifyKeyValueExistsInJson(testKey2, testValue2.toString())
+              result.verifyKeyValueExistsInJson(testKey2, testValue2)
+              result.verifyKeyValueExistsInJson(testKey3, testValue3)
+              result.verifyKeyValueExistsInJson(testKey4, testValue4)
             }
         }
     }
@@ -146,16 +159,9 @@ class ContextDataTest {
 
   private fun CaptureResult.verifyKeyValueExistsInJson(
     key: String,
-    value: String
+    value: Any
   ) {
     val any = contextData[key]
-    if (any is Double) {
-      // gson always parse number as double
-      assert(any.toInt() == value.toInt()) {
-        "Expected $value but got $any"
-      }
-      return
-    }
     assert(any == value) {
       "Expected $value but got $any"
     }

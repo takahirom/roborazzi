@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
+import java.awt.AlphaComposite
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Font
@@ -58,8 +59,19 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     consumeEmptyPoints(r)
   }
 
-  fun drawImage(image: BufferedImage) {
+  enum class CompositeMode {
+    SrcOver,
+    Src,
+  }
+
+  fun drawImage(image: BufferedImage, compositeMode: CompositeMode = CompositeMode.SrcOver) {
     bufferedImage.graphics { graphics2D ->
+      graphics2D.setComposite(
+        when (compositeMode) {
+          CompositeMode.SrcOver -> AlphaComposite.SrcOver
+          CompositeMode.Src -> AlphaComposite.Src
+        }
+      )
       graphics2D.drawImage(
         image,
         0,
@@ -303,7 +315,9 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
         filled = true,
         bufferedImageType = bufferedImageType
       )
-      awtRoboCanvas.drawImage(loadedImage)
+      // We should use Src here, it changes the transparent color
+      // https://github.com/takahirom/roborazzi/issues/292
+      awtRoboCanvas.drawImage(loadedImage, CompositeMode.Src)
       return awtRoboCanvas
     }
 

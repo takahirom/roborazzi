@@ -2,94 +2,11 @@ package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
-import com.github.takahirom.roborazzi.CaptureResults.Companion.gson
+import com.github.takahirom.roborazzi.CaptureResults.Companion.json
+import kotlinx.serialization.json.encodeToJsonElement
 import java.io.File
 import java.io.FileWriter
 
-const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH: String = "build/outputs/roborazzi"
-var ROBORAZZI_DEBUG: Boolean = false
-
-@ExperimentalRoborazziApi
-fun roborazziSystemPropertyOutputDirectory(): String {
-  return System.getProperty("roborazzi.output.dir", DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH)
-}
-
-@ExperimentalRoborazziApi
-fun roborazziSystemPropertyResultDirectory(): String {
-  return System.getProperty("roborazzi.result.dir",
-    "build/${RoborazziReportConst.resultDirPathFromBuildDir}"
-  )
-}
-
-@ExperimentalRoborazziApi
-// This will be removed when we found if this is safe.
-fun roborazziEnableContextData(): Boolean {
-  return System.getProperty("roborazzi.contextdata", "true").toBoolean()
-}
-
-@Deprecated(
-  message = "Use roborazziSystemPropertyTaskType()",
-  replaceWith = ReplaceWith("roborazziSystemPropertyTaskType().isEnabled()"),
-)
-fun roborazziEnabled(): Boolean {
-  return roborazziSystemPropertyTaskType().isEnabled()
-}
-
-@Deprecated(
-  message = "Use roborazziSystemPropertyTaskType()",
-  ReplaceWith("roborazziSystemPropertyTaskType().isRecord()")
-)
-fun roborazziRecordingEnabled(): Boolean {
-  return roborazziSystemPropertyTaskType().isRecording()
-}
-
-@Deprecated(
-  message = "Use roborazziSystemPropertyTaskType()",
-  ReplaceWith("roborazziSystemPropertyTaskType().isComparing()")
-)
-fun roborazziCompareEnabled(): Boolean {
-  return roborazziSystemPropertyTaskType().isComparing()
-}
-
-@Deprecated(
-  message = "Use roborazziSystemPropertyTaskType()",
-  ReplaceWith("roborazziSystemPropertyTaskType().isVerifying()")
-)
-fun roborazziVerifyEnabled(): Boolean {
-  return roborazziSystemPropertyTaskType().isVerifying()
-}
-
-@ExperimentalRoborazziApi
-fun roborazziSystemPropertyTaskType(): RoborazziTaskType {
-  val result = run {
-    val roborazziRecordingEnabled = System.getProperty("roborazzi.test.record") == "true"
-    val roborazziCompareEnabled = System.getProperty("roborazzi.test.compare") == "true"
-    val roborazziVerifyEnabled = System.getProperty("roborazzi.test.verify") == "true"
-    RoborazziTaskType.of(
-      isRecording = roborazziRecordingEnabled,
-      isComparing = roborazziCompareEnabled,
-      isVerifying = roborazziVerifyEnabled
-    )
-  }
-  debugLog {
-    "roborazziSystemPropertyTaskType():\n" +
-      "roborazziTaskType: $result \n" +
-      "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n" +
-      "roborazziDefaultNamingStrategy(): ${roborazziDefaultNamingStrategy()}\n" +
-      "roborazziRecordFilePathStrategy(): ${roborazziRecordFilePathStrategy()}\n" +
-      "RoborazziContext: ${provideRoborazziContext()}\n"
-  }
-  return result
-}
-
-/**
- * Specify the file path strategy for the recorded image.
- * Default: roborazzi.record.filePathStrategy=relativePathFromCurrentDirectory
- * If set to relativePathFromRoborazziContextOutputDirectory, the file will be saved to the output directory specified by RoborazziRule.Options.outputDirectoryPath.
- */
-fun roborazziDefaultResizeScale(): Double {
-  return checkNotNull(System.getProperty("roborazzi.record.resizeScale", "1.0")).toDouble()
-}
 
 @ExperimentalRoborazziApi
 sealed interface RoborazziRecordFilePathStrategy {
@@ -117,7 +34,7 @@ sealed interface RoborazziRecordFilePathStrategy {
 @ExperimentalRoborazziApi
 fun roborazziRecordFilePathStrategy(): RoborazziRecordFilePathStrategy {
   return when (
-    System.getProperty(
+    getSystemProperty(
       "roborazzi.record.filePathStrategy",
       RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory.propertyValue
     )
@@ -143,7 +60,7 @@ fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStra
   return DefaultFileNameGenerator.DefaultNamingStrategy
     .fromOptionName(
       optionName = checkNotNull(
-        System.getProperty(
+        getSystemProperty(
           "roborazzi.record.namingStrategy",
           DefaultFileNameGenerator.DefaultNamingStrategy.TestPackageAndClassAndMethod.optionName
         )
@@ -254,12 +171,13 @@ data class RoborazziOptions(
           is CaptureResult.Recorded -> captureResult.goldenFile
         }.nameWithoutExtension
         val reportFileName =
-          "$absolutePath/${captureResult.timestampNs}_$nameWithoutExtension.json"
+          getReportFileName(absolutePath, captureResult.timestampNs, nameWithoutExtension)
 
-        val jsonResult = gson.toJson(captureResult)
+        val jsonResult = json.encodeToJsonElement(captureResult)
         FileWriter(reportFileName).use { it.write(jsonResult.toString()) }
         debugLog { "JsonResult file($reportFileName) has been written" }
       }
+
     }
 
     @InternalRoborazziApi

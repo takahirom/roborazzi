@@ -28,17 +28,17 @@ jobs:
 
         steps:
         - name: Checkout repository
-          uses: actions/checkout@v3
+          uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
 
         - name: Build Writerside docs using Docker
-          uses: JetBrains/writerside-github-action@v4
+          uses: JetBrains/writerside-github-action@5a6920dbce3ef3169acbeb7e45c6cbdaf7e76bfa # v4
           with:
             instance: ${{ env.INSTANCE }}
             artifact: ${{ env.ARTIFACT }}
             docker-version: ${{ env.DOCKER_VERSION }}
 
         - name: Upload documentation
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
           with:
             name: docs
             path: |
@@ -62,13 +62,13 @@ jobs:
 
         steps:
             - name: Download artifacts
-              uses: actions/download-artifact@v1
+              uses: actions/download-artifact@18f0f591fbc635562c815484d73b6e8e3980482e # v1
               with:
                 name: docs
                 path: artifacts
 
             - name: Test documentation
-              uses: JetBrains/writerside-checker-action@v1
+              uses: JetBrains/writerside-checker-action@8e11963855941a93dff60b8e39a2ffd4a2c0b767 # v1
               with:
                 instance: ${{ env.INSTANCE }}
 
@@ -81,23 +81,23 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Download artifact
-              uses: actions/download-artifact@v3
+              uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3
               with:
                 name: docs
 
             - name: Unzip artifact
-              uses: montudor/action-zip@v1
+              uses: montudor/action-zip@a8e75c9faefcd80fac3baf53ef40b9b119d5b702 # v1
               with:
                 args: unzip -qq ${{ env.ARTIFACT }} -d dir
 
             - name: Setup Pages
-              uses: actions/configure-pages@v2
+              uses: actions/configure-pages@c5a3e1159e0cbdf0845eb8811bd39e39fc3099c2 # v2
 
             - name: Upload artifact
-              uses: actions/upload-pages-artifact@v1
+              uses: actions/upload-pages-artifact@84bb4cd4b733d5c320c9c9cfbc354937524f4d64 # v1
               with:
                 path: dir
 
             - name: Deploy to GitHub Pages
               id: deployment
-              uses: actions/deploy-pages@v1
+              uses: actions/deploy-pages@f27bcc15848fdcdcc02f01754eb838e44bcf389b # v1

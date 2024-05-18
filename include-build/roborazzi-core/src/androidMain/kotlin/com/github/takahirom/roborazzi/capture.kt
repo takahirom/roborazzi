@@ -216,6 +216,10 @@ sealed interface RoboComponent {
             appendLine("Custom Action: \"${action.label}\"")
           }
         }
+        val disabled = node.config.getOrNull(SemanticsProperties.Disabled)
+        if (disabled != null) {
+          appendLine("Disabled: \"true\"")
+        }
       }
     }
     override val visibility: Visibility = Visibility.Visible

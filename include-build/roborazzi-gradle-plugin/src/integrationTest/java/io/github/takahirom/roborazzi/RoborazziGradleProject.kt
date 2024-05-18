@@ -185,7 +185,7 @@ plugins {
 
 android {
   namespace = "com.github.takahirom.integration_test_project"
-  compileSdk = 33
+  compileSdk = 34
 
   defaultConfig {
     applicationId = "com.github.takahirom.integration_test_project"
@@ -317,18 +317,18 @@ dependencies {
   ) {
     val recordedFile =
       testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
-    val resutls = CaptureResults.fromJsonFile(recordedFile.absolutePath)
-    assert(resutls.resultSummary.recorded == recorded) {
-      "Expected count: $recorded, actual count: ${resutls.resultSummary.recorded} summary:${resutls.resultSummary}"
+    val results = CaptureResults.fromJsonFile(recordedFile.absolutePath)
+    assert(results.resultSummary.recorded == recorded) {
+      "Expected count: $recorded, actual count: ${results.resultSummary.recorded} summary:${results.resultSummary}"
     }
-    assert(resutls.resultSummary.added == added) {
-      "Expected count: $added, actual count: ${resutls.resultSummary.added} summary:${resutls.resultSummary}"
+    assert(results.resultSummary.added == added) {
+      "Expected count: $added, actual count: ${results.resultSummary.added} summary:${results.resultSummary}"
     }
-    assert(resutls.resultSummary.changed == changed) {
-      "Expected count: $changed, actual count: ${resutls.resultSummary.changed} summary:${resutls.resultSummary}"
+    assert(results.resultSummary.changed == changed) {
+      "Expected count: $changed, actual count: ${results.resultSummary.changed} summary:${results.resultSummary}"
     }
-    assert(resutls.resultSummary.unchanged == unchanged) {
-      "Expected count: $unchanged, actual count: ${resutls.resultSummary.unchanged} summary:${resutls.resultSummary}"
+    assert(results.resultSummary.unchanged == unchanged) {
+      "Expected count: $unchanged, actual count: ${results.resultSummary.unchanged} summary:${results.resultSummary}"
     }
   }
 

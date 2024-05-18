@@ -6,7 +6,7 @@ plugins {
 
 android {
   namespace 'com.github.takahirom.roborazzi.sample'
-  compileSdk 33
+  compileSdk 34
 
   defaultConfig {
     minSdk 21
@@ -23,13 +23,6 @@ android {
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
   }
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_11
-    targetCompatibility JavaVersion.VERSION_11
-  }
-  kotlinOptions {
-    jvmTarget = "11"
-  }
   buildFeatures {
     viewBinding true
     compose true
@@ -41,18 +34,13 @@ android {
     unitTests {
       includeAndroidResources = true
       it.all {
+        environment "robolectric.logging.enabled", "true"
         // To run coverage report in Android Studio
         jvmArgs '-noverify'
         // Set the max heap size for the tests JVM(s)
         maxHeapSize = "4g"
       }
     }
-  }
-}
-
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
   }
 }
 

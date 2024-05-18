@@ -13,6 +13,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -23,15 +24,27 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
+import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.Test
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.gradle.tooling.events.FinishEvent
 import org.gradle.tooling.events.OperationCompletionListener
+import org.gradle.tooling.events.task.TaskFailureResult
+import org.gradle.tooling.events.task.TaskFinishEvent
+import org.gradle.tooling.events.task.TaskSkippedResult
+import org.gradle.tooling.events.task.TaskSuccessResult
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.ExecutionTaskHolder
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
+import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import java.util.Locale
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.reflect.KClass
 
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
 private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
@@ -48,6 +61,22 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 abstract class RoborazziPlugin : Plugin<Project> {
   @Inject abstract fun getEventsListenerRegistry(): BuildEventsListenerRegistry
+
+  val AbstractTestTask.systemProperties: MutableMap<String, Any?>
+    get() = when (this) {
+      is Test -> systemProperties
+      is KotlinNativeTest -> object : AbstractMutableMap<String, Any?>() {
+        override fun put(key: String, value: Any?): Any? {
+          environment("SIMCTL_CHILD_" + key, value.toString())
+          return null
+        }
+
+        override val entries: MutableSet<MutableMap.MutableEntry<String, Any?>>
+          get() = environment.mapValues { it.value as Any? }.toMutableMap().entries
+      }
+
+      else -> throw IllegalStateException("Unsupported test task type: $this")
+    }
 
   @OptIn(InternalRoborazziApi::class)
   override fun apply(project: Project) {
@@ -100,7 +129,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
     fun configureRoborazziTasks(
       variantSlug: String,
       testTaskName: String,
-      testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider>
+      testTaskSkipEventsServiceProvider: Provider<TestTaskSkipEventsServiceProvider>,
+      testTaskClass: KClass<out AbstractTestTask> = Test::class
     ) {
       try {
         testTaskSkipEventsServiceProvider.get().addExpectingTestTaskName(testTaskName)
@@ -167,11 +197,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
         isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
       }
 
-      val testTaskProvider = project.tasks.withType(Test::class.java)
+      val testTaskProvider = project.tasks.withType(testTaskClass.java)
         .matching {
           it.name == testTaskName
         }
-      val roborazziProperties =
+      val roborazziProperties: Map<String, Any?> =
         project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
 
       val doesRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
@@ -183,6 +213,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
             }
           }
         }
+      }
+      val projectAbsolutePathProvider = project.providers.provider {
+        project.projectDir.absolutePath
       }
       val outputDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
       val resultDirFileProperty =
@@ -199,19 +232,38 @@ abstract class RoborazziPlugin : Plugin<Project> {
       val finalizeTestRoborazziTask = project.tasks.register(
         /* name = */ "finalizeTestRoborazzi$variantSlug",
         /* configurationAction = */ object : Action<Task> {
-          override fun execute(t: Task) {
-            t.onlyIf {
+          override fun execute(finalizeTestTask: Task) {
+            finalizeTestTask.onlyIf {
               val doesRoborazziRun = doesRoborazziRunProvider.get()
-              t.infoln("Roborazzi: roborazziTestFinalizer.onlyIf doesRoborazziRun $doesRoborazziRun")
+              finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.onlyIf doesRoborazziRun $doesRoborazziRun")
               doesRoborazziRun
             }
-            t.doLast {
-              val isTestSkipped =
-                testTaskSkipEventsServiceProvider.get().skipped
-              t.infoln("Roborazzi: roborazziTestFinalizer.doLast $isTestSkipped")
+            val taskPath = if (project.path == ":") {
+              ":"
+            } else {
+              project.path + ":"
+            }
+            finalizeTestTask.doLast {
+              val taskSkipEventsService = testTaskSkipEventsServiceProvider.get()
+              val buildFinishCountDownLatch = taskSkipEventsService.countDownLatch
+              val currentIsTestSkipped =
+                taskSkipEventsService.skippedTestTaskMap[taskPath + testTaskName]
+              val isTestSkipped = if (currentIsTestSkipped == null) {
+                // BuildService could cause race condition
+                // https://github.com/gradle/gradle/issues/24887
+                finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast test task result doesn't exits. currentIsTestSkipped:$currentIsTestSkipped currentTimeMillis:${System.currentTimeMillis()}")
+                val waitSuccess = buildFinishCountDownLatch.await(200, TimeUnit.MILLISECONDS)
+                val new =
+                  taskSkipEventsService.skippedTestTaskMap[taskPath + testTaskName]
+                finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast wait end currentIsTestSkipped:$currentIsTestSkipped new:$new waitSuccess:$waitSuccess currentTimeMillis:${System.currentTimeMillis()}")
+                new ?: false
+              } else {
+                currentIsTestSkipped
+              }
+              finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast isTestSkipped:$isTestSkipped")
               if (isTestSkipped) {
                 // If the test is skipped, we need to use cached files
-                t.infoln("Roborazzi: finalizeTestRoborazziTask isTestSkipped:$isTestSkipped Copy files from ${intermediateDir.get()} to ${outputDir.get()}")
+                finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask isTestSkipped:$isTestSkipped Copy files from ${intermediateDir.get()} to ${outputDir.get()}")
                 intermediateDir.get().asFile.mkdirs()
                 intermediateDir.get().asFile.copyRecursively(
                   target = outputDir.get().asFile,
@@ -229,7 +281,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               val resultsSummaryFile = resultSummaryFileProperty.get().asFile
 
               val roborazziResults = CaptureResults.from(results)
-              t.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
+              finalizeTestTask.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
 
               val jsonResult = roborazziResults.toJson()
               resultsSummaryFile.parentFile.mkdirs()
@@ -291,21 +343,16 @@ abstract class RoborazziPlugin : Plugin<Project> {
               "roborazziProperties" to roborazziProperties,
             )
           )
-          test.outputs.upToDateWhen {
-            val doesRoborazziRun = doesRoborazziRunProvider.get()
-            val inputDirEmpty = outputDir.get().asFile.listFiles()?.isEmpty() ?: true
-            test.infoln("Roborazzi: test.outputs.upToDateWhen !(doesRoborazziRun:$doesRoborazziRun && inputDirEmpty:$inputDirEmpty)")
-            !(doesRoborazziRun && inputDirEmpty)
-          }
           test.doFirst {
             val doesRoborazziRun =
               doesRoborazziRunProvider.get()
             if (!doesRoborazziRun) {
               return@doFirst
             }
-            test.infoln("Roborazzi: test.doFirst")
+            test.infoln("Roborazzi: test.doFirst ${test.name}")
             val isTaskPresent =
               isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
+            // Task properties
             if (!isTaskPresent) {
               test.systemProperties.putAll(roborazziProperties)
             } else {
@@ -323,10 +370,13 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 isVerifyRun.get() || isVerifyAndRecordRun.get()
             }
             test.systemProperties["robolectric.logging.enabled"] = true
+            // Other properties
             test.systemProperties["roborazzi.output.dir"] =
               outputDirRelativePathFromProjectProvider.get()
             test.systemProperties["roborazzi.result.dir"] =
               resultDirRelativePathFromProjectProvider.get()
+            test.systemProperties["roborazzi.project.path"] =
+              projectAbsolutePathProvider.get()
             test.infoln("Roborazzi: Plugin passed system properties " + test.systemProperties + " to the test")
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
@@ -409,6 +459,17 @@ abstract class RoborazziPlugin : Plugin<Project> {
             )
           }
         }
+        if (target is KotlinNativeTargetWithTests<*>) {
+          target.testRuns.all { testRun: KotlinNativeBinaryTestRun ->
+            // e.g. desktopTest -> recordRoborazziDesktop
+            configureRoborazziTasks(
+              variantSlug = target.name.capitalizeUS(),
+              testTaskName = (testRun as ExecutionTaskHolder<*>).executionTask.name,
+              testTaskSkipEventsServiceProvider = testTaskSkipEventsServiceProvider,
+              testTaskClass = KotlinNativeTest::class
+            )
+          }
+        }
       }
     }
   }
@@ -454,7 +515,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
  */
 abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServiceParameters.None?>,
   OperationCompletionListener {
-  var skipped = false
+  val skippedTestTaskMap = mutableMapOf<String, Boolean>()
+  var countDownLatch = CountDownLatch(1)
+    private set
+  private val logger = Logging.getLogger(this::class.java)
   private val expectingTestNames = mutableListOf<String>()
   fun addExpectingTestTaskName(testName: String) {
     expectingTestNames.add(testName)
@@ -470,13 +534,39 @@ abstract class TestTaskSkipEventsServiceProvider : BuildService<BuildServicePara
 //        "finishEvent.descriptor:${finishEvent.descriptor}" +
 //        "finishEvent.descriptor.name:${finishEvent.descriptor.name}"
 //    )
-    if (expectingTestNames.any {
-        displayName.contains(it, ignoreCase = true) &&
-          (displayName.contains("skipped", ignoreCase = true) ||
-            displayName.contains("FROM-CACHE", ignoreCase = true))
-      }) {
-      skipped = true
+    if (finishEvent !is TaskFinishEvent) {
+      return
     }
+    if (!expectingTestNames.any {
+        displayName.contains(it, ignoreCase = true)
+      }) {
+      return
+    }
+    val result = finishEvent.result
+    if (when (result) {
+        is TaskSuccessResult -> {
+          if (result.isFromCache) {
+            true
+          } else if (result.isUpToDate) {
+            true
+          } else {
+            false
+          }
+        }
+
+        is TaskFailureResult -> false
+        is TaskSkippedResult -> true
+        else -> false
+      }
+    ) {
+      logger.info("Roborazzi: Skip test ${finishEvent.descriptor.name} ${System.currentTimeMillis()}")
+      skippedTestTaskMap[finishEvent.descriptor.name] = true
+    } else {
+      logger.info("Roborazzi: Don't skip test ${finishEvent.descriptor.name} ${System.currentTimeMillis()}")
+      skippedTestTaskMap[finishEvent.descriptor.name] = false
+    }
+    countDownLatch.countDown()
+    countDownLatch = CountDownLatch(1)
   }
 }
 

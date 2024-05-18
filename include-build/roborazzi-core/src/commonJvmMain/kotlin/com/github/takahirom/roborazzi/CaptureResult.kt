@@ -1,19 +1,30 @@
 package com.github.takahirom.roborazzi
 
-import com.github.takahirom.roborazzi.CaptureResults.Companion.gson
-import com.google.gson.annotations.JsonAdapter
-import com.google.gson.annotations.SerializedName
+import com.github.takahirom.roborazzi.CaptureResults.Companion.json
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 import java.io.FileReader
 
-@JsonAdapter(CaptureResult.JsonAdapter::class)
+@Serializable(with = CaptureResult.CaptureResultSerializer::class)
 sealed interface CaptureResult {
   val type: String
   val timestampNs: Long
   val compareFile: File?
   val actualFile: File?
   val goldenFile: File?
-  val contextData: Map<String, Any>
+  val contextData: Map<String,@Contextual Any>
 
   val reportFile: File
     get() = when (val result = this) {
@@ -23,15 +34,15 @@ sealed interface CaptureResult {
       is Unchanged -> result.goldenFile
     }
 
+  @Serializable
   data class Recorded(
-    @SerializedName("golden_file_path")
-    override val goldenFile: File,
-    @SerializedName("timestamp")
+    @SerialName("golden_file_path")
+    override val goldenFile:@Contextual File,
+    @SerialName("timestamp")
     override val timestampNs: Long,
-    @SerializedName("context_data")
-    override val contextData: Map<String, Any>
+    @SerialName("context_data")
+    override val contextData: Map<String,@Contextual Any>
   ) : CaptureResult {
-
     override val type = "recorded"
     override val actualFile: File?
       get() = null
@@ -39,43 +50,46 @@ sealed interface CaptureResult {
       get() = null
   }
 
+  @Serializable
   data class Added(
-    @SerializedName("compare_file_path")
-    override val compareFile: File,
-    @SerializedName("actual_file_path")
-    override val actualFile: File,
-    @SerializedName("golden_file_path")
-    override val goldenFile: File,
-    @SerializedName("timestamp")
+    @SerialName("compare_file_path")
+    override val compareFile:@Contextual File,
+    @SerialName("actual_file_path")
+    override val actualFile:@Contextual File,
+    @SerialName("golden_file_path")
+    override val goldenFile:@Contextual File,
+    @SerialName("timestamp")
     override val timestampNs: Long,
-    @SerializedName("context_data")
-    override val contextData: Map<String, Any>
+    @SerialName("context_data")
+    override val contextData: Map<String,@Contextual Any>
   ) : CaptureResult {
     override val type = "added"
   }
 
+  @Serializable
   data class Changed(
-    @SerializedName("compare_file_path")
-    override val compareFile: File,
-    @SerializedName("golden_file_path")
-    override val goldenFile: File,
-    @SerializedName("actual_file_path")
-    override val actualFile: File,
-    @SerializedName("timestamp")
+    @SerialName("compare_file_path")
+    override val compareFile:@Contextual File,
+    @SerialName("golden_file_path")
+    override val goldenFile:@Contextual File,
+    @SerialName("actual_file_path")
+    override val actualFile:@Contextual File,
+    @SerialName("timestamp")
     override val timestampNs: Long,
-    @SerializedName("context_data")
-    override val contextData: Map<String, Any>
+    @SerialName("context_data")
+    override val contextData: Map<String,@Contextual Any>
   ) : CaptureResult {
     override val type = "changed"
   }
 
+  @Serializable
   data class Unchanged(
-    @SerializedName("golden_file_path")
-    override val goldenFile: File,
-    @SerializedName("timestamp")
+    @SerialName("golden_file_path")
+    override val goldenFile:@Contextual File,
+    @SerialName("timestamp")
     override val timestampNs: Long,
-    @SerializedName("context_data")
-    override val contextData: Map<String, Any>
+    @SerialName("context_data")
+    override val contextData: Map<String,@Contextual Any>
   ) : CaptureResult {
     override val type = "unchanged"
     override val actualFile: File?
@@ -86,38 +100,32 @@ sealed interface CaptureResult {
 
   companion object {
     fun fromJsonFile(filePath: String): CaptureResult {
-      return gson.fromJson(FileReader(filePath), CaptureResult::class.java)
+      val jsonElement = json.parseToJsonElement(FileReader(filePath).readText())
+      return json.decodeFromJsonElement<CaptureResult>(jsonElement)
     }
   }
 
-  object JsonAdapter : com.google.gson.JsonSerializer<CaptureResult>,
-    com.google.gson.JsonDeserializer<CaptureResult> {
-    override fun serialize(
-      src: CaptureResult,
-      typeOfSrc: java.lang.reflect.Type,
-      context: com.google.gson.JsonSerializationContext
-    ): com.google.gson.JsonElement {
-      val jsonElement = when (src) {
-        is Recorded -> context.serialize(src, Recorded::class.java)
-        is Changed -> context.serialize(src, Changed::class.java)
-        is Unchanged -> context.serialize(src, Unchanged::class.java)
-        is Added -> context.serialize(src, Added::class.java)
-      }
-      return jsonElement
-    }
+  object CaptureResultSerializer : KSerializer<CaptureResult> {
+    override val descriptor: SerialDescriptor
+      get() = PrimitiveSerialDescriptor("CaptureResult", PrimitiveKind.STRING)
 
-    override fun deserialize(
-      json: com.google.gson.JsonElement,
-      typeOfT: java.lang.reflect.Type,
-      context: com.google.gson.JsonDeserializationContext
-    ): CaptureResult? {
-      val type = requireNotNull(json.asJsonObject.get("type")?.asString)
+    override fun serialize(encoder: Encoder, value: CaptureResult) =
+      when (value) {
+        is Recorded -> encoder.encodeSerializableValue(Recorded.serializer(), value)
+        is Changed -> encoder.encodeSerializableValue(Changed.serializer(), value)
+        is Unchanged -> encoder.encodeSerializableValue(Unchanged.serializer(), value)
+        is Added -> encoder.encodeSerializableValue(Added.serializer(), value)
+      }
+
+    override fun deserialize(decoder: Decoder): CaptureResult {
+      require(decoder is JsonDecoder)
+      val type = decoder.decodeJsonElement().jsonObject["type"]!!.jsonPrimitive.content
       return when (type) {
-        "recorded" -> context.deserialize(json, Recorded::class.java)
-        "changed" -> context.deserialize(json, Changed::class.java)
-        "unchanged" -> context.deserialize(json, Unchanged::class.java)
-        "added" -> context.deserialize(json, Added::class.java)
-        else -> throw IllegalArgumentException("Unknown type $type")
+      "recorded" -> decoder.decodeSerializableValue(Recorded.serializer())
+      "changed" -> decoder.decodeSerializableValue(Changed.serializer())
+      "unchanged" -> decoder.decodeSerializableValue(Unchanged.serializer())
+      "added" -> decoder.decodeSerializableValue(Added.serializer())
+      else -> throw IllegalArgumentException("Unknown type $type")
       }
     }
   }
