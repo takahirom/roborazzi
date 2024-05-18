@@ -5,6 +5,41 @@ plugins {
 }
 
 allprojects {
+  // Apply the same Java compatibility for each module
+  def javaVersion = libs.versions.javaTarget.get()
+  def toolchainVersion = libs.versions.javaToolchain.get()
+
+  def javaTargetVersion = JavaVersion.toVersion(javaVersion)
+  def jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.@Companion.fromTarget(javaVersion)
+
+  plugins.withId("java") {
+    java {
+      toolchain {
+        languageVersion.set(JavaLanguageVersion.of(toolchainVersion))
+      }
+    }
+  }
+
+  plugins.withType(com.android.build.gradle.BasePlugin).configureEach {
+    android {
+      compileOptions {
+        sourceCompatibility javaTargetVersion
+        targetCompatibility javaTargetVersion
+      }
+    }
+  }
+
+  tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
+    sourceCompatibility = javaTargetVersion
+    targetCompatibility = javaTargetVersion
+  }
+
+  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    compilerOptions {
+      jvmTarget.set(jvmTargetVersion)
+    }
+  }
+
   plugins.withId('com.vanniktech.maven.publish') {
     project.group = "io.github.takahirom.roborazzi"
     mavenPublishing {

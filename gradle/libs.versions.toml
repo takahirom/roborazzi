@@ -1,4 +1,6 @@
 [versions]
+javaToolchain = "17"
+javaTarget = "11"
 agp = "7.3.1"
 commons-compress = "1.23.0"
 kotlin = "1.9.21"
