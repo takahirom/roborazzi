@@ -1,7 +1,10 @@
 package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
+import kotlinx.io.files.Path
 import java.io.File
+
+fun File.toIoPath(): Path = Path(this.path)
 
 fun interface EmptyCanvasFactory {
   operator fun invoke(
@@ -99,7 +102,7 @@ fun processOutputImageAndReport(
       true
     }
 
-    val result: CaptureResult = if (changed) {
+    val result: CaptureResult2 = if (changed) {
       val comparisonFile = File(
         roborazziOptions.compareOptions.outputDirectoryPath,
         goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
@@ -142,25 +145,25 @@ fun processOutputImageAndReport(
           "actualFile:${actualFile.absolutePath}"
       }
       if (goldenFile.exists()) {
-        CaptureResult.Changed(
-          compareFile = comparisonFile,
-          actualFile = actualFile,
-          goldenFile = goldenFile,
+        CaptureResult2.Changed(
+          compareFile = comparisonFile.toIoPath(),
+          actualFile = actualFile.toIoPath(),
+          goldenFile = goldenFile.toIoPath(),
           timestampNs = System.nanoTime(),
           contextData = contextData,
         )
       } else {
-        CaptureResult.Added(
-          compareFile = comparisonFile,
-          actualFile = actualFile,
-          goldenFile = goldenFile,
+        CaptureResult2.Added(
+          compareFile = comparisonFile.toIoPath(),
+          actualFile = actualFile.toIoPath(),
+          goldenFile = goldenFile.toIoPath(),
           timestampNs = System.nanoTime(),
           contextData = contextData,
         )
       }
     } else {
-      CaptureResult.Unchanged(
-        goldenFile = goldenFile,
+      CaptureResult2.Unchanged(
+        goldenFile = goldenFile.toIoPath(),
         timestampNs = System.nanoTime(),
         contextData = contextData,
       )
@@ -187,8 +190,8 @@ fun processOutputImageAndReport(
         " record goldenFile: $goldenFile\n"
     }
     roborazziOptions.reportOptions.captureResultReporter.report(
-      captureResult = CaptureResult.Recorded(
-        goldenFile = goldenFile,
+      captureResult = CaptureResult2.Recorded(
+        goldenFile = goldenFile.toIoPath(),
         timestampNs = System.nanoTime(),
         contextData = contextData,
       ),

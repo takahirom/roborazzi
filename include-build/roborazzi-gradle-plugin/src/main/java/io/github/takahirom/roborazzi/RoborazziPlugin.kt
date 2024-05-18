@@ -3,8 +3,8 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.github.takahirom.roborazzi.CaptureResult
-import com.github.takahirom.roborazzi.CaptureResults
+import com.github.takahirom.roborazzi.CaptureResult2
+import com.github.takahirom.roborazzi.CaptureResults2
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import org.gradle.api.Action
@@ -232,16 +232,16 @@ abstract class RoborazziPlugin : Plugin<Project> {
               )
               finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask Copy files from ${intermediateDir.get()} to ${outputDir.get()} end ${System.currentTimeMillis() - startCopy}ms")
 
-              val results: List<CaptureResult> = resultDirFileTree.get().mapNotNull {
+              val results: List<CaptureResult2> = resultDirFileTree.get().mapNotNull {
                 if (it.name.endsWith(".json")) {
-                  CaptureResult.fromJsonFile(it.path)
+                  CaptureResult2.fromJsonFile(it.path)
                 } else {
                   null
                 }
               }
               val resultsSummaryFile = resultSummaryFileProperty.get().asFile
 
-              val roborazziResults = CaptureResults.from(results)
+              val roborazziResults = CaptureResults2.from(results)
               finalizeTestTask.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
 
               val jsonResult = roborazziResults.toJson()

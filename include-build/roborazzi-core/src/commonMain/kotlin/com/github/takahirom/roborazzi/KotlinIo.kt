@@ -14,6 +14,9 @@ fun Path.relativeTo(base: Path): Path {
   return Path(SystemFileSystem.resolve(base))
 }
 
+val Path.nameWithoutExtension: String
+  get() = name.substringBeforeLast(".")
+
 @OptIn(ExperimentalStdlibApi::class)
 object KotlinIo {
 

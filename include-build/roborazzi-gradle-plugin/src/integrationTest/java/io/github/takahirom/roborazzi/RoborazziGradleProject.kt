@@ -1,6 +1,6 @@
 package io.github.takahirom.roborazzi
 
-import com.github.takahirom.roborazzi.CaptureResults
+import com.github.takahirom.roborazzi.CaptureResults2
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.rules.TemporaryFolder
@@ -317,7 +317,7 @@ dependencies {
   ) {
     val recordedFile =
       testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
-    val results = CaptureResults.fromJsonFile(recordedFile.absolutePath)
+    val results = CaptureResults2.fromJsonFile(recordedFile.absolutePath)
     assert(results.resultSummary.recorded == recorded) {
       "Expected count: $recorded, actual count: ${results.resultSummary.recorded} summary:${results.resultSummary}"
     }

@@ -37,7 +37,7 @@ kotlin {
     commonMain {
       dependencies {
         api libs.dropbox.differ
-        compileOnly libs.kotlinx.serialization.json
+        implementation libs.kotlinx.serialization.json
         implementation libs.kotlinx.io.core
       }
     }
