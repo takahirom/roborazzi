@@ -26,6 +26,9 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.TestDescriptor
+import org.gradle.api.tasks.testing.TestListener
+import org.gradle.api.tasks.testing.TestResult
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.gradle.tooling.events.FinishEvent
@@ -299,7 +302,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           }
         })
       testTaskProvider
-        .configureEach { test ->
+        .configureEach { test: AbstractTestTask ->
           val resultsDir = resultDirFileProperty.get().asFile
           if (restoreOutputDirRoborazziTaskProvider.isPresent) {
             test.inputs.dir(restoreOutputDirRoborazziTaskProvider.map {
@@ -382,19 +385,30 @@ abstract class RoborazziPlugin : Plugin<Project> {
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
           }
-          test.doLast {
-            // Copy all files from outputDir to intermediateDir
-            // so that we can use Gradle's output caching
-            it.infoln("Roborazzi: test.doLast Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
-            // outputDir.get().asFileTree.forEach {
-            //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
-            // }
-            outputDir.get().asFile.mkdirs()
-            outputDir.get().asFile.copyRecursively(
-              target = intermediateDir.get().asFile,
-              overwrite = true
-            )
-          }
+          test.addTestListener(object : TestListener {
+            override fun beforeSuite(suite: TestDescriptor?) {
+            }
+
+            override fun afterSuite(suite: TestDescriptor?, result: TestResult?) {
+              // Copy all files from outputDir to intermediateDir
+              // so that we can use Gradle's output caching
+              test.infoln("Roborazzi: test.doLast Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
+              // outputDir.get().asFileTree.forEach {
+              //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
+              // }
+              outputDir.get().asFile.mkdirs()
+              outputDir.get().asFile.copyRecursively(
+                target = intermediateDir.get().asFile,
+                overwrite = true
+              )
+            }
+
+            override fun beforeTest(testDescriptor: TestDescriptor?) {
+            }
+
+            override fun afterTest(testDescriptor: TestDescriptor?, result: TestResult?) {
+            }
+          })
           test.finalizedBy(finalizeTestRoborazziTask)
         }
 
