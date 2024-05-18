@@ -20,6 +20,8 @@ include ':roborazzi-compose-ios'
 include ':roborazzi-compose'
 include ':roborazzi-painter'
 
+include ':roborazzi-idea-plugin'
+
 include ':sample-android'
 include ':sample-android-without-compose'
 include ':sample-compose-desktop-multiplatform'
