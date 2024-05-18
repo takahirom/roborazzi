@@ -36,7 +36,6 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        api libs.dropbox.differ
         implementation libs.kotlinx.serialization.json
         implementation libs.kotlinx.io.core
       }
@@ -52,6 +51,7 @@ kotlin {
     }
     commonJvmMain {
       dependencies {
+        api libs.dropbox.differ
         implementation libs.junit
       }
     }
