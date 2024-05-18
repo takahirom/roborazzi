@@ -261,15 +261,16 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 currentIsTestSkipped
               }
               finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.doLast isTestSkipped:$isTestSkipped")
-              if (isTestSkipped) {
-                // If the test is skipped, we need to use cached files
-                finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask isTestSkipped:$isTestSkipped Copy files from ${intermediateDir.get()} to ${outputDir.get()}")
-                intermediateDir.get().asFile.mkdirs()
-                intermediateDir.get().asFile.copyRecursively(
-                  target = outputDir.get().asFile,
-                  overwrite = true
-                )
-              }
+              // if (isTestSkipped) {
+              // If the test is skipped, we need to use cached files
+              val startCopy = System.currentTimeMillis()
+              intermediateDir.get().asFile.mkdirs()
+              intermediateDir.get().asFile.copyRecursively(
+                target = outputDir.get().asFile,
+                overwrite = true
+              )
+              finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask Copy files from ${intermediateDir.get()} to ${outputDir.get()} end ${System.currentTimeMillis() - startCopy}ms")
+              // }
 
               val results: List<CaptureResult> = resultDirFileTree.get().mapNotNull {
                 if (it.name.endsWith(".json")) {
