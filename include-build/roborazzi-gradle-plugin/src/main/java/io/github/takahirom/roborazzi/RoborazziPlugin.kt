@@ -301,20 +301,20 @@ abstract class RoborazziPlugin : Plugin<Project> {
         .configureEach { test ->
           val resultsDir = resultDirFileProperty.get().asFile
           if (restoreOutputDirRoborazziTaskProvider.isPresent) {
-            test.inputs.dir(restoreOutputDirRoborazziTaskProvider.map {
+            test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
               if (!it.outputDir.get().asFile.exists()) {
                 it.outputDir.get().asFile.mkdirs()
               }
               test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
-              it.outputDir
+              it.outputDir.files()
             })
           } else {
-            test.inputs.dir(outputDir.map {
+            test.inputs.files(outputDir.map {
               if (!it.asFile.exists()) {
                 it.asFile.mkdirs()
               }
               test.infoln("Roborazzi: Set input dir $it to test task")
-              it
+              it.files()
             })
           }
           test.outputs.dir(intermediateDirForEachVariant.map {
