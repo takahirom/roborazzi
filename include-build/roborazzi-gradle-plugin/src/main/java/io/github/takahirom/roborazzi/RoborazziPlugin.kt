@@ -306,7 +306,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 it.outputDir.get().asFile.mkdirs()
               }
               test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
-              it.outputDir.files()
+              it.outputDir.files(".")
             })
           } else {
             test.inputs.files(outputDir.map {
@@ -314,7 +314,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 it.asFile.mkdirs()
               }
               test.infoln("Roborazzi: Set input dir $it to test task")
-              it.files()
+              it.files(".")
             })
           }
           test.outputs.dir(intermediateDirForEachVariant.map {
