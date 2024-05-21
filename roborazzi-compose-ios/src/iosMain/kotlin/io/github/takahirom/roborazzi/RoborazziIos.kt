@@ -16,7 +16,7 @@ import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType
-import com.github.takahirom.roborazzi.toIoPath
+import com.github.takahirom.roborazzi.ioPath
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -497,9 +497,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
   val filePathWithOutExtension = filePath.substringBeforeLast(".")
   val nameWithoutExtension = filePathWithOutExtension.substringAfterLast("/")
 
-  val actualFilePath = "$compareDirPath/${filePathWithOutExtension}_actual.$ext".toIoPath
-  val compareFilePath = "$compareDirPath/${filePathWithOutExtension}_compare.$ext".toIoPath
-  val goldenFilePath = "$baseOutputPath/$filePath".toIoPath
+  val actualFilePath = "$compareDirPath/${filePathWithOutExtension}_actual.$ext".ioPath
+  val compareFilePath = "$compareDirPath/${filePathWithOutExtension}_compare.$ext".ioPath
+  val goldenFilePath = "$baseOutputPath/$filePath".ioPath
   when (roborazziTaskType) {
     RoborazziTaskType.None -> return
     RoborazziTaskType.Record -> {

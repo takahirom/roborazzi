@@ -4,7 +4,7 @@ import com.github.takahirom.roborazzi.KotlinxIo
 import com.github.takahirom.roborazzi.absolutePath
 import com.github.takahirom.roborazzi.nameWithoutExtension
 import com.github.takahirom.roborazzi.relativeTo
-import com.github.takahirom.roborazzi.toIoPath
+import com.github.takahirom.roborazzi.ioPath
 import kotlinx.io.files.Path
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -51,13 +51,14 @@ class KotlinxIoTest {
   @Test
   fun testToIoPath() {
     val pathText = "/Users/roborazzi/file.txt"
-    val path = pathText.toIoPath
+    val path = pathText.ioPath
     assertEquals(Path(pathText), path)
   }
 
   @Test
   fun testReadText() {
     val testFile = tmpDir.newFile("kotlinx_io_write_test.txt")
+    println(testFile.path)
     val expectedReadText = "Sample text for KotlinxIo"
     testFile.writeText(expectedReadText)
 

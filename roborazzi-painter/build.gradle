@@ -38,7 +38,9 @@ kotlin {
     commonJvmMain {
       dependencies {
         compileOnly libs.robolectric.android.all
+        implementation libs.kotlinx.io.core
         api libs.dropbox.differ
+
       }
     }
   }

@@ -13,7 +13,7 @@ val Path.absolutePath: String
 val Path.nameWithoutExtension: String
   get() = name.substringBeforeLast(".")
 
-val String.toIoPath: Path
+val String.ioPath: Path
   get() = Path(this)
 
 fun Path.relativeTo(base: Path): Path {
