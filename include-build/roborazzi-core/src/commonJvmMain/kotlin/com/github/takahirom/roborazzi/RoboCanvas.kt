@@ -1,7 +1,6 @@
 package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
-import kotlinx.io.files.Path
 
 interface RoboCanvas {
   val croppedWidth: Int
@@ -9,7 +8,7 @@ interface RoboCanvas {
   val width: Int
   val height: Int
   fun save(
-    path: Path,
+    path: String,
     resizeScale: Double,
     contextData: Map<String, Any>,
   )

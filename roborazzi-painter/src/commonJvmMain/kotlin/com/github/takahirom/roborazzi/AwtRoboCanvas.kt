@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
-import kotlinx.io.files.Path
 import java.awt.AlphaComposite
 import java.awt.BasicStroke
 import java.awt.Color
@@ -220,8 +219,8 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     pendingDrawList.add(pendingDraw)
   }
 
-  override fun save(path: Path, resizeScale: Double, contextData: Map<String, Any>) {
-    val file = File(path.absolutePath)
+  override fun save(path: String, resizeScale: Double, contextData: Map<String, Any>) {
+    val file = File(path)
     drawPendingDraw()
     val directory = file.parentFile
     try {

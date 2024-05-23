@@ -4,7 +4,6 @@ import com.github.takahirom.roborazzi.KotlinxIo
 import com.github.takahirom.roborazzi.absolutePath
 import com.github.takahirom.roborazzi.nameWithoutExtension
 import com.github.takahirom.roborazzi.relativeTo
-import com.github.takahirom.roborazzi.ioPath
 import kotlinx.io.files.Path
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -19,50 +18,53 @@ class KotlinxIoTest {
   @Test
   fun testAbsolutePath() {
     val path = Path("/Users/roborazzi/file.txt")
+
     assertEquals("/Users/roborazzi/file.txt", path.absolutePath)
   }
 
   @Test
   fun testNameWithoutExtension() {
-    val path = Path("/Users/roborazzi/file.txt")
+    val path = "/Users/roborazzi/file.txt"
+
     assertEquals("file", path.nameWithoutExtension)
   }
 
   @Test
   fun testRelativeToSamePath() {
-    val path = Path("/Users/roborazzi/file.txt")
-    assertEquals(Path(""), path.relativeTo(path))
+    val path = "/Users/roborazzi/file.txt"
+
+    val actualPath = Path(path).relativeTo(Path(path)).toString()
+
+    assertEquals("", actualPath)
   }
 
   @Test
   fun testRelativeToDifferentPath() {
-    val base = Path("/Users/roborazzi")
-    val path = Path("/Users/roborazzi/docs/file.txt")
-    assertEquals(Path("docs/file.txt"), path.relativeTo(base))
+    val base = "/Users/roborazzi"
+    val path = "/Users/roborazzi/docs/file.txt"
+
+    val actualPath = Path(path).relativeTo(Path(base)).toString()
+
+    assertEquals("docs/file.txt", actualPath)
   }
 
   @Test
   fun testRelativeToDifferentBase() {
-    val base = Path("/Users/roborazzi/docs")
-    val path = Path("/Users/roborazzi/music/file.mp3")
-    assertEquals(Path("../music/file.mp3"), path.relativeTo(base))
-  }
+    val base = "/Users/roborazzi/docs"
+    val path = "/Users/roborazzi/music/file.mp3"
 
-  @Test
-  fun testToIoPath() {
-    val pathText = "/Users/roborazzi/file.txt"
-    val path = pathText.ioPath
-    assertEquals(Path(pathText), path)
+    val actualPath = Path(path).relativeTo(Path(base)).toString()
+
+    assertEquals("../music/file.mp3", actualPath)
   }
 
   @Test
   fun testReadText() {
     val testFile = tmpDir.newFile("kotlinx_io_write_test.txt")
-    println(testFile.path)
     val expectedReadText = "Sample text for KotlinxIo"
     testFile.writeText(expectedReadText)
 
-    val actualReadText = KotlinxIo.readText(Path(testFile.absolutePath))
+    val actualReadText = KotlinxIo.readText(testFile.absolutePath)
 
     assertEquals(expectedReadText, actualReadText)
   }
@@ -72,7 +74,7 @@ class KotlinxIoTest {
     val expectedWriteText = "Write a new text to the file"
     val file = tmpDir.newFile("kotlinx_io_write_test.txt")
 
-    val path = Path(file.absolutePath)
+    val path = file.absolutePath
     KotlinxIo.writeText(path, expectedWriteText)
 
     val actualReadText = KotlinxIo.readText(path)

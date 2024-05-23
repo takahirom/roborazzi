@@ -10,11 +10,11 @@ import kotlinx.io.write
 val Path.absolutePath: String
   get() = this.toString()
 
-val Path.nameWithoutExtension: String
-  get() = name.substringBeforeLast(".")
+val String.nameWithoutExtension: String
+  get() = Path(this).name.substringBeforeLast(".")
 
-val String.ioPath: Path
-  get() = Path(this)
+val String.name: String
+  get() = Path(this).name
 
 fun Path.relativeTo(base: Path): Path {
   if (this == base) return Path("")
@@ -45,16 +45,14 @@ private fun String.segments(): List<String> = split("/")
 @OptIn(ExperimentalStdlibApi::class)
 object KotlinxIo {
 
-
-  fun readText(path: Path): String {
-
-    return SystemFileSystem.source(path).buffered().use { source ->
+  fun readText(path: String): String {
+    return SystemFileSystem.source(Path(path)).buffered().use { source ->
       source.readString()
     }
   }
 
-  fun writeText(path: Path, text: String) {
-    SystemFileSystem.sink(path).buffered().use { sink ->
+  fun writeText(path: String, text: String) {
+    SystemFileSystem.sink(Path(path)).buffered().use { sink ->
       sink.write(text.encodeToByteString())
     }
   }

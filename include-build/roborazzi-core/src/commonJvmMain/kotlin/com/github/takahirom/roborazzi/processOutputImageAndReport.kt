@@ -1,10 +1,7 @@
 package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
-import kotlinx.io.files.Path
 import java.io.File
-
-val File.ioPath: Path get() = Path(this.path)
 
 fun interface EmptyCanvasFactory {
   operator fun invoke(
@@ -115,7 +112,7 @@ fun processOutputImageAndReport(
       )
       comparisonCanvas
         .save(
-          path = comparisonFile.ioPath,
+          path = comparisonFile.absolutePath,
           resizeScale = resizeScale,
           contextData = contextData
         )
@@ -136,7 +133,7 @@ fun processOutputImageAndReport(
       }
       newRoboCanvas
         .save(
-          path = actualFile.ioPath,
+          path = actualFile.absolutePath,
           resizeScale = resizeScale,
           contextData = contextData
         )
@@ -146,24 +143,24 @@ fun processOutputImageAndReport(
       }
       if (goldenFile.exists()) {
         CaptureResult.Changed(
-          compareFile = comparisonFile.ioPath,
-          actualFile = actualFile.ioPath,
-          goldenFile = goldenFile.ioPath,
+          compareFile = comparisonFile.absolutePath,
+          actualFile = actualFile.absolutePath,
+          goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
           contextData = contextData,
         )
       } else {
         CaptureResult.Added(
-          compareFile = comparisonFile.ioPath,
-          actualFile = actualFile.ioPath,
-          goldenFile = goldenFile.ioPath,
+          compareFile = comparisonFile.absolutePath,
+          actualFile = actualFile.absolutePath,
+          goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
           contextData = contextData,
         )
       }
     } else {
       CaptureResult.Unchanged(
-        goldenFile = goldenFile.ioPath,
+        goldenFile = goldenFile.absolutePath,
         timestampNs = System.nanoTime(),
         contextData = contextData,
       )
@@ -181,7 +178,7 @@ fun processOutputImageAndReport(
   } else {
     // roborazzi.record is checked before
     newRoboCanvas.save(
-      path = goldenFile.ioPath,
+      path = goldenFile.absolutePath,
       resizeScale = resizeScale,
       contextData = contextData
     )
@@ -191,7 +188,7 @@ fun processOutputImageAndReport(
     }
     roborazziOptions.reportOptions.captureResultReporter.report(
       captureResult = CaptureResult.Recorded(
-        goldenFile = goldenFile.ioPath,
+        goldenFile = goldenFile.absolutePath,
         timestampNs = System.nanoTime(),
         contextData = contextData,
       ),

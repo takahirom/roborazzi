@@ -6,8 +6,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
@@ -111,9 +109,9 @@ data class CaptureResults(
     images: List<CaptureResult>,
     reportDirectoryPath: String
   ): String {
-    fun Path.pathFrom(reportDirectoryPath: String): String {
+    fun String.pathFrom(reportDirectoryPath: String): String {
       val reportDirectory = Path(reportDirectoryPath)
-      val relativePath =  relativeTo(reportDirectory)
+      val relativePath = Path(this).relativeTo(reportDirectory)
       return relativePath.toString()
     }
     if (images.isEmpty()) return ""
@@ -166,27 +164,12 @@ data class CaptureResults(
       ignoreUnknownKeys = true
       classDiscriminator = "#class"
       serializersModule = SerializersModule {
-        contextual(Path::class,
-          object : KSerializer<Path> {
-            override val descriptor: SerialDescriptor =
-              PrimitiveSerialDescriptor("FileSerializer", PrimitiveKind.STRING)
-
-            override fun serialize(encoder: Encoder, value: Path) {
-              encoder.encodeString(value.absolutePath)
-            }
-
-            override fun deserialize(decoder: Decoder): Path {
-              val path = decoder.decodeString()
-              return Path(path)
-            }
-          }
-        )
         contextual(Any::class, AnySerializer)
       }
     }
 
     fun fromJsonFile(inputPath: String): CaptureResults {
-      val string = KotlinxIo.readText(Path(inputPath))
+      val string = KotlinxIo.readText(inputPath)
       val jsonElement = json.parseToJsonElement(string)
       return json.decodeFromJsonElement(jsonElement)
     }

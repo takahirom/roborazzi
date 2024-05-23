@@ -9,14 +9,12 @@ import androidx.compose.ui.test.captureToImage
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziTaskType
-import com.github.takahirom.roborazzi.absolutePath
 import com.github.takahirom.roborazzi.getReportFileName
 import com.github.takahirom.roborazzi.reportLog
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType
-import com.github.takahirom.roborazzi.ioPath
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -28,7 +26,6 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.refTo
 import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.set
-import kotlinx.io.files.Path
 import kotlinx.serialization.PolymorphicSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -151,7 +148,7 @@ private fun convertImageFormat(image: UIImage): UIImage? {
     CGContextDrawImage(it, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()), cgImage)
     val newCGImage = CGBitmapContextCreateImage(it)
     CGContextRelease(it)
-    return newCGImage?.let { UIImage.imageWithCGImage(it) }
+    return newCGImage?.let { imgRef -> UIImage.imageWithCGImage(imgRef) }
   }
 
   return null
@@ -469,10 +466,10 @@ data class CompareOptions(
 )
 
 fun String.toAbsolutePath(projectPath: String): String {
-  if (this.startsWith("/")) {
-    return this
+  return if (this.startsWith("/")) {
+    this
   } else {
-    return "$projectPath/$this"
+    "$projectPath/$this"
   }
 }
 
@@ -497,9 +494,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
   val filePathWithOutExtension = filePath.substringBeforeLast(".")
   val nameWithoutExtension = filePathWithOutExtension.substringAfterLast("/")
 
-  val actualFilePath = "$compareDirPath/${filePathWithOutExtension}_actual.$ext".ioPath
-  val compareFilePath = "$compareDirPath/${filePathWithOutExtension}_compare.$ext".ioPath
-  val goldenFilePath = "$baseOutputPath/$filePath".ioPath
+  val actualFilePath = "$compareDirPath/${filePathWithOutExtension}_actual.$ext"
+  val compareFilePath = "$compareDirPath/${filePathWithOutExtension}_compare.$ext"
+  val goldenFilePath = "$baseOutputPath/$filePath"
   when (roborazziTaskType) {
     RoborazziTaskType.None -> return
     RoborazziTaskType.Record -> {
@@ -682,22 +679,22 @@ fun SemanticsNodeInteraction.captureRoboImage(
   }
 }
 
-private fun writeImage(newImage: UIImage, path: Path) {
+private fun writeImage(newImage: UIImage, path: String) {
   UIImagePNGRepresentation(newImage)!!.writeToFile(
-    path.absolutePath,
+    path,
     true
   )
   reportLog("Image is saved $path")
 }
 
 private fun loadGoldenImage(
-  filePath: Path
+  filePath: String
 ): UIImage? {
-  if (!NSFileManager.defaultManager.fileExistsAtPath(filePath.absolutePath)) {
+  if (!NSFileManager.defaultManager.fileExistsAtPath(filePath)) {
     return null
   }
   @Suppress("USELESS_CAST")
-  val image: UIImage? = UIImage(filePath.absolutePath) as UIImage?
+  val image: UIImage? = UIImage(filePath) as UIImage?
   if (image == null) {
     reportLog("can't load reference image from $filePath")
   }
