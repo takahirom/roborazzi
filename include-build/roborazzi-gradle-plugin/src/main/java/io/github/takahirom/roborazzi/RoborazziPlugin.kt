@@ -334,7 +334,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               test.systemProperties["roborazzi.test.verify"] =
                 isVerifyRun.get() || isVerifyAndRecordRun.get()
             }
-
+            test.systemProperties["robolectric.logging.enabled"] = true
             // Other properties
             test.systemProperties["roborazzi.output.dir"] =
               outputDirRelativePathFromProjectProvider.get()
