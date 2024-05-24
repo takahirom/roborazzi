@@ -301,20 +301,24 @@ abstract class RoborazziPlugin : Plugin<Project> {
         .configureEach { test ->
           val resultsDir = resultDirFileProperty.get().asFile
           if (restoreOutputDirRoborazziTaskProvider.isPresent) {
-            test.inputs.dir(restoreOutputDirRoborazziTaskProvider.map {
+            // Previous outputs are an input when running in compare or verify mode.
+            // However, during record runs the output dir might not exist yet, so we use
+            // files() to express that it is optional.
+            // See also: https://github.com/gradle/gradle/issues/2016
+            test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
               if (!it.outputDir.get().asFile.exists()) {
                 it.outputDir.get().asFile.mkdirs()
               }
               test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
-              it.outputDir
+              it.outputDir.files(".")
             })
           } else {
-            test.inputs.dir(outputDir.map {
+            test.inputs.files(outputDir.map {
               if (!it.asFile.exists()) {
                 it.asFile.mkdirs()
               }
               test.infoln("Roborazzi: Set input dir $it to test task")
-              it
+              it.files(".")
             })
           }
           test.outputs.dir(intermediateDirForEachVariant.map {
