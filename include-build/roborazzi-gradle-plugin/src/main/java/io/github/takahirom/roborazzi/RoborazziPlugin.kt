@@ -267,17 +267,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
             // files() to express that it is optional.
             // See also: https://github.com/gradle/gradle/issues/2016
             test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
-              if (!it.outputDir.get().asFile.exists()) {
-                it.outputDir.get().asFile.mkdirs()
-              }
               test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
               it.outputDir.files(".")
             })
           } else {
             test.inputs.files(outputDir.map {
-              if (!it.asFile.exists()) {
-                it.asFile.mkdirs()
-              }
               test.infoln("Roborazzi: Set input dir $it to test task")
               it.files(".")
             })
