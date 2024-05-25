@@ -36,6 +36,8 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        compileOnly libs.kotlinx.serialization.json
+        implementation libs.kotlinx.io.core
       }
     }
     iosX64 {
@@ -50,7 +52,6 @@ kotlin {
     commonJvmMain {
       dependencies {
         api libs.dropbox.differ
-        compileOnly libs.kotlinx.serialization.json
         implementation libs.junit
       }
     }

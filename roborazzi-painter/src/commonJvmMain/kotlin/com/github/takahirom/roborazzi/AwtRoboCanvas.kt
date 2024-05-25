@@ -219,7 +219,8 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     pendingDrawList.add(pendingDraw)
   }
 
-  override fun save(file: File, resizeScale: Double, contextData: Map<String, Any>) {
+  override fun save(path: String, resizeScale: Double, contextData: Map<String, Any>) {
+    val file = File(path)
     drawPendingDraw()
     val directory = file.parentFile
     try {

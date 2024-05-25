@@ -1,12 +1,11 @@
 package com.github.takahirom.roborazzi
 
+import kotlinx.io.files.Path
 import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
@@ -24,7 +23,6 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.modules.SerializersModule
-import java.io.File
 
 @Serializable
 data class CaptureResults(
@@ -69,7 +67,7 @@ data class CaptureResults(
           id = key,
           contents = buildString {
             captureResults.groupBy { it.contextData[key]?.toString() ?: "undefined" }
-              .toSortedMap(Comparator<String> { value1, value2 ->
+              .toSortedMap { value1, value2 ->
                 // show "undefined" and "null" at the end
                 if (value1 == "undefined" || value2 == "null") {
                   1
@@ -78,7 +76,7 @@ data class CaptureResults(
                 } else {
                   value1.compareTo(value2)
                 }
-              })
+              }
               .forEach { (value, results) ->
                 append(buildTable(value, value, results, reportDirectoryPath))
               }
@@ -111,10 +109,10 @@ data class CaptureResults(
     images: List<CaptureResult>,
     reportDirectoryPath: String
   ): String {
-    fun File.pathFrom(reportDirectoryPath: String): String {
-      val reportDirectory = File(reportDirectoryPath)
-      val relativePath = relativeTo(reportDirectory)
-      return relativePath.path
+    fun String.pathFrom(reportDirectoryPath: String): String {
+      val reportDirectory = Path(reportDirectoryPath)
+      val relativePath = Path(this).relativeTo(reportDirectory)
+      return relativePath.toString()
     }
     if (images.isEmpty()) return ""
     return buildString {
@@ -166,27 +164,13 @@ data class CaptureResults(
       ignoreUnknownKeys = true
       classDiscriminator = "#class"
       serializersModule = SerializersModule {
-        contextual(File::class,
-          object : KSerializer<File> {
-            override val descriptor: SerialDescriptor =
-              PrimitiveSerialDescriptor("FileSerializer", PrimitiveKind.STRING)
-
-            override fun serialize(encoder: Encoder, value: File) {
-              encoder.encodeString(value.absolutePath)
-            }
-
-            override fun deserialize(decoder: Decoder): File {
-              val path = decoder.decodeString()
-              return File(path)
-            }
-          }
-        )
         contextual(Any::class, AnySerializer)
       }
     }
 
     fun fromJsonFile(inputPath: String): CaptureResults {
-      val jsonElement = json.parseToJsonElement(File(inputPath).readText())
+      val string = KotlinxIo.readText(inputPath)
+      val jsonElement = json.parseToJsonElement(string)
       return json.decodeFromJsonElement(jsonElement)
     }
 
@@ -238,4 +222,8 @@ object AnySerializer : KSerializer<Any> {
       else -> throw IllegalArgumentException("Unknown type: ${input::class.qualifiedName}")
     }
   }
+}
+
+fun <K : Comparable<K>, V> Map<out K, V>.toSortedMap(comparator: Comparator<in K>): Map<K, V> {
+  return this.toList().sortedWith(compareBy(comparator) { it.first }).toMap()
 }
