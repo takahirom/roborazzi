@@ -39,7 +39,7 @@ junit = "4.13.2"
 ktor-serialization-kotlinx-xml = "2.3.0"
 kotlinx-serialization = "1.6.3"
 squareup-okhttp = "5.0.0-alpha.11"
-kotlinx-io = "0.3.5"
+kotlinx-io = "0.3.3"
 
 [libraries]
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi-for-replacing-by-include-build" }
