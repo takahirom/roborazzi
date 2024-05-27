@@ -23,7 +23,6 @@ androidx-compose-material3 = "1.2.1"
 androidx-compose-foundation = "1.4.0"
 androidx-compose-runtime = "1.4.0"
 androidx-compose-ui = "1.4.0"
-androidx-compose-ui-graphics = "1.4.0"
 androidx-compose-ui-test = "1.4.0"
 androidx-compose-ui-test-junit4 = "1.4.0"
 androidx-compose-ui-test-manifest = "1.4.0"
@@ -82,7 +81,6 @@ androidx-compose-material = { module = "androidx.compose.material:material", ver
 androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "androidx-compose-material3" }
 androidx-compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "androidx-compose-runtime" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose-ui" }
-androidx-compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics", version.ref = "androidx-compose-ui-graphics" }
 androidx-compose-ui-test = { module = "androidx.compose.ui:ui-test", version.ref = "androidx-compose-ui-test" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-compose-ui-test-junit4" }
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-compose-ui-test-manifest" }
