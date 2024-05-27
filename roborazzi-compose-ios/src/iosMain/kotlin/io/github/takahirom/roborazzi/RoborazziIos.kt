@@ -6,6 +6,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.captureToImage
+import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.getReportFileName
@@ -147,7 +148,7 @@ private fun convertImageFormat(image: UIImage): UIImage? {
     CGContextDrawImage(it, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()), cgImage)
     val newCGImage = CGBitmapContextCreateImage(it)
     CGContextRelease(it)
-    return newCGImage?.let { UIImage.imageWithCGImage(it) }
+    return newCGImage?.let { imgRef -> UIImage.imageWithCGImage(imgRef) }
   }
 
   return null
@@ -459,15 +460,16 @@ class RoborazziOptions(
   val compareOptions: CompareOptions = CompareOptions(),
 )
 
+@OptIn(ExperimentalRoborazziApi::class)
 data class CompareOptions(
   val outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
 )
 
 fun String.toAbsolutePath(projectPath: String): String {
-  if (this.startsWith("/")) {
-    return this
+  return if (this.startsWith("/")) {
+    this
   } else {
-    return "$projectPath/$this"
+    "$projectPath/$this"
   }
 }
 

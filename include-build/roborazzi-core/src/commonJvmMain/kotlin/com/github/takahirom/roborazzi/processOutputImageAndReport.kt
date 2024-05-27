@@ -112,7 +112,7 @@ fun processOutputImageAndReport(
       )
       comparisonCanvas
         .save(
-          file = comparisonFile,
+          path = comparisonFile.absolutePath,
           resizeScale = resizeScale,
           contextData = contextData
         )
@@ -133,7 +133,7 @@ fun processOutputImageAndReport(
       }
       newRoboCanvas
         .save(
-          file = actualFile,
+          path = actualFile.absolutePath,
           resizeScale = resizeScale,
           contextData = contextData
         )
@@ -143,24 +143,24 @@ fun processOutputImageAndReport(
       }
       if (goldenFile.exists()) {
         CaptureResult.Changed(
-          compareFile = comparisonFile,
-          actualFile = actualFile,
-          goldenFile = goldenFile,
+          compareFile = comparisonFile.absolutePath,
+          actualFile = actualFile.absolutePath,
+          goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
           contextData = contextData,
         )
       } else {
         CaptureResult.Added(
-          compareFile = comparisonFile,
-          actualFile = actualFile,
-          goldenFile = goldenFile,
+          compareFile = comparisonFile.absolutePath,
+          actualFile = actualFile.absolutePath,
+          goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
           contextData = contextData,
         )
       }
     } else {
       CaptureResult.Unchanged(
-        goldenFile = goldenFile,
+        goldenFile = goldenFile.absolutePath,
         timestampNs = System.nanoTime(),
         contextData = contextData,
       )
@@ -178,7 +178,7 @@ fun processOutputImageAndReport(
   } else {
     // roborazzi.record is checked before
     newRoboCanvas.save(
-      file = goldenFile,
+      path = goldenFile.absolutePath,
       resizeScale = resizeScale,
       contextData = contextData
     )
@@ -188,7 +188,7 @@ fun processOutputImageAndReport(
     }
     roborazziOptions.reportOptions.captureResultReporter.report(
       captureResult = CaptureResult.Recorded(
-        goldenFile = goldenFile,
+        goldenFile = goldenFile.absolutePath,
         timestampNs = System.nanoTime(),
         contextData = contextData,
       ),

@@ -5,8 +5,6 @@ import com.dropbox.differ.SimpleImageComparator
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import kotlinx.serialization.json.encodeToJsonElement
 import java.io.File
-import java.io.FileWriter
-
 
 @ExperimentalRoborazziApi
 sealed interface RoborazziRecordFilePathStrategy {
@@ -174,7 +172,7 @@ data class RoborazziOptions(
           getReportFileName(absolutePath, captureResult.timestampNs, nameWithoutExtension)
 
         val jsonResult = json.encodeToJsonElement(captureResult)
-        FileWriter(reportFileName).use { it.write(jsonResult.toString()) }
+        KotlinxIo.writeText(reportFileName, jsonResult.toString())
         debugLog { "JsonResult file($reportFileName) has been written" }
       }
 
@@ -221,13 +219,13 @@ expect fun defaultCaptureType(): RoborazziOptions.CaptureType
 private fun getAssertErrorOrNull(captureResult: CaptureResult): AssertionError? =
   when (captureResult) {
     is CaptureResult.Added -> AssertionError(
-      "Roborazzi: The original file(${captureResult.goldenFile.absolutePath}) was not found.\n" +
-        "See the actual image at ${captureResult.actualFile.absolutePath}"
+      "Roborazzi: The original file(${captureResult.goldenFile}) was not found.\n" +
+        "See the actual image at ${captureResult.actualFile}"
     )
 
     is CaptureResult.Changed -> AssertionError(
-      "Roborazzi: ${captureResult.goldenFile.absolutePath} is changed.\n" +
-        "See the compare image at ${captureResult.compareFile.absolutePath}"
+      "Roborazzi: ${captureResult.goldenFile} is changed.\n" +
+        "See the compare image at ${captureResult.compareFile}"
     )
 
     is CaptureResult.Unchanged, is CaptureResult.Recorded -> {

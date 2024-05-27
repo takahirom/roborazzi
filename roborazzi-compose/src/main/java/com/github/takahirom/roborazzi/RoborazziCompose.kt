@@ -32,18 +32,20 @@ fun captureRoboImage(
   if (!roborazziOptions.taskType.isEnabled()) return
   registerRoborazziActivityToRobolectricIfNeeded()
   val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
-  activityScenario.onActivity { activity ->
-    activity.setContent(content = content)
-    val composeView = activity.window.decorView
-      .findViewById<ViewGroup>(android.R.id.content)
-      .getChildAt(0) as ComposeView
-    val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
-    viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+  activityScenario.use {
+    activityScenario.onActivity { activity ->
+      activity.setContent(content = content)
+      val composeView = activity.window.decorView
+        .findViewById<ViewGroup>(android.R.id.content)
+        .getChildAt(0) as ComposeView
+      val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
+      viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+    }
+
+    // Closing the activity is necessary to prevent memory leaks.
+    // If multiple captureRoboImage calls occur in a single test,
+    // they can lead to an activity leak.
   }
-  // Closing the activity is necessary to prevent memory leaks.
-  // If multiple captureRoboImage calls occur in a single test,
-  // they can lead to an activity leak.
-  activityScenario.close()
 }
 
 /**

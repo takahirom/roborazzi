@@ -14,19 +14,17 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.io.File
-import java.io.FileReader
 
 @Serializable(with = CaptureResult.CaptureResultSerializer::class)
 sealed interface CaptureResult {
   val type: String
   val timestampNs: Long
-  val compareFile: File?
-  val actualFile: File?
-  val goldenFile: File?
+  val compareFile: String?
+  val actualFile: String?
+  val goldenFile: String?
   val contextData: Map<String,@Contextual Any>
 
-  val reportFile: File
+  val reportFile: String
     get() = when (val result = this) {
       is Added -> result.actualFile
       is Changed -> result.compareFile
@@ -37,27 +35,27 @@ sealed interface CaptureResult {
   @Serializable
   data class Recorded(
     @SerialName("golden_file_path")
-    override val goldenFile:@Contextual File,
+    override val goldenFile:@Contextual String,
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("context_data")
     override val contextData: Map<String,@Contextual Any>
   ) : CaptureResult {
     override val type = "recorded"
-    override val actualFile: File?
+    override val actualFile: String?
       get() = null
-    override val compareFile: File?
+    override val compareFile: String?
       get() = null
   }
 
   @Serializable
   data class Added(
     @SerialName("compare_file_path")
-    override val compareFile:@Contextual File,
+    override val compareFile:@Contextual String,
     @SerialName("actual_file_path")
-    override val actualFile:@Contextual File,
+    override val actualFile:@Contextual String,
     @SerialName("golden_file_path")
-    override val goldenFile:@Contextual File,
+    override val goldenFile:@Contextual String,
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("context_data")
@@ -69,11 +67,11 @@ sealed interface CaptureResult {
   @Serializable
   data class Changed(
     @SerialName("compare_file_path")
-    override val compareFile:@Contextual File,
+    override val compareFile:@Contextual String,
     @SerialName("golden_file_path")
-    override val goldenFile:@Contextual File,
+    override val goldenFile:@Contextual String,
     @SerialName("actual_file_path")
-    override val actualFile:@Contextual File,
+    override val actualFile:@Contextual String,
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("context_data")
@@ -85,22 +83,23 @@ sealed interface CaptureResult {
   @Serializable
   data class Unchanged(
     @SerialName("golden_file_path")
-    override val goldenFile:@Contextual File,
+    override val goldenFile:@Contextual String,
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("context_data")
     override val contextData: Map<String,@Contextual Any>
   ) : CaptureResult {
     override val type = "unchanged"
-    override val actualFile: File?
+    override val actualFile: String?
       get() = null
-    override val compareFile: File?
+    override val compareFile: String?
       get() = null
   }
 
   companion object {
     fun fromJsonFile(filePath: String): CaptureResult {
-      val jsonElement = json.parseToJsonElement(FileReader(filePath).readText())
+      val string = KotlinxIo.readText(filePath)
+      val jsonElement = json.parseToJsonElement(string)
       return json.decodeFromJsonElement<CaptureResult>(jsonElement)
     }
   }
