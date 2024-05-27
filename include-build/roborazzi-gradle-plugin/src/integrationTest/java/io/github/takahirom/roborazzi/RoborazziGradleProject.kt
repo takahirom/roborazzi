@@ -116,9 +116,12 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     assert(output.contains("testDebugUnitTest' is not up-to-date because"))
   }
 
-
   fun assertSkipped(output: String) {
     assert(output.contains("testDebugUnitTest UP-TO-DATE"))
+  }
+
+  fun assertFromCache(output: String) {
+    assert(output.contains("testDebugUnitTest FROM-CACHE"))
   }
 
   enum class BuildType {
