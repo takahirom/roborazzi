@@ -3,16 +3,21 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
+import com.android.build.gradle.internal.cxx.logging.infoln
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziReportConst
+import com.google.common.hash.Hashing
+import com.google.common.io.ByteSource
+import com.google.common.io.Files
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputDirectory
@@ -163,24 +168,38 @@ abstract class RoborazziPlugin : Plugin<Project> {
         }
       verifyAndRecordVariants.configure { it.dependsOn(verifyAndRecordTaskProvider) }
 
+      val roborazziProperties: Map<String, Any?> =
+        project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
+
       val isRecordRun = project.objects.property(Boolean::class.java)
       val isVerifyRun = project.objects.property(Boolean::class.java)
       val isCompareRun = project.objects.property(Boolean::class.java)
       val isVerifyAndRecordRun = project.objects.property(Boolean::class.java)
+      val goldenFilesHash = project.objects.property(String::class.java)
 
       project.gradle.taskGraph.whenReady { graph ->
         isRecordRun.set(recordTaskProvider.map { graph.hasTask(it) })
         isVerifyRun.set(verifyTaskProvider.map { graph.hasTask(it) })
         isVerifyAndRecordRun.set(verifyAndRecordTaskProvider.map { graph.hasTask(it) })
         isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
+        goldenFilesHash.set(
+          isRecordRun.map { isRecording ->
+            val isOnlyRecording = isRecording ||
+              (roborazziProperties["roborazzi.test.record"] == "true" &&
+                roborazziProperties["roborazzi.test.verify"] != "true")
+            if (!isOnlyRecording) {
+              outputDir.files(".").generateHash()
+            } else {
+              ""
+            }
+          }
+        )
       }
 
       val testTaskProvider = project.tasks.withType(testTaskClass.java)
         .matching {
           it.name == testTaskName
         }
-      val roborazziProperties: Map<String, Any?> =
-        project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
 
       val doesRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
         isVerifyRun.flatMap { isVerifyRunValue ->
@@ -261,27 +280,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
       testTaskProvider
         .configureEach { test: AbstractTestTask ->
           val resultsDir = resultDirFileProperty.get().asFile
-          if (restoreOutputDirRoborazziTaskProvider.isPresent) {
-            // Previous outputs are an input when running in compare or verify mode.
-            // However, during record runs the output dir might not exist yet, so we use
-            // files() to express that it is optional.
-            // See also: https://github.com/gradle/gradle/issues/2016
-            test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
-              if (!it.outputDir.get().asFile.exists()) {
-                it.outputDir.get().asFile.mkdirs()
-              }
-              test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
-              it.outputDir.files(".")
-            })
-          } else {
-            test.inputs.files(outputDir.map {
-              if (!it.asFile.exists()) {
-                it.asFile.mkdirs()
-              }
-              test.infoln("Roborazzi: Set input dir $it to test task")
-              it.files(".")
-            })
-          }
           test.outputs.dir(intermediateDirForEachVariant.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
@@ -306,6 +304,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               "isCompareRun" to isCompareRun,
               "isVerifyAndRecordRun" to isVerifyAndRecordRun,
               "roborazziProperties" to roborazziProperties,
+              "goldenFilesHash" to goldenFilesHash,
             )
           )
           test.doFirst {
@@ -451,6 +450,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
   private fun String.capitalizeUS() =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
+
+  private fun FileCollection.generateHash(): String {
+    val hashes = mutableListOf<ByteArray>()
+    asFileTree.forEach {
+      hashes.add(Files.asByteSource(it).hash(Hashing.sha256()).asBytes())
+    }
+    return ByteSource.concat(hashes.map { ByteSource.wrap(it) }).hash(Hashing.sha256()).toString()
+  }
 
   abstract class RestoreOutputDirRoborazziTask @Inject constructor(objects: ObjectFactory) :
     DefaultTask() {

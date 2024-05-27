@@ -18,6 +18,7 @@ dependencies {
     // We don't use junit for plugin
     exclude group: 'junit', module: 'junit'
   }
+  implementation 'com.google.guava:guava:31.0.1-jre'
   implementation libs.kotlinx.serialization.json
   integrationTestDepImplementation libs.android.tools.build.gradle
   integrationTestDepImplementation libs.kotlin.gradle.plugin
