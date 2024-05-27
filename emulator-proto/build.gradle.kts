@@ -15,10 +15,4 @@ dependencies {
 
 wire {
   protoLibrary = true
-
-//  kotlin {
-//    rpcCallStyle = "suspending"
-//    rpcRole = "client"
-//    singleMethodServices = false
-//  }
 }
