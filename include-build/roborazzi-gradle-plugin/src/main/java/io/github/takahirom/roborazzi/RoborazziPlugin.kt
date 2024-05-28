@@ -51,7 +51,8 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 abstract class RoborazziPlugin : Plugin<Project> {
-  @Inject abstract fun getEventsListenerRegistry(): BuildEventsListenerRegistry
+  @Inject
+  abstract fun getEventsListenerRegistry(): BuildEventsListenerRegistry
 
   val AbstractTestTask.systemProperties: MutableMap<String, Any?>
     get() = when (this) {
@@ -192,6 +193,16 @@ abstract class RoborazziPlugin : Plugin<Project> {
           }
         }
       }
+      val onlyRecordRunProvider = isRecordRun.flatMap { isRecordTaskRun ->
+        isVerifyRun.map { isVerifyTaskRun ->
+          isRecordTaskRun && !isVerifyTaskRun
+        }
+      }.map { isRecordingTaskOnly ->
+        isRecordingTaskOnly ||
+          (roborazziProperties["roborazzi.test.record"] == "true" &&
+            roborazziProperties["roborazzi.test.verify"] != "true")
+      }
+
       val projectAbsolutePathProvider = project.providers.provider {
         project.projectDir.absolutePath
       }
@@ -261,27 +272,35 @@ abstract class RoborazziPlugin : Plugin<Project> {
       testTaskProvider
         .configureEach { test: AbstractTestTask ->
           val resultsDir = resultDirFileProperty.get().asFile
-          if (restoreOutputDirRoborazziTaskProvider.isPresent) {
-            // Previous outputs are an input when running in compare or verify mode.
-            // However, during record runs the output dir might not exist yet, so we use
-            // files() to express that it is optional.
-            // See also: https://github.com/gradle/gradle/issues/2016
-            test.inputs.files(restoreOutputDirRoborazziTaskProvider.map {
-              if (!it.outputDir.get().asFile.exists()) {
-                it.outputDir.get().asFile.mkdirs()
+          test.inputs.files(
+            onlyRecordRunProvider.map { onlyRecordRun ->
+              if (onlyRecordRun) {
+                // Note: this is not files in outputDir,
+                // but empty input when running in record mode.
+                outputDir.get().files()
+              } else if (restoreOutputDirRoborazziTaskProvider.isPresent) {
+                // Previous outputs are an input when running in compare or verify mode.
+                // However, during record runs the output dir might not exist yet, so we use
+                // files() to express that it is optional.
+                // See also: https://github.com/gradle/gradle/issues/2016
+                restoreOutputDirRoborazziTaskProvider.map {
+                  if (!it.outputDir.get().asFile.exists()) {
+                    it.outputDir.get().asFile.mkdirs()
+                  }
+                  test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
+                  it.outputDir.files(".")
+                }
+              } else {
+                outputDir.map {
+                  if (!it.asFile.exists()) {
+                    it.asFile.mkdirs()
+                  }
+                  test.infoln("Roborazzi: Set input dir $it to test task")
+                  it.files(".")
+                }
               }
-              test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
-              it.outputDir.files(".")
-            })
-          } else {
-            test.inputs.files(outputDir.map {
-              if (!it.asFile.exists()) {
-                it.asFile.mkdirs()
-              }
-              test.infoln("Roborazzi: Set input dir $it to test task")
-              it.files(".")
-            })
-          }
+            }
+          )
           test.outputs.dir(intermediateDirForEachVariant.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it

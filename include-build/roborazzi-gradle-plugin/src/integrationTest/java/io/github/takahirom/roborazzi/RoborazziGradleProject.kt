@@ -121,6 +121,10 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     assert(output.contains("testDebugUnitTest UP-TO-DATE"))
   }
 
+  fun assertFromCache(output: String) {
+    assert(output.contains("testDebugUnitTest FROM-CACHE"))
+  }
+
   enum class BuildType {
     Build, BuildAndFail
   }
