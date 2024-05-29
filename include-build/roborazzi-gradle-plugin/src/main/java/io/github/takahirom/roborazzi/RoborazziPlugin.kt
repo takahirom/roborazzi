@@ -189,11 +189,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
           }
         }
       }
-      val isImageInputUsedProvider = isRecordRun.flatMap { isRecordTaskRun ->
-        isVerifyRun.flatMap { isVerifyTaskRun ->
-          isCompareRun.map { isCompareTaskRun ->
-            isVerifyTaskRun || isCompareTaskRun
-          }
+      val isImageInputUsedProvider = isVerifyRun.flatMap { isVerifyTaskRun ->
+        isCompareRun.map { isCompareTaskRun ->
+          isVerifyTaskRun || isCompareTaskRun
         }
       }.map { taskUseImageInput ->
         taskUseImageInput ||
