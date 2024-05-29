@@ -59,7 +59,7 @@ class RoborazziGradleProjectTest {
       record()
       removeRoborazziOutputDir()
       val output = record().output
-      assertNotSkipped(output)
+      assertSkipped(output)
 
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
@@ -74,10 +74,8 @@ class RoborazziGradleProjectTest {
       removeRoborazziAndIntermediateOutputDir()
       record()
       removeRoborazziAndIntermediateOutputDir()
-      // should not be skipped even if tests and sources are not changed
-      // when output directory is removed
       val output = record().output
-      assertNotSkipped(output)
+      assertFromCache(output)
 
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
@@ -89,7 +87,6 @@ class RoborazziGradleProjectTest {
   @Test
   fun recordWhenRunTwice() {
     RoborazziGradleProject(testProjectDir).apply {
-      record()
       val output1 = record().output
       assertNotSkipped(output1)
       val output2 = record().output
@@ -103,11 +100,26 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun recordWithSystemParameterWhenRemovedOutputAndIntermediate() {
+    RoborazziGradleProject(testProjectDir).apply {
+      val output1 = recordWithSystemParameter().output
+      assertNotSkipped(output1)
+      removeRoborazziAndIntermediateOutputDir()
+      val output2 = recordWithSystemParameter().output
+      assertFromCache(output2)
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
   fun recordWhenRunTwiceWithGradleCustomOutput() {
     RoborazziGradleProject(testProjectDir).apply {
       val customDirFromGradle = "src/screenshots/roborazzi_customdir_from_gradle"
       appBuildFile.customOutputDirPath = customDirFromGradle
-      record()
       val output1 = record().output
       assertNotSkipped(output1)
       val output2 = record().output
