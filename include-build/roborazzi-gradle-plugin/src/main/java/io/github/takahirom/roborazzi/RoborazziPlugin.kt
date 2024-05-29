@@ -25,7 +25,6 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
 import org.gradle.api.tasks.testing.TestListener
 import org.gradle.api.tasks.testing.TestResult
-import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.ExecutionTaskHolder
@@ -51,9 +50,6 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 abstract class RoborazziPlugin : Plugin<Project> {
-  @Inject
-  abstract fun getEventsListenerRegistry(): BuildEventsListenerRegistry
-
   val AbstractTestTask.systemProperties: MutableMap<String, Any?>
     get() = when (this) {
       is Test -> systemProperties
@@ -193,14 +189,16 @@ abstract class RoborazziPlugin : Plugin<Project> {
           }
         }
       }
-      val onlyRecordRunProvider = isRecordRun.flatMap { isRecordTaskRun ->
-        isVerifyRun.map { isVerifyTaskRun ->
-          isRecordTaskRun && !isVerifyTaskRun
+      val isImageInputUsedProvider = isRecordRun.flatMap { isRecordTaskRun ->
+        isVerifyRun.flatMap { isVerifyTaskRun ->
+          isCompareRun.map { isCompareTaskRun ->
+            isVerifyTaskRun || isCompareTaskRun
+          }
         }
-      }.map { isRecordingTaskOnly ->
-        isRecordingTaskOnly ||
-          (roborazziProperties["roborazzi.test.record"] == "true" &&
-            roborazziProperties["roborazzi.test.verify"] != "true")
+      }.map { taskUseImageInput ->
+        taskUseImageInput ||
+          roborazziProperties["roborazzi.test.verify"] == "true" ||
+          roborazziProperties["roborazzi.test.compare"] == "true"
       }
 
       val projectAbsolutePathProvider = project.providers.provider {
@@ -273,8 +271,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
         .configureEach { test: AbstractTestTask ->
           val resultsDir = resultDirFileProperty.get().asFile
           test.inputs.files(
-            onlyRecordRunProvider.map { onlyRecordRun ->
-              if (onlyRecordRun) {
+            isImageInputUsedProvider.map { isImageInputUsed ->
+              if (!isImageInputUsed) {
                 // Note: this is not files in outputDir,
                 // but empty input when running in record mode.
                 outputDir.get().files()
