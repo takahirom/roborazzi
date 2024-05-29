@@ -17,8 +17,8 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task)
   }
 
-  fun recordAllVariants(): BuildResult {
-    val task = "recordRoborazzi"
+  fun compareAllVariants(): BuildResult {
+    val task = "compareRoborazzi"
     return runTask(task)
   }
 

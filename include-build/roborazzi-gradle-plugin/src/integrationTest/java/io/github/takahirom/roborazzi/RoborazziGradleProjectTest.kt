@@ -54,10 +54,10 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
-  fun recordAllVariantMultipleTimes() {
+  fun compareAllVariantMultipleTimes() {
     RoborazziGradleProject(testProjectDir).apply {
       for (i in 0 until 10) {
-        recordAllVariants()
+        compareAllVariants()
 
         checkResultsSummaryFileExists()
         checkRecordedFileExists("$screenshotAndName.testCapture.png")
