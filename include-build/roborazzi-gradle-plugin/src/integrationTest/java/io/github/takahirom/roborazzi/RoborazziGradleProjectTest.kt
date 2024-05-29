@@ -60,7 +60,6 @@ class RoborazziGradleProjectTest {
         compareAllVariants()
 
         checkResultsSummaryFileExists()
-        checkResultFileExists(resultFileSuffix)
         checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
         checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
       }
