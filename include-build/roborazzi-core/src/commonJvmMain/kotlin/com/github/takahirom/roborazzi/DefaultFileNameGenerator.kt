@@ -1,9 +1,7 @@
 package com.github.takahirom.roborazzi
 
-import org.junit.Test
 import org.junit.runner.Description
 import java.io.File
-
 
 object DefaultFileNameGenerator {
   enum class DefaultNamingStrategy(val optionName: String) {
@@ -22,6 +20,9 @@ object DefaultFileNameGenerator {
   private val defaultNamingStrategy by lazy {
     roborazziDefaultNamingStrategy()
   }
+  private val testNameExtractionStrategies by lazy {
+    roborazziTestNameExtractionStrategies()
+  }
 
   @InternalRoborazziApi
   fun generateFilePath(extension: String): String {
@@ -38,59 +39,31 @@ object DefaultFileNameGenerator {
     return when (roborazziRecordFilePathStrategy()) {
       RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory -> {
         val dir = roborazziContext.outputDirectory
-        "$dir/${generateCountableOutputNameWithStacktrace()}.$extension"
+        "$dir/${generateCountableOutputNameWithStrategies()}.$extension"
       }
 
       RoborazziRecordFilePathStrategy.RelativePathFromRoborazziContextOutputDirectory -> {
         // The directory is specified by [fileWithRecordFilePathStrategy(filePath)]
-        "${generateCountableOutputNameWithStacktrace()}.$extension"
+        "${generateCountableOutputNameWithStrategies()}.$extension"
       }
     }
   }
 
-  val jupiterTestAnnotationOrNull = try {
-    Class.forName("org.junit.jupiter.api.Test") as Class<Annotation>
-  } catch (e: ClassNotFoundException) {
-    null
-  }
-
-  private fun generateCountableOutputNameWithStacktrace(): String {
+  private fun generateCountableOutputNameWithStrategies(): String {
     val testName =
-      generateOutputNameWithStackTrace()
+      generateOutputNameWithStrategies()
 
     return countableOutputName(testName)
   }
 
-  internal fun generateOutputNameWithStackTrace(): String {
-    // Find test method name
-    val allStackTraces = Thread.getAllStackTraces()
-    val filteredTracces = allStackTraces
-      // The Thread Name is come from here
-      // https://github.com/robolectric/robolectric/blob/40832ada4a0651ecbb0151ebed2c99e9d1d71032/robolectric/src/main/java/org/robolectric/internal/AndroidSandbox.java#L67
-      .filterKeys {
-        it.name.contains("Main Thread")
-          || it.name.contains("Test worker")
+  internal fun generateOutputNameWithStrategies(): String {
+    for (strategy in testNameExtractionStrategies) {
+      strategy.extract()?.let { (className, methodName) ->
+        return generateOutputName(className, methodName)
       }
-    val traceElements = filteredTracces
-      .flatMap { it.value.toList() }
-    val stackTraceElement = traceElements
-      .firstOrNull {
-        try {
-          val method = Class.forName(it.className).getMethod(it.methodName)
-          method
-            .getAnnotation(Test::class.java) != null ||
-            (jupiterTestAnnotationOrNull != null && (method
-              .getAnnotation(jupiterTestAnnotationOrNull) as? Annotation) != null)
-        } catch (e: NoClassDefFoundError) {
-          false
-        } catch (e: Exception) {
-          false
-        }
-      }
-      ?: throw IllegalArgumentException("Roborazzi can't find method of test. Please specify file name or use Rule")
-    val testName =
-      generateOutputName(stackTraceElement.className, stackTraceElement.methodName)
-    return testName
+    }
+
+    throw IllegalArgumentException("Roborazzi can't find method of test. Please specify file name or use Rule")
   }
 
   private fun countableOutputName(testName: String): String {

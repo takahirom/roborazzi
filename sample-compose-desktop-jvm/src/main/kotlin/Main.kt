@@ -11,14 +11,15 @@ import androidx.compose.ui.window.application
 
 @Composable
 @Preview
-fun App() {
+fun App(value: String = "test") {
   var text by remember { mutableStateOf("Hello, World!") }
+  val updatedValue by rememberUpdatedState(value)
 
   MaterialTheme {
     Button(
       modifier = Modifier.testTag("button"),
       onClick = {
-        text = "Hello, Desktop! test"
+        text = "Hello, Desktop! $updatedValue"
       }) {
       Text(
         style = MaterialTheme.typography.h2,

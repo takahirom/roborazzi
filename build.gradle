@@ -6,6 +6,8 @@ plugins {
   id 'com.android.library' version libs.versions.agp apply false
   id 'org.jetbrains.kotlin.multiplatform' version libs.versions.kotlin apply false
   id 'org.jetbrains.compose' version libs.versions.composeMultiplatform apply false
+  id 'de.mannodermaus.android-junit5' version libs.versions.junit5Android apply false
+  id 'tech.apter.junit5.jupiter.robolectric-extension-gradle-plugin' version libs.versions.junit5Robolectric apply false
 
   id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false

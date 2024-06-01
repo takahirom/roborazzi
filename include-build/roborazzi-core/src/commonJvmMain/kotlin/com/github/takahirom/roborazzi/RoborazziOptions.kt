@@ -66,6 +66,26 @@ fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStra
     )
 }
 
+fun roborazziTestNameExtractionStrategies(): List<TestNameExtractionStrategy> {
+  return buildList {
+    // Always use the default strategy with stack traces,
+    // then add the JUnit 5 integration as well (if present on the classpath)
+    add(StackTraceTestNameExtractionStrategy)
+    junit5TestNameExtractionStrategy?.let(::add)
+  }
+}
+
+private val junit5TestNameExtractionStrategy by lazy {
+  try {
+    Class.forName("com.github.takahirom.roborazzi.junit5.JUnit5TestNameExtractionStrategy")
+      .getConstructor()
+      .newInstance()
+       as TestNameExtractionStrategy
+  } catch (ignored: ClassNotFoundException) {
+    null
+  }
+}
+
 data class RoborazziOptions(
   /**
    * This option, taskType, is experimental. So the API may change.

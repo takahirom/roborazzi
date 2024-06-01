@@ -22,6 +22,8 @@ dependencies {
   integrationTestDepImplementation libs.android.tools.build.gradle
   integrationTestDepImplementation libs.kotlin.gradle.plugin
   integrationTestDepImplementation libs.compose.gradle.plugin
+  integrationTestDepImplementation libs.android.junit5.plugin
+  integrationTestDepImplementation libs.robolectric.junit5.plugin
 }
 
 sourceSets {

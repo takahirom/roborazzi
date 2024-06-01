@@ -11,5 +11,5 @@ fun roboOutputName(): String {
   if (description != null) {
     return DefaultFileNameGenerator.generateOutputNameWithDescription(description)
   }
-  return DefaultFileNameGenerator.generateOutputNameWithStackTrace()
+  return DefaultFileNameGenerator.generateOutputNameWithStrategies()
 }

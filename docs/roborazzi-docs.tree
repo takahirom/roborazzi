@@ -11,6 +11,7 @@
     <toc-element topic="build_setup.md"/>
     <toc-element topic="how_to_use.md"/>
     <toc-element topic="compose_multiplatform.md"/>
+    <toc-element topic="junit5.md"/>
     <toc-element topic="gradle_properties_options.md"/>
     <toc-element topic="faq.md"/>
 </instance-profile>
