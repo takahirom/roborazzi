@@ -14,8 +14,8 @@
        Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
        Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
   <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
+    The Roborazzi plugin enhances your development workflow by automatically displaying screenshots related to Roborazzi's screenshot tests within IntelliJ IDEA.
+    Easily view and verify visual outputs directly in your IDE, streamlining your testing and development process.
   ]]></description>
 
   <!-- Product and plugin compatibility requirements.
@@ -46,8 +46,5 @@
       displayName="Roborazzi"/>
   </extensions>
   <actions>
-    <action id="io.github.takahirom.roborazzi.HelloWorldAction"
-            class="com.github.takahirom.roborazzi.idea.HelloWorldAction"
-            text="HelloWorldAction" description="HelloWorldAction"/>
   </actions>
 </idea-plugin>
