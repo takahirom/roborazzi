@@ -1,6 +1,7 @@
 package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResults
+import com.github.takahirom.roborazzi.RoborazziTaskType
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.rules.TemporaryFolder
@@ -240,6 +241,8 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     var customOutputDirPath: String? = null
     var customCompareOutputDirPath: String? = null
 
+    var taskType: RoborazziTaskType? = null
+
     init {
       addIncludeBuild()
     }
@@ -335,28 +338,33 @@ dependencies {
           """.trimIndent()
         )
       }
+      buildFile.appendText("""
+        roborazzi {
+      """)
       if (customOutputDirPath != null) {
         buildFile.appendText(
           """
-            roborazzi {
-              outputDir.set(file("$customOutputDirPath"))
-            }
-            
+            outputDir.set(file("$customOutputDirPath"))
           """.trimIndent()
         )
       }
       if (customCompareOutputDirPath != null) {
         buildFile.appendText(
           """
-            roborazzi {
-              compare {
-                outputDir.set(file("$customCompareOutputDirPath"))
-              }
+            compare {
+              outputDir.set(file("$customCompareOutputDirPath"))
             }
-            
           """.trimIndent()
         )
       }
+      if (taskType != null) {
+        buildFile.appendText("""
+          taskType.set(com.github.takahirom.roborazzi.RoborazziTaskType.${taskType.toString()})
+        """.trimIndent())
+      }
+      buildFile.appendText("""
+        }
+      """.trimIndent())
     }
   }
 
