@@ -61,16 +61,10 @@ class PreviewViewModel {
     refreshList(project)
   }
 
-  fun onFileOpened(project: Project) {
-    roborazziLog("onFileOpened")
-    coroutineScope.launch {
-      refreshListProcess(project)
-    }
-  }
-
   fun onCaretPositionChanged(project: Project) {
     roborazziLog("onCaretPositionChanged")
     coroutineScope.launch {
+      updateListJob?.cancel()
       refreshListProcess(project)
       val editor = FileEditorManager.getInstance(project).selectedTextEditor
       val offset = editor?.caretModel?.offset
@@ -89,16 +83,16 @@ class PreviewViewModel {
   private fun findFunction(element: PsiElement): KtFunction? {
     var methodCnadidate: KtDeclaration? = null
     while (true) {
-      if (methodCnadidate == null) {
-        methodCnadidate = PsiTreeUtil.getParentOfType(
+      methodCnadidate = if (methodCnadidate == null) {
+        PsiTreeUtil.getParentOfType(
           element,
           KtDeclaration::class.java
-        )
+          )
       } else {
-        methodCnadidate = if ((element is CompositeElement)) methodCnadidate else PsiTreeUtil.getParentOfType(
+        if ((element is CompositeElement)) methodCnadidate else PsiTreeUtil.getParentOfType(
           methodCnadidate,
           KtDeclaration::class.java
-        )
+          )
       }
       if (methodCnadidate is KtFunction) {
         if (methodCnadidate.isLocal) {
@@ -145,7 +139,7 @@ class PreviewViewModel {
     val functions: List<KtFunction> = allDeclarations.filterIsInstance<KtFunction>()
     val classes: List<KtClass> = allDeclarations.filterIsInstance<KtClass>()
     val searchPath = project.basePath
-    statusText.value = "Searching images in ${searchPath} ..."
+    statusText.value = "Searching images in $searchPath ..."
 
     val files = withContext(Dispatchers.IO) {
       val roborazziFolders = ProjectRootManager.getInstance(project).contentRootsFromAllModules
@@ -155,8 +149,8 @@ class PreviewViewModel {
         }
 
       roborazziFolders
-        .flatMap {
-          it.walkTopDown().filter { it.isFile }
+        .flatMap { folder ->
+          folder.walkTopDown().filter { it.isFile }
         }
     }
 
@@ -198,7 +192,7 @@ class PreviewViewModel {
     }
   }
 
-  fun cancel() {
+  private fun cancel() {
     coroutineScope.cancel()
   }
 
@@ -236,7 +230,7 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
         setFixedCellHeight(-1)
       }
     }
-    addComponentListener(l);
+    addComponentListener(l)
     selectionMode = ListSelectionModel.SINGLE_SELECTION
   }
 
@@ -281,7 +275,7 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
       }
 
       override fun selectionChanged(event: FileEditorManagerEvent) {
-        viewModel?.onFileOpened(project)
+        viewModel?.onCaretPositionChanged(project)
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
         editor?.caretModel?.addCaretListener(object : CaretListener {
           override fun caretPositionChanged(event: CaretEvent) {
@@ -349,7 +343,6 @@ class ImageListCellRenderer : ListCellRenderer<Pair<File, Long>> {
       alignmentX = Component.LEFT_ALIGNMENT
     }
 
-    // 要素の選択状態を適用
     if (isSelected) {
       box.background = list.selectionBackground
       box.foreground = list.selectionForeground
