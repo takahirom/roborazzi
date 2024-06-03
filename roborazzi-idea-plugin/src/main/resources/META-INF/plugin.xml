@@ -37,6 +37,13 @@
                 stripeTitle="Roborazzi Preview"
                 type="DOCKED">
     </toolWindow>
+    <applicationService
+      serviceImplementation="com.github.takahirom.roborazzi.idea.settings.AppSettingsState"/>
+    <applicationConfigurable
+      parentId="tools"
+      instance="com.github.takahirom.roborazzi.idea.settings.AppSettingsConfigurable"
+      id="org.intellij.sdk.settings.AppSettingsConfigurable"
+      displayName="Roborazzi"/>
   </extensions>
   <actions>
     <action id="io.github.takahirom.roborazzi.HelloWorldAction"

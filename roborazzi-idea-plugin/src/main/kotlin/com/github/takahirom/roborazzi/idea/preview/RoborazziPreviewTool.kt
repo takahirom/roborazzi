@@ -1,5 +1,6 @@
 package com.github.takahirom.roborazzi.idea.preview
 
+import com.github.takahirom.roborazzi.idea.settings.AppSettingsState
 import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -15,14 +16,17 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.impl.source.tree.CompositeElement
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentFactory
+import com.intellij.util.containers.SLRUMap
 import com.intellij.util.messages.MessageBusConnection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.jetbrains.kotlin.codegen.inline.getOrPut
 import org.jetbrains.kotlin.psi.*
 import java.awt.BorderLayout
 import java.awt.Component
@@ -45,7 +49,7 @@ class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
 class PreviewViewModel {
 
   var coroutineScope = MainScope()
-  val imagesStateFlow = MutableStateFlow<List<Pair<File, Long>>>(listOf())
+  val imagesStateFlow = MutableStateFlow<List<Pair<String, Long>>>(listOf())
   private val lastEditingFileName = MutableStateFlow<String?>(null)
   val statusText = MutableStateFlow("No images found")
   val shouldSeeIndex = MutableStateFlow(-1)
@@ -73,7 +77,7 @@ class PreviewViewModel {
         val kotlinFile = psiFile as? KtFile ?: return@launch
         val pe: PsiElement = kotlinFile.findElementAt(editor.caretModel.offset) ?: return@launch
         val method: KtFunction = findFunction(pe) ?: return@launch
-        imagesStateFlow.value.indexOfFirst { it.first.name.contains(method.name ?: "") }.let {
+        imagesStateFlow.value.indexOfFirst { it.first.substringAfterLast(File.separator).contains(method.name ?: "") }.let {
           shouldSeeIndex.value = it
         }
       }
@@ -87,12 +91,12 @@ class PreviewViewModel {
         PsiTreeUtil.getParentOfType(
           element,
           KtDeclaration::class.java
-          )
+        )
       } else {
         if ((element is CompositeElement)) methodCnadidate else PsiTreeUtil.getParentOfType(
           methodCnadidate,
           KtDeclaration::class.java
-          )
+        )
       }
       if (methodCnadidate is KtFunction) {
         if (methodCnadidate.isLocal) {
@@ -116,6 +120,7 @@ class PreviewViewModel {
   }
 
   private suspend fun refreshListProcess(project: Project) {
+    val start = System.currentTimeMillis()
     roborazziLog("refreshListProcess")
     statusText.value = "Loading..."
     yield()
@@ -143,7 +148,7 @@ class PreviewViewModel {
 
     val files = withContext(Dispatchers.IO) {
       val roborazziFolders = ProjectRootManager.getInstance(project).contentRootsFromAllModules
-        .map { File(it.path + File.separator + "build" + File.separator + "outputs" + File.separator + "roborazzi") }
+        .map { File(it.path + AppSettingsState.instance.imagesPathForModule) }
         .filter {
           it.exists()
         }
@@ -163,8 +168,8 @@ class PreviewViewModel {
       statusText.value = "${allPreviewImageFiles.size} images found"
     }
     val result = allPreviewImageFiles.sortedByClassesAndFunctions(classes, functions)
-      .map { it to it.lastModified() }
-    roborazziLog("result result.size:${result.size}")
+      .map { it.path to it.lastModified() }
+    roborazziLog("refreshListProcess result result.size:${result.size} in ${System.currentTimeMillis() - start}ms")
     imagesStateFlow.value = result
   }
 
@@ -202,7 +207,7 @@ class PreviewViewModel {
 }
 
 class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
-  private val listModel = DefaultListModel<Pair<File, Long>>()
+  private val listModel = DefaultListModel<Pair<String, Long>>()
   private val statusLabel = JBLabel("No images found")
   private val statusBar = JBBox.createHorizontalBox().apply {
     add(JLabel("Refresh: ").apply {
@@ -214,7 +219,7 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
     })
     add(statusLabel)
   }
-  private val imageList = object : JBList<Pair<File, Long>>(listModel) {
+  private val imageList = object : JBList<Pair<String, Long>>(listModel) {
     override fun getScrollableTracksViewportWidth(): Boolean {
       return true
     }
@@ -273,16 +278,18 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
       override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         viewModel?.onInit(project)
       }
-
+      val caretListener = object : CaretListener {
+        override fun caretPositionChanged(event: CaretEvent) {
+          super.caretPositionChanged(event)
+          viewModel?.onCaretPositionChanged(project)
+        }
+      }
       override fun selectionChanged(event: FileEditorManagerEvent) {
         viewModel?.onCaretPositionChanged(project)
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
-        editor?.caretModel?.addCaretListener(object : CaretListener {
-          override fun caretPositionChanged(event: CaretEvent) {
-            super.caretPositionChanged(event)
-            viewModel?.onCaretPositionChanged(project)
-          }
-        })
+
+        editor?.caretModel?.removeCaretListener(caretListener)
+        editor?.caretModel?.addCaretListener(caretListener)
       }
     })
 
@@ -293,6 +300,7 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
     viewModel = PreviewViewModel()
     viewModel?.coroutineScope?.launch {
       viewModel?.imagesStateFlow?.collect {
+        roborazziLog("imagesStateFlow.collect ${it.size}")
         listModel.clear()
         listModel.addAll(it)
       }
@@ -304,6 +312,7 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
     }
     viewModel?.coroutineScope?.launch {
       viewModel?.shouldSeeIndex?.collect {
+        roborazziLog("shouldSeeIndex.collect $it")
         imageList.selectedIndex = it
       }
     }
@@ -312,17 +321,22 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
 }
 
 
-class ImageListCellRenderer : ListCellRenderer<Pair<File, Long>> {
+class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
+  private val lruCache = SLRUMap<Pair<String, Long>, ImageIcon>(300, 50)
   override fun getListCellRendererComponent(
-    list: JList<out Pair<File, Long>>,
-    value: Pair<File, Long>,
+    list: JList<out Pair<String, Long>>,
+    value: Pair<String, Long>,
     index: Int,
     isSelected: Boolean,
     cellHasFocus: Boolean
   ): Component {
-    val file = value.first
-    val icon = ImageIcon(ImageIO.read(File(file.path)))
-    val scale = if (list.width < icon.iconWidth) list.width.toDouble() / icon.iconWidth else 1.0
+    val start = System.currentTimeMillis()
+    val filePath = value.first
+    val lastModified = value.second
+    val file = File(filePath)
+    val icon = lruCache.getOrPut(filePath to lastModified) { ImageIcon(ImageIO.read(file)) }
+    val maxImageWidth = list.width * 0.9
+    val scale = if (maxImageWidth < icon.iconWidth) maxImageWidth / icon.iconWidth else 1.0
     val newIcon = if (scale == 1.0) icon else ImageIcon(
       icon.image.getScaledInstance(
         (icon.iconWidth * scale).toInt(),
@@ -333,14 +347,14 @@ class ImageListCellRenderer : ListCellRenderer<Pair<File, Long>> {
 
     val imageLabel = JBLabel()
     imageLabel.setIcon(newIcon)
-    imageLabel.isAllowAutoWrapping = true
+    imageLabel.background = JBColor.RED
 
     val box = JBBox.createVerticalBox().apply {
+      add(Box.createVerticalStrut(16))
       add(imageLabel)
       add(JBLabel(file.name))
       // Add space between items
-      add(Box.createVerticalStrut(30))
-      alignmentX = Component.LEFT_ALIGNMENT
+      add(Box.createVerticalStrut(16))
     }
 
     if (isSelected) {
@@ -351,7 +365,7 @@ class ImageListCellRenderer : ListCellRenderer<Pair<File, Long>> {
       box.foreground = list.foreground
     }
     box.isOpaque = true
-
+    roborazziLog("getListCellRendererComponent in ${System.currentTimeMillis() - start}ms")
     return box
   }
 }
