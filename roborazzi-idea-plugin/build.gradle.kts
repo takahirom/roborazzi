@@ -27,16 +27,5 @@ intellij {
 tasks {
   patchPluginXml {
     sinceBuild.set("232")
-    untilBuild.set("242.*")
-  }
-
-  signPlugin {
-    certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
-    privateKey.set(System.getenv("PRIVATE_KEY"))
-    password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
-  }
-
-  publishPlugin {
-    token.set(System.getenv("PUBLISH_TOKEN"))
   }
 }
