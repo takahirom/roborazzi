@@ -1,4 +1,4 @@
-package com.github.takahirom.roborazzi.roborazziintellijplugin.com.github.takahirom.roborazzi
+package com.github.takahirom.roborazzi.idea
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent

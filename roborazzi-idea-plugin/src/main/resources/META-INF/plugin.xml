@@ -21,15 +21,26 @@
   <!-- Product and plugin compatibility requirements.
        Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
   <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.lang</depends>
+  <depends>com.intellij.modules.java</depends>
+  <depends>org.jetbrains.kotlin</depends>
+  <depends>com.intellij.gradle</depends>
 
   <!-- Extension points defined by the plugin.
        Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
   <extensions defaultExtensionNs="com.intellij">
-
+    <toolWindow id="RoborazziPreview"
+                anchor="right"
+                factoryClass="com.github.takahirom.roborazzi.idea.preview.RoborazziPreviewToolWindowFactory"
+                icon="/icons/previewIcon.svg"
+                canCloseContents="true"
+                stripeTitle="Roborazzi Preview"
+                type="DOCKED">
+    </toolWindow>
   </extensions>
   <actions>
     <action id="io.github.takahirom.roborazzi.HelloWorldAction"
-            class="com.github.takahirom.roborazzi.roborazziintellijplugin.com.github.takahirom.roborazzi.HelloWorldAction"
+            class="com.github.takahirom.roborazzi.idea.HelloWorldAction"
             text="HelloWorldAction" description="HelloWorldAction"/>
   </actions>
 </idea-plugin>
