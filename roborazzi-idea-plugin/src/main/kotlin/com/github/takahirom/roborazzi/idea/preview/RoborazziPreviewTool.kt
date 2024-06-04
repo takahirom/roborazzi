@@ -30,17 +30,40 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.containers.SLRUMap
 import com.intellij.util.messages.MessageBusConnection
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import org.jetbrains.kotlin.codegen.inline.getOrPut
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtDeclaration
+import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtFunction
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Image
-import java.awt.event.*
+import java.awt.event.ComponentAdapter
+import java.awt.event.ComponentEvent
+import java.awt.event.ComponentListener
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.io.File
 import javax.imageio.ImageIO
-import javax.swing.*
+import javax.swing.Box
+import javax.swing.DefaultListModel
+import javax.swing.ImageIcon
+import javax.swing.JLabel
+import javax.swing.JList
+import javax.swing.JPanel
+import javax.swing.JScrollPane
+import javax.swing.ListCellRenderer
+import javax.swing.ListSelectionModel
 
 
 class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
@@ -51,9 +74,11 @@ class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
     toolWindow.contentManager.addContent(content)
 
     if (toolWindow is ToolWindowEx) {
-      toolWindow.setAdditionalGearActions(DefaultActionGroup(object : AnAction("Roborazzi setting") {
+      toolWindow.setAdditionalGearActions(DefaultActionGroup(object :
+        AnAction("Roborazzi setting") {
         override fun actionPerformed(e: AnActionEvent) {
-          ShowSettingsUtil.getInstance().showSettingsDialog(e.project, AppSettingsConfigurable::class.java)
+          ShowSettingsUtil.getInstance()
+            .showSettingsDialog(e.project, AppSettingsConfigurable::class.java)
         }
       }))
     }
@@ -87,11 +112,14 @@ class PreviewViewModel {
       val editor = FileEditorManager.getInstance(project).selectedTextEditor
       val offset = editor?.caretModel?.offset
       if (offset != null) {
-        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) as? KtFile ?: return@launch
+        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) as? KtFile
+          ?: return@launch
         val kotlinFile = psiFile as? KtFile ?: return@launch
         val pe: PsiElement = kotlinFile.findElementAt(editor.caretModel.offset) ?: return@launch
         val method: KtFunction = findFunction(pe) ?: return@launch
-        imagesStateFlow.value.indexOfFirst { it.first.substringAfterLast(File.separator).contains(method.name ?: "") }
+        imagesStateFlow.value.indexOfFirst {
+          it.first.substringAfterLast(File.separator).contains(method.name ?: "")
+        }
           .let {
             shouldSeeIndex.value = it
           }
@@ -143,9 +171,10 @@ class PreviewViewModel {
       statusText.value = "No editor found"
     }
 
-    val psiFile: PsiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return run {
-      statusText.value = "No psi file found"
-    }
+    val psiFile: PsiFile =
+      PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return run {
+        statusText.value = "No psi file found"
+      }
     val kotlinFile = psiFile as? KtFile ?: return run {
       statusText.value = "No kotlin file found"
     }
@@ -156,8 +185,18 @@ class PreviewViewModel {
     }
     val allDeclarations = kotlinFile.declarations
     val allPreviewImageFiles = mutableListOf<File>()
+    fun hasPreviewOrTestAnnotationOrHasNameOfTestFunction(declaration: KtDeclaration): Boolean {
+      return declaration.annotationEntries.any { annotation ->
+        annotation.text.contains("Composable") ||
+          annotation.text.contains("Preview") || annotation.text.contains("Test")
+      } || (declaration is KtFunction && declaration.name?.startsWith("test") == true)
+    }
+
     val functions: List<KtFunction> = allDeclarations.filterIsInstance<KtFunction>()
+      .filter { hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it) }
     val classes: List<KtClass> = allDeclarations.filterIsInstance<KtClass>()
+      .filter { it.declarations.any { hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it) } }
+
     val searchPath = project.basePath
     statusText.value = "Searching images in $searchPath ..."
 
@@ -301,26 +340,28 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
       }
     }
     val messageBus: MessageBusConnection = project.messageBus.connect()
-    messageBus.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
-      override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
-        viewModel?.onInit(project)
-      }
-
-      val caretListener = object : CaretListener {
-        override fun caretPositionChanged(event: CaretEvent) {
-          super.caretPositionChanged(event)
-          viewModel?.onCaretPositionChanged(project)
+    messageBus.subscribe(
+      FileEditorManagerListener.FILE_EDITOR_MANAGER,
+      object : FileEditorManagerListener {
+        override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
+          viewModel?.onInit(project)
         }
-      }
 
-      override fun selectionChanged(event: FileEditorManagerEvent) {
-        viewModel?.onCaretPositionChanged(project)
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+        val caretListener = object : CaretListener {
+          override fun caretPositionChanged(event: CaretEvent) {
+            super.caretPositionChanged(event)
+            viewModel?.onCaretPositionChanged(project)
+          }
+        }
 
-        editor?.caretModel?.removeCaretListener(caretListener)
-        editor?.caretModel?.addCaretListener(caretListener)
-      }
-    })
+        override fun selectionChanged(event: FileEditorManagerEvent) {
+          viewModel?.onCaretPositionChanged(project)
+          val editor = FileEditorManager.getInstance(project).selectedTextEditor
+
+          editor?.caretModel?.removeCaretListener(caretListener)
+          editor?.caretModel?.addCaretListener(caretListener)
+        }
+      })
 
     viewModel?.onInit(project)
   }
@@ -351,7 +392,12 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
 
 
 class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
-  data class CacheKey(val width: Int, val filePath: String, val lastModified: Long, val isSelected: Boolean)
+  data class CacheKey(
+    val width: Int,
+    val filePath: String,
+    val lastModified: Long,
+    val isSelected: Boolean
+  )
 
   private val imageCache = SLRUMap<Pair<String, Long>, Image>(300, 50)
   private val lruCache = SLRUMap<CacheKey, Box>(300, 50)
