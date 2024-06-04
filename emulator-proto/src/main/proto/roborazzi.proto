@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "roborazzi.emulator";
+
+package roborazzi.emulator;
+import "google/protobuf/empty.proto";
+
+service Roborazzi {
+  rpc launchComposePreview(ComposePreview) returns (google.protobuf.Empty) {}
+}
+
+message ComposePreview {
+  string previewMethod = 1;
+}
