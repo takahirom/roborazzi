@@ -91,9 +91,10 @@ class PreviewViewModel {
         val kotlinFile = psiFile as? KtFile ?: return@launch
         val pe: PsiElement = kotlinFile.findElementAt(editor.caretModel.offset) ?: return@launch
         val method: KtFunction = findFunction(pe) ?: return@launch
-        imagesStateFlow.value.indexOfFirst { it.first.substringAfterLast(File.separator).contains(method.name ?: "") }.let {
-          shouldSeeIndex.value = it
-        }
+        imagesStateFlow.value.indexOfFirst { it.first.substringAfterLast(File.separator).contains(method.name ?: "") }
+          .let {
+            shouldSeeIndex.value = it
+          }
       }
     }
   }
@@ -187,27 +188,39 @@ class PreviewViewModel {
     imagesStateFlow.value = result
   }
 
-  private fun List<File>.sortedByClassesAndFunctions(classes: List<KtClass>, functions: List<KtFunction>): List<File> {
-    val allFunctionsOrder = classes.flatMap { it.declarations.filterIsInstance<KtFunction>() } + functions
-    return this.sortedBy { file ->
-      allFunctionsOrder.indexOfFirst { function ->
-        file.name.contains(function.name ?: "")
+  private suspend fun List<File>.sortedByClassesAndFunctions(
+    classes: List<KtClass>,
+    functions: List<KtFunction>
+  ): List<File> {
+    val allFunctionNamesOrder = (classes
+      .flatMap { it.declarations.filterIsInstance<KtFunction>() } + functions
+      ).map { it.name }
+    val files = this
+    return withContext(Dispatchers.Default) {
+      files.sortedBy { file ->
+        allFunctionNamesOrder.indexOfFirst { functionName ->
+          file.name.contains(functionName ?: "")
+        }
       }
     }
   }
 
-  private fun findImages(
+  private suspend fun findImages(
     elements: List<KtElement>,
     files: List<File>
   ): List<File> {
-    return elements.flatMap { element ->
-      val elementNameName = element.name ?: return@flatMap emptyList<File>()
-      val pattern = ".*$elementNameName.*.png"
-      files
-        .filter {
-          val matches = it.name.matches(Regex(pattern))
-          matches
-        }
+    val elementNames = elements.mapNotNull { element ->
+      element.name
+    }
+    return withContext(Dispatchers.Default) {
+      elementNames.flatMap { elementName ->
+        val pattern = ".*$elementName.*.png"
+        files
+          .filter {
+            val matches = it.name.matches(Regex(pattern))
+            matches
+          }
+      }
     }
   }
 
@@ -292,12 +305,14 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
       override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
         viewModel?.onInit(project)
       }
+
       val caretListener = object : CaretListener {
         override fun caretPositionChanged(event: CaretEvent) {
           super.caretPositionChanged(event)
           viewModel?.onCaretPositionChanged(project)
         }
       }
+
       override fun selectionChanged(event: FileEditorManagerEvent) {
         viewModel?.onCaretPositionChanged(project)
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
@@ -336,7 +351,10 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
 
 
 class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
-  private val lruCache = SLRUMap<Pair<String, Long>, ImageIcon>(300, 50)
+  data class CacheKey(val width: Int, val filePath: String, val lastModified: Long, val isSelected: Boolean)
+
+  private val imageCache = SLRUMap<Pair<String, Long>, Image>(300, 50)
+  private val lruCache = SLRUMap<CacheKey, Box>(300, 50)
   override fun getListCellRendererComponent(
     list: JList<out Pair<String, Long>>,
     value: Pair<String, Long>,
@@ -344,43 +362,53 @@ class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
     isSelected: Boolean,
     cellHasFocus: Boolean
   ): Component {
-    val start = System.currentTimeMillis()
-    val filePath = value.first
-    val lastModified = value.second
-    val file = File(filePath)
-    val icon = lruCache.getOrPut(filePath to lastModified) { ImageIcon(ImageIO.read(file)) }
-    val maxImageWidth = list.width * 0.9
-    val scale = if (maxImageWidth < icon.iconWidth) maxImageWidth / icon.iconWidth else 1.0
-    val newIcon = if (scale == 1.0) icon else ImageIcon(
-      icon.image.getScaledInstance(
-        (icon.iconWidth * scale).toInt(),
-        (icon.iconHeight * scale).toInt(),
-        Image.SCALE_SMOOTH
+    return lruCache.getOrPut(
+      CacheKey(
+        width = list.width,
+        filePath = value.first,
+        lastModified = value.second,
+        isSelected = isSelected
       )
-    )
+    ) {
+      val start = System.currentTimeMillis()
+      val filePath = value.first
+      val lastModified = value.second
+      val file = File(filePath)
+      val image = imageCache.getOrPut(file.path to lastModified) { ImageIO.read(file) }
+      val icon = ImageIcon(image)
+      val maxImageWidth = list.width * 0.9
+      val scale = if (maxImageWidth < icon.iconWidth) maxImageWidth / icon.iconWidth else 1.0
+      val newIcon = if (scale == 1.0) icon else ImageIcon(
+        icon.image.getScaledInstance(
+          (icon.iconWidth * scale).toInt(),
+          (icon.iconHeight * scale).toInt(),
+          Image.SCALE_SMOOTH
+        )
+      )
 
-    val imageLabel = JBLabel()
-    imageLabel.setIcon(newIcon)
-    imageLabel.background = JBColor.RED
+      val imageLabel = JBLabel()
+      imageLabel.setIcon(newIcon)
+      imageLabel.background = JBColor.RED
 
-    val box = JBBox.createVerticalBox().apply {
-      add(Box.createVerticalStrut(16))
-      add(imageLabel)
-      add(JBLabel(file.name))
-      // Add space between items
-      add(Box.createVerticalStrut(16))
+      val box = JBBox.createVerticalBox().apply {
+        add(Box.createVerticalStrut(16))
+        add(imageLabel)
+        add(JBLabel(file.name))
+        // Add space between items
+        add(Box.createVerticalStrut(16))
+      }
+
+      if (isSelected) {
+        box.background = list.selectionBackground
+        box.foreground = list.selectionForeground
+      } else {
+        box.background = list.background
+        box.foreground = list.foreground
+      }
+      box.isOpaque = true
+      roborazziLog("getListCellRendererComponent in ${System.currentTimeMillis() - start}ms")
+      box
     }
-
-    if (isSelected) {
-      box.background = list.selectionBackground
-      box.foreground = list.selectionForeground
-    } else {
-      box.background = list.background
-      box.foreground = list.foreground
-    }
-    box.isOpaque = true
-    roborazziLog("getListCellRendererComponent in ${System.currentTimeMillis() - start}ms")
-    return box
   }
 }
 
