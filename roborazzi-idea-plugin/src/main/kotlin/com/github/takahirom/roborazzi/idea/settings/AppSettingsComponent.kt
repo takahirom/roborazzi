@@ -15,7 +15,7 @@ class AppSettingsComponent {
 
     init {
         myMainPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent(JBLabel("Enter images path from module: "), imagesPathFromModuleText, 1, false)
+            .addLabeledComponent(JBLabel("Enter images directory path from module: "), imagesPathFromModuleText, 1, false)
             .addComponentFillVertically(JPanel(), 0)
             .getPanel()
     }

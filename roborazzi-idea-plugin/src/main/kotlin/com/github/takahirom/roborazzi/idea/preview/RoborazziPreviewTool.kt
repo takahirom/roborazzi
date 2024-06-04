@@ -1,16 +1,22 @@
 package com.github.takahirom.roborazzi.idea.preview
 
+import com.github.takahirom.roborazzi.idea.settings.AppSettingsConfigurable
 import com.github.takahirom.roborazzi.idea.settings.AppSettingsState
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.openapi.wm.ex.ToolWindowEx
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -43,6 +49,14 @@ class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
     val panel = RoborazziPreviewPanel(project)
     val content = contentFactory.createContent(panel, "", false)
     toolWindow.contentManager.addContent(content)
+
+    if (toolWindow is ToolWindowEx) {
+      toolWindow.setAdditionalGearActions(DefaultActionGroup(object : AnAction("Roborazzi setting") {
+        override fun actionPerformed(e: AnActionEvent) {
+          ShowSettingsUtil.getInstance().showSettingsDialog(e.project, AppSettingsConfigurable::class.java)
+        }
+      }))
+    }
   }
 }
 
