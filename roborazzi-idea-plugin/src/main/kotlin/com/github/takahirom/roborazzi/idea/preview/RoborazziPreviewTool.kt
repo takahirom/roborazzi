@@ -195,7 +195,11 @@ class PreviewViewModel {
     val functions: List<KtFunction> = allDeclarations.filterIsInstance<KtFunction>()
       .filter { hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it) }
     val classes: List<KtClass> = allDeclarations.filterIsInstance<KtClass>()
-      .filter { it.declarations.any { hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it) } }
+      .filter {
+        it.name?.contains("Test") == true || it.declarations.any {
+          hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it)
+        }
+      }
 
     val searchPath = project.basePath
     statusText.value = "Searching images in $searchPath ..."
