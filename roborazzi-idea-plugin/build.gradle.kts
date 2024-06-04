@@ -20,7 +20,6 @@ intellij {
   plugins.set(listOf(
     "java",
     "Kotlin",
-    "android",
   ))
 }
 
