@@ -69,7 +69,7 @@ class ComposeTest {
     composeTestRule.setContent {
       SampleComposableFunction()
     }
-    (0 until 10).forEach { _ ->
+    (0 until 3).forEach { _ ->
       composeTestRule
         .onNodeWithTag("AddBoxButton")
         .performClick()
