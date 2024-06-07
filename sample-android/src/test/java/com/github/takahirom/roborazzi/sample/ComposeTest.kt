@@ -69,7 +69,7 @@ class ComposeTest {
     composeTestRule.setContent {
       SampleComposableFunction()
     }
-    (0 until 3).forEach { _ ->
+    (0 until 10).forEach { _ ->
       composeTestRule
         .onNodeWithTag("AddBoxButton")
         .performClick()
@@ -81,10 +81,10 @@ class ComposeTest {
     composeTestRule.activity.setContent {
       Column(
         modifier = Modifier
-            .clip(shape = RoundedCornerShape(16.dp))
-            .background(Color.Gray)
-            .testTag("SettingsDialog")
-            .size(100.dp)
+          .clip(shape = RoundedCornerShape(16.dp))
+          .background(Color.Gray)
+          .testTag("SettingsDialog")
+          .size(100.dp)
       ) {
         Text("Settings")
         Text("Dark theme")
@@ -100,6 +100,27 @@ class ComposeTest {
           )
         )
       )
+  }
+
+  @Config(qualifiers = "+ar-rXB-ldrtl")
+  @Test
+  fun rtlCompose() {
+    composeTestRule.activity.setContent {
+      Column(
+        modifier = Modifier
+          .clip(shape = RoundedCornerShape(16.dp))
+          .background(Color.Gray)
+          .testTag("SettingsDialog")
+          .size(100.dp)
+      ) {
+        Text("Settings")
+        Text("Dark theme")
+      }
+    }
+
+    composeTestRule
+      .onNodeWithTag("SettingsDialog")
+      .captureRoboImage()
   }
 
   @Test
