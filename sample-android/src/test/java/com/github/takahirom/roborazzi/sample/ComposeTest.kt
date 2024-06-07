@@ -83,7 +83,7 @@ class ComposeTest {
         modifier = Modifier
           .clip(shape = RoundedCornerShape(16.dp))
           .background(Color.Gray)
-          .testTag("SettingsDialog")
+          .testTag("Settings")
           .size(100.dp)
       ) {
         Text("Settings")
@@ -92,7 +92,7 @@ class ComposeTest {
     }
 
     composeTestRule
-      .onNodeWithTag("SettingsDialog")
+      .onNodeWithTag("Settings")
       .captureRoboImage(
         roborazziOptions = RoborazziOptions(
           recordOptions = RoborazziOptions.RecordOptions(
@@ -110,7 +110,7 @@ class ComposeTest {
         modifier = Modifier
           .clip(shape = RoundedCornerShape(16.dp))
           .background(Color.Gray)
-          .testTag("SettingsDialog")
+          .testTag("Settings")
           .size(100.dp)
       ) {
         Text("Settings")
@@ -119,7 +119,7 @@ class ComposeTest {
     }
 
     composeTestRule
-      .onNodeWithTag("SettingsDialog")
+      .onNodeWithTag("Settings")
       .captureRoboImage()
   }
 
