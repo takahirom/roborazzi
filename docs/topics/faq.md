@@ -111,7 +111,7 @@ You can specify the SDK version like `@Config(sdk = [33])` or by using `robolect
 
 If your images are mostly fine but there are some drawing issues like shadows or shape graphics, you can try using Robolectric's Hardware Rendering mode. Please refer to [this issue](https://github.com/takahirom/roborazzi/issues/255#issuecomment-1972838571).
 
-Q: I am seeing Out Of Memory errors.
+### Q: I am seeing Out Of Memory errors.
 
 **A:** You may solve this by using `unitTests.maxHeapSize` to adjust the unit test heap size as follows:
 ```groovy
