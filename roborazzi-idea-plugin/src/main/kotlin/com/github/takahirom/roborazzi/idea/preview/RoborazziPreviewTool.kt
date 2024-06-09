@@ -104,26 +104,41 @@ class PreviewViewModel {
     refreshList(project)
   }
 
+  fun onSelectedFileChanged(project: Project) {
+    roborazziLog("onSelectedFileChanged")
+    coroutineScope.launch {
+      updateListJob?.cancel()
+      refreshListProcess(project)
+      selectListIndexByCaret(project)
+    }
+  }
+
   fun onCaretPositionChanged(project: Project) {
     roborazziLog("onCaretPositionChanged")
     coroutineScope.launch {
       updateListJob?.cancel()
       refreshListProcess(project)
-      val editor = FileEditorManager.getInstance(project).selectedTextEditor
-      val offset = editor?.caretModel?.offset
-      if (offset != null) {
-        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) as? KtFile
-          ?: return@launch
-        val kotlinFile = psiFile as? KtFile ?: return@launch
-        val pe: PsiElement = kotlinFile.findElementAt(editor.caretModel.offset) ?: return@launch
-        val method: KtFunction = findFunction(pe) ?: return@launch
-        imagesStateFlow.value.indexOfFirst {
-          it.first.substringAfterLast(File.separator).contains(method.name ?: "")
-        }
-          .let {
-            shouldSeeIndex.value = it
-          }
+      selectListIndexByCaret(project)
+    }
+  }
+
+  private fun selectListIndexByCaret(project: Project) {
+    val editor = FileEditorManager.getInstance(project).selectedTextEditor
+    val offset = editor?.caretModel?.offset
+    if (offset != null) {
+      val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) as? KtFile
+        ?: return
+      val kotlinFile = psiFile as? KtFile ?: return
+      val pe: PsiElement = kotlinFile.findElementAt(editor.caretModel.offset) ?: return
+      val method: KtFunction = findFunction(pe) ?: return
+      roborazziLog("imagesStateFlow.value = ${imagesStateFlow.value}")
+      imagesStateFlow.value.indexOfFirst {
+        it.first.substringAfterLast(File.separator).contains(method.name ?: "")
       }
+        .let {
+          roborazziLog("shouldSeeIndex.value = $it")
+          shouldSeeIndex.value = it
+        }
     }
   }
 
@@ -169,14 +184,17 @@ class PreviewViewModel {
     yield()
     val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return run {
       statusText.value = "No editor found"
+      imagesStateFlow.value = emptyList()
     }
 
     val psiFile: PsiFile =
       PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return run {
         statusText.value = "No psi file found"
+        imagesStateFlow.value = emptyList()
       }
     val kotlinFile = psiFile as? KtFile ?: return run {
       statusText.value = "No kotlin file found"
+      imagesStateFlow.value = emptyList()
     }
     if (lastEditingFileName.value != kotlinFile.name) {
       imagesStateFlow.value = emptyList()
@@ -274,6 +292,10 @@ class PreviewViewModel {
   fun onHide() {
     cancel()
   }
+
+  fun onShouldSeeIndexHandled() {
+    shouldSeeIndex.value = -1
+  }
 }
 
 class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
@@ -359,7 +381,7 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
         }
 
         override fun selectionChanged(event: FileEditorManagerEvent) {
-          viewModel?.onCaretPositionChanged(project)
+          viewModel?.onSelectedFileChanged(project)
           val editor = FileEditorManager.getInstance(project).selectedTextEditor
 
           editor?.caretModel?.removeCaretListener(caretListener)
@@ -386,8 +408,12 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
     }
     viewModel?.coroutineScope?.launch {
       viewModel?.shouldSeeIndex?.collect {
+        if (it == -1) {
+          return@collect
+        }
         roborazziLog("shouldSeeIndex.collect $it")
         imageList.selectedIndex = it
+        viewModel?.onShouldSeeIndexHandled()
       }
     }
   }
