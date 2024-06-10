@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import java.io.File
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -255,12 +256,15 @@ abstract class RoborazziPlugin : Plugin<Project> {
               resultsSummaryFile.parentFile.mkdirs()
               resultsSummaryFile.writeText(jsonResult)
               val reportFile = reportFileProperty.get().asFile
+
               reportFile.parentFile.mkdirs()
+              writeAssetsToRoborazziReportsDir(reportFile.parentFile)
+              val reportHtml = readIndexHtmlFile()
               reportFile.writeText(
-                RoborazziReportConst.reportHtml.replace(
+                reportHtml?.replace(
                   oldValue = "REPORT_TEMPLATE_BODY",
                   newValue = roborazziResults.toHtml(reportFile.parentFile.absolutePath)
-                )
+                ) ?: ""
               )
             }
           }
@@ -462,6 +466,34 @@ abstract class RoborazziPlugin : Plugin<Project> {
         }
       }
     }
+  }
+
+  private fun writeAssetsToRoborazziReportsDir(reportDir: File) {
+    val assetsDirectory = File(reportDir, "assets")
+    listOf(
+      "materialize.min.css",
+      "materialize.min.js",
+      "report-style.css",
+      "material-icons.css",
+      "material-icons.woff2",
+    ).forEach { assetName ->
+      val asset = this::class.java.classLoader
+        .getResource("META-INF/assets/$assetName")?.readBytes()
+      if (asset != null) {
+        val assetFile = outputFile(assetsDirectory, assetName)
+        assetFile.writeBytes(asset)
+      }
+    }
+  }
+
+  private fun outputFile(directory: File, filename: String): File {
+    return File(directory, filename).apply {
+      parentFile.apply { if (!exists()) mkdirs() }
+    }
+  }
+
+  private fun readIndexHtmlFile(): String? {
+    return this::class.java.classLoader.getResource("META-INF/index.html")?.readText()
   }
 
   private fun String.capitalizeUS() =
