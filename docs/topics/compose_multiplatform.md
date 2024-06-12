@@ -73,7 +73,7 @@ Then, you can run the Gradle tasks for iOS Support, just like you do for Android
 ...
 ```
 
-The currently implemented features are as follows:
+The currently implemented features for iOS support are as follows:
 
 | Feature | status |
 |---|---|
