@@ -33,7 +33,6 @@ import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import org.webjars.WebJarVersionLocator
-import java.io.File
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -262,8 +261,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               val reportFile = reportFileProperty.get().asFile
 
               reportFile.parentFile.mkdirs()
-              writeAssetsToRoborazziReportsDir2(reportFile.parentFile)
-              writeAssetsToRoborazziReportsDir(reportFile.parentFile)
+              WebAssets.create().writeWebAssets(reportFile.parentFile)
               val reportHtml = readIndexHtmlFile()
               reportFile.writeText(
                 reportHtml?.replace(
@@ -473,54 +471,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
     }
   }
 
-  private fun writeAssetsToRoborazziReportsDir(reportDir: File) {
-    listOf(
-      "materialize.min.js",
-      "report-style.css",
-      "material-icons.css",
-      "material-icons.woff2",
-    ).forEach { assetName ->
-      writeAssets(assetName, "assets/$assetName", reportDir)
-    }
-  }
-
-  private fun writeAssetsToRoborazziReportsDir2(reportDir: File) {
-    getMaterializeMinCssPath()?.let { materializeMinCss ->
-      writeAssets("materialize.min.css", "resources/$materializeMinCss", reportDir)
-    }
-  }
-
-  private fun outputFile(directory: File, filename: String): File {
-    return File(directory, filename).apply {
-      parentFile.apply { if (!exists()) mkdirs() }
-    }
-  }
-
-  private fun getMaterializeMinCssPath(): String? {
-    return webJarVersionLocator.locate("materializecss", "css/materialize.min.css")
-  }
-
   private fun readIndexHtmlFile(): String? {
     return this::class.java.classLoader.getResource("META-INF/index.html")?.readText()
-  }
-
-  private fun WebJarVersionLocator.locate(webJarName: String, exactPath: String) = run {
-    path(webJarName, exactPath)?.let { "webjars/$it" }
-  }
-
-  private fun writeAssets(
-    assetName: String,
-    exactPath: String,
-    reportDir: File
-  ) {
-    val assetsDirectory = File(reportDir, "assets")
-    val asset = this::class.java
-      .classLoader
-      .getResource("META-INF/$exactPath")?.readBytes()
-    if (asset != null) {
-      val assetFile = outputFile(assetsDirectory, assetName)
-      assetFile.writeBytes(asset)
-    }
   }
 
   private fun String.capitalizeUS() =
