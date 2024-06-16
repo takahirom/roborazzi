@@ -22,19 +22,21 @@ class WebAssets private constructor(private val webJarVersionLocator: WebJarVers
   }
 
   private fun writeWebJarAssetsToRoborazziReportsDir(reportDir: File) {
-    getMaterializeMinCssPath()?.let { materializeMinCss ->
-      writeAssets(
-        assetName = "materialize.min.css",
-        exactPath = "$webJarResource/$materializeMinCss",
-        reportDir = reportDir
+    mapOf(
+      materializeCss to listOf(
+        "css/materialize.min.css",
+        "js/materialize.min.js"
       )
-    }
-    getMaterializeMinJsPath()?.let { materializeMinJs ->
-      writeAssets(
-        assetName = "materialize.min.js",
-        exactPath = "$webJarResource/$materializeMinJs",
-        reportDir = reportDir
-      )
+    ).forEach { (key, value) ->
+      value.forEach { exactPath ->
+        webJarVersionLocator.locate(key, exactPath)?.let {
+          writeAssets(
+            assetName = exactPath.substringAfterLast("/"),
+            exactPath = "$webJarResource/$it",
+            reportDir = reportDir
+          )
+        }
+      }
     }
   }
 
@@ -42,22 +44,6 @@ class WebAssets private constructor(private val webJarVersionLocator: WebJarVers
     return File(directory, filename).apply {
       parentFile.apply { if (!exists()) mkdirs() }
     }
-  }
-
-  private fun getMaterializeMinCssPath(): String? {
-    return webJarVersionLocator.locate(materializeCss, "css/materialize.min.css")
-  }
-
-  private fun getMaterializeMinJsPath(): String? {
-    return webJarVersionLocator.locate(materializeCss, "js/materialize.min.js")
-  }
-
-  private fun getMaterialIconsCssPath(): String? {
-    return webJarVersionLocator.locate(materializeCss, "css/material-icons.css")
-  }
-
-  private fun getMaterialIconsFontPath(): String? {
-    return webJarVersionLocator.locate(materializeCss, "css/material-icons.woff2")
   }
 
   private fun WebJarVersionLocator.locate(webJarName: String, exactPath: String) = run {
