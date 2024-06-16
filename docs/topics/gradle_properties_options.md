@@ -47,7 +47,7 @@ roborazzi.record.namingStrategy=testClassAndMethod
 
 ### robolectric.pixelCopyRenderMode
 
-I recommend setting `it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"` in your `build.gradle` file to enhance the accuracy of your screenshots. For more details, please refer to the [issue](https://github.com/takahirom/roborazzi/issues/296)."
+I recommend setting `it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"` in your `build.gradle` file to enhance the accuracy of your screenshots. For more details, please refer to the [issue](https://github.com/takahirom/roborazzi/issues/296).
 
 ```
 android {
