@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import org.webjars.WebJarVersionLocator
+import java.io.FileNotFoundException
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -262,12 +263,12 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
               reportFile.parentFile.mkdirs()
               WebAssets.create().writeWebAssets(reportFile.parentFile)
-              val reportHtml = readIndexHtmlFile()
+              val reportHtml = readIndexHtmlFile() ?: throw FileNotFoundException("index.html not found in resources")
               reportFile.writeText(
-                reportHtml?.replace(
+                reportHtml.replace(
                   oldValue = "REPORT_TEMPLATE_BODY",
                   newValue = roborazziResults.toHtml(reportFile.parentFile.absolutePath)
-                ) ?: ""
+                )
               )
             }
           }
