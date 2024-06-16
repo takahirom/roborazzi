@@ -8,10 +8,10 @@ class WebAssets private constructor(private val webJarVersionLocator: WebJarVers
   private val materialIcons = "material-design-icons"
   private val webJarResource = "resources"
 
-    fun writeWebAssets(reportDir: File) {
-      writeLocalAssetsToRoborazziReportsDir(reportDir)
-      writeWebJarAssetsToRoborazziReportsDir(reportDir)
-    }
+  fun writeWebAssets(reportDir: File) {
+    writeLocalAssetsToRoborazziReportsDir(reportDir)
+    writeWebJarAssetsToRoborazziReportsDir(reportDir)
+  }
 
   private fun writeLocalAssetsToRoborazziReportsDir(reportDir: File) {
     writeAssets(
@@ -25,7 +25,11 @@ class WebAssets private constructor(private val webJarVersionLocator: WebJarVers
     mapOf(
       materializeCss to listOf(
         "css/materialize.min.css",
-        "js/materialize.min.js"
+        "js/materialize.min.js",
+      ),
+      materialIcons to listOf(
+        "material-icons.css",
+        "MaterialIcons-Regular.ttf",
       )
     ).forEach { (key, value) ->
       value.forEach { exactPath ->
@@ -66,8 +70,9 @@ class WebAssets private constructor(private val webJarVersionLocator: WebJarVers
   }
 
   companion object {
-    fun create(webJarVersionLocator: WebJarVersionLocator = WebJarVersionLocator()): WebAssets {
-      return WebAssets(webJarVersionLocator)
-    }
+
+    fun create(
+      webJarVersionLocator: WebJarVersionLocator = WebJarVersionLocator()
+    ): WebAssets = WebAssets(webJarVersionLocator)
   }
 }
