@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import org.webjars.WebJarVersionLocator
 import java.io.File
 import java.util.Locale
 import javax.inject.Inject
@@ -51,6 +52,9 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 abstract class RoborazziPlugin : Plugin<Project> {
+
+  private val webJarVersionLocator = WebJarVersionLocator()
+
   val AbstractTestTask.systemProperties: MutableMap<String, Any?>
     get() = when (this) {
       is Test -> systemProperties
@@ -258,6 +262,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               val reportFile = reportFileProperty.get().asFile
 
               reportFile.parentFile.mkdirs()
+              writeAssetsToRoborazziReportsDir2(reportFile.parentFile)
               writeAssetsToRoborazziReportsDir(reportFile.parentFile)
               val reportHtml = readIndexHtmlFile()
               reportFile.writeText(
@@ -469,20 +474,19 @@ abstract class RoborazziPlugin : Plugin<Project> {
   }
 
   private fun writeAssetsToRoborazziReportsDir(reportDir: File) {
-    val assetsDirectory = File(reportDir, "assets")
     listOf(
-      "materialize.min.css",
       "materialize.min.js",
       "report-style.css",
       "material-icons.css",
       "material-icons.woff2",
     ).forEach { assetName ->
-      val asset = this::class.java.classLoader
-        .getResource("META-INF/assets/$assetName")?.readBytes()
-      if (asset != null) {
-        val assetFile = outputFile(assetsDirectory, assetName)
-        assetFile.writeBytes(asset)
-      }
+      writeAssets(assetName, "assets/$assetName", reportDir)
+    }
+  }
+
+  private fun writeAssetsToRoborazziReportsDir2(reportDir: File) {
+    getMaterializeMinCssPath()?.let { materializeMinCss ->
+      writeAssets("materialize.min.css", "resources/$materializeMinCss", reportDir)
     }
   }
 
@@ -492,8 +496,31 @@ abstract class RoborazziPlugin : Plugin<Project> {
     }
   }
 
+  private fun getMaterializeMinCssPath(): String? {
+    return webJarVersionLocator.locate("materializecss", "css/materialize.min.css")
+  }
+
   private fun readIndexHtmlFile(): String? {
     return this::class.java.classLoader.getResource("META-INF/index.html")?.readText()
+  }
+
+  private fun WebJarVersionLocator.locate(webJarName: String, exactPath: String) = run {
+    path(webJarName, exactPath)?.let { "webjars/$it" }
+  }
+
+  private fun writeAssets(
+    assetName: String,
+    exactPath: String,
+    reportDir: File
+  ) {
+    val assetsDirectory = File(reportDir, "assets")
+    val asset = this::class.java
+      .classLoader
+      .getResource("META-INF/$exactPath")?.readBytes()
+    if (asset != null) {
+      val assetFile = outputFile(assetsDirectory, assetName)
+      assetFile.writeBytes(asset)
+    }
   }
 
   private fun String.capitalizeUS() =
