@@ -32,7 +32,6 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
-import org.webjars.WebJarVersionLocator
 import java.io.FileNotFoundException
 import java.util.Locale
 import javax.inject.Inject
@@ -52,8 +51,6 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 abstract class RoborazziPlugin : Plugin<Project> {
-
-  private val webJarVersionLocator = WebJarVersionLocator()
 
   val AbstractTestTask.systemProperties: MutableMap<String, Any?>
     get() = when (this) {
