@@ -8,7 +8,7 @@ class WebAssets private constructor(private val webJarVersionLocator: WebJarVers
   private val materialIcons = "material-design-icons"
   private val webJarResource = "resources"
 
-  fun writeWebAssets(reportDir: File) {
+  fun writeToRoborazziReportsDir(reportDir: File) {
     writeLocalAssetsToRoborazziReportsDir(reportDir)
     writeWebJarAssetsToRoborazziReportsDir(reportDir)
   }

@@ -262,7 +262,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               val reportFile = reportFileProperty.get().asFile
 
               reportFile.parentFile.mkdirs()
-              WebAssets.create().writeWebAssets(reportFile.parentFile)
+              WebAssets.create().writeToRoborazziReportsDir(reportFile.parentFile)
               val reportHtml = readIndexHtmlFile() ?: throw FileNotFoundException("index.html not found in resources")
               reportFile.writeText(
                 reportHtml.replace(
