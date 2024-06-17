@@ -260,7 +260,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
               reportFile.parentFile.mkdirs()
               WebAssets.create().writeToRoborazziReportsDir(reportFile.parentFile)
-              val reportHtml = readIndexHtmlFile() ?: throw FileNotFoundException("index.html not found in resources")
+              val reportHtml = readIndexHtmlFile() ?: throw FileNotFoundException("index.html not found in resources/META-INF folder")
               reportFile.writeText(
                 reportHtml.replace(
                   oldValue = "REPORT_TEMPLATE_BODY",
