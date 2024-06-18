@@ -19,6 +19,9 @@ dependencies {
     exclude group: 'junit', module: 'junit'
   }
   implementation libs.kotlinx.serialization.json
+  implementation libs.webjars.locator.lite
+  implementation libs.webjars.materialize
+  implementation libs.webjars.material.design.icons
   integrationTestDepImplementation libs.android.tools.build.gradle
   integrationTestDepImplementation libs.kotlin.gradle.plugin
   integrationTestDepImplementation libs.compose.gradle.plugin

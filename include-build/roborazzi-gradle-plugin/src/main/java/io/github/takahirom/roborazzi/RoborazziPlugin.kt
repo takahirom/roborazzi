@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import java.io.FileNotFoundException
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -50,6 +51,7 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 abstract class RoborazziPlugin : Plugin<Project> {
+
   val AbstractTestTask.systemProperties: MutableMap<String, Any?>
     get() = when (this) {
       is Test -> systemProperties
@@ -255,9 +257,12 @@ abstract class RoborazziPlugin : Plugin<Project> {
               resultsSummaryFile.parentFile.mkdirs()
               resultsSummaryFile.writeText(jsonResult)
               val reportFile = reportFileProperty.get().asFile
+
               reportFile.parentFile.mkdirs()
+              WebAssets.create().writeToRoborazziReportsDir(reportFile.parentFile)
+              val reportHtml = readIndexHtmlFile() ?: throw FileNotFoundException("index.html not found in resources/META-INF folder")
               reportFile.writeText(
-                RoborazziReportConst.reportHtml.replace(
+                reportHtml.replace(
                   oldValue = "REPORT_TEMPLATE_BODY",
                   newValue = roborazziResults.toHtml(reportFile.parentFile.absolutePath)
                 )
@@ -462,6 +467,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
         }
       }
     }
+  }
+
+  private fun readIndexHtmlFile(): String? {
+    return this::class.java.classLoader.getResource("META-INF/index.html")?.readText()
   }
 
   private fun String.capitalizeUS() =

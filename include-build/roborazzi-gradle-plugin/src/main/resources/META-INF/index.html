@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Roborazzi report</title>
+  <!-- Compiled and minified CSS -->
+  <link href="assets/materialize.min.css" rel="stylesheet" />
+  <link href="assets/material-icons.css" rel="stylesheet" />
+
+  <link href="assets/report-style.css" rel="stylesheet"/>
+</head>
+<body>
+<nav role="navigation" class="light-blue lighten-1">
+  <div class="nav-wrapper container">
+    <a href="#" class="brand-logo">Roborazzi report</a>
+    <a href="#" data-target="nav-mobile" class="sidenav-trigger">
+      <i class="material-icons menu">menu</i>
+    </a>
+  </div>
+</nav>
+<div class="section">
+  <div class="container">
+    <p>REPORT_TEMPLATE_BODY</p>
+  </div>
+</div>
+
+<div id="imageBottomSheet" class="modal bottom-sheet max-height">
+  <div class="modal-content center-align">
+    <img id="modalImage" src="" alt="">
+  </div>
+</div>
+
+<footer class="page-footer orange">
+  <div class="container">
+    <a class="us" href="https://github.com/takahirom/roborazzi" target="_blank"
+       rel="noopener noreferrer">Roborazzi</a>
+    <br>
+    <br>
+  </div>
+</footer>
+<!-- Compiled and minified JavaScript -->
+<script src="assets/materialize.min.js"></script>
+<script>
+  M.AutoInit();
+  document.addEventListener('DOMContentLoaded', function() {
+      M.Tabs.getInstance(document.getElementsByClassName("tabs")[0]).select('results');
+      var modalInstance = M.Modal.init(document.getElementById('imageBottomSheet'), {});
+      var modal = document.getElementById('imageBottomSheet');
+      var modalImage = document.getElementById('modalImage');
+      var modalTriggers = document.querySelectorAll('.modal-trigger');
+      modalTriggers.forEach(function(trigger) {
+          trigger.addEventListener('click', function() {
+              var src = this.getAttribute('src');
+              var alt = this.getAttribute('data-alt');
+              modalImage.setAttribute('src', src);
+              modalImage.setAttribute('alt', alt);
+              var instance = M.Modal.getInstance(modal);
+              instance.open();
+          });
+      });
+  });
+</script>
+</body>
+</html>
