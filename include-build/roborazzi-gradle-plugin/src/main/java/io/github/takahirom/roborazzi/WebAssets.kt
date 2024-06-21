@@ -4,9 +4,11 @@ import org.webjars.WebJarVersionLocator
 import java.io.File
 
 class WebAssets private constructor(private val webJarVersionLocator: WebJarVersionLocator) {
-  private val materializeCss = "materializecss"
-  private val materialIcons = "material-design-icons"
   private val webJarResource = "resources"
+
+  val assets = assetPathsMap.entries.flatMap {
+    assets -> assets.value.map { it.substringAfterLast("/") }
+  }
 
   fun writeToRoborazziReportsDir(reportDir: File) {
     writeLocalAssetsToRoborazziReportsDir(reportDir)
@@ -22,16 +24,7 @@ class WebAssets private constructor(private val webJarVersionLocator: WebJarVers
   }
 
   private fun writeWebJarAssetsToRoborazziReportsDir(reportDir: File) {
-    mapOf(
-      materializeCss to listOf(
-        "css/materialize.min.css",
-        "js/materialize.min.js",
-      ),
-      materialIcons to listOf(
-        "material-icons.css",
-        "MaterialIcons-Regular.ttf",
-      )
-    ).forEach { (key, value) ->
+    assetPathsMap.forEach { (key, value) ->
       value.forEach { exactPath ->
         webJarVersionLocator.locate(key, exactPath)?.let {
           writeAssets(
@@ -70,6 +63,17 @@ class WebAssets private constructor(private val webJarVersionLocator: WebJarVers
   }
 
   companion object {
+
+    val assetPathsMap = mapOf(
+      "materializecss" to listOf(
+        "css/materialize.min.css",
+        "js/materialize.min.js",
+      ),
+      "material-design-icons" to listOf(
+        "material-icons.css",
+        "MaterialIcons-Regular.ttf",
+      )
+    )
 
     fun create(
       webJarVersionLocator: WebJarVersionLocator = WebJarVersionLocator()
