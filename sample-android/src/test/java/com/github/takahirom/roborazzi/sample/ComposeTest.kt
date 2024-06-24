@@ -81,10 +81,10 @@ class ComposeTest {
     composeTestRule.activity.setContent {
       Column(
         modifier = Modifier
-            .clip(shape = RoundedCornerShape(16.dp))
-            .background(Color.Gray)
-            .testTag("SettingsDialog")
-            .size(100.dp)
+          .clip(shape = RoundedCornerShape(16.dp))
+          .background(Color.Gray)
+          .testTag("Settings")
+          .size(100.dp)
       ) {
         Text("Settings")
         Text("Dark theme")
@@ -92,7 +92,7 @@ class ComposeTest {
     }
 
     composeTestRule
-      .onNodeWithTag("SettingsDialog")
+      .onNodeWithTag("Settings")
       .captureRoboImage(
         roborazziOptions = RoborazziOptions(
           recordOptions = RoborazziOptions.RecordOptions(
@@ -100,6 +100,27 @@ class ComposeTest {
           )
         )
       )
+  }
+
+  @Config(qualifiers = "+ar-rXB-ldrtl")
+  @Test
+  fun rtlCompose() {
+    composeTestRule.activity.setContent {
+      Column(
+        modifier = Modifier
+          .clip(shape = RoundedCornerShape(16.dp))
+          .background(Color.Gray)
+          .testTag("Settings")
+          .size(100.dp)
+      ) {
+        Text("Settings")
+        Text("Dark theme")
+      }
+    }
+
+    composeTestRule
+      .onNodeWithTag("Settings")
+      .captureRoboImage()
   }
 
   @Test
