@@ -434,7 +434,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         val testTaskName = "test$testVariantSlug"
         if (isEnableAutomaticPreviewScreenshots) {
 
-          setupGeneratedScreenshotTest(
+          setupAutoPreviewScreenshotTests(
             project = project,
             variant = variant,
             extension = extension.autoPreviewScreenshots,

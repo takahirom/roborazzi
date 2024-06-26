@@ -18,17 +18,19 @@ import javax.inject.Inject
 
 open class AutoPreviewScreenshotsExtension @Inject constructor(objects: ObjectFactory) {
   val enabled: Property<Boolean> = objects.property(Boolean::class.java)
-  val scanPackages: ListProperty<String> = objects.listProperty(String::class.java)
+  val scanPackageTrees: ListProperty<String> = objects.listProperty(String::class.java)
 }
 
-fun setupGeneratedScreenshotTest(
+fun setupAutoPreviewScreenshotTests(
   project: Project,
   variant: Variant,
   extension: AutoPreviewScreenshotsExtension,
   testTaskProvider: TaskCollection<Test>
 ) {
-  val scanPackages = extension.scanPackages.get()
-  assert(scanPackages.isNotEmpty())
+  val scanPackageTrees = extension.scanPackageTrees.get()
+  assert(scanPackageTrees.isNotEmpty()) {
+    "Please set scanPackageTrees in the autoPreviewScreenshots extension. Please refer to https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
+  }
   addPreviewScreenshotLibraries(variant, project)
   testTaskProvider.configureEach {testTask: Test ->
     // see: https://github.com/takahirom/roborazzi?tab=readme-ov-file#roborazzirecordfilepathstrategy
@@ -43,7 +45,7 @@ fun setupGeneratedScreenshotTest(
     // It seems that this directory path is overridden by addGeneratedSourceDirectory.
     // The generated tests will be located in build/JAVA/generate[VariantName]PreviewScreenshotTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
-    it.scanPackages.set(scanPackages)
+    it.scanPackageTrees.set(scanPackageTrees)
   }
   // We need to use Java here; otherwise, the generate task will not be executed.
   // https://stackoverflow.com/a/76870110/4339442
@@ -91,14 +93,14 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
   abstract val outputDir: DirectoryProperty
 
   @get:Input
-  var scanPackages: ListProperty<String> = project.objects.listProperty(String::class.java)
+  var scanPackageTrees: ListProperty<String> = project.objects.listProperty(String::class.java)
 
   @TaskAction
   fun generateTests() {
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
-    val packagesExpr = scanPackages.get().joinToString(", ") { "\"$it\"" }
+    val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
     val scanPackageTreeExpr = ".scanPackageTrees($packagesExpr)"
 
     File(testDir, "PreviewParameterizedTests.kt").writeText(
