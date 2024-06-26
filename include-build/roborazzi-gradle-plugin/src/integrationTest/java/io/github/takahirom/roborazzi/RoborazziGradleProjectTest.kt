@@ -1,5 +1,7 @@
 package io.github.takahirom.roborazzi
 
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.RoborazziTaskType
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -470,6 +472,24 @@ class RoborazziGradleProjectTest {
       recordWithFilter2()
 
       checkResultCount(recorded = 1)
+    }
+  }
+
+  @Test
+  fun shouldNotRecordResultsByDefault() {
+    RoborazziGradleProject(testProjectDir).apply {
+      unitTest()
+      checkResultsSummaryFileNotExists()
+    }
+  }
+
+  @OptIn(ExperimentalRoborazziApi::class)
+  @Test
+  fun shouldRecordResultsByDefaultIfExtensionIsConfigured() {
+    RoborazziGradleProject(testProjectDir).apply {
+      appBuildFile.taskType = RoborazziTaskType.Record
+      unitTest()
+      checkResultsSummaryFileExists()
     }
   }
 }

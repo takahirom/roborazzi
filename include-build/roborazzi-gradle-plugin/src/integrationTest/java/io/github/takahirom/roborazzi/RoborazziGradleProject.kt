@@ -1,6 +1,7 @@
 package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResults
+import com.github.takahirom.roborazzi.RoborazziTaskType
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.rules.TemporaryFolder
@@ -174,6 +175,7 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     private val PATH = "app/build.gradle.kts"
     var removeOutputDirBeforeTestTypeTask = false
     var customOutputDirPath: String? = null
+    var taskType: RoborazziTaskType? = null
 
     fun addIncludeBuild() {
       folder.root.resolve(PATH).delete()
@@ -270,15 +272,22 @@ dependencies {
           """.trimIndent()
         )
       }
+      buildFile.appendText("""
+        roborazzi {
+      """)
       if (customOutputDirPath != null) {
-        buildFile.appendText(
-          """
-            roborazzi {
-              outputDir.set(file("$customOutputDirPath"))
-            }
-          """.trimIndent()
-        )
+        buildFile.appendText("""
+          outputDir.set(file("$customOutputDirPath"))
+        """.trimIndent())
       }
+      if (taskType != null) {
+        buildFile.appendText("""
+          taskType.set(com.github.takahirom.roborazzi.RoborazziTaskType.${taskType.toString()})
+        """.trimIndent())
+      }
+      buildFile.appendText("""
+        }
+      """.trimIndent())
     }
   }
 
