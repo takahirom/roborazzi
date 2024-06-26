@@ -7,7 +7,7 @@ plugins {
 roborazzi {
   automaticPreviewScreenshots {
     enabled = true
-    scanPackages = listOf("com.github.takahirom.sample")
+    scanPackageTrees = listOf("com.github.takahirom.sample")
   }
 }
 
