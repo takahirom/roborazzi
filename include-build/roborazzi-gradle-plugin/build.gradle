@@ -29,12 +29,12 @@ tasks.register("generateBuildConfig") {
         .get()
       "\"${it}\" to \"${version}\","
     }.join("\n"))
+  inputs.property("versionMapString", versionMapString)
   doLast {
-    def buildConfigFile = new File(generatedSourcesDir, "com/example/BuildConfig.kt")
+    def buildConfigFile = new File(generatedSourcesDir, "io/github/takahirom/roborazzi/BuildConfig.kt")
     buildConfigFile.parentFile.mkdirs()
 
-    println(version)
-    def libString = "val libraryVersionsMap = mapOf(" + versionMapString + ")\n"
+    def libString = "val libraryVersionsMap = mapOf(" + inputs.properties["versionMapString"] + ")\n"
     ""
     buildConfigFile.text = """
 package io.github.takahirom.roborazzi
