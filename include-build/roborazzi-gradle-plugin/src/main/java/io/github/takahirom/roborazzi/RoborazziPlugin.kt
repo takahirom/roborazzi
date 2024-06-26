@@ -46,8 +46,11 @@ private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
  */
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
+  val autoPreviewScreenshots: AutoPreviewScreenshotsExtension = objects.newInstance(AutoPreviewScreenshotsExtension::class.java)
+  fun automaticPreviewScreenshots(action: Action<AutoPreviewScreenshotsExtension>) {
+    action.execute(autoPreviewScreenshots)
+  }
 }
-
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 abstract class RoborazziPlugin : Plugin<Project> {
@@ -415,6 +418,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
         val unitTest = variant.unitTest ?: return@onVariants
         val variantSlug = variant.name.capitalizeUS()
         val testVariantSlug = unitTest.name.capitalizeUS()
+        val isEnableAutomaticPreviewScreenshots = extension.autoPreviewScreenshots.enabled.convention(false).get()
+        if (isEnableAutomaticPreviewScreenshots) {
+          setupGeneratedScreenshotTest(project, variant, extension.autoPreviewScreenshots)
+        }
 
         // e.g. testDebugUnitTest -> recordRoborazziDebug
         configureRoborazziTasks(
