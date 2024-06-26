@@ -44,7 +44,7 @@ private fun addPreviewScreenshotLibraries(
   variant: Variant,
   project: Project
 ) {
-  val configurationName = "${variant.name}Implementation"
+  val configurationName = "test${variant.name.capitalize()}Implementation"
 
   project.dependencies.add(
     configurationName,
