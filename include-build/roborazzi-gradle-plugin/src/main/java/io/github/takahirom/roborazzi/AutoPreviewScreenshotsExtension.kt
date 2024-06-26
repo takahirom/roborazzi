@@ -32,11 +32,16 @@ fun setupAutoPreviewScreenshotTests(
     "Please set scanPackageTrees in the autoPreviewScreenshots extension. Please refer to https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
   addPreviewScreenshotLibraries(variant, project)
-  testTaskProvider.configureEach {testTask: Test ->
+  testTaskProvider.configureEach { testTask: Test ->
     // see: https://github.com/takahirom/roborazzi?tab=readme-ov-file#roborazzirecordfilepathstrategy
-    testTask.systemProperties["roborazzi.record.filePathStrategy"] = "relativePathFromRoborazziContextOutputDirectory"
+    if (project.properties["roborazzi.record.filePathStrategy"] == null) {
+      testTask.systemProperties["roborazzi.record.filePathStrategy"] =
+        "relativePathFromRoborazziContextOutputDirectory"
+    }
     // see: https://github.com/takahirom/roborazzi?tab=readme-ov-file#robolectricpixelcopyrendermode
-    testTask.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+    if (testTask.systemProperties["robolectric.pixelCopyRenderMode"] == null) {
+      testTask.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+    }
   }
   val generateTestsTask = project.tasks.register(
     "generate${variant.name.capitalize()}PreviewScreenshotTests",
