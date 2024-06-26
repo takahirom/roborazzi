@@ -46,20 +46,21 @@ private fun addPreviewScreenshotLibraries(
 ) {
   val configurationName = "test${variant.name.capitalize()}Implementation"
 
+  val roborazziVersion = BuildConfig.libraryVersionsMap["roborazzi"]
   project.dependencies.add(
     configurationName,
-    "io.github.takahirom.roborazzi:roborazzi-compose:1.20.0"
+    "io.github.takahirom.roborazzi:roborazzi-compose:$roborazziVersion"
   )
-  project.dependencies.add(configurationName, "io.github.takahirom.roborazzi:roborazzi:1.20.0")
-  project.dependencies.add(configurationName, "junit:junit:4.13.2")
-  project.dependencies.add(configurationName, "org.robolectric:robolectric:4.12.2")
+  project.dependencies.add(configurationName, "io.github.takahirom.roborazzi:roborazzi:$roborazziVersion")
+  project.dependencies.add(configurationName, "junit:junit:${BuildConfig.libraryVersionsMap["junit"]}")
+  project.dependencies.add(configurationName, "org.robolectric:robolectric:${BuildConfig.libraryVersionsMap["robolectric"]}")
 
   project.repositories.add(project.repositories.maven { it.setUrl("https://jitpack.io") })
   project.repositories.add(project.repositories.mavenCentral())
   project.repositories.add(project.repositories.google())
   project.dependencies.add(
     configurationName,
-    "com.github.sergio-sastre.ComposablePreviewScanner:android:0.1.2"
+    "com.github.sergio-sastre.ComposablePreviewScanner:android:${BuildConfig.libraryVersionsMap["composable-preview-scanner"]}"
   )
 }
 

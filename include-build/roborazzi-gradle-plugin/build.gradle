@@ -10,6 +10,51 @@ apply plugin: 'java-gradle-plugin'
 
 def integrationTestDep = sourceSets.create('integrationTestDep')
 
+def generatedSourcesDir = "${project.layout.buildDirectory.get()}/generated/sources/buildConfig/java/main"
+sourceSets {
+  main {
+    java {
+      srcDir(generatedSourcesDir)
+    }
+  }
+}
+
+tasks.register("generateBuildConfig") {
+  doLast {
+    def buildConfigFile = new File(generatedSourcesDir, "com/example/BuildConfig.kt")
+    buildConfigFile.parentFile.mkdirs()
+
+    def libs = ["composable-preview-scanner", "junit", "robolectric"]
+//    def composablePreviewScannerVersion = project.extensions.getByType(VersionCatalogsExtension.class)
+//      .named("libs")
+//      .findVersion("composable-preview-scanner")
+//      .get()
+    def versionMapString = libs.collect {
+      def version = project.extensions.getByType(VersionCatalogsExtension.class)
+        .named("libs")
+        .findVersion(it)
+        .get()
+      "\"${it}\" to \"${version}\","
+    }.join("\n")
+    println(version)
+    def libString = "val libraryVersionsMap = mapOf(" + "\"roborazzi\" to \"$VERSION_NAME\", \n" +versionMapString + ")\n"
+    ""
+    buildConfigFile.text = """
+package io.github.takahirom.roborazzi
+class BuildConfig {
+    companion object {
+        ${libString}
+    }
+}
+        """
+  }
+}
+
+tasks.named("compileKotlin") {
+  dependsOn("generateBuildConfig")
+}
+
+
 dependencies {
   compileOnly gradleApi()
   compileOnly libs.android.tools.build.gradle
