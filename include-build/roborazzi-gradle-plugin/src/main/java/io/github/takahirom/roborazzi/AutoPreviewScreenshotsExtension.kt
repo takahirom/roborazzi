@@ -10,6 +10,8 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskCollection
+import org.gradle.api.tasks.testing.Test
 import java.io.File
 import javax.inject.Inject
 
@@ -22,18 +24,29 @@ open class AutoPreviewScreenshotsExtension @Inject constructor(objects: ObjectFa
 fun setupGeneratedScreenshotTest(
   project: Project,
   variant: Variant,
-  extension: AutoPreviewScreenshotsExtension
+  extension: AutoPreviewScreenshotsExtension,
+  testTaskProvider: TaskCollection<Test>
 ) {
   val scanPackages = extension.scanPackages.get()
   assert(scanPackages.isNotEmpty())
   addPreviewScreenshotLibraries(variant, project)
+  testTaskProvider.configureEach {testTask: Test ->
+    // see: https://github.com/takahirom/roborazzi?tab=readme-ov-file#roborazzirecordfilepathstrategy
+    testTask.systemProperties["roborazzi.record.filePathStrategy"] = "relativePathFromRoborazziContextOutputDirectory"
+    // see: https://github.com/takahirom/roborazzi?tab=readme-ov-file#robolectricpixelcopyrendermode
+    testTask.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+  }
   val generateTestsTask = project.tasks.register(
     "generate${variant.name.capitalize()}PreviewScreenshotTests",
     GeneratePreviewScreenshotTestsTask::class.java
   ) {
+    // It seems that this directory path is overridden by addGeneratedSourceDirectory.
+    // The generated tests will be located in build/JAVA/generate[VariantName]PreviewScreenshotTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
     it.scanPackages.set(scanPackages)
   }
+  // We need to use Java here; otherwise, the generate task will not be executed.
+  // https://stackoverflow.com/a/76870110/4339442
   variant.unitTest?.sources?.java?.addGeneratedSourceDirectory(
     generateTestsTask,
     GeneratePreviewScreenshotTestsTask::outputDir
@@ -51,9 +64,18 @@ private fun addPreviewScreenshotLibraries(
     configurationName,
     "io.github.takahirom.roborazzi:roborazzi-compose:$roborazziVersion"
   )
-  project.dependencies.add(configurationName, "io.github.takahirom.roborazzi:roborazzi:$roborazziVersion")
-  project.dependencies.add(configurationName, "junit:junit:${BuildConfig.libraryVersionsMap["junit"]}")
-  project.dependencies.add(configurationName, "org.robolectric:robolectric:${BuildConfig.libraryVersionsMap["robolectric"]}")
+  project.dependencies.add(
+    configurationName,
+    "io.github.takahirom.roborazzi:roborazzi:$roborazziVersion"
+  )
+  project.dependencies.add(
+    configurationName,
+    "junit:junit:${BuildConfig.libraryVersionsMap["junit"]}"
+  )
+  project.dependencies.add(
+    configurationName,
+    "org.robolectric:robolectric:${BuildConfig.libraryVersionsMap["robolectric"]}"
+  )
 
   project.repositories.add(project.repositories.maven { it.setUrl("https://jitpack.io") })
   project.repositories.add(project.repositories.mavenCentral())
@@ -79,7 +101,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
     val packagesExpr = scanPackages.get().joinToString(", ") { "\"$it\"" }
     val scanPackageTreeExpr = ".scanPackageTrees($packagesExpr)"
 
-    File(testDir, "GeneratedPreviewScreenshotTest.kt").writeText(
+    File(testDir, "PreviewParameterizedTests.kt").writeText(
       """
             import org.junit.Test
             import org.junit.runner.RunWith
@@ -112,8 +134,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
                 @Config(sdk = [30])
                 @Test
                 fun snapshot() {
-                    val filePath =
-                        DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + "/" + preview.methodName + ".png"
+                    val filePath = preview.methodName + ".png"
                     captureRoboImage(filePath = filePath) {
                         preview()
                     }
