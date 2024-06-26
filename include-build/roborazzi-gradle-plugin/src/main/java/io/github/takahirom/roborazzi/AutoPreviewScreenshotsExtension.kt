@@ -32,7 +32,7 @@ fun setupAutoPreviewScreenshotTests(
     "Please set scanPackageTrees in the autoPreviewScreenshots extension. Please refer to https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
   addPreviewScreenshotLibraryDependencies(variant, project)
-  setupTestTask(testTaskProvider, project)
+  setupTestTaskProperties(testTaskProvider, project)
   setupGenerateTestsTask(project, variant, scanPackageTrees)
 }
 
@@ -58,7 +58,7 @@ private fun setupGenerateTestsTask(
   )
 }
 
-private fun setupTestTask(
+private fun setupTestTaskProperties(
   testTaskProvider: TaskCollection<Test>,
   project: Project
 ) {
