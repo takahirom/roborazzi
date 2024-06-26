@@ -31,18 +31,16 @@ fun setupAutoPreviewScreenshotTests(
   assert(scanPackageTrees.isNotEmpty()) {
     "Please set scanPackageTrees in the autoPreviewScreenshots extension. Please refer to https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
-  addPreviewScreenshotLibraries(variant, project)
-  testTaskProvider.configureEach { testTask: Test ->
-    // see: https://github.com/takahirom/roborazzi?tab=readme-ov-file#roborazzirecordfilepathstrategy
-    if (project.properties["roborazzi.record.filePathStrategy"] == null) {
-      testTask.systemProperties["roborazzi.record.filePathStrategy"] =
-        "relativePathFromRoborazziContextOutputDirectory"
-    }
-    // see: https://github.com/takahirom/roborazzi?tab=readme-ov-file#robolectricpixelcopyrendermode
-    if (testTask.systemProperties["robolectric.pixelCopyRenderMode"] == null) {
-      testTask.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
-    }
-  }
+  addPreviewScreenshotLibraryDependencies(variant, project)
+  setupTestTask(testTaskProvider, project)
+  setupGenerateTestsTask(project, variant, scanPackageTrees)
+}
+
+private fun setupGenerateTestsTask(
+  project: Project,
+  variant: Variant,
+  scanPackageTrees: List<String>?
+) {
   val generateTestsTask = project.tasks.register(
     "generate${variant.name.capitalize()}PreviewScreenshotTests",
     GeneratePreviewScreenshotTestsTask::class.java
@@ -60,7 +58,24 @@ fun setupAutoPreviewScreenshotTests(
   )
 }
 
-private fun addPreviewScreenshotLibraries(
+private fun setupTestTask(
+  testTaskProvider: TaskCollection<Test>,
+  project: Project
+) {
+  testTaskProvider.configureEach { testTask: Test ->
+    // see: https://github.com/takahirom/roborazzi?tab=readme-ov-file#roborazzirecordfilepathstrategy
+    if (project.properties["roborazzi.record.filePathStrategy"] == null) {
+      testTask.systemProperties["roborazzi.record.filePathStrategy"] =
+        "relativePathFromRoborazziContextOutputDirectory"
+    }
+    // see: https://github.com/takahirom/roborazzi?tab=readme-ov-file#robolectricpixelcopyrendermode
+    if (testTask.systemProperties["robolectric.pixelCopyRenderMode"] == null) {
+      testTask.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+    }
+  }
+}
+
+private fun addPreviewScreenshotLibraryDependencies(
   variant: Variant,
   project: Project
 ) {
@@ -84,6 +99,7 @@ private fun addPreviewScreenshotLibraries(
     "org.robolectric:robolectric:${BuildConfig.libraryVersionsMap["robolectric"]}"
   )
 
+  // For ComposablePreviewScanner
   project.repositories.add(project.repositories.maven { it.setUrl("https://jitpack.io") })
   project.repositories.add(project.repositories.mavenCentral())
   project.repositories.add(project.repositories.google())
