@@ -20,24 +20,21 @@ sourceSets {
 }
 
 tasks.register("generateBuildConfig") {
-  doLast {
-    def buildConfigFile = new File(generatedSourcesDir, "com/example/BuildConfig.kt")
-    buildConfigFile.parentFile.mkdirs()
-
-    def libs = ["composable-preview-scanner", "junit", "robolectric"]
-//    def composablePreviewScannerVersion = project.extensions.getByType(VersionCatalogsExtension.class)
-//      .named("libs")
-//      .findVersion("composable-preview-scanner")
-//      .get()
-    def versionMapString = libs.collect {
+  def libs = ["composable-preview-scanner", "junit", "robolectric"]
+  def versionMapString = "\"roborazzi\" to \"$VERSION_NAME\", \n" + (
+    libs.collect {
       def version = project.extensions.getByType(VersionCatalogsExtension.class)
         .named("libs")
         .findVersion(it)
         .get()
       "\"${it}\" to \"${version}\","
-    }.join("\n")
+    }.join("\n"))
+  doLast {
+    def buildConfigFile = new File(generatedSourcesDir, "com/example/BuildConfig.kt")
+    buildConfigFile.parentFile.mkdirs()
+
     println(version)
-    def libString = "val libraryVersionsMap = mapOf(" + "\"roborazzi\" to \"$VERSION_NAME\", \n" +versionMapString + ")\n"
+    def libString = "val libraryVersionsMap = mapOf(" + versionMapString + ")\n"
     ""
     buildConfigFile.text = """
 package io.github.takahirom.roborazzi
