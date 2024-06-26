@@ -346,7 +346,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
             if (!isTaskPresent && extension.taskType.orNull == RoborazziTaskType.None) {
               test.systemProperties.putAll(roborazziProperties)
             } else {
-              val taskType = extension.taskType.orNull
+              val extensionTaskType = extension.taskType.orNull
               // Apply other roborazzi properties except for the ones that
               // start with "roborazzi.test"
               test.systemProperties.putAll(
@@ -356,12 +356,12 @@ abstract class RoborazziPlugin : Plugin<Project> {
               )
               test.systemProperties["roborazzi.test.record"] =
                 isRecordRun.get() || isVerifyAndRecordRun.get() ||
-                  taskType == RoborazziTaskType.Record || taskType == RoborazziTaskType.VerifyAndRecord
+                  extensionTaskType == RoborazziTaskType.Record || extensionTaskType == RoborazziTaskType.VerifyAndRecord
               test.systemProperties["roborazzi.test.compare"] =
-                isCompareRun.get() || taskType == RoborazziTaskType.Compare
+                isCompareRun.get() || extensionTaskType == RoborazziTaskType.Compare
               test.systemProperties["roborazzi.test.verify"] =
                 isVerifyRun.get() || isVerifyAndRecordRun.get() ||
-                  taskType == RoborazziTaskType.Verify || taskType == RoborazziTaskType.VerifyAndRecord
+                  extensionTaskType == RoborazziTaskType.Verify || extensionTaskType == RoborazziTaskType.VerifyAndRecord
             }
 
             // Other properties
