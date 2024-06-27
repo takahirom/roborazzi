@@ -1,5 +1,6 @@
 plugins {
-  id("com.android.library")
+  id("com.android.application")
+//  id("com.android.library")
   id("org.jetbrains.kotlin.android")
   id("io.github.takahirom.roborazzi")
 }
@@ -19,7 +20,6 @@ android {
     minSdk = 24
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    consumerProguardFiles("consumer-rules.pro")
   }
   buildFeatures {
     compose = true
