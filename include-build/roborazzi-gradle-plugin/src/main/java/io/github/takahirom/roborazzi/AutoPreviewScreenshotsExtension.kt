@@ -178,6 +178,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
                 
                 fun createScreenshotIdFor(preview: ComposablePreview<AndroidPreviewInfo>) = 
                   AndroidPreviewScreenshotIdBuilder(preview)
+                         .ignoreClassName()
                          .build()
                 
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)
