@@ -40,7 +40,7 @@ fun setupAutoPreviewScreenshotTests(
   assert(scanPackageTrees.isNotEmpty()) {
     "Please set scanPackageTrees in the autoPreviewScreenshots extension. Please refer to https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
-  addPreviewScreenshotLibraryDependencies(variant, project, extension.libraryVersions.get())
+  addPreviewScreenshotLibraryDependencies(variant, project, extension.libraryVersions.orNull)
   setupTestTaskProperties(testTaskProvider, project)
   setupGenerateTestsTask(project, variant, scanPackageTrees)
 }
@@ -87,16 +87,19 @@ private fun setupTestTaskProperties(
 private fun addPreviewScreenshotLibraryDependencies(
   variant: Variant,
   project: Project,
-  libraryVersionsExtension: LibraryVersionsExtension
+  libraryVersionsExtension: LibraryVersionsExtension?
 ) {
   val configurationName = "test${variant.name.capitalize()}Implementation"
 
-  fun Property<String>.getLibraryVersion(libraryName: String): String {
+  fun Property<String>?.getLibraryVersion(libraryName: String): String {
+    if (this == null) {
+      return BuildConfig.defaultLibraryVersionsMap[libraryName]!!
+    }
     return convention(BuildConfig.defaultLibraryVersionsMap[libraryName]!!)
       .get()
   }
 
-  val roborazziVersion = libraryVersionsExtension.roborazzi.getLibraryVersion("roborazzi")
+  val roborazziVersion = libraryVersionsExtension?.roborazzi.getLibraryVersion("roborazzi")
   project.dependencies.add(
     configurationName,
     "io.github.takahirom.roborazzi:roborazzi-compose:$roborazziVersion"
@@ -105,12 +108,12 @@ private fun addPreviewScreenshotLibraryDependencies(
     configurationName,
     "io.github.takahirom.roborazzi:roborazzi:$roborazziVersion"
   )
-  val junitLibraryVersion = libraryVersionsExtension.junit.getLibraryVersion("junit")
+  val junitLibraryVersion = libraryVersionsExtension?.junit.getLibraryVersion("junit")
   project.dependencies.add(
     configurationName,
     "junit:junit:$junitLibraryVersion"
   )
-  val robolectricLibraryVersion = libraryVersionsExtension.robolectric.getLibraryVersion("robolectric")
+  val robolectricLibraryVersion = libraryVersionsExtension?.robolectric.getLibraryVersion("robolectric")
   project.dependencies.add(
     configurationName,
     "org.robolectric:robolectric:$robolectricLibraryVersion"
@@ -121,7 +124,7 @@ private fun addPreviewScreenshotLibraryDependencies(
   project.repositories.add(project.repositories.mavenCentral())
   project.repositories.add(project.repositories.google())
   val composePreviewScannerLibraryVersion =
-    libraryVersionsExtension.composablePreviewScanner.getLibraryVersion("composable-preview-scanner")
+    libraryVersionsExtension?.composablePreviewScanner.getLibraryVersion("composable-preview-scanner")
   project.dependencies.add(
     configurationName,
     "com.github.sergio-sastre.ComposablePreviewScanner:android:$composePreviewScannerLibraryVersion"
