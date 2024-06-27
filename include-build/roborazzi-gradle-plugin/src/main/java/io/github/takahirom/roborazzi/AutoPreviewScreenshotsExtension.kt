@@ -157,6 +157,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
             import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
             import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
             import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
+            import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
             import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 
 
@@ -175,11 +176,15 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
                             .getPreviews()
                 }
                 
+                fun createScreenshotIdFor(preview: ComposablePreview<AndroidPreviewInfo>) = 
+                  AndroidPreviewScreenshotIdBuilder(preview)
+                         .build()
+                
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)
                 @Config(sdk = [30])
                 @Test
                 fun snapshot() {
-                    val filePath = preview.methodName + ".png"
+                    val filePath = createScreenshotIdFor(preview) + ".png"
                     captureRoboImage(filePath = filePath) {
                         preview()
                     }
