@@ -34,7 +34,7 @@ tasks.register("generateBuildConfig") {
     def buildConfigFile = new File(generatedSourcesDir, "io/github/takahirom/roborazzi/BuildConfig.kt")
     buildConfigFile.parentFile.mkdirs()
 
-    def libString = "val libraryVersionsMap = mapOf(" + inputs.properties["versionMapString"] + ")\n"
+    def libString = "val defaultLibraryVersionsMap = mapOf(" + inputs.properties["versionMapString"] + ")\n"
     ""
     buildConfigFile.text = """
 package io.github.takahirom.roborazzi
