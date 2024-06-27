@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,15 +17,17 @@ import androidx.compose.ui.unit.dp
 @Preview
 @Composable
 fun Preview() {
-  Card(
+  MaterialTheme {
+    Card(
       Modifier
-          .width(100.dp)
-          .height(50.dp)
-  ) {
-    Text(
-      modifier = Modifier.padding(8.dp),
-      text = "Hello, World!"
-    )
+        .width(126.dp)
+        .height(80.dp)
+    ) {
+      Text(
+        modifier = Modifier.padding(8.dp),
+        text = "Auto Preview Sample"
+      )
+    }
   }
 }
 
@@ -47,9 +50,9 @@ fun Preview() {
 @Composable
 fun PreviewWithProperties() {
   Card(
-      Modifier
-          .width(100.dp)
-          .height(50.dp)
+    Modifier
+      .width(100.dp)
+      .height(50.dp)
   ) {
     Text(
       modifier = Modifier.padding(8.dp),
