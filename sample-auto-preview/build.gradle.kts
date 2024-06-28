@@ -6,9 +6,11 @@ plugins {
 }
 
 roborazzi {
-  automaticPreviewScreenshots {
-    enabled = true
-    scanPackageTrees = listOf("com.github.takahirom.sample")
+  androidSetup {
+    enable = true
+    generatePreviewTests {
+      scanPackages.set(listOf("com.github.takahirom.sample"))
+    }
   }
 }
 

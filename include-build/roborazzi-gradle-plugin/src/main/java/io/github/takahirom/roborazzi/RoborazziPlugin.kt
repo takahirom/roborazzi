@@ -3,6 +3,7 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
+import com.android.build.gradle.TestedExtension
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.InternalRoborazziApi
@@ -47,11 +48,11 @@ private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
  */
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
-  val autoPreviewScreenshots: AutoPreviewScreenshotsExtension =
-    objects.newInstance(AutoPreviewScreenshotsExtension::class.java)
+  val androidSetup: AndroidSetupExtension =
+    objects.newInstance(AndroidSetupExtension::class.java)
 
-  fun automaticPreviewScreenshots(action: Action<AutoPreviewScreenshotsExtension>) {
-    action.execute(autoPreviewScreenshots)
+  fun androidSetup(action: Action<AndroidSetupExtension>) {
+    action.execute(androidSetup)
   }
 }
 
@@ -430,14 +431,15 @@ abstract class RoborazziPlugin : Plugin<Project> {
         val variantSlug = variant.name.capitalizeUS()
         val testVariantSlug = unitTest.name.capitalizeUS()
         val isEnableAutomaticPreviewScreenshots =
-          extension.autoPreviewScreenshots.enabled.convention(false).get()
+          extension.androidSetup.enable.convention(false).get()
         val testTaskName = "test$testVariantSlug"
         if (isEnableAutomaticPreviewScreenshots) {
 
-          setupAutoPreviewScreenshotTests(
+          setupAndroidSetupExtension(
             project = project,
             variant = variant,
-            extension = extension.autoPreviewScreenshots,
+            extension = extension.androidSetup,
+            androidExtension = project.extensions.getByType(TestedExtension::class.java),
             testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
           )
         }
