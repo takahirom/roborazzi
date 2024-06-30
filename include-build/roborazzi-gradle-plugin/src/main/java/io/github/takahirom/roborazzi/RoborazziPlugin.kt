@@ -6,6 +6,7 @@ import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.android.build.gradle.TestedExtension
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import org.gradle.api.Action
@@ -48,13 +49,45 @@ private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
  */
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
-  val androidSetup: AndroidSetupExtension =
-    objects.newInstance(AndroidSetupExtension::class.java)
 
-  fun androidSetup(action: Action<AndroidSetupExtension>) {
-    action.execute(androidSetup)
+  // UseCase based APIs
+  sealed interface BaseSetupConfig {
+    fun setup(advancedAndroidSetupExtension: AdvancedAndroidSetupExtension)
+    fun name(): String
+    data class BestPractice(val previewScanPackages: List<String>) :
+      BaseSetupConfig by AndroidAutomaticPreviewScreenshots(previewScanPackages)
+
+    data class AndroidAutomaticPreviewScreenshots(val scanPackages: List<String>) :
+      BaseSetupConfig {
+      override fun name(): String {
+        return "AndroidAutomaticPreviewScreenshots"
+      }
+
+      override fun setup(advancedAndroidSetupExtension: AdvancedAndroidSetupExtension) {
+        advancedAndroidSetupExtension.enable.set(true)
+        advancedAndroidSetupExtension.generatePreviewTests {
+          scanPackages.set(this@AndroidAutomaticPreviewScreenshots.scanPackages)
+        }
+      }
+    }
+  }
+
+  @ExperimentalRoborazziApi
+  fun baseSetupConfig(baseSetupConfig: BaseSetupConfig) {
+    baseSetupConfig.setup(advancedAndroidSetup)
+  }
+
+  // Configuration based APIs
+  @ExperimentalRoborazziApi
+  val advancedAndroidSetup: AdvancedAndroidSetupExtension =
+    objects.newInstance(AdvancedAndroidSetupExtension::class.java)
+
+  @ExperimentalRoborazziApi
+  fun advancedAndroidSetup(action: AdvancedAndroidSetupExtension.() -> Unit) {
+    action(advancedAndroidSetup)
   }
 }
+
 
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
@@ -431,14 +464,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
         val variantSlug = variant.name.capitalizeUS()
         val testVariantSlug = unitTest.name.capitalizeUS()
         val isEnableAutomaticPreviewScreenshots =
-          extension.androidSetup.enable.convention(false).get()
+          extension.advancedAndroidSetup.enable.convention(false).get()
         val testTaskName = "test$testVariantSlug"
         if (isEnableAutomaticPreviewScreenshots) {
 
           setupAndroidSetupExtension(
             project = project,
             variant = variant,
-            extension = extension.androidSetup,
+            extension = extension.advancedAndroidSetup,
             androidExtension = project.extensions.getByType(TestedExtension::class.java),
             testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
           )

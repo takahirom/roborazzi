@@ -1,3 +1,5 @@
+import io.github.takahirom.roborazzi.RoborazziExtension.BaseSetupConfig.AndroidAutomaticPreviewScreenshots
+
 plugins {
   id("com.android.application")
 //  id("com.android.library")
@@ -6,11 +8,11 @@ plugins {
 }
 
 roborazzi {
-  androidSetup {
-    enable = true
-    generatePreviewTests {
-      scanPackages.set(listOf("com.github.takahirom.sample"))
-    }
+  baseSetupConfig(
+    AndroidAutomaticPreviewScreenshots(listOf("com.github.takahirom.sample"))
+  )
+  advancedAndroidSetup {
+    libraryDependencies.junitVersion = "4.13.2"
   }
 }
 
