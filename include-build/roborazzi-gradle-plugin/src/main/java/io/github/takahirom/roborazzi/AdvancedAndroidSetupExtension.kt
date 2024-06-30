@@ -17,7 +17,7 @@ import org.gradle.api.tasks.testing.Test
 import java.io.File
 import javax.inject.Inject
 
-open class AndroidSetupExtension @Inject constructor(objects: ObjectFactory) {
+open class AdvancedAndroidSetupExtension @Inject constructor(objects: ObjectFactory) {
   /**
    * Default value is false.
    */
@@ -71,7 +71,7 @@ open class TestConfigExtension @Inject constructor(objects: ObjectFactory) {
 fun setupAndroidSetupExtension(
   project: Project,
   variant: Variant,
-  extension: AndroidSetupExtension,
+  extension: AdvancedAndroidSetupExtension,
   androidExtension: TestedExtension,
   testTaskProvider: TaskCollection<Test>
 ) {
