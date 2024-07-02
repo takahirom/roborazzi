@@ -188,12 +188,11 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
             import org.robolectric.ParameterizedRobolectricTestRunner
             import org.robolectric.annotation.Config
             import org.robolectric.annotation.GraphicsMode
-            import com.github.takahirom.roborazzi.captureRoboImage
+            import com.github.takahirom.roborazzi.*
             import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
             import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
             import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
             import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
-            import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 
 
             @RunWith(ParameterizedRobolectricTestRunner::class)
@@ -223,8 +222,8 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
                 @Config(sdk = [30])
                 @Test
                 fun test() {
-                    val pathPrefix = if(com.github.takahirom.roborazzi.roborazziRecordFilePathStrategy() == com.github.takahirom.roborazzi.RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory) {
-                        DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + java.io.File.separator
+                    val pathPrefix = if(roborazziRecordFilePathStrategy() == RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory) {
+                        roborazziSystemPropertyOutputDirectory() + java.io.File.separator
                     } else {
                         ""
                     }
