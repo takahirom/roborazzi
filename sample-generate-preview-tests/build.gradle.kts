@@ -1,5 +1,3 @@
-import io.github.takahirom.roborazzi.RoborazziExtension.BaseSetupConfig.AndroidAutomaticPreviewScreenshots
-
 plugins {
   id("com.android.application")
 //  id("com.android.library")
@@ -8,16 +6,20 @@ plugins {
 }
 
 roborazzi {
-  baseSetupConfig(
-    AndroidAutomaticPreviewScreenshots(listOf("com.github.takahirom.sample"))
-  )
-  advancedAndroidSetup {
-    libraryDependencies.junitVersion = "4.13.2"
+  generateRobolectricPreviewTests {
+    enable = true
+    packages = listOf("com.github.takahirom.preview.tests")
   }
 }
 
+repositories {
+  mavenCentral()
+  google()
+  maven { url = uri("https://jitpack.io") }
+}
+
 android {
-  namespace = "com.github.takahirom.sample"
+  namespace = "com.github.takahirom.preview.tests"
   compileSdk = 34
 
   defaultConfig {
@@ -41,6 +43,14 @@ android {
       )
     }
   }
+  testOptions {
+    unitTests {
+      isIncludeAndroidResources = true
+      all {
+        it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+      }
+    }
+  }
 }
 
 dependencies {
@@ -48,7 +58,11 @@ dependencies {
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling)
 
+  testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.20.0")
+  testImplementation("io.github.takahirom.roborazzi:roborazzi:1.20.0")
   testImplementation(libs.junit)
+  testImplementation(libs.robolectric)
+  testImplementation("com.github.sergio-sastre.ComposablePreviewScanner:android:0.1.2")
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.espresso.core)
 }
