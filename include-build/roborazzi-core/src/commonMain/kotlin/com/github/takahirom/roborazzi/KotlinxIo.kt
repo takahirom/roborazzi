@@ -4,6 +4,7 @@ import kotlinx.io.buffered
 import kotlinx.io.bytestring.encodeToByteString
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import kotlinx.io.files.SystemPathSeparator
 import kotlinx.io.readString
 import kotlinx.io.write
 
@@ -32,15 +33,15 @@ fun Path.relativeTo(base: Path): Path {
   val path = buildString {
     repeat(baseSegments.size - i) {
       append("..")
-      append("/")
+      append(SystemPathSeparator)
     }
-    append(thisSegments.subList(i, thisSegments.size).joinToString("/") { it })
+    append(thisSegments.subList(i, thisSegments.size).joinToString(SystemPathSeparator.toString()) { it })
   }
 
   return Path(path)
 }
 
-private fun String.segments(): List<String> = split("/")
+private fun String.segments(): List<String> = split(SystemPathSeparator)
 
 @OptIn(ExperimentalStdlibApi::class)
 object KotlinxIo {
