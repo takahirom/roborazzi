@@ -50,41 +50,14 @@ private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
 
-  // UseCase based APIs
-  sealed interface BaseSetupConfig {
-    fun setup(advancedAndroidSetupExtension: AdvancedAndroidSetupExtension)
-    fun name(): String
-    data class BestPractice(val previewScanPackages: List<String>) :
-      BaseSetupConfig by AndroidAutomaticPreviewScreenshots(previewScanPackages)
-
-    data class AndroidAutomaticPreviewScreenshots(val scanPackages: List<String>) :
-      BaseSetupConfig {
-      override fun name(): String {
-        return "AndroidAutomaticPreviewScreenshots"
-      }
-
-      override fun setup(advancedAndroidSetupExtension: AdvancedAndroidSetupExtension) {
-        advancedAndroidSetupExtension.enable.set(true)
-        advancedAndroidSetupExtension.generatePreviewTests {
-          scanPackages.set(this@AndroidAutomaticPreviewScreenshots.scanPackages)
-        }
-      }
-    }
-  }
-
-  @ExperimentalRoborazziApi
-  fun baseSetupConfig(baseSetupConfig: BaseSetupConfig) {
-    baseSetupConfig.setup(advancedAndroidSetup)
-  }
-
   // Configuration based APIs
   @ExperimentalRoborazziApi
-  val advancedAndroidSetup: AdvancedAndroidSetupExtension =
-    objects.newInstance(AdvancedAndroidSetupExtension::class.java)
+  val generateRobolectricPreviewTests: GenerateRobolectricPreviewTestsExtension =
+    objects.newInstance(GenerateRobolectricPreviewTestsExtension::class.java)
 
   @ExperimentalRoborazziApi
-  fun advancedAndroidSetup(action: AdvancedAndroidSetupExtension.() -> Unit) {
-    action(advancedAndroidSetup)
+  fun generateRobolectricPreviewTests(action: GenerateRobolectricPreviewTestsExtension.() -> Unit) {
+    action(generateRobolectricPreviewTests)
   }
 }
 
@@ -463,19 +436,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
         val unitTest = variant.unitTest ?: return@onVariants
         val variantSlug = variant.name.capitalizeUS()
         val testVariantSlug = unitTest.name.capitalizeUS()
-        val isEnableAutomaticPreviewScreenshots =
-          extension.advancedAndroidSetup.enable.convention(false).get()
         val testTaskName = "test$testVariantSlug"
-        if (isEnableAutomaticPreviewScreenshots) {
-
-          setupAndroidSetupExtension(
-            project = project,
-            variant = variant,
-            extension = extension.advancedAndroidSetup,
-            androidExtension = project.extensions.getByType(TestedExtension::class.java),
-            testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
-          )
-        }
+        generateRobolectricPreviewTestsIfNeeded(
+          project = project,
+          variant = variant,
+          extension = extension.generateRobolectricPreviewTests,
+          androidExtension = project.extensions.getByType(TestedExtension::class.java),
+          testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
+        )
 
         // e.g. testDebugUnitTest -> recordRoborazziDebug
         configureRoborazziTasks(

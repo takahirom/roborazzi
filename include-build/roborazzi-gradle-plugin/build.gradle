@@ -10,48 +10,6 @@ apply plugin: 'java-gradle-plugin'
 
 def integrationTestDep = sourceSets.create('integrationTestDep')
 
-def generatedSourcesDir = "${project.layout.buildDirectory.get()}/generated/sources/buildConfig/java/main"
-sourceSets {
-  main {
-    java {
-      srcDir(generatedSourcesDir)
-    }
-  }
-}
-
-tasks.register("generateBuildConfig") {
-  def libs = ["composable-preview-scanner", "junit", "robolectric"]
-  def versionMapString = "\"roborazzi\" to \"$VERSION_NAME\", \n" + (
-    libs.collect {
-      def version = project.extensions.getByType(VersionCatalogsExtension.class)
-        .named("libs")
-        .findVersion(it)
-        .get()
-      "\"${it}\" to \"${version}\","
-    }.join("\n"))
-  inputs.property("versionMapString", versionMapString)
-  doLast {
-    def buildConfigFile = new File(generatedSourcesDir, "io/github/takahirom/roborazzi/BuildConfig.kt")
-    buildConfigFile.parentFile.mkdirs()
-
-    def libString = "val defaultLibraryVersionsMap = mapOf(" + inputs.properties["versionMapString"] + ")\n"
-    ""
-    buildConfigFile.text = """
-package io.github.takahirom.roborazzi
-class BuildConfig {
-    companion object {
-        ${libString}
-    }
-}
-        """
-  }
-}
-
-tasks.named("compileKotlin") {
-  dependsOn("generateBuildConfig")
-}
-
-
 dependencies {
   compileOnly gradleApi()
   compileOnly libs.android.tools.build.gradle

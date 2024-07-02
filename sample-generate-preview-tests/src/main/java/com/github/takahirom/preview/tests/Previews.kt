@@ -1,4 +1,4 @@
-package com.github.takahirom.sample
+package com.github.takahirom.preview.tests
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.height
@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 
 @Preview
 @Composable
-fun Preview() {
+fun Preview2() {
   MaterialTheme {
     Card(
       Modifier
@@ -25,7 +25,7 @@ fun Preview() {
     ) {
       Text(
         modifier = Modifier.padding(8.dp),
-        text = "Auto Preview Sample"
+        text = "Generate Preview Test Sample"
       )
     }
   }
