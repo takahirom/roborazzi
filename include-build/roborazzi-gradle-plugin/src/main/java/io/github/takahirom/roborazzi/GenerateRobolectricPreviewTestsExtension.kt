@@ -21,9 +21,6 @@ import java.net.URLEncoder
 import javax.inject.Inject
 
 open class GenerateRobolectricPreviewTestsExtension @Inject constructor(objects: ObjectFactory) {
-  /**
-   * Default value is false.
-   */
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
@@ -36,14 +33,13 @@ fun generateRobolectricPreviewTestsIfNeeded(
   androidExtension: TestedExtension,
   testTaskProvider: TaskCollection<Test>
 ) {
-  // Prioritize the enable property in the extension over the global enable property.
   if ((extension.enable.orNull) != true) {
     return
   }
   val logger = project.logger
   setupGeneratePreviewTestsTask(project, variant, extension.packages)
   project.afterEvaluate {
-    // Checks
+    // We use afterEvaluate only for verify
     assert(variant.unitTest == null) {
       "Roborazzi: Please enable unit tests for the variant '${variant.name}' in the 'build.gradle' file."
     }
@@ -72,7 +68,7 @@ private fun setupGeneratePreviewTestsTask(
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
     it.scanPackageTrees.set(scanPackages)
   }
-  // We need to use Java here; otherwise, the generate task will not be executed.
+  // We need to use sources.java here; otherwise, the generate task will not be executed.
   // https://stackoverflow.com/a/76870110/4339442
   variant.unitTest?.sources?.java?.addGeneratedSourceDirectory(
     generateTestsTask,
