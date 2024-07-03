@@ -13,6 +13,7 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
+import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -57,6 +58,7 @@ import java.io.File
 import javax.imageio.ImageIO
 import javax.swing.Box
 import javax.swing.DefaultListModel
+import javax.swing.Icon
 import javax.swing.ImageIcon
 import javax.swing.JLabel
 import javax.swing.JList
