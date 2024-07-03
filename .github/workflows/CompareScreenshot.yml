@@ -16,6 +16,7 @@ jobs:
     permissions:
       contents: read # for clone
       actions: write # for upload-artifact
+      checks: read # for wait-on-check-action
 
     steps:
       - name: Checkout base branch
@@ -39,12 +40,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
+      - name: Wait for base unit-test to succeed before downloading base branch screenshot artifact
+        uses: lewagon/wait-on-check-action@ccfb013c15c8afb7bf2b7c028fb74dc5a068cccc # v1.3.4
+        with:
+          ref: ${{ steps.get_base_branch_head.outputs.sha }}
+          check-name: 'store-screenshot-test'
+          repo-token: ${{ github.token }}
+          wait-interval: 10
+
       - uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
         continue-on-error: true
         with:
           name: screenshot
           workflow: StoreScreenshot.yml
           commit: ${{ steps.get_base_branch_head.outputs.sha }}
+          if_no_artifact_found: fail
 
       - name: compare screenshot test
         id: compare-screenshot-test
