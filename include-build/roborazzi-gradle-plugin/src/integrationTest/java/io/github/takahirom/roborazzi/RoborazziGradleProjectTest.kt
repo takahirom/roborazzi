@@ -54,6 +54,19 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun compareAllVariantMultipleTimes() {
+    RoborazziGradleProject(testProjectDir).apply {
+      for (i in 0 until 10) {
+        compareAllVariants()
+
+        checkResultsSummaryFileExists()
+        checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+        checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+      }
+    }
+  }
+
+  @Test
   fun whenRecordAndRemovedOutputAndRecordThenSkipAndRestoreTheImages() {
     RoborazziGradleProject(testProjectDir).apply {
       record()
