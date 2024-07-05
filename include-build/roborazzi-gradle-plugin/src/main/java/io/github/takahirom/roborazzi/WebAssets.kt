@@ -64,7 +64,7 @@ class WebAssets private constructor(private val webJarVersionLocator: WebJarVers
 
   companion object {
 
-   internal val assetPathsMap = mapOf(
+   private val assetPathsMap = mapOf(
       "materializecss" to listOf(
         "css/materialize.min.css",
         "js/materialize.min.js",
