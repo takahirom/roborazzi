@@ -23,8 +23,6 @@ import javax.inject.Inject
 open class GenerateRobolectricPreviewTestsExtension @Inject constructor(objects: ObjectFactory) {
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
-  val generatedClassFQDN: Property<String> = objects.property(String::class.java)
-    .convention("com.github.takahirom.roborazzi.RoborazziPreviewParameterizedTests")
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
 }
 
@@ -43,7 +41,6 @@ fun generateRobolectricPreviewTestsIfNeeded(
     project = project,
     variant = variant,
     scanPackages = extension.packages,
-    generatedClassFQDN = extension.generatedClassFQDN
   )
   project.afterEvaluate {
     // We use afterEvaluate only for verify
@@ -60,7 +57,6 @@ private fun setupGeneratePreviewTestsTask(
   project: Project,
   variant: Variant,
   scanPackages: ListProperty<String>,
-  generatedClassFQDN: Property<String>,
 ) {
   assert(scanPackages.get().orEmpty().isNotEmpty()) {
     "Please set roborazzi.generateRobolectricPreviewTests.packages in the generatePreviewTests extension or set roborazzi.generateRobolectricPreviewTests.enable = false." +
@@ -75,7 +71,6 @@ private fun setupGeneratePreviewTestsTask(
     // The generated tests will be located in build/JAVA/generate[VariantName]PreviewScreenshotTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
     it.scanPackageTrees.set(scanPackages)
-    it.generatedClassFQDN.set(generatedClassFQDN)
   }
   // We need to use sources.java here; otherwise, the generate task will not be executed.
   // https://stackoverflow.com/a/76870110/4339442
@@ -176,8 +171,6 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
   @get:Input
   var scanPackageTrees: ListProperty<String> = project.objects.listProperty(String::class.java)
 
-  @get:Input
-  val generatedClassFQDN: Property<String> = project.objects.property(String::class.java)
 
   @TaskAction
   fun generateTests() {
@@ -187,8 +180,9 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
     val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
     val scanPackageTreeExpr = ".scanPackageTrees($packagesExpr)"
 
-    val packageName = generatedClassFQDN.get().substringBeforeLast(".")
-    val className = generatedClassFQDN.get().substringAfterLast(".")
+    val generatedClassFQDN = "com.github.takahirom.roborazzi.RoborazziPreviewParameterizedTests"
+    val packageName = generatedClassFQDN.substringBeforeLast(".")
+    val className = generatedClassFQDN.substringAfterLast(".")
     val directory = File(testDir, packageName.replace(".", "/"))
     directory.mkdirs()
     File(directory, "$className.kt").writeText(
