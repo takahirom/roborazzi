@@ -24,7 +24,15 @@ import javax.inject.Inject
 open class GenerateRobolectricPreviewTestsExtension @Inject constructor(objects: ObjectFactory) {
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
+
+  /**
+   * The package names to scan for the Composable Previews.
+   */
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
+
+  /**
+   * The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.RobolectricPreviewTest].
+   */
   val customTestQualifiedClassName: Property<String> = objects.property(String::class.java)
     .convention("com.github.takahirom.roborazzi.DefaultRobolectricPreviewTest")
 
