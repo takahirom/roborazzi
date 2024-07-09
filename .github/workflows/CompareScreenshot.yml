@@ -10,7 +10,7 @@ permissions: {}
 
 jobs:
   compare-screenshot-test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 20
 
     permissions:
