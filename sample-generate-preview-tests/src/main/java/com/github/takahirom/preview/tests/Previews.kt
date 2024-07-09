@@ -2,7 +2,6 @@ package com.github.takahirom.preview.tests
 
 import android.content.res.Configuration
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
@@ -65,7 +64,7 @@ fun PreviewDarkMode() {
   apiLevel = 30,
   widthDp = 320,
   heightDp = 640,
-  locale = "ja",
+  locale = "ja-rJP",
   fontScale = 1.5f,
   showSystemUi = true,
   showBackground = true,
