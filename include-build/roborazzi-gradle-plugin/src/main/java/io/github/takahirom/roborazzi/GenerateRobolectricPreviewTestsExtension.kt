@@ -25,8 +25,13 @@ open class GenerateRobolectricPreviewTestsExtension @Inject constructor(objects:
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
-  val customTestClassFQDN: Property<String> = objects.property(String::class.java)
+  val customTestQualifiedClassName: Property<String> = objects.property(String::class.java)
     .convention("com.github.takahirom.roborazzi.DefaultRobolectricPreviewTest")
+
+  /**
+   * [robolectricConfig] will be passed to the Robolectric's @Config annotation in the generated test class.
+   * See https://robolectric.org/configuring/ for more information.
+   */
   val robolectricConfig: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
     .convention(
       mapOf(
@@ -51,7 +56,7 @@ fun generateRobolectricPreviewTestsIfNeeded(
     project = project,
     variant = variant,
     scanPackages = extension.packages,
-    customTestClassFQDN = extension.customTestClassFQDN,
+    customTestQualifiedClassName = extension.customTestQualifiedClassName,
     robolectricConfig = extension.robolectricConfig
   )
   project.afterEvaluate {
@@ -69,7 +74,7 @@ private fun setupGeneratePreviewTestsTask(
   project: Project,
   variant: Variant,
   scanPackages: ListProperty<String>,
-  customTestClassFQDN: Property<String>,
+  customTestQualifiedClassName: Property<String>,
   robolectricConfig: MapProperty<String, String>,
 ) {
   assert(scanPackages.get().orEmpty().isNotEmpty()) {
@@ -85,7 +90,7 @@ private fun setupGeneratePreviewTestsTask(
     // The generated tests will be located in build/JAVA/generate[VariantName]PreviewScreenshotTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
     it.scanPackageTrees.set(scanPackages)
-    it.customTestClassFQDN.set(customTestClassFQDN)
+    it.customTestQualifiedClassName.set(customTestQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)
   }
   // We need to use sources.java here; otherwise, the generate task will not be executed.
@@ -188,7 +193,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
   var scanPackageTrees: ListProperty<String> = project.objects.listProperty(String::class.java)
 
   @get:Input
-  abstract val customTestClassFQDN: Property<String>
+  abstract val customTestQualifiedClassName: Property<String>
 
   @get:Input
   abstract val robolectricConfig: MapProperty<String, String>
@@ -209,7 +214,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
       "@Config(" + robolectricConfig.get().entries.joinToString(", ") { (key, value) ->
         "$key = $value"
       } + ")"
-    val customTestClassFQDNString = customTestClassFQDN.get()
+    val customTestQualifiedClassNameString = customTestQualifiedClassName.get()
     File(directory, "$className.kt").writeText(
       """
             package $packageName
@@ -234,7 +239,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
                 companion object {
                     // lazy for performance
                     val previews: List<ComposablePreview<AndroidPreviewInfo>> by lazy {
-                        getRobolectricPreviewTest("$customTestClassFQDNString").previews(
+                        getRobolectricPreviewTest("$customTestQualifiedClassNameString").previews(
                             $packagesExpr
                         )
                     }
@@ -249,7 +254,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
                 $robolectricConfigString
                 @Test
                 fun test() {
-                    getRobolectricPreviewTest("$customTestClassFQDNString").test(preview)
+                    getRobolectricPreviewTest("$customTestQualifiedClassNameString").test(preview)
                 }
 
             }

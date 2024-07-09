@@ -1,6 +1,5 @@
 package com.github.takahirom.roborazzi
 
-import org.robolectric.RuntimeEnvironment
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
@@ -53,11 +52,16 @@ class DefaultRobolectricPreviewTest : RobolectricPreviewTest {
 }
 
 @InternalRoborazziApi
-fun getRobolectricPreviewTest(robolectricCapturerClass: String): RobolectricPreviewTest {
-  val capturerClass = Class.forName(robolectricCapturerClass)
-  if (!RobolectricPreviewTest::class.java.isAssignableFrom(capturerClass)) {
-    throw IllegalArgumentException("The class $robolectricCapturerClass must implement RobolectricPreviewCapturer")
+fun getRobolectricPreviewTest(customTestQualifiedClassName: String): RobolectricPreviewTest {
+  val customTestClass = try {
+    Class.forName(customTestQualifiedClassName)
+  } catch (e: ClassNotFoundException) {
+    throw IllegalArgumentException("The class $customTestQualifiedClassName not found")
   }
-  val capturer = capturerClass.getDeclaredConstructor().newInstance() as RobolectricPreviewTest
-  return capturer
+  if (!RobolectricPreviewTest::class.java.isAssignableFrom(customTestClass)) {
+    throw IllegalArgumentException("The class $customTestQualifiedClassName must implement RobolectricPreviewCapturer")
+  }
+  val robolectricPreviewTest =
+    customTestClass.getDeclaredConstructor().newInstance() as RobolectricPreviewTest
+  return robolectricPreviewTest
 }
