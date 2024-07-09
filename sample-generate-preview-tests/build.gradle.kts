@@ -67,9 +67,8 @@ dependencies {
   implementation(libs.androidx.compose.ui.tooling)
   implementation(libs.androidx.compose.runtime)
 
-  testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.20.0")
-  testImplementation(project(":roborazzi-compose-preview-scanner-support"))
-  testImplementation("io.github.takahirom.roborazzi:roborazzi:1.20.0")
+  // replaced by dependency substitution
+  testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
   testImplementation(libs.junit)
   testImplementation(libs.robolectric)
   testImplementation(libs.composable.preview.scanner)

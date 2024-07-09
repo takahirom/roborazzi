@@ -83,6 +83,14 @@ allprojects {
       }
     }
   }
+
+  configurations.all {
+    resolutionStrategy {
+      dependencySubstitution {
+        substitute(module("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support")).using(project(":roborazzi-compose-preview-scanner-support"))
+      }
+    }
+  }
 }
 
 class Topic {
