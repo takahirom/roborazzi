@@ -27,10 +27,11 @@ open class GenerateRobolectricPreviewTestsExtension @Inject constructor(objects:
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
   val customTestClassFQDN: Property<String> = objects.property(String::class.java)
     .convention("com.github.takahirom.roborazzi.DefaultRobolectricPreviewTest")
-  val robolectricConfig = objects.mapProperty(String::class.java, String::class.java)
+  val robolectricConfig: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
     .convention(
       mapOf(
-        "sdk" to "[33]"
+        "sdk" to "[33]",
+        "qualifiers" to "RobolectricDeviceQualifiers.Pixel4a",
       )
     )
 }

@@ -36,7 +36,6 @@ class DefaultRobolectricPreviewTest : RobolectricPreviewTest {
   }
 
   override fun test(preview: ComposablePreview<AndroidPreviewInfo>) {
-    RuntimeEnvironment.setQualifiers(RobolectricDeviceQualifiers.Pixel4a)
     val pathPrefix =
       if (roborazziRecordFilePathStrategy() == RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory) {
         roborazziSystemPropertyOutputDirectory() + java.io.File.separator

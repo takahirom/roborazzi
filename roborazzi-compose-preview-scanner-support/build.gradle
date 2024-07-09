@@ -19,8 +19,8 @@ apply from: rootProject.file('gradle/android.gradle')
 android.namespace 'com.github.takahirom.roborazzi.preview.support'
 
 dependencies {
-  implementation project(":roborazzi")
-  implementation project(":roborazzi-compose")
+  api project(":roborazzi")
+  api project(":roborazzi-compose")
 
   compileOnly libs.androidx.compose.runtime
   compileOnly libs.composable.preview.scanner
