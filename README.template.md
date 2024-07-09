@@ -7,6 +7,8 @@
 </div>
 <div name="topic_how_to_use">
 </div>
+<div name="topic_preview_support">
+</div>
 <div name="topic_idea_plugin">
 </div>
 <div name="topic_compose_multiplatform">
