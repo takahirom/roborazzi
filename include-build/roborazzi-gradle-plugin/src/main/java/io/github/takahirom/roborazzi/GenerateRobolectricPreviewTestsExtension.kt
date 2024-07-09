@@ -204,9 +204,10 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
     val className = generatedClassFQDN.substringAfterLast(".")
     val directory = File(testDir, packageName.replace(".", "/"))
     directory.mkdirs()
-    val robolectricConfigString = "@Config(\n"+robolectricConfig.get().entries.joinToString(", ") { (key, value) ->
-      "    $key = $value"
-    } + "\n)"
+    val space = "            "
+    val robolectricConfigString = "$space@Config(\n"+robolectricConfig.get().entries.joinToString(", ") { (key, value) ->
+      "$space    $key = $value"
+    } + "\n$space)"
     val customTestClassFQDNString = customTestClassFQDN.get()
     File(directory, "$className.kt").writeText(
       """
