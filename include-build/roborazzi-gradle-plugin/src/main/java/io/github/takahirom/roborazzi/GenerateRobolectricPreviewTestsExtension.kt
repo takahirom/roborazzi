@@ -123,7 +123,7 @@ private fun verifyTestConfig(
         }
       """.trimIndent()
       logger.warn(
-        "Roborazzi: Please set 'robolectric.pixelCopyRenderMode = hardware' in the 'testOptions' block in the 'build.gradle' file. " +
+        "Roborazzi: Please set 'robolectric.pixelCopyRenderMode = hardware' (Robolectric 4.12.2+) in the 'testOptions' block in the 'build.gradle' file. " +
           "This is advisable to avoid issues with the fidelity of the images.\n" +
           "Please refer to 'https://github.com/takahirom/roborazzi?tab=readme-ov-file#q-the-images-taken-from-roborazzi-seem-broken' for more information.\n" +
           "Example:\n$example"
