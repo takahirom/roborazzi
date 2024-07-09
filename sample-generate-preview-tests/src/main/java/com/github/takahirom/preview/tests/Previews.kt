@@ -38,7 +38,7 @@ fun Preview2() {
   apiLevel = 30,
   widthDp = 320,
   heightDp = 640,
-  locale = "ja_JP",
+  locale = "ja",
   fontScale = 1.5f,
   showSystemUi = true,
   showBackground = true,

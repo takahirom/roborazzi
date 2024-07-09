@@ -52,17 +52,26 @@ android {
     }
   }
 }
+android {
+  testOptions {
+    unitTests.all { test ->
+      test.systemProperties["roborazzi.generateRobolectricPreview.capturer.classFQDN"] = "com.github.takahirom.roborazzi.DefaultRobolectricPreviewCapturer"
+    }
+  }
+}
 
 dependencies {
   implementation(libs.androidx.compose.material3)
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling)
+  implementation(libs.androidx.compose.runtime)
 
   testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.20.0")
+  testImplementation(project(":roborazzi-compose-preview-scanner-support"))
   testImplementation("io.github.takahirom.roborazzi:roborazzi:1.20.0")
   testImplementation(libs.junit)
   testImplementation(libs.robolectric)
-  testImplementation("com.github.sergio-sastre.ComposablePreviewScanner:android:0.1.2")
+  testImplementation(libs.composable.preview.scanner)
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.espresso.core)
 }
