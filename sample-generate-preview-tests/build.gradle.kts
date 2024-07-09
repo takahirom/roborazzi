@@ -55,6 +55,7 @@ android {
 android {
   testOptions {
     unitTests.all { test ->
+      // For testing, we don't need to specify like this if we use default settings
       test.systemProperties["roborazzi.generateRobolectricPreview.capturer.classFQDN"] = "com.github.takahirom.roborazzi.DefaultRobolectricPreviewCapturer"
     }
   }
