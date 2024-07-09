@@ -79,7 +79,6 @@ fun PreviewWithProperties() {
   Card(
       Modifier
           .width(100.dp)
-          .height(50.dp)
   ) {
     Text(
       modifier = Modifier.padding(8.dp),
