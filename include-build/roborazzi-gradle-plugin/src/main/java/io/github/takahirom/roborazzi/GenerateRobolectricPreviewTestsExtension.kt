@@ -252,7 +252,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
                         )
                     }
                     @JvmStatic
-                    @ParameterizedRobolectricTestRunner.Parameters
+                    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
                     fun values(): List<ComposablePreview<AndroidPreviewInfo>> =
                         previews
                 }
