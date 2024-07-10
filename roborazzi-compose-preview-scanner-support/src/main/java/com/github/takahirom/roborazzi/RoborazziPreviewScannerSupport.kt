@@ -41,7 +41,8 @@ class DefaultRobolectricPreviewTest : RobolectricPreviewTest {
       } else {
         ""
       }
-    val filePath = pathPrefix + createScreenshotIdFor(preview) + ".png"
+    val name = roborazziDefaultNamingStrategy().generateOutputName(preview.declaringClass, createScreenshotIdFor(preview))
+    val filePath = "$pathPrefix$name.png"
     preview.captureRoboImage(filePath)
   }
 
