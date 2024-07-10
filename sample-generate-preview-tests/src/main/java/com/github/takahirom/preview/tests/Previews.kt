@@ -66,6 +66,21 @@ fun PreviewDarkMode() {
   heightDp = 640,
   locale = "ja-rJP",
   fontScale = 1.5f,
+)
+@Composable
+fun PreviewWithProperties1() {
+  Card(
+      Modifier
+          .width(100.dp)
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!"
+    )
+  }
+}
+
+@Preview(
   showSystemUi = true,
   showBackground = true,
   backgroundColor = 0xFF0000FF,
@@ -74,10 +89,10 @@ fun PreviewDarkMode() {
   wallpaper = Wallpapers.GREEN_DOMINATED_EXAMPLE,
 )
 @Composable
-fun PreviewWithProperties() {
+fun PreviewWithProperties2() {
   Card(
-      Modifier
-          .width(100.dp)
+    Modifier
+      .width(100.dp)
   ) {
     Text(
       modifier = Modifier.padding(8.dp),
