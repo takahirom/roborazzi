@@ -13,7 +13,7 @@ object DefaultFileNameGenerator {
 
     @ExperimentalRoborazziApi
     fun generateOutputName(className: String, methodName: String?): String {
-      val result = when (this) {
+      return when (this) {
         TestPackageAndClassAndMethod -> "$className.$methodName"
         EscapedTestPackageAndClassAndMethod -> className.replace(
           ".",
@@ -22,7 +22,6 @@ object DefaultFileNameGenerator {
 
         TestClassAndMethod -> className.substringAfterLast(".") + "." + methodName
       }
-      return result
     }
 
     companion object {
