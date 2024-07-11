@@ -6,10 +6,10 @@ import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
 
 class StatusToolbarPanel(
-  actions: List<ToolbarAction>,
   onActionClicked: (taskName: String) -> Unit
 ) : JBPanel<Nothing>(BorderLayout()){
   private val _statusLabel = JBLabel()
+  private val dropdownMenu = TaskComboBox()
 
   var statusLabel: String = ""
     get() = _statusLabel.text
@@ -19,19 +19,42 @@ class StatusToolbarPanel(
     }
 
   init {
-    val dropdownMenu = ComboBox(actions.map { it.label }.toTypedArray())
     dropdownMenu.addItemListener { event ->
       val selectedTaskLabel = event.item as String
-      val selectedTask = actions.first { it.label == selectedTaskLabel }
-      if (selectedTask.id.isEmpty()) {
+      val selectedTask = dropdownMenu.actions.firstOrNull {
+        roborazziLog("label: ${it.label}, selectedTaskLabel: $selectedTaskLabel")
+        it.label == selectedTaskLabel
+      }
+      if (selectedTask?.id?.isEmpty() == true) {
         return@addItemListener
       }
-      onActionClicked(selectedTask.id)
-      roborazziLog("Selected: ${selectedTask.label} (${selectedTask.id})")
+      roborazziLog("Selected: ${selectedTask?.label} (${selectedTask?.id})")
+      onActionClicked(selectedTask?.id ?: return@addItemListener)
     }
     add(_statusLabel, BorderLayout.WEST)
     add(dropdownMenu, BorderLayout.EAST)
   }
 
+  fun setActions(actions: List<ToolbarAction>) {
+    val actionList = listOf(
+      ToolbarAction("Select a Task", ""),
+      *actions.toTypedArray()
+    )
+    dropdownMenu.setActions(actionList)
+  }
+
   data class ToolbarAction(val label: String, val id: String)
+}
+
+class TaskComboBox : ComboBox<String>() {
+
+  private val _actions = mutableListOf<StatusToolbarPanel.ToolbarAction>()
+  val actions get() = _actions.toList()
+
+  fun setActions(actions: List<StatusToolbarPanel.ToolbarAction>) {
+    removeAllItems()
+    _actions.clear()
+    _actions.addAll(actions)
+    actions.forEach { addItem(it.label) }
+  }
 }

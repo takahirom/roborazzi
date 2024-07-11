@@ -1,7 +1,6 @@
 package com.github.takahirom.roborazzi.idea.preview
 
 import com.github.takahirom.roborazzi.idea.settings.AppSettingsConfigurable
-import com.github.takahirom.roborazzi.idea.settings.AppSettingsState
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -12,16 +11,10 @@ import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.openapi.wm.ex.ToolWindowEx
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.impl.source.tree.CompositeElement
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBBox
 import com.intellij.ui.components.JBLabel
@@ -30,21 +23,8 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.containers.SLRUMap
 import com.intellij.util.messages.MessageBusConnection
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.yield
 import org.jetbrains.kotlin.codegen.inline.getOrPut
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtDeclaration
-import org.jetbrains.kotlin.psi.KtElement
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtFunction
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Image
@@ -85,233 +65,10 @@ class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
   }
 }
 
-class PreviewViewModel {
-
-  var coroutineScope = MainScope()
-  val imagesStateFlow = MutableStateFlow<List<Pair<String, Long>>>(listOf())
-  private val lastEditingFileName = MutableStateFlow<String?>(null)
-  val statusText = MutableStateFlow("No images found")
-  val shouldSeeIndex = MutableStateFlow(-1)
-  private var updateListJob: Job? = null
-
-  fun onRefreshClicked(project: Project) {
-    roborazziLog("onRefreshClicked")
-    refreshList(project)
-  }
-
-  fun onInit(project: Project) {
-    roborazziLog("onInit")
-    refreshList(project)
-  }
-
-  fun onSelectedFileChanged(project: Project) {
-    roborazziLog("onSelectedFileChanged")
-    coroutineScope.launch {
-      updateListJob?.cancel()
-      refreshListProcess(project)
-      selectListIndexByCaret(project)
-    }
-  }
-
-  fun onCaretPositionChanged(project: Project) {
-    roborazziLog("onCaretPositionChanged")
-    coroutineScope.launch {
-      updateListJob?.cancel()
-      refreshListProcess(project)
-      selectListIndexByCaret(project)
-    }
-  }
-
-  private fun selectListIndexByCaret(project: Project) {
-    val editor = FileEditorManager.getInstance(project).selectedTextEditor
-    val offset = editor?.caretModel?.offset
-    if (offset != null) {
-      val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) as? KtFile
-        ?: return
-      val kotlinFile = psiFile as? KtFile ?: return
-      val pe: PsiElement = kotlinFile.findElementAt(editor.caretModel.offset) ?: return
-      val method: KtFunction = findFunction(pe) ?: return
-      roborazziLog("imagesStateFlow.value = ${imagesStateFlow.value}")
-      imagesStateFlow.value.indexOfFirst {
-        it.first.substringAfterLast(File.separator).contains(method.name ?: "")
-      }
-        .let {
-          roborazziLog("shouldSeeIndex.value = $it")
-          shouldSeeIndex.value = it
-        }
-    }
-  }
-
-  private fun findFunction(element: PsiElement): KtFunction? {
-    var methodCnadidate: KtDeclaration? = null
-    while (true) {
-      methodCnadidate = if (methodCnadidate == null) {
-        PsiTreeUtil.getParentOfType(
-          element,
-          KtDeclaration::class.java
-        )
-      } else {
-        if ((element is CompositeElement)) methodCnadidate else PsiTreeUtil.getParentOfType(
-          methodCnadidate,
-          KtDeclaration::class.java
-        )
-      }
-      if (methodCnadidate is KtFunction) {
-        if (methodCnadidate.isLocal) {
-          continue
-        }
-        break
-      }
-      if (methodCnadidate == null) {
-        break
-      }
-    }
-
-    return methodCnadidate as? KtFunction
-  }
-
-  private fun refreshList(project: Project) {
-    updateListJob?.cancel()
-    updateListJob = coroutineScope.launch {
-      refreshListProcess(project)
-    }
-  }
-
-  private suspend fun refreshListProcess(project: Project) {
-    val start = System.currentTimeMillis()
-    roborazziLog("refreshListProcess")
-    statusText.value = "Loading..."
-    yield()
-    val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return run {
-      statusText.value = "No editor found"
-      imagesStateFlow.value = emptyList()
-    }
-
-    val psiFile: PsiFile =
-      PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return run {
-        statusText.value = "No psi file found"
-        imagesStateFlow.value = emptyList()
-      }
-    val kotlinFile = psiFile as? KtFile ?: return run {
-      statusText.value = "No kotlin file found"
-      imagesStateFlow.value = emptyList()
-    }
-    if (lastEditingFileName.value != kotlinFile.name) {
-      imagesStateFlow.value = emptyList()
-      delay(10)
-      lastEditingFileName.value = kotlinFile.name
-    }
-    val allDeclarations = kotlinFile.declarations
-    val allPreviewImageFiles = mutableListOf<File>()
-    fun hasPreviewOrTestAnnotationOrHasNameOfTestFunction(declaration: KtDeclaration): Boolean {
-      return declaration.annotationEntries.any { annotation ->
-        annotation.text.contains("Composable") ||
-          annotation.text.contains("Preview") || annotation.text.contains("Test")
-      } || (declaration is KtFunction && declaration.name?.startsWith("test") == true)
-    }
-
-    val functions: List<KtFunction> = allDeclarations.filterIsInstance<KtFunction>()
-      .filter { hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it) }
-    val classes: List<KtClass> = allDeclarations.filterIsInstance<KtClass>()
-      .filter {
-        it.name?.contains("Test") == true || it.declarations.any {
-          hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it)
-        }
-      }
-
-    val searchPath = project.basePath
-    statusText.value = "Searching images in $searchPath ..."
-
-    val files = withContext(Dispatchers.IO) {
-      val roborazziFolders = ProjectRootManager.getInstance(project).contentRootsFromAllModules
-        .map { File(it.path + AppSettingsState.instance.imagesPathForModule) }
-        .filter {
-          it.exists()
-        }
-
-      roborazziFolders
-        .flatMap { folder ->
-          folder.walkTopDown().filter { it.isFile }
-        }
-    }
-
-    allPreviewImageFiles.addAll(findImages(classes, files))
-    allPreviewImageFiles.addAll(findImages(functions, files))
-
-    if (allPreviewImageFiles.isEmpty()) {
-      statusText.value = "No images found"
-    } else {
-      statusText.value = "${allPreviewImageFiles.size} images found"
-    }
-    val result = allPreviewImageFiles.sortedByClassesAndFunctions(classes, functions)
-      .map { it.path to it.lastModified() }
-    roborazziLog("refreshListProcess result result.size:${result.size} in ${System.currentTimeMillis() - start}ms")
-    imagesStateFlow.value = result
-  }
-
-  private suspend fun List<File>.sortedByClassesAndFunctions(
-    classes: List<KtClass>,
-    functions: List<KtFunction>
-  ): List<File> {
-    val allFunctionNamesOrder = (classes
-      .flatMap { it.declarations.filterIsInstance<KtFunction>() } + functions
-      ).map { it.name }
-    val files = this
-    return withContext(Dispatchers.Default) {
-      files.sortedBy { file ->
-        allFunctionNamesOrder.indexOfFirst { functionName ->
-          file.name.contains(functionName ?: "")
-        }
-      }
-    }
-  }
-
-  private suspend fun findImages(
-    elements: List<KtElement>,
-    files: List<File>
-  ): List<File> {
-    val elementNames = elements.mapNotNull { element ->
-      element.name
-    }
-    return withContext(Dispatchers.Default) {
-      elementNames.flatMap { elementName ->
-        val pattern = ".*$elementName.*.png"
-        files
-          .filter {
-            val matches = it.name.matches(Regex(pattern))
-            matches
-          }
-      }
-    }
-  }
-
-  private fun cancel() {
-    coroutineScope.cancel()
-  }
-
-  fun onHide() {
-    cancel()
-  }
-
-  fun onShouldSeeIndexHandled() {
-    shouldSeeIndex.value = -1
-  }
-}
-
-class RoborazziPreviewPanel(
-  project: Project,
-  roborazziGradleTask: RoborazziGradleTask = RoborazziGradleTask(project)
-) : JPanel(BorderLayout()) {
+class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
   private val listModel = DefaultListModel<Pair<String, Long>>()
-  private val statusGradleTaskPanel = StatusToolbarPanel(
-    listOf(
-      StatusToolbarPanel.ToolbarAction("Select a Task", ""),
-      *roborazziGradleTask.fetchTasks().map {
-        StatusToolbarPanel.ToolbarAction(it, it)
-      }.toTypedArray()
-    ),
-  ) { taskName ->
-    roborazziGradleTask.executeTaskByName(taskName)
+  private val statusGradleTaskPanel = StatusToolbarPanel { taskName ->
+    viewModel?.executeTaskByName(project, taskName)
   }
   private val statusBar = JBBox.createHorizontalBox().apply {
     add(JLabel("Refresh: ").apply {
@@ -417,6 +174,14 @@ class RoborazziPreviewPanel(
     viewModel?.coroutineScope?.launch {
       viewModel?.statusText?.collect {
         statusGradleTaskPanel.statusLabel = it
+      }
+    }
+
+    viewModel?.coroutineScope?.launch {
+      viewModel?.dropDownUiState?.collect {
+        statusGradleTaskPanel.setActions(
+          it.map { taskName -> StatusToolbarPanel.ToolbarAction(taskName, taskName)}
+        )
       }
     }
     viewModel?.coroutineScope?.launch {

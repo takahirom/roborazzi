@@ -7,14 +7,14 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import org.jetbrains.plugins.gradle.util.GradleConstants
 
-class RoborazziGradleTask(private val project: Project) {
+class RoborazziGradleTask {
 
-  fun fetchTasks(): List<String> {
+  fun fetchTasks(project: Project): List<String> {
     // Redo this to fetch gradle's tasks for Roborazzi
     return roborazziTasks()
   }
 
-  fun executeTaskByName(taskName: String) {
+  fun executeTaskByName(project: Project, taskName: String) {
     val settings = ExternalSystemTaskExecutionSettings().apply {
       externalProjectPath = project.basePath!!
       taskNames = listOf(taskName)
