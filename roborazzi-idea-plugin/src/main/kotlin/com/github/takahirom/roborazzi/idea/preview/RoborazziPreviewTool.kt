@@ -57,7 +57,6 @@ import java.io.File
 import javax.imageio.ImageIO
 import javax.swing.Box
 import javax.swing.DefaultListModel
-import javax.swing.Icon
 import javax.swing.ImageIcon
 import javax.swing.JLabel
 import javax.swing.JList
@@ -299,9 +298,21 @@ class PreviewViewModel {
   }
 }
 
-class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
+class RoborazziPreviewPanel(
+  project: Project,
+  roborazziGradleTask: RoborazziGradleTask = RoborazziGradleTask(project)
+) : JPanel(BorderLayout()) {
   private val listModel = DefaultListModel<Pair<String, Long>>()
-  private val statusLabel = JBLabel("No images found")
+  private val statusGradleTaskPanel = StatusToolbarPanel(
+    listOf(
+      StatusToolbarPanel.ToolbarAction("Select a Task", ""),
+      *roborazziGradleTask.fetchTasks().map {
+        StatusToolbarPanel.ToolbarAction(it, it)
+      }.toTypedArray()
+    ),
+  ) { taskName ->
+    roborazziGradleTask.executeTaskByName(taskName)
+  }
   private val statusBar = JBBox.createHorizontalBox().apply {
     add(JLabel("Refresh: ").apply {
       addMouseListener(object : MouseAdapter() {
@@ -310,7 +321,8 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
         }
       })
     })
-    add(statusLabel)
+    statusGradleTaskPanel.statusLabel = "No images found"
+    add(statusGradleTaskPanel)
   }
   private val imageList = object : JBList<Pair<String, Long>>(listModel) {
     override fun getScrollableTracksViewportWidth(): Boolean {
@@ -404,7 +416,7 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
     }
     viewModel?.coroutineScope?.launch {
       viewModel?.statusText?.collect {
-        statusLabel.text = it
+        statusGradleTaskPanel.statusLabel = it
       }
     }
     viewModel?.coroutineScope?.launch {
