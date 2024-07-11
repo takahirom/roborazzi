@@ -192,10 +192,11 @@ sealed interface RoboComponent {
     override val accessibilityText: String = run {
       buildString {
         val contentDescription = node.config.getOrNull(SemanticsProperties.ContentDescription)
-        val text = node.config.getOrNull(SemanticsProperties.Text)
         if (contentDescription != null) {
           appendLine("Content Description: \"${contentDescription.joinToString(", ")}\"")
-        } else if (text != null) {
+        }
+        val text = node.config.getOrNull(SemanticsProperties.Text)
+        if (text != null) {
           appendLine("Text: \"${text.joinToString(", ")}\"")
         }
         val stateDescription = node.config.getOrNull(SemanticsProperties.StateDescription)
