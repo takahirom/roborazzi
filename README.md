@@ -960,7 +960,7 @@ Then you can enable the Compose Preview screenshot test generation feature by ad
 
 ```kotlin
 roborazzi {
-  generateRobolectricPreviewTests {
+  generateRobolectricComposePreviewTests {
     enable = true
   }
 }
@@ -976,7 +976,7 @@ You can customize the generated test by adding the following configuration to yo
 
 ```kotlin
 roborazzi {
-  generateRobolectricPreviewTests {
+  generateRobolectricComposePreviewTests {
     enable = true
     // The package names to scan for Composable Previews.
     packages = listOf("com.example")

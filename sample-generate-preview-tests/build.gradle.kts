@@ -6,7 +6,7 @@ plugins {
 }
 
 roborazzi {
-  generateRobolectricPreviewTests {
+  generateRobolectricComposePreviewTests {
     enable = true
     packages = listOf("com.github.takahirom.preview.tests")
   }

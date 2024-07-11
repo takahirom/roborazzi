@@ -43,21 +43,16 @@ import kotlin.reflect.KClass
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
 private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 
-/**
- * Experimental API
- * This class can be changed without notice.
- */
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
 
-  // Configuration based APIs
   @ExperimentalRoborazziApi
-  val generateRobolectricPreviewTests: GenerateRobolectricPreviewTestsExtension =
-    objects.newInstance(GenerateRobolectricPreviewTestsExtension::class.java)
+  val generateRobolectricComposePreviewTests: GenerateRobolectricComposePreviewTestsExtension =
+    objects.newInstance(GenerateRobolectricComposePreviewTestsExtension::class.java)
 
   @ExperimentalRoborazziApi
-  fun generateRobolectricPreviewTests(action: GenerateRobolectricPreviewTestsExtension.() -> Unit) {
-    action(generateRobolectricPreviewTests)
+  fun generateRobolectricComposePreviewTests(action: GenerateRobolectricComposePreviewTestsExtension.() -> Unit) {
+    action(generateRobolectricComposePreviewTests)
   }
 }
 
@@ -440,7 +435,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         generateRobolectricPreviewTestsIfNeeded(
           project = project,
           variant = variant,
-          extension = extension.generateRobolectricPreviewTests,
+          extension = extension.generateRobolectricComposePreviewTests,
           androidExtension = project.extensions.getByType(TestedExtension::class.java),
           testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
         )
