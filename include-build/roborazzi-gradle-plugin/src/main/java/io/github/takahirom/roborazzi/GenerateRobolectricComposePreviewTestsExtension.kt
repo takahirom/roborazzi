@@ -21,7 +21,7 @@ import java.io.File
 import java.net.URLEncoder
 import javax.inject.Inject
 
-open class GenerateRobolectricComposePreviewTestsExtension @Inject constructor(objects: ObjectFactory) {
+open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
 
@@ -52,7 +52,7 @@ open class GenerateRobolectricComposePreviewTestsExtension @Inject constructor(o
 fun generateRobolectricPreviewTestsIfNeeded(
   project: Project,
   variant: Variant,
-  extension: GenerateRobolectricComposePreviewTestsExtension,
+  extension: GenerateComposePreviewRobolectricTestsExtension,
   androidExtension: TestedExtension,
   testTaskProvider: TaskCollection<Test>
 ) {

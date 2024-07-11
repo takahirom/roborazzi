@@ -47,12 +47,12 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
 
   @ExperimentalRoborazziApi
-  val generateRobolectricComposePreviewTests: GenerateRobolectricComposePreviewTestsExtension =
-    objects.newInstance(GenerateRobolectricComposePreviewTestsExtension::class.java)
+  val generateComposePreviewRobolectricTests: GenerateComposePreviewRobolectricTestsExtension =
+    objects.newInstance(GenerateComposePreviewRobolectricTestsExtension::class.java)
 
   @ExperimentalRoborazziApi
-  fun generateRobolectricComposePreviewTests(action: GenerateRobolectricComposePreviewTestsExtension.() -> Unit) {
-    action(generateRobolectricComposePreviewTests)
+  fun generateComposePreviewRobolectricTests(action: GenerateComposePreviewRobolectricTestsExtension.() -> Unit) {
+    action(generateComposePreviewRobolectricTests)
   }
 }
 
@@ -435,7 +435,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         generateRobolectricPreviewTestsIfNeeded(
           project = project,
           variant = variant,
-          extension = extension.generateRobolectricComposePreviewTests,
+          extension = extension.generateComposePreviewRobolectricTests,
           androidExtension = project.extensions.getByType(TestedExtension::class.java),
           testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
         )
