@@ -4,6 +4,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -153,6 +154,29 @@ class ComposeTest {
             },
           text = "Text"
         )
+      }
+    }
+    composeTestRule
+      .onNode(isRoot())
+      .captureRoboImage(
+        roborazziOptions = RoborazziOptions(
+          captureType = RoborazziOptions.CaptureType.Dump(
+            explanation = Dump.AccessibilityExplanation,
+          )
+        )
+      )
+  }
+
+  @Test
+  fun accessibilityExplanation_merged() {
+    composeTestRule.setContent {
+      Row(modifier = Modifier.semantics(mergeDescendants = true) {}) {
+        Icon(
+          modifier = Modifier.size(48.dp),
+          painter = painterResource(id = R.drawable.ic_launcher_foreground),
+          contentDescription = "Test content description"
+        )
+        Text(text = "Test text")
       }
     }
     composeTestRule
