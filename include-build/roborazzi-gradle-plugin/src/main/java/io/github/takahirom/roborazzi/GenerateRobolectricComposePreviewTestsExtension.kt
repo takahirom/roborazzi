@@ -118,8 +118,8 @@ private fun verifyMavenRepository(project: Project) {
   if (!hasJitpackRepo) {
     error(
       "Roborazzi: Please add the following 'maven' repository to the 'repositories' block in the 'build.gradle' file.\n" +
-        "build.gradle: maven { url 'https://jitpack.io' }\n" +
-        "build.gradle.kts: maven { url = uri(\"https://jitpack.io\") }\n" +
+        "build.gradle: \nrepositories {\nmaven { url 'https://jitpack.io' } \n}\n" +
+        "build.gradle.kts: \nrepositories {\nmaven { url = uri(\"https://jitpack.io\") } \n}\n" +
         "This is necessary to download the ComposablePreviewScanner."
     )
   }
@@ -146,11 +146,13 @@ private fun verifyTestConfig(
     }
     if (testTask.systemProperties["robolectric.pixelCopyRenderMode"] != "hardware") {
       val example = """
-        testOptions {
-          unitTests {
-            isIncludeAndroidResources = true
-            all {
-              it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+        android {
+          testOptions {
+            unitTests {
+              isIncludeAndroidResources = true
+              all {
+                it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+              }
             }
           }
         }
