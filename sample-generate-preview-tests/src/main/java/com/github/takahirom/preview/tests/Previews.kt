@@ -1,12 +1,14 @@
 package com.github.takahirom.preview.tests
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
@@ -16,12 +18,36 @@ import androidx.compose.ui.unit.dp
 
 @Preview
 @Composable
-fun Preview2() {
+fun PreviewNormal() {
   MaterialTheme {
     Card(
       Modifier
-        .width(126.dp)
-        .height(80.dp)
+        .width(180.dp)
+    ) {
+      Text(
+        modifier = Modifier.padding(8.dp),
+        text = "Generate Preview Test Sample"
+      )
+    }
+  }
+}
+
+@Preview(
+  uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun PreviewDarkMode() {
+  val isSystemInDarkTheme = isSystemInDarkTheme()
+  MaterialTheme(
+    colorScheme = if (isSystemInDarkTheme) {
+      darkColorScheme()
+    } else {
+      lightColorScheme()
+    }
+  ) {
+    Card(
+      Modifier
+        .width(180.dp)
     ) {
       Text(
         modifier = Modifier.padding(8.dp),
@@ -38,8 +64,23 @@ fun Preview2() {
   apiLevel = 30,
   widthDp = 320,
   heightDp = 640,
-  locale = "ja_JP",
+  locale = "ja-rJP",
   fontScale = 1.5f,
+)
+@Composable
+fun PreviewWithProperties1() {
+  Card(
+      Modifier
+          .width(100.dp)
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!"
+    )
+  }
+}
+
+@Preview(
   showSystemUi = true,
   showBackground = true,
   backgroundColor = 0xFF0000FF,
@@ -48,11 +89,10 @@ fun Preview2() {
   wallpaper = Wallpapers.GREEN_DOMINATED_EXAMPLE,
 )
 @Composable
-fun PreviewWithProperties() {
+fun PreviewWithProperties2() {
   Card(
     Modifier
       .width(100.dp)
-      .height(50.dp)
   ) {
     Text(
       modifier = Modifier.padding(8.dp),

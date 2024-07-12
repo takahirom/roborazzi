@@ -6,7 +6,7 @@ plugins {
 }
 
 roborazzi {
-  generateRobolectricPreviewTests {
+  generateComposePreviewRobolectricTests {
     enable = true
     packages = listOf("com.github.takahirom.preview.tests")
   }
@@ -57,12 +57,13 @@ dependencies {
   implementation(libs.androidx.compose.material3)
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling)
+  implementation(libs.androidx.compose.runtime)
 
-  testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.20.0")
-  testImplementation("io.github.takahirom.roborazzi:roborazzi:1.20.0")
+  // replaced by dependency substitution
+  testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
   testImplementation(libs.junit)
   testImplementation(libs.robolectric)
-  testImplementation("com.github.sergio-sastre.ComposablePreviewScanner:android:0.1.2")
+  testImplementation(libs.composable.preview.scanner)
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.espresso.core)
 }

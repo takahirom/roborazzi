@@ -10,6 +10,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
@@ -20,16 +21,38 @@ import java.io.File
 import java.net.URLEncoder
 import javax.inject.Inject
 
-open class GenerateRobolectricPreviewTestsExtension @Inject constructor(objects: ObjectFactory) {
+open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
+
+  /**
+   * The package names to scan for the Composable Previews.
+   */
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
+
+  /**
+   * The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.RobolectricPreviewTest].
+   */
+  val customTestQualifiedClassName: Property<String> = objects.property(String::class.java)
+    .convention("com.github.takahirom.roborazzi.DefaultRobolectricPreviewTest")
+
+  /**
+   * [robolectricConfig] will be passed to the Robolectric's @Config annotation in the generated test class.
+   * See https://robolectric.org/configuring/ for more information.
+   */
+  val robolectricConfig: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+    .convention(
+      mapOf(
+        "sdk" to "[33]",
+        "qualifiers" to "RobolectricDeviceQualifiers.Pixel4a",
+      )
+    )
 }
 
 fun generateRobolectricPreviewTestsIfNeeded(
   project: Project,
   variant: Variant,
-  extension: GenerateRobolectricPreviewTestsExtension,
+  extension: GenerateComposePreviewRobolectricTestsExtension,
   androidExtension: TestedExtension,
   testTaskProvider: TaskCollection<Test>
 ) {
@@ -37,7 +60,13 @@ fun generateRobolectricPreviewTestsIfNeeded(
     return
   }
   val logger = project.logger
-  setupGeneratePreviewTestsTask(project, variant, extension.packages)
+  setupGeneratePreviewTestsTask(
+    project = project,
+    variant = variant,
+    scanPackages = extension.packages,
+    customTestQualifiedClassName = extension.customTestQualifiedClassName,
+    robolectricConfig = extension.robolectricConfig
+  )
   project.afterEvaluate {
     // We use afterEvaluate only for verify
     assert(variant.unitTest == null) {
@@ -52,7 +81,9 @@ fun generateRobolectricPreviewTestsIfNeeded(
 private fun setupGeneratePreviewTestsTask(
   project: Project,
   variant: Variant,
-  scanPackages: ListProperty<String>
+  scanPackages: ListProperty<String>,
+  customTestQualifiedClassName: Property<String>,
+  robolectricConfig: MapProperty<String, String>,
 ) {
   assert(scanPackages.get().orEmpty().isNotEmpty()) {
     "Please set roborazzi.generateRobolectricPreviewTests.packages in the generatePreviewTests extension or set roborazzi.generateRobolectricPreviewTests.enable = false." +
@@ -67,6 +98,8 @@ private fun setupGeneratePreviewTestsTask(
     // The generated tests will be located in build/JAVA/generate[VariantName]PreviewScreenshotTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
     it.scanPackageTrees.set(scanPackages)
+    it.customTestQualifiedClassName.set(customTestQualifiedClassName)
+    it.robolectricConfig.set(robolectricConfig)
   }
   // We need to use sources.java here; otherwise, the generate task will not be executed.
   // https://stackoverflow.com/a/76870110/4339442
@@ -85,8 +118,8 @@ private fun verifyMavenRepository(project: Project) {
   if (!hasJitpackRepo) {
     error(
       "Roborazzi: Please add the following 'maven' repository to the 'repositories' block in the 'build.gradle' file.\n" +
-        "build.gradle: maven { url 'https://jitpack.io' }\n" +
-        "build.gradle.kts: maven { url = uri(\"https://jitpack.io\") }\n" +
+        "build.gradle: \nrepositories {\nmaven { url 'https://jitpack.io' } \n}\n" +
+        "build.gradle.kts: \nrepositories {\nmaven { url = uri(\"https://jitpack.io\") } \n}\n" +
         "This is necessary to download the ComposablePreviewScanner."
     )
   }
@@ -113,11 +146,13 @@ private fun verifyTestConfig(
     }
     if (testTask.systemProperties["robolectric.pixelCopyRenderMode"] != "hardware") {
       val example = """
-        testOptions {
-          unitTests {
-            isIncludeAndroidResources = true
-            all {
-              it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+        android {
+          testOptions {
+            unitTests {
+              isIncludeAndroidResources = true
+              all {
+                it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+              }
             }
           }
         }
@@ -152,8 +187,7 @@ private fun verifyLibraryDependencies(
   }
 
   val requiredLibraries = listOf(
-    "io.github.takahirom.roborazzi:roborazzi-compose",
-    "io.github.takahirom.roborazzi:roborazzi",
+    "io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support",
     "junit:junit",
     "org.robolectric:robolectric",
     "com.github.sergio-sastre.ComposablePreviewScanner:android",
@@ -168,17 +202,32 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
   @get:Input
   var scanPackageTrees: ListProperty<String> = project.objects.listProperty(String::class.java)
 
+  @get:Input
+  abstract val customTestQualifiedClassName: Property<String>
+
+  @get:Input
+  abstract val robolectricConfig: MapProperty<String, String>
+
   @TaskAction
   fun generateTests() {
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
     val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
-    val scanPackageTreeExpr = ".scanPackageTrees($packagesExpr)"
 
-    val className = "RoborazziPreviewParameterizedTests"
-    File(testDir, "$className.kt").writeText(
+    val generatedClassFQDN = "com.github.takahirom.roborazzi.RoborazziPreviewParameterizedTests"
+    val packageName = generatedClassFQDN.substringBeforeLast(".")
+    val className = generatedClassFQDN.substringAfterLast(".")
+    val directory = File(testDir, packageName.replace(".", "/"))
+    directory.mkdirs()
+    val robolectricConfigString =
+      "@Config(" + robolectricConfig.get().entries.joinToString(", ") { (key, value) ->
+        "$key = $value"
+      } + ")"
+    val customTestQualifiedClassNameString = customTestQualifiedClassName.get()
+    File(directory, "$className.kt").writeText(
       """
+            package $packageName
             import org.junit.Test
             import org.junit.runner.RunWith
             import org.robolectric.ParameterizedRobolectricTestRunner
@@ -198,35 +247,24 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
             ) {
 
                 companion object {
+                    // lazy for performance
                     val previews: List<ComposablePreview<AndroidPreviewInfo>> by lazy {
-                        AndroidComposablePreviewScanner()
-                            $scanPackageTreeExpr
-                            .getPreviews()
+                        getRobolectricPreviewTest("$customTestQualifiedClassNameString").previews(
+                            $packagesExpr
+                        )
                     }
                     @JvmStatic
-                    @ParameterizedRobolectricTestRunner.Parameters
+                    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
                     fun values(): List<ComposablePreview<AndroidPreviewInfo>> =
                         previews
                 }
                 
-                fun createScreenshotIdFor(preview: ComposablePreview<AndroidPreviewInfo>) = 
-                  AndroidPreviewScreenshotIdBuilder(preview)
-                         .ignoreClassName()
-                         .build()
                 
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-                @Config(sdk = [30])
+                $robolectricConfigString
                 @Test
                 fun test() {
-                    val pathPrefix = if(roborazziRecordFilePathStrategy() == RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory) {
-                        roborazziSystemPropertyOutputDirectory() + java.io.File.separator
-                    } else {
-                        ""
-                    }
-                    val filePath = pathPrefix + createScreenshotIdFor(preview) + ".png"
-                    captureRoboImage(filePath = filePath) {
-                        preview()
-                    }
+                    getRobolectricPreviewTest("$customTestQualifiedClassNameString").test(preview)
                 }
 
             }
