@@ -3,8 +3,10 @@ package io.github.takahirom.roborazzi
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
+import com.android.build.gradle.TestedExtension
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import org.gradle.api.Action
@@ -19,6 +21,7 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.options.Option
 import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.Test
@@ -40,13 +43,19 @@ import kotlin.reflect.KClass
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
 private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 
-/**
- * Experimental API
- * This class can be changed without notice.
- */
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
+
+  @ExperimentalRoborazziApi
+  val generateComposePreviewRobolectricTests: GenerateComposePreviewRobolectricTestsExtension =
+    objects.newInstance(GenerateComposePreviewRobolectricTestsExtension::class.java)
+
+  @ExperimentalRoborazziApi
+  fun generateComposePreviewRobolectricTests(action: GenerateComposePreviewRobolectricTestsExtension.() -> Unit) {
+    action(generateComposePreviewRobolectricTests)
+  }
 }
+
 
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
@@ -116,6 +125,15 @@ abstract class RoborazziPlugin : Plugin<Project> {
       return roborazziProperties["roborazzi.test.record"] == "true" || roborazziProperties["roborazzi.test.verify"] == "true" || roborazziProperties["roborazzi.test.compare"] == "true"
     }
 
+    fun <T : AbstractTestTask> findTestTaskProvider(
+      testTaskClass: KClass<T>,
+      testTaskName: String
+    ): TaskCollection<T> =
+      project.tasks.withType(testTaskClass.java)
+        .matching {
+          it.name == testTaskName
+        }
+
     fun configureRoborazziTasks(
       variantSlug: String,
       testTaskName: String,
@@ -174,10 +192,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         isCompareRun.set(compareReportGenerateTaskProvider.map { graph.hasTask(it) })
       }
 
-      val testTaskProvider = project.tasks.withType(testTaskClass.java)
-        .matching {
-          it.name == testTaskName
-        }
+      val testTaskProvider = findTestTaskProvider(testTaskClass, testTaskName)
       val roborazziProperties: Map<String, Any?> =
         project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
 
@@ -260,7 +275,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
               reportFile.parentFile.mkdirs()
               WebAssets.create().writeToRoborazziReportsDir(reportFile.parentFile)
-              val reportHtml = readIndexHtmlFile() ?: throw FileNotFoundException("index.html not found in resources/META-INF folder")
+              val reportHtml = readIndexHtmlFile()
+                ?: throw FileNotFoundException("index.html not found in resources/META-INF folder")
               reportFile.writeText(
                 reportHtml.replace(
                   oldValue = "REPORT_TEMPLATE_BODY",
@@ -415,11 +431,19 @@ abstract class RoborazziPlugin : Plugin<Project> {
         val unitTest = variant.unitTest ?: return@onVariants
         val variantSlug = variant.name.capitalizeUS()
         val testVariantSlug = unitTest.name.capitalizeUS()
+        val testTaskName = "test$testVariantSlug"
+        generateRobolectricPreviewTestsIfNeeded(
+          project = project,
+          variant = variant,
+          extension = extension.generateComposePreviewRobolectricTests,
+          androidExtension = project.extensions.getByType(TestedExtension::class.java),
+          testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
+        )
 
         // e.g. testDebugUnitTest -> recordRoborazziDebug
         configureRoborazziTasks(
           variantSlug = variantSlug,
-          testTaskName = "test$testVariantSlug",
+          testTaskName = testTaskName,
         )
       }
     }

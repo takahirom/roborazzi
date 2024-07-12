@@ -21,7 +21,7 @@ allprojects {
   def javaTargetVersion = JavaVersion.toVersion(javaVersion)
   def jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.@Companion.fromTarget(javaVersion)
 
-  plugins.withId("java") {
+    plugins.withId("java") {
     java {
       toolchain {
         languageVersion.set(JavaLanguageVersion.of(toolchainVersion))
@@ -80,6 +80,14 @@ allprojects {
             }
           }
         }
+      }
+    }
+  }
+
+  configurations.all {
+    resolutionStrategy {
+      dependencySubstitution {
+        substitute(module("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support")).using(project(":roborazzi-compose-preview-scanner-support"))
       }
     }
   }
