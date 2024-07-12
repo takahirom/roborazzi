@@ -36,8 +36,9 @@ class StatusToolbarPanel(
   }
 
   fun setActions(actions: List<ToolbarAction>) {
+    val prompt = if (actions.isEmpty()) "No tasks found" else "Select a Task"
     val actionList = listOf(
-      ToolbarAction("Select a Task", ""),
+      ToolbarAction(prompt, ""),
       *actions.toTypedArray()
     )
     dropdownMenu.setActions(actionList)
