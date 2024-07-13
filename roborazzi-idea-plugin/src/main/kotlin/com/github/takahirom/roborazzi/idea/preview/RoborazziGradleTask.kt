@@ -28,7 +28,11 @@ class RoborazziGradleTask {
       .map { it.data.name }.sorted()
   }
 
-  fun executeTaskByName(project: Project, taskName: String) {
+  fun executeTaskByName(
+    project: Project,
+    taskName: String,
+    onTaskExecuted:() -> Unit
+  ) {
     val settings = ExternalSystemTaskExecutionSettings().apply {
       externalProjectPath = project.basePath!!
       taskNames = listOf(taskName)
@@ -43,10 +47,12 @@ class RoborazziGradleTask {
       object : TaskCallback {
         override fun onSuccess() {
           roborazziLog("Task '$taskName' executed successfully")
+          onTaskExecuted()
         }
 
         override fun onFailure() {
           roborazziLog("Task '$taskName' execution failed")
+          onTaskExecuted()
         }
       },
       ProgressExecutionMode.IN_BACKGROUND_ASYNC,

@@ -26,7 +26,7 @@ class StatusToolbarPanel(
   onActionClicked: (taskName: String) -> Unit
 ) : JBPanel<Nothing>(BorderLayout()){
   private val _statusLabel = JBLabel()
-  private val actionToolBar = RoborazziGradleTaskToolbar(
+  private val actionToolbar = RoborazziGradleTaskToolbar(
     project = project,
     place = "RoborazziGradleTaskToolbar",
     horizontal = true,
@@ -40,20 +40,26 @@ class StatusToolbarPanel(
       field = value
     }
 
+  var isExecuteGradleTaskActionEnabled: Boolean
+    get() = actionToolbar.isExecuteGradleTaskActionEnabled
+    set(value) {
+      actionToolbar.isExecuteGradleTaskActionEnabled = value
+    }
+
   init {
-    actionToolBar.setTargetComponent(this)
+    actionToolbar.setTargetComponent(this)
     add(_statusLabel, BorderLayout.WEST)
-    add(actionToolBar.component, BorderLayout.EAST)
+    add(actionToolbar.component, BorderLayout.EAST)
   }
 
   fun setActions(actions: List<ToolbarAction>) {
     if (actions.isEmpty()) {
-      actionToolBar.isVisible = false
+      actionToolbar.isVisible = false
       return
     }
-    actionToolBar.isVisible = true
+    actionToolbar.isVisible = true
     val actionList = listOf(*actions.toTypedArray())
-    actionToolBar.setActions(actionList)
+    actionToolbar.setActions(actionList)
   }
 
   data class ToolbarAction(val label: String, val id: String)
@@ -69,12 +75,20 @@ class RoborazziGradleTaskToolbar(
 
   private val propertiesComponent = PropertiesComponent.getInstance(project)
   private val roborazziGradleTaskAction = GradleTaskComboBoxAction(propertiesComponent)
+  private val executeGradleTaskAction = ExecuteGradleTaskAction(propertiesComponent, onActionClicked)
+
+  var isExecuteGradleTaskActionEnabled: Boolean
+    get() = isEnabled
+    set(value) {
+      executeGradleTaskAction.isActionEnabled = value
+      isEnabled = value
+    }
 
   init {
     actionGroup.addAll(
       listOf(
         roborazziGradleTaskAction,
-        ExecuteGradleTaskAction(propertiesComponent, onActionClicked)
+        executeGradleTaskAction
       )
     )
   }
@@ -122,9 +136,22 @@ class RoborazziGradleTaskToolbar(
     private val onActionClicked: (taskName: String) -> Unit
   ): DumbAwareAction("Execute Selected Task", "Execute selected task", AllIcons.Actions.Refresh) {
 
+    var isActionEnabled = true
+      set(value) {
+        field = value
+        updateAllToolbarsImmediately()
+      }
+
     override fun actionPerformed(e: AnActionEvent) {
       propertiesComponent.getValue(SELECTED_TASK_KEY)?.let { onActionClicked(it) }
     }
+
+    override fun update(e: AnActionEvent) {
+      super.update(e)
+      e.presentation.isEnabled = isActionEnabled
+    }
+
+    override fun getActionUpdateThread() = ActionUpdateThread.EDT
   }
 
   class GradleTaskAction(

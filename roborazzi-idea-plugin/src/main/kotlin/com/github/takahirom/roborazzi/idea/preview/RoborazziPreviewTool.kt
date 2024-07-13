@@ -180,8 +180,9 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
 
     viewModel?.coroutineScope?.launch {
       viewModel?.dropDownUiState?.collect {
+        statusGradleTaskPanel.isExecuteGradleTaskActionEnabled = it.flag == PreviewViewModel.ActionToolbarUiState.Flag.IDLE
         statusGradleTaskPanel.setActions(
-          it.map { taskName -> StatusToolbarPanel.ToolbarAction(taskName, taskName)}
+          it.tasks.map { taskName -> StatusToolbarPanel.ToolbarAction(taskName, taskName)}
         )
       }
     }

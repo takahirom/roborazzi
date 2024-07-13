@@ -16,6 +16,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
@@ -32,7 +33,7 @@ class PreviewViewModel {
   val imagesStateFlow = MutableStateFlow<List<Pair<String, Long>>>(listOf())
   private val lastEditingFileName = MutableStateFlow<String?>(null)
   val statusText = MutableStateFlow("No images found")
-  private val _dropDownUiState = MutableStateFlow(emptyList<String>())
+  private val _dropDownUiState = MutableStateFlow(ActionToolbarUiState())
   val dropDownUiState = _dropDownUiState.asStateFlow()
   val shouldSeeIndex = MutableStateFlow(-1)
   private var updateListJob: Job? = null
@@ -70,7 +71,14 @@ class PreviewViewModel {
 
   fun executeTaskByName(project: Project, taskName: String) {
     roborazziLog("Executing task '$taskName'...")
-    gradleTask.executeTaskByName(project, taskName)
+    _dropDownUiState.update { currentUiState ->
+      currentUiState.copy(flag = ActionToolbarUiState.Flag.LOADING)
+    }
+    gradleTask.executeTaskByName(project, taskName) {
+      _dropDownUiState.update { currentUiState ->
+        currentUiState.copy(flag = ActionToolbarUiState.Flag.IDLE)
+      }
+    }
   }
 
   private fun selectListIndexByCaret(project: Project) {
@@ -130,7 +138,9 @@ class PreviewViewModel {
 
   private fun fetchTasks(project: Project) {
     roborazziLog("fetchTasks...")
-    _dropDownUiState.value = gradleTask.fetchTasks(project)
+    _dropDownUiState.update { currentUiState ->
+      currentUiState.copy( tasks = gradleTask.fetchTasks(project))
+    }
   }
 
   private suspend fun refreshListProcess(project: Project) {
@@ -251,5 +261,15 @@ class PreviewViewModel {
 
   fun onShouldSeeIndexHandled() {
     shouldSeeIndex.value = -1
+  }
+
+  data class ActionToolbarUiState(
+    val tasks: List<String> = emptyList(),
+    val flag: Flag = Flag.IDLE
+  ) {
+    enum class Flag {
+      LOADING,
+      IDLE
+    }
   }
 }
