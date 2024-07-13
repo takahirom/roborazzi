@@ -1,4 +1,4 @@
-# Compose Preview Support
+# Experimental Compose Preview Support
 
 Roborazzi provides support for generating screenshot tests and easy setup for Jetpack Compose Preview.
 This support uses [ComposePreviewScanner](https://github.com/sergio-sastre/ComposablePreviewScanner) to scan the Composable Previews in your project.
