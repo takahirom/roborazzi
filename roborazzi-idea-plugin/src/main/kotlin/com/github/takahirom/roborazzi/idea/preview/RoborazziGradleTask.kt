@@ -6,6 +6,7 @@ import com.intellij.openapi.externalSystem.model.ProjectKeys
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
+import com.intellij.openapi.externalSystem.task.TaskCallback
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -39,7 +40,15 @@ class RoborazziGradleTask {
       DefaultRunExecutor.EXECUTOR_ID,
       project,
       GradleConstants.SYSTEM_ID,
-      null,
+      object : TaskCallback {
+        override fun onSuccess() {
+          roborazziLog("Task '$taskName' executed successfully")
+        }
+
+        override fun onFailure() {
+          roborazziLog("Task '$taskName' execution failed")
+        }
+      },
       ProgressExecutionMode.IN_BACKGROUND_ASYNC,
       false
     )

@@ -69,7 +69,7 @@ class PreviewViewModel {
   }
 
   fun executeTaskByName(project: Project, taskName: String) {
-    roborazziLog("executeTaskByName")
+    roborazziLog("Executing task '$taskName'...")
     gradleTask.executeTaskByName(project, taskName)
   }
 
