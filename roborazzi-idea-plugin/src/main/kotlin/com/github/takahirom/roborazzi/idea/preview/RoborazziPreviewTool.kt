@@ -67,7 +67,7 @@ class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
 
 class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
   private val listModel = DefaultListModel<Pair<String, Long>>()
-  private val statusGradleTaskPanel = StatusToolbarPanel { taskName ->
+  private val statusGradleTaskPanel = StatusToolbarPanel(project) { taskName ->
     viewModel?.executeTaskByName(project, taskName)
   }
   private val statusBar = JBBox.createHorizontalBox().apply {
@@ -81,6 +81,7 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
     statusGradleTaskPanel.statusLabel = "No images found"
     add(statusGradleTaskPanel)
   }
+
   private val imageList = object : JBList<Pair<String, Long>>(listModel) {
     override fun getScrollableTracksViewportWidth(): Boolean {
       return true

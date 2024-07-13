@@ -1,15 +1,37 @@
 package com.github.takahirom.roborazzi.idea.preview
 
-import com.intellij.openapi.ui.ComboBox
+import com.intellij.icons.AllIcons
+import com.intellij.ide.util.PropertiesComponent
+import com.intellij.openapi.actionSystem.ActionUpdateThread
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DataContext
+import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.openapi.actionSystem.ex.ActionButtonLook
+import com.intellij.openapi.actionSystem.ex.ComboBoxAction
+import com.intellij.openapi.actionSystem.impl.ActionButton
+import com.intellij.openapi.actionSystem.impl.ActionToolbarImpl
+import com.intellij.openapi.project.DumbAwareAction
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Key
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
+import java.awt.Dimension
+import javax.swing.JComponent
 
 class StatusToolbarPanel(
+  project: Project,
   onActionClicked: (taskName: String) -> Unit
 ) : JBPanel<Nothing>(BorderLayout()){
   private val _statusLabel = JBLabel()
-  private val dropdownMenu = TaskComboBox()
+  private val actionToolBar = RoborazziGradleTaskToolbar(
+    project = project,
+    place = "RoborazziGradleTaskToolbar",
+    horizontal = true,
+    onActionClicked = onActionClicked
+  )
 
   var statusLabel: String = ""
     get() = _statusLabel.text
@@ -19,43 +41,111 @@ class StatusToolbarPanel(
     }
 
   init {
-    dropdownMenu.addItemListener { event ->
-      val selectedTaskLabel = event.item as String
-      val selectedTask = dropdownMenu.actions.firstOrNull {
-        roborazziLog("label: ${it.label}, selectedTaskLabel: $selectedTaskLabel")
-        it.label == selectedTaskLabel
-      }
-      if (selectedTask?.id?.isEmpty() == true) {
-        return@addItemListener
-      }
-      roborazziLog("Selected: ${selectedTask?.label} (${selectedTask?.id})")
-      onActionClicked(selectedTask?.id ?: return@addItemListener)
-    }
+    actionToolBar.setTargetComponent(this)
     add(_statusLabel, BorderLayout.WEST)
-    add(dropdownMenu, BorderLayout.EAST)
+    add(actionToolBar.component, BorderLayout.EAST)
   }
 
   fun setActions(actions: List<ToolbarAction>) {
-    val prompt = if (actions.isEmpty()) "No tasks found" else "Select a Task"
-    val actionList = listOf(
-      ToolbarAction(prompt, ""),
-      *actions.toTypedArray()
-    )
-    dropdownMenu.setActions(actionList)
+    if (actions.isEmpty()) {
+      actionToolBar.isVisible = false
+      return
+    }
+    actionToolBar.isVisible = true
+    val actionList = listOf(*actions.toTypedArray())
+    actionToolBar.setActions(actionList)
   }
 
   data class ToolbarAction(val label: String, val id: String)
 }
 
-class TaskComboBox : ComboBox<String>() {
+class RoborazziGradleTaskToolbar(
+  project: Project,
+  place: String,
+  actionGroup: DefaultActionGroup = DefaultActionGroup(),
+  horizontal: Boolean,
+  onActionClicked: (taskName: String) -> Unit
+) : ActionToolbarImpl(place, actionGroup, horizontal) {
 
-  private val _actions = mutableListOf<StatusToolbarPanel.ToolbarAction>()
-  val actions get() = _actions.toList()
+  private val propertiesComponent = PropertiesComponent.getInstance(project)
+  private val roborazziGradleTaskAction = GradleTaskComboBoxAction(propertiesComponent)
+
+  init {
+    actionGroup.addAll(
+      listOf(
+        roborazziGradleTaskAction,
+        RefreshAction(propertiesComponent, onActionClicked)
+      )
+    )
+  }
+
+  override fun createToolbarButton(
+    action: AnAction,
+    look: ActionButtonLook?,
+    place: String,
+    presentation: Presentation,
+    minimumSize: Dimension
+  ): ActionButton {
+    val toolbarButton = super.createToolbarButton(action, look, place, presentation, minimumSize)
+    presentation.putClientProperty(Key(action::class.simpleName!! + "Component"), toolbarButton)
+    return toolbarButton
+  }
 
   fun setActions(actions: List<StatusToolbarPanel.ToolbarAction>) {
-    removeAllItems()
-    _actions.clear()
-    _actions.addAll(actions)
-    actions.forEach { addItem(it.label) }
+    roborazziGradleTaskAction.setActions(actions)
   }
+
+  class GradleTaskComboBoxAction(
+    private val propertiesComponent: PropertiesComponent,
+  ) : ComboBoxAction() {
+
+    private val popupActionGroup: DefaultActionGroup = DefaultActionGroup()
+
+    override fun createPopupActionGroup(button: JComponent, dataContext: DataContext) = popupActionGroup
+
+    override fun update(e: AnActionEvent) {
+      e.presentation.text = propertiesComponent.getValue(SELECTED_TASK_KEY) ?: "Select Task"
+      e.presentation.icon = AllIcons.General.Gear
+    }
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
+
+    fun setActions(actions: List<StatusToolbarPanel.ToolbarAction>) {
+      popupActionGroup.removeAll()
+      actions.forEach { popupActionGroup.add(GradleTaskAction(it.label, propertiesComponent)) }
+    }
+
+  }
+
+  class RefreshAction(
+    private val propertiesComponent: PropertiesComponent,
+    private val onActionClicked: (taskName: String) -> Unit
+  ): DumbAwareAction("Execute Selected Task", "Execute selected task", AllIcons.Actions.Refresh) {
+
+    override fun actionPerformed(e: AnActionEvent) {
+      propertiesComponent.getValue(SELECTED_TASK_KEY)?.let { onActionClicked(it) }
+    }
+  }
+
+  class GradleTaskAction(
+    private val taskName: String,
+    private val propertiesComponent: PropertiesComponent,
+  ): DumbAwareAction(taskName, taskName, AllIcons.General.Gear) {
+
+    override fun actionPerformed(e: AnActionEvent) {
+      e.presentation.text = taskName
+      propertiesComponent.setValue(SELECTED_TASK_KEY, taskName)
+    }
+
+    override fun update(e: AnActionEvent) {
+      e.presentation.text = taskName
+    }
+
+    override fun getActionUpdateThread() = ActionUpdateThread.EDT
+  }
+
+  companion object {
+    internal const val SELECTED_TASK_KEY = "roborazzi.idea.selectedTask"
+  }
+
 }
