@@ -74,7 +74,7 @@ class RoborazziGradleTaskToolbar(
     actionGroup.addAll(
       listOf(
         roborazziGradleTaskAction,
-        RefreshAction(propertiesComponent, onActionClicked)
+        ExecuteGradleTaskAction(propertiesComponent, onActionClicked)
       )
     )
   }
@@ -117,7 +117,7 @@ class RoborazziGradleTaskToolbar(
 
   }
 
-  class RefreshAction(
+  class ExecuteGradleTaskAction(
     private val propertiesComponent: PropertiesComponent,
     private val onActionClicked: (taskName: String) -> Unit
   ): DumbAwareAction("Execute Selected Task", "Execute selected task", AllIcons.Actions.Refresh) {
