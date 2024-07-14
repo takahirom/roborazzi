@@ -70,8 +70,8 @@ fun PreviewDarkMode() {
 @Composable
 fun PreviewWithProperties1() {
   Card(
-      Modifier
-          .width(100.dp)
+    Modifier
+      .width(100.dp)
   ) {
     Text(
       modifier = Modifier.padding(8.dp),
