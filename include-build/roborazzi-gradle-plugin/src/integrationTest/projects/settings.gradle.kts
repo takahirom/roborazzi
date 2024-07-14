@@ -21,10 +21,12 @@ dependencyResolutionManagement {
 
 rootProject.name = "integration-test-project"
 include(":app")
+include(":sample-generate-preview-tests")
 
 includeBuild(roborazziRootPath) {
   dependencySubstitution {
     substitute(module("io.github.takahirom.roborazzi:roborazzi")).using(project(":roborazzi"))
+    substitute(module("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support")).using(project(":roborazzi-compose-preview-scanner-support"))
     substitute(module("io.github.takahirom.roborazzi:roborazzi-junit-rule")).using(project(":roborazzi-junit-rule"))
   }
 }

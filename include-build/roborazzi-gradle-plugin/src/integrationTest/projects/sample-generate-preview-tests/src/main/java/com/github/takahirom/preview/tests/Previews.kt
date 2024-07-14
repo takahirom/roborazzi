@@ -4,11 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
@@ -26,7 +22,7 @@ fun PreviewNormal() {
     ) {
       Text(
         modifier = Modifier.padding(8.dp),
-        text = "Generate Preview Test Sample"
+        text = "Hello Roborazzi IntelliJ IDEA Plugin"
       )
     }
   }
@@ -70,8 +66,8 @@ fun PreviewDarkMode() {
 @Composable
 fun PreviewWithProperties1() {
   Card(
-    Modifier
-      .width(100.dp)
+      Modifier
+          .width(100.dp)
   ) {
     Text(
       modifier = Modifier.padding(8.dp),
