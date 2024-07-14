@@ -25,7 +25,7 @@ class RoborazziGradleTask {
 
     return ExternalSystemApiUtil.findAll(gradleModuleData, ProjectKeys.TASK)
       .filter { it.data.name.contains("Roborazzi", true) && it.data.name.contains("DirRoborazzi", true).not()}
-      .map { it.data.name }.sorted()
+      .map { gradleModuleData.data.id + ":" + it.data.name }.sorted()
   }
 
   fun executeTaskByName(
