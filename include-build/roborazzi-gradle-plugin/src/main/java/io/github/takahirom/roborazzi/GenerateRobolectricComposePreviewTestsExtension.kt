@@ -71,7 +71,7 @@ fun generateRobolectricPreviewTestsIfNeeded(
   )
   project.afterEvaluate {
     // We use afterEvaluate only for verify
-    assert(variant.unitTest == null) {
+    check(variant.unitTest != null) {
       "Roborazzi: Please enable unit tests for the variant '${variant.name}' in the 'build.gradle' file."
     }
     verifyMavenRepository(project)
@@ -87,7 +87,7 @@ private fun setupGeneratePreviewTestsTask(
   customTestQualifiedClassName: Property<String>,
   robolectricConfig: MapProperty<String, String>,
 ) {
-  assert(scanPackages.get().orEmpty().isNotEmpty()) {
+  check(scanPackages.get().orEmpty().isNotEmpty()) {
     "Please set roborazzi.generateRobolectricPreviewTests.packages in the generatePreviewTests extension or set roborazzi.generateRobolectricPreviewTests.enable = false." +
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
