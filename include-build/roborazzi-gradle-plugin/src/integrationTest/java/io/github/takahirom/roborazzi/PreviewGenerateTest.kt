@@ -39,15 +39,11 @@ class PreviewModule(
       buildType,
       additionalParameters
     )
-    println(
-      "$moduleName/output/roborazzi/ list files:" + testProjectDir.root.resolve("$moduleName/output/roborazzi/")
-        .listFiles()
-    )
     return buildResult
   }
 
   fun checkHasImages() {
-    val images = testProjectDir.root.resolve("$moduleName/output/roborazzi/").listFiles()
+    val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
     println("images:" + images?.toList())
     assert(images?.isNotEmpty() == true)
   }

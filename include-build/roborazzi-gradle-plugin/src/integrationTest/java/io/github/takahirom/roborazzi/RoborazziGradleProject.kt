@@ -180,10 +180,6 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
       buildType,
       additionalParameters
     )
-    println(
-      "app/output/roborazzi/ list files:" + testProjectDir.root.resolve("app/output/roborazzi/")
-        .listFiles()
-    )
     return buildResult
   }
 
