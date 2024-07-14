@@ -73,6 +73,7 @@ class PreviewViewModel {
       _dropDownUiState.update { currentUiState ->
         currentUiState.copy(flag = ActionToolbarUiState.Flag.IDLE)
       }
+      refreshList(project)
     }
   }
 
