@@ -1,6 +1,10 @@
 package com.github.takahirom.roborazzi.idea.preview
 
 import com.github.takahirom.roborazzi.idea.settings.AppSettingsConfigurable
+import com.intellij.execution.ExecutionListener
+import com.intellij.execution.ExecutionManager
+import com.intellij.execution.process.ProcessHandler
+import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -25,6 +29,7 @@ import com.intellij.util.containers.SLRUMap
 import com.intellij.util.messages.MessageBusConnection
 import kotlinx.coroutines.launch
 import org.jetbrains.kotlin.codegen.inline.getOrPut
+import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Image
@@ -65,7 +70,7 @@ class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
 class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
   private val listModel = DefaultListModel<Pair<String, Long>>()
   private val statusGradleTaskPanel = StatusToolbarPanel(project) { taskName ->
-    viewModel?.executeTaskByName(project, taskName)
+    viewModel?.onRefreshButtonClicked(project, taskName)
   }
   private val statusBar = JBBox.createHorizontalBox().apply {
     statusGradleTaskPanel.statusLabel = "No images found"
@@ -116,6 +121,20 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
         }
       }
     )
+    project.messageBus.connect().subscribe(ExecutionManager.EXECUTION_TOPIC, object : ExecutionListener {
+      override fun processTerminated(
+        executorId: String,
+        env: ExecutionEnvironment,
+        handler: ProcessHandler,
+        exitCode: Int
+      ) {
+        super.processTerminated(executorId, env, handler, exitCode)
+        if (env.runProfile is GradleRunConfiguration) {
+          viewModel?.onTaskExecuted(project)
+        }
+      }
+    })
+
     val scrollPane = JBScrollPane(imageList)
     scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
     add(statusBar, BorderLayout.NORTH)
@@ -177,7 +196,7 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
       }
     }
     viewModel?.coroutineScope?.launch {
-      viewModel?.shouldSeeIndex?.collect {
+      viewModel?.shouldSeeImageIndex?.collect {
         if (it == -1) {
           return@collect
         }
