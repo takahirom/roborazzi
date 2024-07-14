@@ -22,6 +22,7 @@ intellij {
   plugins.set(listOf(
     "java",
     "Kotlin",
+    "com.intellij.gradle",
   ))
 }
 
