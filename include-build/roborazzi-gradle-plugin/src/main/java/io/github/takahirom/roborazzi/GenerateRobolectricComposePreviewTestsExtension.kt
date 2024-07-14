@@ -17,6 +17,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.testing.Test
+import org.gradle.invocation.DefaultGradle
 import java.io.File
 import java.net.URLEncoder
 import javax.inject.Inject
@@ -40,13 +41,14 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * [robolectricConfig] will be passed to the Robolectric's @Config annotation in the generated test class.
    * See https://robolectric.org/configuring/ for more information.
    */
-  val robolectricConfig: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
-    .convention(
-      mapOf(
-        "sdk" to "[33]",
-        "qualifiers" to "RobolectricDeviceQualifiers.Pixel4a",
+  val robolectricConfig: MapProperty<String, String> =
+    objects.mapProperty(String::class.java, String::class.java)
+      .convention(
+        mapOf(
+          "sdk" to "[33]",
+          "qualifiers" to "RobolectricDeviceQualifiers.Pixel4a",
+        )
       )
-    )
 }
 
 fun generateRobolectricPreviewTestsIfNeeded(
@@ -69,7 +71,7 @@ fun generateRobolectricPreviewTestsIfNeeded(
   )
   project.afterEvaluate {
     // We use afterEvaluate only for verify
-    assert(variant.unitTest == null) {
+    check(variant.unitTest != null) {
       "Roborazzi: Please enable unit tests for the variant '${variant.name}' in the 'build.gradle' file."
     }
     verifyMavenRepository(project)
@@ -85,7 +87,7 @@ private fun setupGeneratePreviewTestsTask(
   customTestQualifiedClassName: Property<String>,
   robolectricConfig: MapProperty<String, String>,
 ) {
-  assert(scanPackages.get().orEmpty().isNotEmpty()) {
+  check(scanPackages.get().orEmpty().isNotEmpty()) {
     "Please set roborazzi.generateRobolectricPreviewTests.packages in the generatePreviewTests extension or set roborazzi.generateRobolectricPreviewTests.enable = false." +
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
@@ -115,7 +117,18 @@ private fun verifyMavenRepository(project: Project) {
     it is MavenArtifactRepository &&
       it.url.toString().contains("https://jitpack.io")
   }
-  if (!hasJitpackRepo) {
+  // settingsEvaluated{} is not called
+  // when it is already evaluated so we need to call `settingsEvaluated`
+  // before the project is evaluated.
+  // So we need to use the following workaround.
+  // https://github.com/gradle/gradle/issues/27741
+  val setting = (project.gradle as? DefaultGradle)?.getSettings() ?: return
+  val hasJitpackRepoInSettings = setting.pluginManagement.repositories.any {
+    it is MavenArtifactRepository && it.url.toString().contains("https://jitpack.io")
+  } || setting.dependencyResolutionManagement.repositories.any {
+    it is MavenArtifactRepository && it.url.toString().contains("https://jitpack.io")
+  }
+  if (!hasJitpackRepo && !hasJitpackRepoInSettings) {
     error(
       "Roborazzi: Please add the following 'maven' repository to the 'repositories' block in the 'build.gradle' file.\n" +
         "build.gradle: \nrepositories {\nmaven { url 'https://jitpack.io' } \n}\n" +
