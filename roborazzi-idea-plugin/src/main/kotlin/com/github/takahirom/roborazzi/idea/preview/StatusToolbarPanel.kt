@@ -17,14 +17,18 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
-import java.awt.BorderLayout
+import com.intellij.util.ui.JBUI
 import java.awt.Dimension
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import javax.swing.BorderFactory
+import javax.swing.Box
 import javax.swing.JComponent
 
 class StatusToolbarPanel(
   project: Project,
   onActionClicked: (taskName: String) -> Unit
-) : JBPanel<Nothing>(BorderLayout()){
+) : JBPanel<JBPanel<*>>(GridBagLayout()){
   private val _statusLabel = JBLabel()
   private val actionToolbar = RoborazziGradleTaskToolbar(
     project = project,
@@ -48,8 +52,31 @@ class StatusToolbarPanel(
 
   init {
     actionToolbar.setTargetComponent(this)
-    add(_statusLabel, BorderLayout.WEST)
-    add(actionToolbar.component, BorderLayout.EAST)
+    setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5))
+    val gbc = GridBagConstraints().apply {
+        gridx = 0
+        gridy = 0
+        anchor = GridBagConstraints.WEST
+        insets = JBUI.insets(5)
+    }
+    add(_statusLabel, gbc)
+    val hRGlueConstraints = gbc.apply {
+      gridx = 1
+      gridy = 0
+      weightx = 1.0
+      anchor = GridBagConstraints.CENTER
+      fill = GridBagConstraints.HORIZONTAL
+    }
+    // Add a horizontal glue to push the label to the left
+    add(Box.createHorizontalGlue(), hRGlueConstraints)
+
+    val actionToolbarConstraints = gbc.apply {
+      gridx = 1
+      gridy = 0
+      fill = GridBagConstraints.NONE
+      anchor = GridBagConstraints.EAST
+    }
+    add(actionToolbar.component, actionToolbarConstraints)
   }
 
   fun setActions(actions: List<ToolbarAction>) {

@@ -31,14 +31,11 @@ import java.awt.Image
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import java.io.File
 import javax.imageio.ImageIO
 import javax.swing.Box
 import javax.swing.DefaultListModel
 import javax.swing.ImageIcon
-import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.JScrollPane
