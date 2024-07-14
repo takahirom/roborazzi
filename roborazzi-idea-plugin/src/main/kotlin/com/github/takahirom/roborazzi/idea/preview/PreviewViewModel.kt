@@ -39,11 +39,6 @@ class PreviewViewModel {
   private var updateListJob: Job? = null
   private val gradleTask = RoborazziGradleTask()
 
-  fun onRefreshClicked(project: Project) {
-    roborazziLog("onRefreshClicked")
-    refreshList(project)
-  }
-
   fun onInit(project: Project) {
     roborazziLog("onInit")
     refreshList(project)

@@ -71,13 +71,6 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
     viewModel?.executeTaskByName(project, taskName)
   }
   private val statusBar = JBBox.createHorizontalBox().apply {
-    add(JLabel("Refresh: ").apply {
-      addMouseListener(object : MouseAdapter() {
-        override fun mouseClicked(e: MouseEvent) {
-          viewModel?.onRefreshClicked(project)
-        }
-      })
-    })
     statusGradleTaskPanel.statusLabel = "No images found"
     add(statusGradleTaskPanel)
   }
