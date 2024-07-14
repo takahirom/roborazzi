@@ -5,7 +5,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-class PreviewGenerateTest {
+class GeneratePreviewTestTest {
   @get:Rule
   val testProjectDir = TemporaryFolder()
 
@@ -40,14 +40,14 @@ class PreviewModule(
       additionalParameters
     )
     println(
-      "app/output/roborazzi/ list files:" + testProjectDir.root.resolve("app/output/roborazzi/")
+      "$moduleName/output/roborazzi/ list files:" + testProjectDir.root.resolve("$moduleName/output/roborazzi/")
         .listFiles()
     )
     return buildResult
   }
 
   fun checkHasImages() {
-    val images = testProjectDir.root.resolve("app/output/$moduleName/").listFiles()
+    val images = testProjectDir.root.resolve("$moduleName/output/roborazzi/").listFiles()
     println("images:" + images?.toList())
     assert(images?.isNotEmpty() == true)
   }
