@@ -4,7 +4,6 @@ import com.android.build.api.variant.Variant
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
@@ -75,7 +74,7 @@ fun generateRobolectricPreviewTestsIfNeeded(
       "Roborazzi: Please enable unit tests for the variant '${variant.name}' in the 'build.gradle' file."
     }
     verifyMavenRepository(project)
-    verifyLibraryDependencies(project.configurations.getByName("testImplementation"))
+    verifyLibraryDependencies(project)
     verifyTestConfig(testTaskProvider, androidExtension, logger)
   }
 }
@@ -181,15 +180,38 @@ private fun verifyTestConfig(
 }
 
 private fun verifyLibraryDependencies(
-  runtimeConfiguration: Configuration,
+  project: Project
 ) {
-  val dependencies = runtimeConfiguration.dependencies
-    .map { dependency -> dependency.group to dependency.name }
+  val configurations = listOf(
+    // Android
+    "testImplementation",
+    // KMP Android
+    "androidUnitTestImplementation"
+  )
+  fun dependencies(configurations: List<String>): List<Pair<String, List<Pair<String?, String>>>> {
+    return configurations.map { configuration ->
+      try {
+        configuration to project.configurations
+          .getByName(configuration).dependencies
+          .map { dependency -> dependency.group to dependency.name }
+      } catch (e: org.gradle.api.artifacts.UnknownConfigurationException) {
+        configuration to emptyList()
+      }
+    }
+  }
+  verifyLibraryDependencies(dependencies(configurations))
+}
 
+private fun verifyLibraryDependencies(
+  configurationToDependencies: List<Pair<String, List<Pair<String?, String>>>>
+) {
+  val allDependencies = configurationToDependencies.flatMap { it.second }
+  val allConfigurationNames = configurationToDependencies.map { it.first }
   fun checkExists(libraryName: String) {
-    if (!dependencies.contains(libraryName.split(":").let { it[0] to it[1] })) {
+    if (!allDependencies.contains(libraryName.split(":").let { it[0] to it[1] })) {
+      val configurationNames = allConfigurationNames.joinToString(" or ") { "'$it'" }
       error(
-        "Roborazzi: Please add the following 'testImplementation' dependency to the 'dependencies' block in the 'build.gradle' file: '$libraryName' for the '${runtimeConfiguration.name}' configuration.\n" +
+        "Roborazzi: Please add the following $configurationNames dependency to the 'dependencies' block in the 'build.gradle' file: '$libraryName' for the $configurationNames configuration.\n" +
           "For your convenience, visit https://www.google.com/search?q=" + URLEncoder.encode(
           "$libraryName version",
           "UTF-8"
