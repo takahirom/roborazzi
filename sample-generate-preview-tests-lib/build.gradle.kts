@@ -1,6 +1,5 @@
 plugins {
-  id("com.android.application")
-//  id("com.android.library")
+  id("com.android.library")
   id("org.jetbrains.kotlin.android")
   id("io.github.takahirom.roborazzi")
 }
@@ -54,8 +53,6 @@ android {
 }
 
 dependencies {
-  implementation(project(":sample-generate-preview-tests-lib"))
-
   implementation(libs.androidx.compose.material3)
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling)
