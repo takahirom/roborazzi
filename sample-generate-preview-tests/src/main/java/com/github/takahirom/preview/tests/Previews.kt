@@ -57,6 +57,29 @@ fun PreviewDarkMode() {
   }
 }
 
+@MultiThemePreviews
+@Composable
+fun PreviewDarkModeUsingLibraryAnnotation() {
+  val isSystemInDarkTheme = isSystemInDarkTheme()
+  MaterialTheme(
+    colorScheme = if (isSystemInDarkTheme) {
+      darkColorScheme()
+    } else {
+      lightColorScheme()
+    }
+  ) {
+    Card(
+      Modifier
+        .width(180.dp)
+    ) {
+      Text(
+        modifier = Modifier.padding(8.dp),
+        text = "Generate Preview Test Sample"
+      )
+    }
+  }
+}
+
 @Preview(
   name = "Preview Name",
   // These properties are not supported by Roborazzi yet.

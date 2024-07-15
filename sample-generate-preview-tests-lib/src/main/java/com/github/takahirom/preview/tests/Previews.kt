@@ -47,7 +47,7 @@ fun LibraryComposable() {
   }
 }
 
-@Preview
+@MultiThemePreviews
 @Composable
 fun LibraryComposableUsingMultiThemePreviews() {
   MaterialTheme(
