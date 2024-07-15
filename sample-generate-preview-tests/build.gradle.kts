@@ -6,6 +6,7 @@ plugins {
 }
 
 kotlin {
+  iosSimulatorArm64()
   androidTarget()
 
   sourceSets {
