@@ -153,6 +153,7 @@ abstract class GeneratePreviewScreenshotTestsTask : DefaultTask() {
 
 
             @RunWith(ParameterizedRobolectricTestRunner::class)
+            @OptIn(InternalRoborazziApi::class)
             @GraphicsMode(GraphicsMode.Mode.NATIVE)
             class $className(
                 private val preview: ComposablePreview<AndroidPreviewInfo>,
