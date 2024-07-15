@@ -119,7 +119,7 @@ class RoborazziGradleProjectTest {
   fun recordWhenRunTwiceWithGradleCustomOutput() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
       val customDirFromGradle = "src/screenshots/roborazzi_customdir_from_gradle"
-      appBuildFile.customOutputDirPath = customDirFromGradle
+      buildGradle.customOutputDirPath = customDirFromGradle
       val output1 = record().output
       assertNotSkipped(output1)
       val output2 = record().output
@@ -178,7 +178,7 @@ class RoborazziGradleProjectTest {
   @Test
   fun canRecordWhenRemoveOutputDirBeforeTests() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
-      appBuildFile.removeOutputDirBeforeTestTypeTask = true
+      buildGradle.removeOutputDirBeforeTestTypeTask = true
       record()
     }
   }

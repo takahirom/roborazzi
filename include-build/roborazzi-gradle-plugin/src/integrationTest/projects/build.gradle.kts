@@ -23,11 +23,23 @@ allprojects {
     }
   }
 
-  plugins.withType(com.android.build.gradle.BasePlugin::class.java).configureEach {
-    configure<com.android.build.gradle.internal.dsl.BaseAppModuleExtension> {
-      compileOptions {
-        sourceCompatibility = javaTargetVersion
-        targetCompatibility = javaTargetVersion
+  fun configureAndroid(extension: com.android.build.gradle.BaseExtension) {
+    extension.compileOptions {
+      sourceCompatibility = javaTargetVersion
+      targetCompatibility = javaTargetVersion
+    }
+  }
+  plugins.withType<com.android.build.gradle.BasePlugin>().configureEach {
+    when (this) {
+      is com.android.build.gradle.AppPlugin -> {
+        extensions.configure<com.android.build.gradle.internal.dsl.BaseAppModuleExtension> {
+          configureAndroid(this)
+        }
+      }
+      is com.android.build.gradle.LibraryPlugin -> {
+        extensions.configure<com.android.build.gradle.LibraryExtension> {
+          configureAndroid(this)
+        }
       }
     }
   }

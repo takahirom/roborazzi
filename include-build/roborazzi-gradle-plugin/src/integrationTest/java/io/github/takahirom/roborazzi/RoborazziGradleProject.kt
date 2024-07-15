@@ -173,7 +173,7 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     buildType: BuildType = BuildType.Build,
     additionalParameters: Array<String> = arrayOf()
   ): BuildResult {
-    appBuildFile.addIncludeBuild()
+    buildGradle.addIncludeBuild()
 
     val buildResult = rootProject.runTask(
       "app:"+task,
@@ -183,7 +183,7 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     return buildResult
   }
 
-  class AppBuildFile(private val folder: TemporaryFolder) {
+  class BuildGradle(private val folder: TemporaryFolder) {
     private val PATH = "app/build.gradle.kts"
     var removeOutputDirBeforeTestTypeTask = false
     var customOutputDirPath: String? = null
@@ -644,5 +644,5 @@ class RoborazziTest {
     )
   }
 
-  val appBuildFile = AppBuildFile(testProjectDir)
+  val buildGradle = BuildGradle(testProjectDir)
 }
