@@ -18,16 +18,28 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 }
 
 @ExperimentalRoborazziApi
-interface RobolectricPreviewTest {
-  fun previews(vararg packages: String): List<ComposablePreview<AndroidPreviewInfo>>
+interface ComposePreviewTester<T : Any> {
+  /**
+   * Retrieves a list of composable previews from the specified packages.
+   *
+   * @param packages Vararg parameter representing the package names to scan for previews.
+   * @return A list of ComposablePreview objects of type T.
+   */
+  fun previews(vararg packages: String): List<ComposablePreview<T>>
 
+  /**
+   * Performs a test on a single composable preview.
+   * Note: This method will not be called as the same instance of previews() method.
+   *
+   * @param preview The ComposablePreview object to be tested.
+   */
   fun test(
-    preview: ComposablePreview<AndroidPreviewInfo>,
+    preview: ComposablePreview<T>,
   )
 }
 
 @InternalRoborazziApi
-class DefaultRobolectricPreviewTest : RobolectricPreviewTest {
+class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
   override fun previews(vararg packages: String): List<ComposablePreview<AndroidPreviewInfo>> {
     return AndroidComposablePreviewScanner()
       .scanPackageTrees(*packages)
@@ -41,7 +53,10 @@ class DefaultRobolectricPreviewTest : RobolectricPreviewTest {
       } else {
         ""
       }
-    val name = roborazziDefaultNamingStrategy().generateOutputName(preview.declaringClass, createScreenshotIdFor(preview))
+    val name = roborazziDefaultNamingStrategy().generateOutputName(
+      preview.declaringClass,
+      createScreenshotIdFor(preview)
+    )
     val filePath = "$pathPrefix$name.png"
     preview.captureRoboImage(filePath)
   }
@@ -53,16 +68,17 @@ class DefaultRobolectricPreviewTest : RobolectricPreviewTest {
 }
 
 @InternalRoborazziApi
-fun getRobolectricPreviewTest(customTestQualifiedClassName: String): RobolectricPreviewTest {
+fun getComposePreviewRobolectricTest(testerQualifiedClassName: String): ComposePreviewTester<Any> {
   val customTestClass = try {
-    Class.forName(customTestQualifiedClassName)
+    Class.forName(testerQualifiedClassName)
   } catch (e: ClassNotFoundException) {
-    throw IllegalArgumentException("The class $customTestQualifiedClassName not found")
+    throw IllegalArgumentException("The class $testerQualifiedClassName not found")
   }
-  if (!RobolectricPreviewTest::class.java.isAssignableFrom(customTestClass)) {
-    throw IllegalArgumentException("The class $customTestQualifiedClassName must implement RobolectricPreviewCapturer")
+  if (!ComposePreviewTester::class.java.isAssignableFrom(customTestClass)) {
+    throw IllegalArgumentException("The class $testerQualifiedClassName must implement RobolectricPreviewCapturer")
   }
-  val robolectricPreviewTest =
-    customTestClass.getDeclaredConstructor().newInstance() as RobolectricPreviewTest
-  return robolectricPreviewTest
+  @Suppress("UNCHECKED_CAST")
+  val composePreviewTester =
+    customTestClass.getDeclaredConstructor().newInstance() as ComposePreviewTester<Any>
+  return composePreviewTester
 }
