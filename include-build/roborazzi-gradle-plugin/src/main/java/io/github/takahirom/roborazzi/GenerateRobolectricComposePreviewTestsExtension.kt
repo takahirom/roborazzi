@@ -162,7 +162,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 companion object {
                     // lazy for performance
                     val previews: List<ComposablePreview<Any>> by lazy {
-                        getComposePreviewRobolectricTest("$testerQualifiedClassNameString").previews(
+                        getComposePreviewTester("$testerQualifiedClassNameString").previews(
                             $packagesExpr
                         )
                     }
@@ -177,7 +177,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 $robolectricConfigString
                 @Test
                 fun test() {
-                    getComposePreviewRobolectricTest("$testerQualifiedClassNameString").test(preview)
+                    getComposePreviewTester("$testerQualifiedClassNameString").test(preview)
                 }
 
             }

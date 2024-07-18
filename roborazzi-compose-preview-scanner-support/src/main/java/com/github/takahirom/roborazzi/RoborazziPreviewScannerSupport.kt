@@ -68,7 +68,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
 }
 
 @InternalRoborazziApi
-fun getComposePreviewRobolectricTest(testerQualifiedClassName: String): ComposePreviewTester<Any> {
+fun getComposePreviewTester(testerQualifiedClassName: String): ComposePreviewTester<Any> {
   val customTesterClass = try {
     Class.forName(testerQualifiedClassName)
   } catch (e: ClassNotFoundException) {
