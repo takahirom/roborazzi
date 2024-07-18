@@ -432,7 +432,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         val variantSlug = variant.name.capitalizeUS()
         val testVariantSlug = unitTest.name.capitalizeUS()
         val testTaskName = "test$testVariantSlug"
-        generateRobolectricPreviewTestsIfNeeded(
+        generateComposePreviewRobolectricTestsIfNeeded(
           project = project,
           variant = variant,
           extension = extension.generateComposePreviewRobolectricTests,

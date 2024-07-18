@@ -44,6 +44,14 @@ class PreviewModule(
       val file =
         projectFolder.root.resolve(PATH)
       file.parentFile.mkdirs()
+      val roborazziExtension = """
+          roborazzi {
+            generateComposePreviewRobolectricTests {
+              enable = true
+              packages = listOf("com.github.takahirom.preview.tests")
+            }
+          }
+      """.trimIndent()
       val androidBlock = """
           android {
             namespace = "com.github.takahirom.preview.tests"
@@ -94,6 +102,11 @@ class PreviewModule(
               androidTarget()
               
               sourceSets {
+                  val commonMain by getting {
+                      dependencies {
+                          api(compose.components.uiToolingPreview)
+                      }
+                  }
                   val androidMain by getting {
                       dependencies {
                           implementation(compose.material3)
@@ -123,12 +136,7 @@ class PreviewModule(
 
           $androidBlock
 
-          roborazzi {
-              generateComposePreviewRobolectricTests {
-                  enable = true
-                  packages = listOf("com.github.takahirom.preview.tests")
-              }
-          }
+          $roborazziExtension
 
           repositories {
               mavenCentral()
@@ -144,12 +152,7 @@ class PreviewModule(
     id("io.github.takahirom.roborazzi")
   }
 
-  roborazzi {
-    generateComposePreviewRobolectricTests {
-      enable = true
-      packages = listOf("com.github.takahirom.preview.tests")
-    }
-  }
+  $roborazziExtension
 
   repositories {
     mavenCentral()
