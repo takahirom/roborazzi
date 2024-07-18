@@ -229,7 +229,8 @@ class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
   ): Component {
     return lruCache.getOrPut(
       CacheKey(
-        width = list.width,
+        // For performance, we use the rounded width to reduce the number of cache invalidations
+        width = list.width - (list.width % 30),
         filePath = value.first,
         lastModified = value.second,
         isSelected = isSelected
