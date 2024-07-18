@@ -42,7 +42,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun record() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
 
       checkResultsSummaryFileExists()
@@ -55,7 +55,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun whenRecordAndRemovedOutputAndRecordThenSkipAndRestoreTheImages() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       removeRoborazziOutputDir()
       val output = record().output
@@ -70,7 +70,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun recordWhenRemovedOutputAndIntermediate() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       removeRoborazziAndIntermediateOutputDir()
       record()
       removeRoborazziAndIntermediateOutputDir()
@@ -86,7 +86,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun recordWhenRunTwice() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       val output1 = record().output
       assertNotSkipped(output1)
       val output2 = record().output
@@ -101,7 +101,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun recordWithSystemParameterWhenRemovedOutputAndIntermediate() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       val output1 = recordWithSystemParameter().output
       assertNotSkipped(output1)
       removeRoborazziAndIntermediateOutputDir()
@@ -117,9 +117,9 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun recordWhenRunTwiceWithGradleCustomOutput() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       val customDirFromGradle = "src/screenshots/roborazzi_customdir_from_gradle"
-      appBuildFile.customOutputDirPath = customDirFromGradle
+      buildGradle.customOutputDirPath = customDirFromGradle
       val output1 = record().output
       assertNotSkipped(output1)
       val output2 = record().output
@@ -134,7 +134,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun unitTestWhenRunTwice() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       unitTest()
       val output = unitTest().output
       assertSkipped(output)
@@ -148,7 +148,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun recordWithPropertiesAfterUnitTest() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       unitTest()
       // Record task shouldn't be skipped even after unit test
       val recordWithSystemParameter = recordWithSystemParameter()
@@ -163,7 +163,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun recordAfterUnitTest() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       unitTest()
       // Record task shouldn't be skipped even after unit test
       record()
@@ -177,15 +177,15 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun canRecordWhenRemoveOutputDirBeforeTests() {
-    RoborazziGradleProject(testProjectDir).apply {
-      appBuildFile.removeOutputDirBeforeTestTypeTask = true
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.removeOutputDirBeforeTestTypeTask = true
       record()
     }
   }
 
   @Test
   fun verify_changeDetect() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       changeScreen()
       val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
@@ -204,7 +204,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun checkIfOutputIsUsed() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       changeScreen()
       compare()
@@ -223,7 +223,7 @@ class RoborazziGradleProjectTest {
    */
   @Test
   fun checkRevertCache() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       changeScreen()
       compare()
@@ -243,7 +243,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun verify_addDetect() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       addTest()
 
@@ -258,7 +258,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun recordWithCompareParameter() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       recordWithCompareParameter()
 
       checkResultsSummaryFileExists()
@@ -270,7 +270,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun recordWithSmallProperty() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       changeScreen()
       val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
@@ -288,7 +288,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun record_noTestFiles() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       removeTests()
       record()
 
@@ -301,7 +301,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun record_noTests() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       removeTests()
       addTestClass()
       record()
@@ -313,7 +313,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun verify_nochange_with_changed_build_dir() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       val buildDirName = "testCustomBuildDirName"
       changeBuildDir(buildDirName)
       defaultBuildDir = buildDirName
@@ -331,7 +331,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun verifyAndRecord_changeDetect() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       val recordFileHash1 = getFileHash("$screenshotAndName.testCapture.png")
       changeScreen()
@@ -350,7 +350,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun verifyAndRecord_nochange() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       verifyAndRecord()
 
@@ -363,7 +363,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun compare() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       changeScreen()
       compare()
@@ -379,7 +379,7 @@ class RoborazziGradleProjectTest {
   @Test
   fun compareWithSystemParameter() {
     println("start compareWithSystemParameter")
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       changeScreen()
       compareWithSystemParameter()
@@ -393,7 +393,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun compare_nochange() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()
       compare()
 
@@ -406,7 +406,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun compareWithCustomPath() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       removeTests()
       addTestCaptureWithCustomPathTest()
       record()
@@ -423,7 +423,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun compareWithCustomPathAndCaptureFilePathStrategy() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       removeTests()
       addTestCaptureWithCustomPathTest()
       addRelativeFromContextRecordFilePathStrategyGradleProperty()
@@ -441,7 +441,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun secondImagesIsSkippedIfFirstVerificationFails() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       removeTests()
       addRuleTest()
       record()
@@ -462,7 +462,7 @@ class RoborazziGradleProjectTest {
 
   @Test
   fun shouldNotRetainPreviousTestResults() {
-    RoborazziGradleProject(testProjectDir).apply {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
       removeTests()
       addMultipleTest()
 

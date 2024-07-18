@@ -432,11 +432,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
         val variantSlug = variant.name.capitalizeUS()
         val testVariantSlug = unitTest.name.capitalizeUS()
         val testTaskName = "test$testVariantSlug"
-        generateRobolectricPreviewTestsIfNeeded(
+        generateComposePreviewRobolectricTestsIfNeeded(
           project = project,
           variant = variant,
           extension = extension.generateComposePreviewRobolectricTests,
-          androidExtension = project.extensions.getByType(TestedExtension::class.java),
           testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
         )
 
@@ -451,10 +450,20 @@ abstract class RoborazziPlugin : Plugin<Project> {
     project.pluginManager.withPlugin("com.android.application") {
       project.extensions.getByType(ApplicationAndroidComponentsExtension::class.java)
         .configureComponents()
+      verifyGenerateRobolectricPreviewTests(
+        project = project,
+        androidExtension = project.extensions.getByType(TestedExtension::class.java),
+        extension = extension.generateComposePreviewRobolectricTests
+      )
     }
     project.pluginManager.withPlugin("com.android.library") {
       project.extensions.getByType(LibraryAndroidComponentsExtension::class.java)
         .configureComponents()
+      verifyGenerateRobolectricPreviewTests(
+        project = project,
+        androidExtension = project.extensions.getByType(TestedExtension::class.java),
+        extension = extension.generateComposePreviewRobolectricTests
+      )
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
       // e.g. test -> recordRoborazziJvm
