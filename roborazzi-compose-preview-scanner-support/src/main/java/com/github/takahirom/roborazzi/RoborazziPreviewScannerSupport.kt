@@ -69,16 +69,16 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
 
 @InternalRoborazziApi
 fun getComposePreviewRobolectricTest(testerQualifiedClassName: String): ComposePreviewTester<Any> {
-  val customTestClass = try {
+  val customTesterClass = try {
     Class.forName(testerQualifiedClassName)
   } catch (e: ClassNotFoundException) {
     throw IllegalArgumentException("The class $testerQualifiedClassName not found")
   }
-  if (!ComposePreviewTester::class.java.isAssignableFrom(customTestClass)) {
+  if (!ComposePreviewTester::class.java.isAssignableFrom(customTesterClass)) {
     throw IllegalArgumentException("The class $testerQualifiedClassName must implement RobolectricPreviewCapturer")
   }
   @Suppress("UNCHECKED_CAST")
   val composePreviewTester =
-    customTestClass.getDeclaredConstructor().newInstance() as ComposePreviewTester<Any>
+    customTesterClass.getDeclaredConstructor().newInstance() as ComposePreviewTester<Any>
   return composePreviewTester
 }
