@@ -289,7 +289,7 @@ private fun verifyLibraryDependencies(
     val dependencies = this
     val libNameArray = libraryName.split(":")
     if (!dependencies.contains(libNameArray[0] to libNameArray[1])) {
-      val configurationNames = "'testImplementation'"
+      val configurationNames = "'testImplementation'(For Android Project) or 'kotlin.sourceSets.androidUnitTest.dependencies.implementation'(For KMP)"
       error(
         "Roborazzi: Please add the following $configurationNames dependency to the 'dependencies' block in the 'build.gradle' file: '$libraryName' for the $configurationNames configuration.\n" +
           "For your convenience, visit https://www.google.com/search?q=" + URLEncoder.encode(
