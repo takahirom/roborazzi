@@ -27,14 +27,14 @@ import javax.swing.JComponent
 
 class StatusToolbarPanel(
   project: Project,
-  onActionClicked: (taskName: String) -> Unit
+  onTaskExecuteButtonClicked: (taskName: String) -> Unit
 ) : JBPanel<JBPanel<*>>(GridBagLayout()){
   private val _statusLabel = JBLabel()
   private val actionToolbar = RoborazziGradleTaskToolbar(
     project = project,
     place = "RoborazziGradleTaskToolbar",
     horizontal = true,
-    onActionClicked = onActionClicked
+    onTaskExecuteButtonClicked = onTaskExecuteButtonClicked
   )
 
   var statusLabel: String = ""
@@ -97,17 +97,17 @@ class RoborazziGradleTaskToolbar(
   place: String,
   actionGroup: DefaultActionGroup = DefaultActionGroup(),
   horizontal: Boolean,
-  onActionClicked: (taskName: String) -> Unit
+  onTaskExecuteButtonClicked: (taskName: String) -> Unit
 ) : ActionToolbarImpl(place, actionGroup, horizontal) {
 
   private val propertiesComponent = PropertiesComponent.getInstance(project)
   private val roborazziGradleTaskAction = GradleTaskComboBoxAction(propertiesComponent)
-  private val executeGradleTaskAction = ExecuteGradleTaskAction(propertiesComponent, onActionClicked)
+  private val executeGradleTaskExecuteAction = ExecuteGradleTaskExecuteAction(propertiesComponent, onTaskExecuteButtonClicked)
 
   var isExecuteGradleTaskActionEnabled: Boolean
     get() = isEnabled
     set(value) {
-      executeGradleTaskAction.isActionEnabled = value
+      executeGradleTaskExecuteAction.isActionEnabled = value
       isEnabled = value
     }
 
@@ -115,7 +115,7 @@ class RoborazziGradleTaskToolbar(
     actionGroup.addAll(
       listOf(
         roborazziGradleTaskAction,
-        executeGradleTaskAction
+        executeGradleTaskExecuteAction
       )
     )
   }
@@ -145,7 +145,14 @@ class RoborazziGradleTaskToolbar(
     override fun createPopupActionGroup(button: JComponent, dataContext: DataContext) = popupActionGroup
 
     override fun update(e: AnActionEvent) {
-      e.presentation.text = propertiesComponent.getValue(SELECTED_TASK_KEY) ?: "Select Task"
+
+      e.presentation.text = propertiesComponent.getValue(SELECTED_TASK_KEY) ?: if(popupActionGroup.childActionsOrStubs.isNotEmpty()) {
+        val defaultTask = popupActionGroup.childActionsOrStubs[0].templatePresentation.text
+        propertiesComponent.setSelectedTask(defaultTask)
+        defaultTask
+      } else {
+        "Select Task"
+      }
       e.presentation.icon = AllIcons.General.Gear
     }
 
@@ -153,12 +160,12 @@ class RoborazziGradleTaskToolbar(
 
     fun setActions(actions: List<StatusToolbarPanel.ToolbarAction>) {
       popupActionGroup.removeAll()
-      actions.forEach { popupActionGroup.add(GradleTaskAction(it.label, propertiesComponent)) }
+      actions.forEach { popupActionGroup.add(GradleTaskSelectAction(it.label, propertiesComponent)) }
     }
 
   }
 
-  class ExecuteGradleTaskAction(
+  class ExecuteGradleTaskExecuteAction(
     private val propertiesComponent: PropertiesComponent,
     private val onActionClicked: (taskName: String) -> Unit
   ): DumbAwareAction("Execute Selected Task", "Execute selected task", AllIcons.Actions.Refresh) {
@@ -170,7 +177,7 @@ class RoborazziGradleTaskToolbar(
       }
 
     override fun actionPerformed(e: AnActionEvent) {
-      propertiesComponent.getValue(SELECTED_TASK_KEY)?.let { onActionClicked(it) }
+      propertiesComponent.getSelectedTask()?.let { onActionClicked(it) }
     }
 
     override fun update(e: AnActionEvent) {
@@ -181,14 +188,14 @@ class RoborazziGradleTaskToolbar(
     override fun getActionUpdateThread() = ActionUpdateThread.EDT
   }
 
-  class GradleTaskAction(
+  class GradleTaskSelectAction(
     private val taskName: String,
     private val propertiesComponent: PropertiesComponent,
   ): DumbAwareAction(taskName, taskName, AllIcons.General.Gear) {
 
     override fun actionPerformed(e: AnActionEvent) {
       e.presentation.text = taskName
-      propertiesComponent.setValue(SELECTED_TASK_KEY, taskName)
+      propertiesComponent.setSelectedTask(taskName)
     }
 
     override fun update(e: AnActionEvent) {
@@ -201,5 +208,12 @@ class RoborazziGradleTaskToolbar(
   companion object {
     internal const val SELECTED_TASK_KEY = "roborazzi.idea.selectedTask"
   }
+}
 
+fun PropertiesComponent.getSelectedTask(): String? {
+  return getValue(RoborazziGradleTaskToolbar.SELECTED_TASK_KEY)
+}
+
+fun PropertiesComponent.setSelectedTask(taskName: String) {
+  setValue(RoborazziGradleTaskToolbar.SELECTED_TASK_KEY, taskName)
 }

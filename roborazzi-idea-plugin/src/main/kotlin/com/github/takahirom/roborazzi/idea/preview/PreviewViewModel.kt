@@ -35,13 +35,13 @@ class PreviewViewModel {
   val statusText = MutableStateFlow("No images found")
   private val _dropDownUiState = MutableStateFlow(ActionToolbarUiState())
   val dropDownUiState = _dropDownUiState.asStateFlow()
-  val shouldSeeIndex = MutableStateFlow(-1)
+  val shouldSeeImageIndex = MutableStateFlow(-1)
   private var updateListJob: Job? = null
   private val gradleTask = RoborazziGradleTask()
 
   fun onInit(project: Project) {
     roborazziLog("onInit")
-    refreshList(project)
+    refreshImageList(project)
   }
 
   fun onSelectedFileChanged(project: Project) {
@@ -64,17 +64,12 @@ class PreviewViewModel {
     }
   }
 
-  fun executeTaskByName(project: Project, taskName: String) {
-    roborazziLog("Executing task '$taskName'...")
+  fun onRefreshButtonClicked(project: Project, selectedTaskName: String) {
+    roborazziLog("Executing task '$selectedTaskName'...")
     _dropDownUiState.update { currentUiState ->
       currentUiState.copy(flag = ActionToolbarUiState.Flag.LOADING)
     }
-    gradleTask.executeTaskByName(project, taskName) {
-      _dropDownUiState.update { currentUiState ->
-        currentUiState.copy(flag = ActionToolbarUiState.Flag.IDLE)
-      }
-      refreshList(project)
-    }
+    gradleTask.executeTaskByName(project, selectedTaskName)
   }
 
   private fun selectListIndexByCaret(project: Project) {
@@ -92,7 +87,7 @@ class PreviewViewModel {
       }
         .let {
           roborazziLog("shouldSeeIndex.value = $it")
-          shouldSeeIndex.value = it
+          shouldSeeImageIndex.value = it
         }
     }
   }
@@ -125,7 +120,7 @@ class PreviewViewModel {
     return methodCnadidate as? KtFunction
   }
 
-  private fun refreshList(project: Project) {
+  private fun refreshImageList(project: Project) {
     updateListJob?.cancel()
     updateListJob = coroutineScope.launch {
       refreshListProcess(project)
@@ -256,7 +251,18 @@ class PreviewViewModel {
   }
 
   fun onShouldSeeIndexHandled() {
-    shouldSeeIndex.value = -1
+    shouldSeeImageIndex.value = -1
+  }
+
+  fun onTaskExecuted(project: Project) {
+    _dropDownUiState.update { currentUiState ->
+      currentUiState.copy(flag = ActionToolbarUiState.Flag.IDLE)
+    }
+    refreshImageList(project)
+    // For updating the task list after syncing the gradle task
+    coroutineScope.launch {
+      fetchTasks(project)
+    }
   }
 
   data class ActionToolbarUiState(

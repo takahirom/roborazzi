@@ -11,6 +11,11 @@ repositories {
   mavenCentral()
 }
 
+dependencies {
+  // Replaced by dependency substitution
+  implementation("io.github.takahirom.roborazzi:roborazzi-core:0.0.1")
+}
+
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
