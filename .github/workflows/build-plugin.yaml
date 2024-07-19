@@ -26,12 +26,12 @@ jobs:
       - name: build-plugin
         id: test
         run: |
-          ./gradlew roborazzi-idea-plugin:build --stacktrace
+          ./gradlew roborazzi-idea-plugin:buildPlugin --stacktrace
 
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
         if: ${{ always() }}
         with:
           name: roborazzi-plugin-jar
           path: |
-            **/build/libs/roborazzi-idea-plugin-*.jar
+            **/build/distributions
           retention-days: 120

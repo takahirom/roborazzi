@@ -53,6 +53,8 @@ enum class RoborazziTaskType(private val taskName: String) {
       }
     }
 
+    @Deprecated("This API will be removed")
+    @InternalRoborazziApi
     fun getOrderOfTaskName(taskName: String): Int {
       return values().indexOfLast { taskName.contains(it.taskName, true) }
     }

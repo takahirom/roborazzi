@@ -39,7 +39,19 @@ class RoborazziGradleTask {
           ).not() && !it.data.name.contains("finalize", true)
         }
         .map { gradleModuleData.data.id + ":" + it.data.name }
-        .sortedBy { com.github.takahirom.roborazzi.RoborazziTaskType.getOrderOfTaskName(it) }
+        .sortedWith(
+          compareBy({
+            RoborazziTaskNames.getOrderOfTaskName(it)
+          }, {
+            if (it.contains("iOS", true)) {
+              2
+            } else if (it.contains("Desktop", true)) {
+              1
+            } else {
+              0
+            }
+          })
+        )
     }
   }
 
