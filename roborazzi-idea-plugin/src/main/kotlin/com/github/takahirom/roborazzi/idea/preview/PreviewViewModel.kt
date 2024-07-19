@@ -1,6 +1,7 @@
 package com.github.takahirom.roborazzi.idea.preview
 
 import com.github.takahirom.roborazzi.idea.settings.AppSettingsState
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
@@ -54,9 +55,14 @@ class PreviewViewModel {
     }
   }
 
+  private var caretPositionJob: Job? = null
+
   fun onCaretPositionChanged(project: Project) {
-    roborazziLog("onCaretPositionChanged")
-    coroutineScope.launch {
+    caretPositionJob?.cancel()
+    caretPositionJob = coroutineScope.launch {
+      // debounce
+      delay(400)
+      roborazziLog("onCaretPositionChanged")
       updateListJob?.cancel()
       refreshListProcess(project)
       selectListIndexByCaret(project)
@@ -72,24 +78,27 @@ class PreviewViewModel {
     gradleTask.executeTaskByName(project, selectedTaskName)
   }
 
-  private fun selectListIndexByCaret(project: Project) {
-    val editor = FileEditorManager.getInstance(project).selectedTextEditor
-    val offset = editor?.caretModel?.offset
-    if (offset != null) {
-      val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) as? KtFile
-        ?: return
-      val kotlinFile = psiFile as? KtFile ?: return
-      val pe: PsiElement = kotlinFile.findElementAt(editor.caretModel.offset) ?: return
-      val method: KtFunction = findFunction(pe) ?: return
-      roborazziLog("imagesStateFlow.value = ${imagesStateFlow.value}")
-      imagesStateFlow.value.indexOfFirst {
-        it.first.substringAfterLast(File.separator).contains(method.name ?: "")
-      }
-        .let {
-          roborazziLog("shouldSeeIndex.value = $it")
-          shouldSeeImageIndex.value = it
+  private suspend fun selectListIndexByCaret(project: Project) {
+    val start = System.currentTimeMillis()
+    val kotlinFile = getCurrentKtFileOrNull(project) ?: return
+    readAction {
+      val editor = FileEditorManager.getInstance(project).selectedTextEditor
+      val offset = editor?.caretModel?.offset
+      if (offset != null) {
+        val pe: PsiElement =
+          kotlinFile.findElementAt(editor.caretModel.offset) ?: return@readAction
+        val method: KtFunction = findFunction(pe) ?: return@readAction
+//        roborazziLog("imagesStateFlow.value = ${imagesStateFlow.value}")
+        imagesStateFlow.value.indexOfFirst {
+          it.first.substringAfterLast(File.separator).contains(method.name ?: "")
         }
+          .let {
+            roborazziLog("shouldSeeIndex.value = $it")
+            shouldSeeImageIndex.value = it
+          }
+      }
     }
+    roborazziLog("selectListIndexByCaret took ${System.currentTimeMillis() - start}ms")
   }
 
   private fun findFunction(element: PsiElement): KtFunction? {
@@ -127,11 +136,13 @@ class PreviewViewModel {
     }
   }
 
-  private fun fetchTasks(project: Project) {
+  private suspend fun fetchTasks(project: Project) {
     roborazziLog("fetchTasks...")
+    val startTime = System.currentTimeMillis()
     _dropDownUiState.update { currentUiState ->
-      currentUiState.copy( tasks = gradleTask.fetchTasks(project))
+      currentUiState.copy(tasks = gradleTask.fetchTasks(project))
     }
+    roborazziLog("fetchTasks took ${System.currentTimeMillis() - startTime}ms")
   }
 
   private suspend fun refreshListProcess(project: Project) {
@@ -139,20 +150,7 @@ class PreviewViewModel {
     roborazziLog("refreshListProcess")
     statusText.value = "Loading..."
     yield()
-    val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return run {
-      statusText.value = "No editor found"
-      imagesStateFlow.value = emptyList()
-    }
-
-    val psiFile: PsiFile =
-      PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return run {
-        statusText.value = "No psi file found"
-        imagesStateFlow.value = emptyList()
-      }
-    val kotlinFile = psiFile as? KtFile ?: return run {
-      statusText.value = "No kotlin file found"
-      imagesStateFlow.value = emptyList()
-    }
+    val kotlinFile = getCurrentKtFileOrNull(project) ?: return
     if (lastEditingFileName.value != kotlinFile.name) {
       imagesStateFlow.value = emptyList()
       delay(10)
@@ -167,14 +165,18 @@ class PreviewViewModel {
       } || (declaration is KtFunction && declaration.name?.startsWith("test") == true)
     }
 
-    val functions: List<KtFunction> = allDeclarations.filterIsInstance<KtFunction>()
-      .filter { hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it) }
-    val classes: List<KtClass> = allDeclarations.filterIsInstance<KtClass>()
-      .filter {
-        it.name?.contains("Test") == true || it.declarations.any {
-          hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it)
+    val functions: List<KtFunction> = readAction {
+      allDeclarations.filterIsInstance<KtFunction>()
+        .filter { hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it) }
+    }
+    val classes: List<KtClass> = readAction {
+      allDeclarations.filterIsInstance<KtClass>()
+        .filter {
+          it.name?.contains("Test") == true || it.declarations.any {
+            hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it)
+          }
         }
-      }
+    }
 
     val searchPath = project.basePath
     statusText.value = "Searching images in $searchPath ..."
@@ -205,6 +207,24 @@ class PreviewViewModel {
     roborazziLog("refreshListProcess result result.size:${result.size} in ${System.currentTimeMillis() - start}ms")
     imagesStateFlow.value = result
   }
+
+  private suspend fun getCurrentKtFileOrNull(project: Project): KtFile? = readAction {
+    val editor =
+      FileEditorManager.getInstance(project).selectedTextEditor ?: return@readAction run {
+        statusText.value = "No editor found"
+        imagesStateFlow.value = emptyList()
+      }
+
+    val psiFile: PsiFile =
+      PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@readAction run {
+        statusText.value = "No psi file found"
+        imagesStateFlow.value = emptyList()
+      }
+    psiFile as? KtFile ?: return@readAction run {
+      statusText.value = "No kotlin file found"
+      imagesStateFlow.value = emptyList()
+    }
+  } as? KtFile
 
   private suspend fun List<File>.sortedByClassesAndFunctions(
     classes: List<KtClass>,
