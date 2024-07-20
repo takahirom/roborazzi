@@ -5,15 +5,10 @@ plugins {
 }
 
 group = "io.github.takahirom.roborazzi"
-version = "1.3.0"
+version = "1.4.0"
 
 repositories {
   mavenCentral()
-}
-
-dependencies {
-  // Replaced by dependency substitution
-  implementation("io.github.takahirom.roborazzi:roborazzi-core:0.0.1")
 }
 
 // Configure Gradle IntelliJ Plugin
