@@ -15,34 +15,25 @@ import com.intellij.openapi.actionSystem.impl.ActionToolbarImpl
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
-import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBBox
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.BorderFactory
-import javax.swing.Box
 import javax.swing.JComponent
 
-class StatusToolbarPanel(
+class TaskToolbarPanel(
   project: Project,
   onTaskExecuteButtonClicked: (taskName: String) -> Unit
-) : JBPanel<JBPanel<*>>(GridBagLayout()){
-  private val _statusLabel = JBLabel()
+) : JBPanel<JBPanel<*>>(GridBagLayout()) {
   private val actionToolbar = RoborazziGradleTaskToolbar(
     project = project,
     place = "RoborazziGradleTaskToolbar",
     horizontal = true,
     onTaskExecuteButtonClicked = onTaskExecuteButtonClicked
   )
-
-  var statusLabel: String = ""
-    get() = _statusLabel.text
-    set(value) {
-      _statusLabel.text = value
-      field = value
-    }
 
   var isExecuteGradleTaskActionEnabled: Boolean
     get() = actionToolbar.isExecuteGradleTaskActionEnabled
@@ -52,31 +43,20 @@ class StatusToolbarPanel(
 
   init {
     actionToolbar.setTargetComponent(this)
-    setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5))
-    val gbc = GridBagConstraints().apply {
-        gridx = 0
-        gridy = 0
-        anchor = GridBagConstraints.WEST
-        insets = JBUI.insets(5)
+    setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4))
+    val actionToolbarConstraints = GridBagConstraints().apply {
+      insets = JBUI.insets(4)
+      gridx = 0
+      gridy = 0
+      anchor = GridBagConstraints.WEST
     }
-    add(_statusLabel, gbc)
-    val hRGlueConstraints = gbc.apply {
+    add(actionToolbar.component, actionToolbarConstraints)
+    add(JBBox.createHorizontalGlue(), GridBagConstraints().apply {
       gridx = 1
       gridy = 0
       weightx = 1.0
-      anchor = GridBagConstraints.CENTER
       fill = GridBagConstraints.HORIZONTAL
-    }
-    // Add a horizontal glue to push the label to the left
-    add(Box.createHorizontalGlue(), hRGlueConstraints)
-
-    val actionToolbarConstraints = gbc.apply {
-      gridx = 1
-      gridy = 0
-      fill = GridBagConstraints.NONE
-      anchor = GridBagConstraints.EAST
-    }
-    add(actionToolbar.component, actionToolbarConstraints)
+    })
   }
 
   fun setActions(actions: List<ToolbarAction>) {
@@ -102,7 +82,8 @@ class RoborazziGradleTaskToolbar(
 
   private val propertiesComponent = PropertiesComponent.getInstance(project)
   private val roborazziGradleTaskAction = GradleTaskComboBoxAction(propertiesComponent)
-  private val executeGradleTaskExecuteAction = ExecuteGradleTaskExecuteAction(propertiesComponent, onTaskExecuteButtonClicked)
+  private val executeGradleTaskExecuteAction =
+    ExecuteGradleTaskExecuteAction(propertiesComponent, onTaskExecuteButtonClicked)
 
   var isExecuteGradleTaskActionEnabled: Boolean
     get() = isEnabled
@@ -132,7 +113,7 @@ class RoborazziGradleTaskToolbar(
     return toolbarButton
   }
 
-  fun setActions(actions: List<StatusToolbarPanel.ToolbarAction>) {
+  fun setActions(actions: List<TaskToolbarPanel.ToolbarAction>) {
     roborazziGradleTaskAction.setActions(actions)
   }
 
@@ -142,25 +123,33 @@ class RoborazziGradleTaskToolbar(
 
     private val popupActionGroup: DefaultActionGroup = DefaultActionGroup()
 
-    override fun createPopupActionGroup(button: JComponent, dataContext: DataContext) = popupActionGroup
+    override fun createPopupActionGroup(button: JComponent, dataContext: DataContext) =
+      popupActionGroup
 
     override fun update(e: AnActionEvent) {
-
-      e.presentation.text = propertiesComponent.getValue(SELECTED_TASK_KEY) ?: if(popupActionGroup.childActionsOrStubs.isNotEmpty()) {
-        val defaultTask = popupActionGroup.childActionsOrStubs[0].templatePresentation.text
-        propertiesComponent.setSelectedTask(defaultTask)
-        defaultTask
-      } else {
-        "Select Task"
-      }
+      e.presentation.text = propertiesComponent.getValue(SELECTED_TASK_KEY)
+        ?: if (popupActionGroup.childActionsOrStubs.isNotEmpty()) {
+          val defaultTask = popupActionGroup.childActionsOrStubs[0].templatePresentation.text
+          propertiesComponent.setSelectedTask(defaultTask)
+          defaultTask
+        } else {
+          "Select Task"
+        }
       e.presentation.icon = AllIcons.General.Gear
     }
 
     override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
-    fun setActions(actions: List<StatusToolbarPanel.ToolbarAction>) {
+    fun setActions(actions: List<TaskToolbarPanel.ToolbarAction>) {
       popupActionGroup.removeAll()
-      actions.forEach { popupActionGroup.add(GradleTaskSelectAction(it.label, propertiesComponent)) }
+      actions.forEach {
+        popupActionGroup.add(
+          GradleTaskSelectAction(
+            it.label,
+            propertiesComponent
+          )
+        )
+      }
     }
 
   }
@@ -168,7 +157,7 @@ class RoborazziGradleTaskToolbar(
   class ExecuteGradleTaskExecuteAction(
     private val propertiesComponent: PropertiesComponent,
     private val onActionClicked: (taskName: String) -> Unit
-  ): DumbAwareAction("Execute Selected Task", "Execute selected task", AllIcons.Actions.Refresh) {
+  ) : DumbAwareAction("Execute Selected Task", "Execute selected task", AllIcons.Actions.Refresh) {
 
     var isActionEnabled = true
       set(value) {
@@ -191,7 +180,7 @@ class RoborazziGradleTaskToolbar(
   class GradleTaskSelectAction(
     private val taskName: String,
     private val propertiesComponent: PropertiesComponent,
-  ): DumbAwareAction(taskName, taskName, AllIcons.General.Gear) {
+  ) : DumbAwareAction(taskName, taskName, AllIcons.General.Gear) {
 
     override fun actionPerformed(e: AnActionEvent) {
       e.presentation.text = taskName
