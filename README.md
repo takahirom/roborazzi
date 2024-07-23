@@ -951,7 +951,7 @@ If you are having trouble debugging your test, try Dump mode as follows.
 # Experimental Compose Preview Support
 
 Roborazzi provides support for generating screenshot tests and easy setup for Jetpack Compose Preview.
-This support uses [ComposePreviewScanner](https://github.com/sergio-sastre/ComposablePreviewScanner) to scan the Composable Previews in your project.
+This support uses [ComposablePreviewScanner](https://github.com/sergio-sastre/ComposablePreviewScanner) to scan the Composable Previews in your project.
 
 ## Generate Compose Preview screenshot tests
 
@@ -994,13 +994,13 @@ roborazzi {
 
 ## Manually adding Compose Preview screenshot tests
 
-Roborazzi provides a helper function for ComposePreviewScanner.
+Roborazzi provides a helper function for ComposablePreviewScanner.
 You can add the following dependency to your project to use the helper function:
 
 `testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:[version]")`
 
 Then you can use the `ComposablePreview<AndroidPreviewInfo>.captureRoboImage()` function to capture the Composable Preview using the settings in Preview annotations.
-To obtain the `ComposablePreview` object, please refer to [ComposePreviewScanner](https://github.com/sergio-sastre/ComposablePreviewScanner).
+To obtain the `ComposablePreview` object, please refer to [ComposablePreviewScanner](https://github.com/sergio-sastre/ComposablePreviewScanner).
 
 ```kotlin
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
