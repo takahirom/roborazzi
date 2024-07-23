@@ -59,7 +59,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
       .scanPackageTrees(*options.scanOptions.packages)
       .let {
         if (options.scanOptions.includePrivatePreviews) {
-          it
+          it.includePrivatePreviews()
         } else {
           it
         }
