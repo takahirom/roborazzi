@@ -17,6 +17,7 @@ class GeneratePreviewTestTest {
       checkHasImages()
     }
   }
+
   @Test
   fun whenKmpModuleAndRecordRunImagesShouldBeRecorded() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
@@ -24,6 +25,16 @@ class GeneratePreviewTestTest {
       record()
 
       checkHasImages()
+    }
+  }
+
+  @Test
+  fun whenIncludePrivatePreviewsAndRecordRunImagesShouldBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.isIncludePrivatePreviews = true
+      record()
+
+      checkHasPrivatePreviewImages()
     }
   }
 }
@@ -35,20 +46,28 @@ class PreviewModule(
   companion object {
     val moduleName = "sample-generate-preview-tests"
   }
+
   val buildGradle = BuildGradle(testProjectDir)
 
   class BuildGradle(private val projectFolder: TemporaryFolder) {
     private val PATH = moduleName + "/build.gradle.kts"
     var isKmp = false
+    var isIncludePrivatePreviews = false
     fun write() {
       val file =
         projectFolder.root.resolve(PATH)
       file.parentFile.mkdirs()
+      val includePrivatePreviewsExpr = if (isIncludePrivatePreviews) {
+        """includePrivatePreviews = $isIncludePrivatePreviews"""
+      } else {
+        ""
+      }
       val roborazziExtension = """
           roborazzi {
             generateComposePreviewRobolectricTests {
               enable = true
               packages = listOf("com.github.takahirom.preview.tests")
+              $includePrivatePreviewsExpr
             }
           }
       """.trimIndent()
@@ -89,7 +108,7 @@ class PreviewModule(
           }
 
       """.trimIndent()
-      val buildGradleText = if(isKmp)
+      val buildGradleText = if (isKmp)
         """
           plugins {
               kotlin("multiplatform")
@@ -144,7 +163,7 @@ class PreviewModule(
               maven { url = uri("https://jitpack.io") }
           }
         """.trimIndent()
-        else """
+      else """
   plugins {
     id("com.android.application")
   //  id("com.android.library")
@@ -204,5 +223,14 @@ class PreviewModule(
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
     println("images:" + images?.toList())
     assert(images?.isNotEmpty() == true)
+  }
+
+  fun checkHasPrivatePreviewImages() {
+    val privateImages =
+      testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+        .orEmpty()
+        .filter { it.name.contains("PreviewWithPrivate") }
+    println("images:" + privateImages.toList())
+    assert(privateImages.isNotEmpty() == true)
   }
 }
