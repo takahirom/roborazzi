@@ -19,13 +19,24 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 
 @ExperimentalRoborazziApi
 interface ComposePreviewTester<T : Any> {
+  class Options(
+    val scanOptions: ScanOptions,
+  ) {
+    class ScanOptions(
+      val packages: Array<String>,
+      val includePrivatePreviews: Boolean = false,
+    )
+  }
+
   /**
    * Retrieves a list of composable previews from the specified packages.
    *
    * @param packages Vararg parameter representing the package names to scan for previews.
    * @return A list of ComposablePreview objects of type T.
    */
-  fun previews(vararg packages: String): List<ComposablePreview<T>>
+  fun previews(
+    options: Options,
+  ): List<ComposablePreview<T>>
 
   /**
    * Performs a test on a single composable preview.
@@ -35,18 +46,31 @@ interface ComposePreviewTester<T : Any> {
    */
   fun test(
     preview: ComposablePreview<T>,
+    options: Options,
   )
 }
 
 @InternalRoborazziApi
 class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
-  override fun previews(vararg packages: String): List<ComposablePreview<AndroidPreviewInfo>> {
+  override fun previews(
+    options: ComposePreviewTester.Options,
+  ): List<ComposablePreview<AndroidPreviewInfo>> {
     return AndroidComposablePreviewScanner()
-      .scanPackageTrees(*packages)
+      .scanPackageTrees(*options.scanOptions.packages)
+      .let {
+        if (options.scanOptions.includePrivatePreviews) {
+          it
+        } else {
+          it
+        }
+      }
       .getPreviews()
   }
 
-  override fun test(preview: ComposablePreview<AndroidPreviewInfo>) {
+  override fun test(
+    preview: ComposablePreview<AndroidPreviewInfo>,
+    options: ComposePreviewTester.Options,
+  ) {
     val pathPrefix =
       if (roborazziRecordFilePathStrategy() == RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory) {
         roborazziSystemPropertyOutputDirectory() + java.io.File.separator

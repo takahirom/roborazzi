@@ -31,10 +31,10 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
 
   /**
-   * The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
+   * If true, the private previews will be included in the test.
    */
-  val testerQualifiedClassName: Property<String> = objects.property(String::class.java)
-    .convention("com.github.takahirom.roborazzi.AndroidComposePreviewTester")
+  val includePrivatePreviews: Property<Boolean> = objects.property(Boolean::class.java)
+    .convention(false)
 
   /**
    * [robolectricConfig] will be passed to the Robolectric's @Config annotation in the generated test class.
@@ -48,6 +48,14 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
           "qualifiers" to "RobolectricDeviceQualifiers.Pixel4a",
         )
       )
+
+  /**
+   * The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
+   * This is advanced usage. You can implement your own test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
+   */
+  val testerQualifiedClassName: Property<String> = objects.property(String::class.java)
+    .convention("com.github.takahirom.roborazzi.AndroidComposePreviewTester")
+
 }
 
 fun generateComposePreviewRobolectricTestsIfNeeded(
@@ -63,7 +71,7 @@ fun generateComposePreviewRobolectricTestsIfNeeded(
   setupGenerateComposePreviewRobolectricTestsTask(
     project = project,
     variant = variant,
-    scanPackages = extension.packages,
+    extension = extension,
     testerQualifiedClassName = extension.testerQualifiedClassName,
     robolectricConfig = extension.robolectricConfig
   )
@@ -79,11 +87,11 @@ fun generateComposePreviewRobolectricTestsIfNeeded(
 private fun setupGenerateComposePreviewRobolectricTestsTask(
   project: Project,
   variant: Variant,
-  scanPackages: ListProperty<String>,
+  extension: GenerateComposePreviewRobolectricTestsExtension,
   testerQualifiedClassName: Property<String>,
   robolectricConfig: MapProperty<String, String>,
 ) {
-  check(scanPackages.get().orEmpty().isNotEmpty()) {
+  check(extension.packages.get().orEmpty().isNotEmpty()) {
     "Please set roborazzi.generateRobolectricPreviewTests.packages in the generatePreviewTests extension or set roborazzi.generateRobolectricPreviewTests.enable = false." +
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
@@ -95,7 +103,8 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     // It seems that this directory path is overridden by addGeneratedSourceDirectory.
     // The generated tests will be located in build/JAVA/generate[VariantName]ComposePreviewRobolectricTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
-    it.scanPackageTrees.set(scanPackages)
+    it.scanPackageTrees.set(extension.packages)
+    it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(testerQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)
   }
@@ -115,6 +124,9 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   var scanPackageTrees: ListProperty<String> = project.objects.listProperty(String::class.java)
 
   @get:Input
+  abstract val includePrivatePreviews: Property<Boolean>
+
+  @get:Input
   abstract val testerQualifiedClassName: Property<String>
 
   @get:Input
@@ -126,6 +138,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     testDir.mkdirs()
 
     val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
+    val includePrivatePreviewsExpr = includePrivatePreviews.get()
 
     val generatedClassFQDN = "com.github.takahirom.roborazzi.RoborazziPreviewParameterizedTests"
     val packageName = generatedClassFQDN.substringBeforeLast(".")
@@ -156,20 +169,32 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
             @OptIn(InternalRoborazziApi::class)
             @GraphicsMode(GraphicsMode.Mode.NATIVE)
             class $className(
-                private val preview: ComposablePreview<Any>,
+                private val previewWithOptions: PreviewWithOptions,
             ) {
+                data class PreviewWithOptions(val preview: ComposablePreview<Any>, val options: ComposePreviewTester.Options)
 
                 companion object {
                     // lazy for performance
-                    val previews: List<ComposablePreview<Any>> by lazy {
-                        getComposePreviewTester("$testerQualifiedClassNameString").previews(
-                            $packagesExpr
+                    val previewWithOptions: List<PreviewWithOptions> by lazy {
+                        val options = ComposePreviewTester.Options(
+                            scanOptions = ComposePreviewTester.Options.ScanOptions(
+                              packages = arrayOf($packagesExpr),
+                              includePrivatePreviews = $includePrivatePreviewsExpr, 
+                            )
                         )
+                        getComposePreviewTester("$testerQualifiedClassNameString").previews(
+                            options = options
+                        )
+                        .map { preview ->
+                            PreviewWithOptions(
+                                preview = preview,
+                                options = options
+                            )
+                        }
                     }
                     @JvmStatic
                     @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-                    fun values(): List<ComposablePreview<Any>> =
-                        previews
+                    fun values(): List<PreviewWithOptions> = previewWithOptions
                 }
                 
                 
@@ -177,7 +202,8 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 $robolectricConfigString
                 @Test
                 fun test() {
-                    getComposePreviewTester("$testerQualifiedClassNameString").test(preview)
+                    val (preview, options) = previewWithOptions
+                    getComposePreviewTester("$testerQualifiedClassNameString").test(preview, options)
                 }
 
             }

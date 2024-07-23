@@ -43,7 +43,7 @@ webjar-material-design-icons = "4.0.0"
 webjar-materialize = "1.0.0"
 webjars-locator-lite = "0.0.4"
 
-composable-preview-scanner = "0.1.2"
+composable-preview-scanner = "0.1.3"
 
 [libraries]
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi-for-replacing-by-include-build" }
