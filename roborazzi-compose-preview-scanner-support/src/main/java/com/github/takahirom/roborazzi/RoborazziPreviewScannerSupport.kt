@@ -1,5 +1,7 @@
 package com.github.takahirom.roborazzi
 
+import org.junit.rules.TestRule
+import org.junit.rules.TestWatcher
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
@@ -19,14 +21,23 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 
 @ExperimentalRoborazziApi
 interface ComposePreviewTester<T : Any> {
-  class Options(
-    val scanOptions: ScanOptions,
+  data class Options(
+    val testLifecycleOptions: TestLifecycleOptions = JUnit4TestLifecycleOptions(),
+    val scanOptions: ScanOptions = ScanOptions(emptyList()),
   ) {
-    class ScanOptions(
-      val packages: Array<String>,
+    interface TestLifecycleOptions
+    class JUnit4TestLifecycleOptions(
+      // Used from generated tests
+      @Suppress("unused") val testRule: TestRule = object : TestWatcher() {},
+    ) : TestLifecycleOptions
+
+    data class ScanOptions(
+      val packages: List<String>,
       val includePrivatePreviews: Boolean = false,
     )
   }
+
+  fun options(): Options = defaultOptionsFromPlugin
 
   /**
    * Retrieves a list of composable previews from the specified packages.
@@ -34,9 +45,7 @@ interface ComposePreviewTester<T : Any> {
    * @param packages Vararg parameter representing the package names to scan for previews.
    * @return A list of ComposablePreview objects of type T.
    */
-  fun previews(
-    options: Options,
-  ): List<ComposablePreview<T>>
+  fun previews(): List<ComposablePreview<T>>
 
   /**
    * Performs a test on a single composable preview.
@@ -44,19 +53,20 @@ interface ComposePreviewTester<T : Any> {
    *
    * @param preview The ComposablePreview object to be tested.
    */
-  fun test(
-    preview: ComposablePreview<T>,
-    options: Options,
-  )
+  fun test(preview: ComposablePreview<T>)
+
+  companion object {
+    // Should be replaced with the actual default options from the plugin.
+    var defaultOptionsFromPlugin = Options()
+  }
 }
 
-@InternalRoborazziApi
+@ExperimentalRoborazziApi
 class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
-  override fun previews(
-    options: ComposePreviewTester.Options,
-  ): List<ComposablePreview<AndroidPreviewInfo>> {
+  override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
+    val options = options()
     return AndroidComposablePreviewScanner()
-      .scanPackageTrees(*options.scanOptions.packages)
+      .scanPackageTrees(*options.scanOptions.packages.toTypedArray())
       .let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
@@ -67,10 +77,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
       .getPreviews()
   }
 
-  override fun test(
-    preview: ComposablePreview<AndroidPreviewInfo>,
-    options: ComposePreviewTester.Options,
-  ) {
+  override fun test(preview: ComposablePreview<AndroidPreviewInfo>) {
     val pathPrefix =
       if (roborazziRecordFilePathStrategy() == RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory) {
         roborazziSystemPropertyOutputDirectory() + java.io.File.separator

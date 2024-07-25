@@ -19,6 +19,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.invocation.DefaultGradle
 import java.io.File
 import java.net.URLEncoder
+import java.util.Locale
 import javax.inject.Inject
 
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
@@ -97,7 +98,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   }
 
   val generateTestsTask = project.tasks.register(
-    "generate${variant.name.capitalize()}ComposePreviewRobolectricTests",
+    "generate${variant.name.capitalize(Locale.ROOT)}ComposePreviewRobolectricTests",
     GenerateComposePreviewRobolectricTestsTask::class.java
   ) {
     // It seems that this directory path is overridden by addGeneratedSourceDirectory.
@@ -153,8 +154,11 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     File(directory, "$className.kt").writeText(
       """
             package $packageName
+            import org.junit.Rule
             import org.junit.Test
             import org.junit.runner.RunWith
+            import org.junit.rules.TestWatcher
+            import org.junit.rules.RuleChain
             import org.robolectric.ParameterizedRobolectricTestRunner
             import org.robolectric.annotation.Config
             import org.robolectric.annotation.GraphicsMode
@@ -169,32 +173,36 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
             @OptIn(InternalRoborazziApi::class)
             @GraphicsMode(GraphicsMode.Mode.NATIVE)
             class $className(
-                private val previewWithOptions: PreviewWithOptions,
+                private val preview: ComposablePreview<Any>,
             ) {
-                data class PreviewWithOptions(val preview: ComposablePreview<Any>, val options: ComposePreviewTester.Options)
-
+                private val testLifecycleOptions = tester.options().testLifecycleOptions
+                @get:Rule
+                val rule = RuleChain.outerRule(
+                  if(testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
+                    (testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions).testRule
+                  } else {
+                    object : TestWatcher() {}
+                  }
+                )
                 companion object {
+                    val tester = getComposePreviewTester("$testerQualifiedClassNameString")
                     // lazy for performance
-                    val previewWithOptions: List<PreviewWithOptions> by lazy {
-                        val options = ComposePreviewTester.Options(
-                            scanOptions = ComposePreviewTester.Options.ScanOptions(
-                              packages = arrayOf($packagesExpr),
-                              includePrivatePreviews = $includePrivatePreviewsExpr, 
-                            )
-                        )
-                        getComposePreviewTester("$testerQualifiedClassNameString").previews(
-                            options = options
-                        )
-                        .map { preview ->
-                            PreviewWithOptions(
-                                preview = preview,
-                                options = options
-                            )
-                        }
+                    val previews: List<ComposablePreview<Any>> by lazy {
+                        setupDefaultOptions()
+                        tester.previews()
                     }
                     @JvmStatic
                     @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-                    fun values(): List<PreviewWithOptions> = previewWithOptions
+                    fun values(): List<ComposablePreview<Any>> = previews 
+                    
+                    fun setupDefaultOptions() {
+                        ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options(
+                            scanOptions = ComposePreviewTester.Options.ScanOptions(
+                              packages = listOf($packagesExpr),
+                              includePrivatePreviews = $includePrivatePreviewsExpr, 
+                            )
+                        )
+                    }
                 }
                 
                 
@@ -202,8 +210,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 $robolectricConfigString
                 @Test
                 fun test() {
-                    val (preview, options) = previewWithOptions
-                    getComposePreviewTester("$testerQualifiedClassNameString").test(preview, options)
+                    tester.test(preview)
                 }
 
             }
@@ -315,7 +322,8 @@ private fun verifyLibraryDependencies(
     val dependencies = this
     val libNameArray = libraryName.split(":")
     if (!dependencies.contains(libNameArray[0] to libNameArray[1])) {
-      val configurationNames = "'testImplementation'(For Android Project) or 'kotlin.sourceSets.androidUnitTest.dependencies.implementation'(For KMP)"
+      val configurationNames =
+        "'testImplementation'(For Android Project) or 'kotlin.sourceSets.androidUnitTest.dependencies.implementation'(For KMP)"
       error(
         "Roborazzi: Please add the following $configurationNames dependency to the 'dependencies' block in the 'build.gradle' file: '$libraryName' for the $configurationNames configuration.\n" +
           "For your convenience, visit https://www.google.com/search?q=" + URLEncoder.encode(
