@@ -27,16 +27,31 @@ interface ComposePreviewTester<T : Any> {
   ) {
     interface TestLifecycleOptions
     data class JUnit4TestLifecycleOptions(
+      /**
+       * The TestRule factory to be used for the generated tests.
+       * You can use this to add custom behavior to the generated tests.
+       */
       // Used from generated tests
       @Suppress("unused") val testRuleFactory: () -> TestRule = { object : TestWatcher() {} },
     ) : TestLifecycleOptions
 
     data class ScanOptions(
+      /**
+       * The packages to scan for composable previews.
+       */
       val packages: List<String>,
+      /**
+       * Whether to include private previews in the scan.
+       */
       val includePrivatePreviews: Boolean = false,
     )
   }
 
+  /**
+   * Retrieves the options for the ComposePreviewTester.
+   *
+   * @return The Options object.
+   */
   fun options(): Options = defaultOptionsFromPlugin
 
   /**
@@ -49,7 +64,6 @@ interface ComposePreviewTester<T : Any> {
 
   /**
    * Performs a test on a single composable preview.
-   * Note: This method will not be called as the same instance of previews() method.
    *
    * @param preview The ComposablePreview object to be tested.
    */
