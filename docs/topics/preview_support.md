@@ -30,14 +30,16 @@ roborazzi {
     enable = true
     // The package names to scan for Composable Previews.
     packages = listOf("com.example")
-    // The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
-    testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
     // robolectricConfig will be passed to Robolectric's @Config annotation in the generated test class.
     // See https://robolectric.org/configuring/ for more information.
     robolectricConfig = mapOf(
       "sdk" to "[32]",
       "qualifiers" to "RobolectricDeviceQualifiers.Pixel5",
     )
+    // If true, the private previews will be included in the test.
+    includePrivatePreviews = true
+    // The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
+    testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
   }
 }
 ```
