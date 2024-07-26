@@ -48,10 +48,6 @@ android {
       isIncludeAndroidResources = true
       all {
         it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
-        // Add logging for start and end of tests
-        it.testLogging {
-          events "passed", "skipped", "failed", "standardOut", "standardError"
-        }
       }
     }
   }
