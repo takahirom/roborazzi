@@ -81,7 +81,7 @@ class PreviewModule(
         projectFolder.root.resolve(PATH)
       file.parentFile.mkdirs()
 
-      val roborazziExtension = createRoborazziPreview()
+      val roborazziExtension = createRoborazziExtension()
       val androidBlock = """
           android {
             namespace = "com.github.takahirom.preview.tests"
@@ -215,7 +215,7 @@ class PreviewModule(
     var isIncludePrivatePreviews = false
     var useCustomTester = false
 
-    private fun createRoborazziPreview(): String {
+    private fun createRoborazziExtension(): String {
       val includePrivatePreviewsExpr = if (isIncludePrivatePreviews) {
         """includePrivatePreviews = $isIncludePrivatePreviews"""
       } else {
