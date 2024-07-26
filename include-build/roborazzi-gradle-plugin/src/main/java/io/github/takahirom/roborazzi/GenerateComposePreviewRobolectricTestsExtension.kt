@@ -93,7 +93,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   robolectricConfig: MapProperty<String, String>,
 ) {
   check(extension.packages.get().orEmpty().isNotEmpty()) {
-    "Please set roborazzi.generateRobolectricPreviewTests.packages in the generatePreviewTests extension or set roborazzi.generateRobolectricPreviewTests.enable = false." +
+    "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
 
@@ -179,7 +179,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 @get:Rule
                 val rule = RuleChain.outerRule(
                   if(testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
-                    (testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions).testRule
+                    (testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions).testRuleFactory()
                   } else {
                     object : TestWatcher() {}
                   }
@@ -219,7 +219,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   }
 }
 
-fun verifyGenerateRobolectricPreviewTests(
+fun verifyGenerateComposePreviewRobolectricTests(
   project: Project,
   androidExtension: TestedExtension,
   extension: GenerateComposePreviewRobolectricTestsExtension

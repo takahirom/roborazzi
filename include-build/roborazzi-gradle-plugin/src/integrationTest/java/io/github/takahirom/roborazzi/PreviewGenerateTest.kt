@@ -29,6 +29,30 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenDisablePreviewAndRecordRunImagesShouldNotBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.enable = false
+
+      record()
+
+      checkNoImages()
+    }
+  }
+
+  @Test
+  fun whenCustomTesterAndRecordRunImagesShouldBeRecordedAndCanSeeJUnitLog() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.useCustomTester = true
+
+      record {
+        itShouldHaveJUnitRuleLog()
+      }
+
+      checkHasImages()
+    }
+  }
+
+  @Test
   fun whenIncludePrivatePreviewsAndRecordRunImagesShouldBeRecorded() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.isIncludePrivatePreviews = true
@@ -52,25 +76,12 @@ class PreviewModule(
   class BuildGradle(private val projectFolder: TemporaryFolder) {
     private val PATH = moduleName + "/build.gradle.kts"
     var isKmp = false
-    var isIncludePrivatePreviews = false
     fun write() {
       val file =
         projectFolder.root.resolve(PATH)
       file.parentFile.mkdirs()
-      val includePrivatePreviewsExpr = if (isIncludePrivatePreviews) {
-        """includePrivatePreviews = $isIncludePrivatePreviews"""
-      } else {
-        ""
-      }
-      val roborazziExtension = """
-          roborazzi {
-            generateComposePreviewRobolectricTests {
-              enable = true
-              packages = listOf("com.github.takahirom.preview.tests")
-              $includePrivatePreviewsExpr
-            }
-          }
-      """.trimIndent()
+
+      val roborazziExtension = createRoborazziPreview()
       val androidBlock = """
           android {
             namespace = "com.github.takahirom.preview.tests"
@@ -199,10 +210,44 @@ class PreviewModule(
         buildGradleText.trimIndent()
       )
     }
+
+    var enable = true
+    var isIncludePrivatePreviews = false
+    var useCustomTester = false
+
+    private fun createRoborazziPreview(): String {
+      val includePrivatePreviewsExpr = if (isIncludePrivatePreviews) {
+        """includePrivatePreviews = $isIncludePrivatePreviews"""
+      } else {
+        ""
+      }
+      val customTesterExpr = if (useCustomTester) {
+        """testerQualifiedClassName = "com.github.takahirom.sample.CustomPreviewTester""""
+      } else {
+        ""
+      }
+      val roborazziExtension = """
+              roborazzi {
+                generateComposePreviewRobolectricTests {
+                  enable = $enable
+                  packages = listOf("com.github.takahirom.preview.tests")
+                  $includePrivatePreviewsExpr
+                  $customTesterExpr
+                }
+              }
+          """.trimIndent()
+      return roborazziExtension
+    }
   }
 
-  fun record() {
-    runTask("recordRoborazziDebug")
+  fun record(checks: BuildResult.() -> Unit = {}) {
+    val result = runTask("recordRoborazziDebug")
+    result.checks()
+  }
+
+  fun BuildResult.itShouldHaveJUnitRuleLog() {
+    assert(output.contains("JUnit4TestLifecycleOptions starting"))
+    assert(output.contains("JUnit4TestLifecycleOptions finished"))
   }
 
   private fun runTask(
@@ -223,6 +268,17 @@ class PreviewModule(
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
     println("images:" + images?.toList())
     assert(images?.isNotEmpty() == true)
+  }
+
+  fun checkNoImages() {
+    val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+    println("images:" + images?.toList())
+    checkResultCount(
+      testProjectDir.root.resolve("$moduleName/build/test-results/roborazzi/results-summary.json")
+      // All zero
+    )
+
+    assert(images?.isEmpty() == true)
   }
 
   fun checkHasPrivatePreviewImages() {

@@ -26,9 +26,9 @@ interface ComposePreviewTester<T : Any> {
     val scanOptions: ScanOptions = ScanOptions(emptyList()),
   ) {
     interface TestLifecycleOptions
-    class JUnit4TestLifecycleOptions(
+    data class JUnit4TestLifecycleOptions(
       // Used from generated tests
-      @Suppress("unused") val testRule: TestRule = object : TestWatcher() {},
+      @Suppress("unused") val testRuleFactory: () -> TestRule = { object : TestWatcher() {} },
     ) : TestLifecycleOptions
 
     data class ScanOptions(

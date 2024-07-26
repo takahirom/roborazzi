@@ -337,19 +337,7 @@ dependencies {
   ) {
     val recordedFile =
       testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
-    val results = CaptureResults.fromJsonFile(recordedFile.absolutePath)
-    assert(results.resultSummary.recorded == recorded) {
-      "Expected count: $recorded, actual count: ${results.resultSummary.recorded} summary:${results.resultSummary}"
-    }
-    assert(results.resultSummary.added == added) {
-      "Expected count: $added, actual count: ${results.resultSummary.added} summary:${results.resultSummary}"
-    }
-    assert(results.resultSummary.changed == changed) {
-      "Expected count: $changed, actual count: ${results.resultSummary.changed} summary:${results.resultSummary}"
-    }
-    assert(results.resultSummary.unchanged == unchanged) {
-      "Expected count: $unchanged, actual count: ${results.resultSummary.unchanged} summary:${results.resultSummary}"
-    }
+    checkResultCount(recordedFile, recorded, added, changed, unchanged)
   }
 
   fun checkRecordedFileExists(path: String) {
@@ -645,4 +633,26 @@ class RoborazziTest {
   }
 
   val buildGradle = BuildGradle(testProjectDir)
+}
+
+fun checkResultCount(
+  recordedFile: File,
+  recorded: Int = 0,
+  added: Int = 0,
+  changed: Int = 0,
+  unchanged: Int = 0
+) {
+  val results = CaptureResults.fromJsonFile(recordedFile.absolutePath)
+  assert(results.resultSummary.recorded == recorded) {
+    "Expected count: $recorded, actual count: ${results.resultSummary.recorded} summary:${results.resultSummary}"
+  }
+  assert(results.resultSummary.added == added) {
+    "Expected count: $added, actual count: ${results.resultSummary.added} summary:${results.resultSummary}"
+  }
+  assert(results.resultSummary.changed == changed) {
+    "Expected count: $changed, actual count: ${results.resultSummary.changed} summary:${results.resultSummary}"
+  }
+  assert(results.resultSummary.unchanged == unchanged) {
+    "Expected count: $unchanged, actual count: ${results.resultSummary.unchanged} summary:${results.resultSummary}"
+  }
 }
