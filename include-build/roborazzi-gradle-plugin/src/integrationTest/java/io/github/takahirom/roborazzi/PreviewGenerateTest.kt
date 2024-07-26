@@ -152,6 +152,12 @@ class PreviewModule(
                           implementation(libs.junit)
                           implementation(libs.robolectric)
                           implementation(libs.composable.preview.scanner)
+                          implementation(libs.androidx.compose.ui.test.junit4)
+                      }
+                  }
+                  val androidDebug by creating {
+                      dependencies {
+                          implementation(libs.androidx.compose.ui.test.manifest)
                       }
                   }
                   
@@ -201,6 +207,8 @@ class PreviewModule(
     testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     testImplementation(libs.composable.preview.scanner)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)

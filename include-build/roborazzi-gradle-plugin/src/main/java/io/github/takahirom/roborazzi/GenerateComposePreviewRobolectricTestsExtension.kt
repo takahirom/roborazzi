@@ -22,7 +22,7 @@ import java.net.URLEncoder
 import java.util.Locale
 import javax.inject.Inject
 
-open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
+open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(@Transient private val objects: ObjectFactory) {
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
 
@@ -74,7 +74,8 @@ fun generateComposePreviewRobolectricTestsIfNeeded(
     variant = variant,
     extension = extension,
     testerQualifiedClassName = extension.testerQualifiedClassName,
-    robolectricConfig = extension.robolectricConfig
+    robolectricConfig = extension.robolectricConfig,
+    testTaskProvider = testTaskProvider
   )
   project.afterEvaluate {
     // We use afterEvaluate only for verify
@@ -91,6 +92,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   extension: GenerateComposePreviewRobolectricTestsExtension,
   testerQualifiedClassName: Property<String>,
   robolectricConfig: MapProperty<String, String>,
+  testTaskProvider: TaskCollection<Test>
 ) {
   check(extension.packages.get().orEmpty().isNotEmpty()) {
     "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
@@ -115,6 +117,10 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     generateTestsTask,
     GenerateComposePreviewRobolectricTestsTask::outputDir
   )
+  // It seems that the addGeneratedSourceDirectory does not affect the inputs.dir and does not invalidate the task.
+  testTaskProvider.configureEach {
+    it.inputs.dir(generateTestsTask.flatMap { it.outputDir })
+  }
 }
 
 abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
@@ -175,6 +181,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
             class $className(
                 private val preview: ComposablePreview<Any>,
             ) {
+                private val tester = getComposePreviewTester("$testerQualifiedClassNameString")
                 private val testLifecycleOptions = tester.options().testLifecycleOptions
                 @get:Rule
                 val rule = RuleChain.outerRule(
@@ -184,11 +191,19 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                     object : TestWatcher() {}
                   }
                 )
+                
+                @GraphicsMode(GraphicsMode.Mode.NATIVE)
+                $robolectricConfigString
+                @Test
+                fun test() {
+                    tester.test(preview)
+                }
+                
                 companion object {
-                    val tester = getComposePreviewTester("$testerQualifiedClassNameString")
                     // lazy for performance
                     val previews: List<ComposablePreview<Any>> by lazy {
                         setupDefaultOptions()
+                        val tester = getComposePreviewTester("$testerQualifiedClassNameString")
                         tester.previews()
                     }
                     @JvmStatic
@@ -203,16 +218,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                             )
                         )
                     }
-                }
-                
-                
-                @GraphicsMode(GraphicsMode.Mode.NATIVE)
-                $robolectricConfigString
-                @Test
-                fun test() {
-                    tester.test(preview)
-                }
-
+                } 
             }
         """.trimIndent()
     )

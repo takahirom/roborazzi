@@ -342,7 +342,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
               "isCompareRun" to isCompareRun,
               "isVerifyAndRecordRun" to isVerifyAndRecordRun,
               "roborazziProperties" to roborazziProperties,
-              "generateComposePreviewRobolectricTests" to extension.generateComposePreviewRobolectricTests.enable
             )
           )
           test.doFirst {
