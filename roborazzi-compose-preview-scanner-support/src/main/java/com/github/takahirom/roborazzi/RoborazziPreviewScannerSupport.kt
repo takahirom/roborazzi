@@ -20,7 +20,7 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 }
 /**
  * ComposePreviewTester is an interface that allows you to define a custom test for a Composable preview.
- * The class that implements this interface should have a default constructor.
+ * The class that implements this interface should have a parameterless constructor.
  * You can set the custom tester class name in the roborazzi.generateComposePreviewRobolectricTests.testerQualifiedClassName property.
  * A new instance of the tester class is created for each test execution and preview generation.
  */
