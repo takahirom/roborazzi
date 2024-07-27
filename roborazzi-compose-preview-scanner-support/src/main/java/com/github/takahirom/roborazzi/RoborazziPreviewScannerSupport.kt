@@ -62,7 +62,6 @@ interface ComposePreviewTester<T : Any> {
   /**
    * Retrieves a list of composable previews from the specified packages.
    *
-   * @param packages Vararg parameter representing the package names to scan for previews.
    * @return A list of ComposablePreview objects of type T.
    */
   fun previews(): List<ComposablePreview<T>>
