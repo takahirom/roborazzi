@@ -22,7 +22,7 @@ import java.net.URLEncoder
 import java.util.Locale
 import javax.inject.Inject
 
-open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(@Transient private val objects: ObjectFactory) {
+open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
 
