@@ -176,7 +176,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
 
 
             @RunWith(ParameterizedRobolectricTestRunner::class)
-            @OptIn(InternalRoborazziApi::class)
+            @OptIn(InternalRoborazziApi::class, ExperimentalRoborazziApi::class)
             @GraphicsMode(GraphicsMode.Mode.NATIVE)
             class $className(
                 private val preview: ComposablePreview<Any>,

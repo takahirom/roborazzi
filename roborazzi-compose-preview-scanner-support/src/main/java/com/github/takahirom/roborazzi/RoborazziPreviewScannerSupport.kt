@@ -77,6 +77,7 @@ interface ComposePreviewTester<T : Any> {
 
   companion object {
     // Should be replaced with the actual default options from the plugin.
+    @InternalRoborazziApi
     var defaultOptionsFromPlugin = Options()
   }
 }
