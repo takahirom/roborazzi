@@ -53,6 +53,23 @@ fun PreviewDarkMode() {
   }
 }
 
+@Preview
+@Composable
+private fun PreviewWithPrivate() {
+  val isSystemInDarkTheme = isSystemInDarkTheme()
+  MaterialTheme {
+    Card(
+      Modifier
+        .width(180.dp)
+    ) {
+      Text(
+        modifier = Modifier.padding(8.dp),
+        text = "This is private preview"
+      )
+    }
+  }
+}
+
 @Preview(
   name = "Preview Name",
   // These properties are not supported by Roborazzi yet.

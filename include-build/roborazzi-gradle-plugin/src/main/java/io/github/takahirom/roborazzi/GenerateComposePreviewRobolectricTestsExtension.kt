@@ -19,6 +19,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.invocation.DefaultGradle
 import java.io.File
 import java.net.URLEncoder
+import java.util.Locale
 import javax.inject.Inject
 
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
@@ -31,10 +32,10 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
 
   /**
-   * The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
+   * If true, the private previews will be included in the test.
    */
-  val testerQualifiedClassName: Property<String> = objects.property(String::class.java)
-    .convention("com.github.takahirom.roborazzi.AndroidComposePreviewTester")
+  val includePrivatePreviews: Property<Boolean> = objects.property(Boolean::class.java)
+    .convention(false)
 
   /**
    * [robolectricConfig] will be passed to the Robolectric's @Config annotation in the generated test class.
@@ -48,6 +49,14 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
           "qualifiers" to "RobolectricDeviceQualifiers.Pixel4a",
         )
       )
+
+  /**
+   * The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
+   * This is advanced usage. You can implement your own test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
+   */
+  val testerQualifiedClassName: Property<String> = objects.property(String::class.java)
+    .convention("com.github.takahirom.roborazzi.AndroidComposePreviewTester")
+
 }
 
 fun generateComposePreviewRobolectricTestsIfNeeded(
@@ -63,9 +72,10 @@ fun generateComposePreviewRobolectricTestsIfNeeded(
   setupGenerateComposePreviewRobolectricTestsTask(
     project = project,
     variant = variant,
-    scanPackages = extension.packages,
+    extension = extension,
     testerQualifiedClassName = extension.testerQualifiedClassName,
-    robolectricConfig = extension.robolectricConfig
+    robolectricConfig = extension.robolectricConfig,
+    testTaskProvider = testTaskProvider
   )
   project.afterEvaluate {
     // We use afterEvaluate only for verify
@@ -79,23 +89,25 @@ fun generateComposePreviewRobolectricTestsIfNeeded(
 private fun setupGenerateComposePreviewRobolectricTestsTask(
   project: Project,
   variant: Variant,
-  scanPackages: ListProperty<String>,
+  extension: GenerateComposePreviewRobolectricTestsExtension,
   testerQualifiedClassName: Property<String>,
   robolectricConfig: MapProperty<String, String>,
+  testTaskProvider: TaskCollection<Test>
 ) {
-  check(scanPackages.get().orEmpty().isNotEmpty()) {
-    "Please set roborazzi.generateRobolectricPreviewTests.packages in the generatePreviewTests extension or set roborazzi.generateRobolectricPreviewTests.enable = false." +
+  check(extension.packages.get().orEmpty().isNotEmpty()) {
+    "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
 
   val generateTestsTask = project.tasks.register(
-    "generate${variant.name.capitalize()}ComposePreviewRobolectricTests",
+    "generate${variant.name.capitalize(Locale.ROOT)}ComposePreviewRobolectricTests",
     GenerateComposePreviewRobolectricTestsTask::class.java
   ) {
     // It seems that this directory path is overridden by addGeneratedSourceDirectory.
     // The generated tests will be located in build/JAVA/generate[VariantName]ComposePreviewRobolectricTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
-    it.scanPackageTrees.set(scanPackages)
+    it.scanPackageTrees.set(extension.packages)
+    it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(testerQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)
   }
@@ -105,6 +117,10 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     generateTestsTask,
     GenerateComposePreviewRobolectricTestsTask::outputDir
   )
+  // It seems that the addGeneratedSourceDirectory does not affect the inputs.dir and does not invalidate the task.
+  testTaskProvider.configureEach {
+    it.inputs.dir(generateTestsTask.flatMap { it.outputDir })
+  }
 }
 
 abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
@@ -113,6 +129,9 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
 
   @get:Input
   var scanPackageTrees: ListProperty<String> = project.objects.listProperty(String::class.java)
+
+  @get:Input
+  abstract val includePrivatePreviews: Property<Boolean>
 
   @get:Input
   abstract val testerQualifiedClassName: Property<String>
@@ -126,6 +145,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     testDir.mkdirs()
 
     val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
+    val includePrivatePreviewsExpr = includePrivatePreviews.get()
 
     val generatedClassFQDN = "com.github.takahirom.roborazzi.RoborazziPreviewParameterizedTests"
     val packageName = generatedClassFQDN.substringBeforeLast(".")
@@ -140,8 +160,11 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     File(directory, "$className.kt").writeText(
       """
             package $packageName
+            import org.junit.Rule
             import org.junit.Test
             import org.junit.runner.RunWith
+            import org.junit.rules.TestWatcher
+            import org.junit.rules.RuleChain
             import org.robolectric.ParameterizedRobolectricTestRunner
             import org.robolectric.annotation.Config
             import org.robolectric.annotation.GraphicsMode
@@ -153,40 +176,56 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
 
 
             @RunWith(ParameterizedRobolectricTestRunner::class)
-            @OptIn(InternalRoborazziApi::class)
+            @OptIn(InternalRoborazziApi::class, ExperimentalRoborazziApi::class)
             @GraphicsMode(GraphicsMode.Mode.NATIVE)
             class $className(
                 private val preview: ComposablePreview<Any>,
             ) {
-
-                companion object {
-                    // lazy for performance
-                    val previews: List<ComposablePreview<Any>> by lazy {
-                        getComposePreviewTester("$testerQualifiedClassNameString").previews(
-                            $packagesExpr
-                        )
-                    }
-                    @JvmStatic
-                    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-                    fun values(): List<ComposablePreview<Any>> =
-                        previews
-                }
-                
+                private val tester = getComposePreviewTester("$testerQualifiedClassNameString")
+                private val testLifecycleOptions = tester.options().testLifecycleOptions
+                @get:Rule
+                val rule = RuleChain.outerRule(
+                  if(testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
+                    (testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions).testRuleFactory()
+                  } else {
+                    object : TestWatcher() {}
+                  }
+                )
                 
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)
                 $robolectricConfigString
                 @Test
                 fun test() {
-                    getComposePreviewTester("$testerQualifiedClassNameString").test(preview)
+                    tester.test(preview)
                 }
-
+                
+                companion object {
+                    // lazy for performance
+                    val previews: List<ComposablePreview<Any>> by lazy {
+                        setupDefaultOptions()
+                        val tester = getComposePreviewTester("$testerQualifiedClassNameString")
+                        tester.previews()
+                    }
+                    @JvmStatic
+                    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
+                    fun values(): List<ComposablePreview<Any>> = previews 
+                    
+                    fun setupDefaultOptions() {
+                        ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options(
+                            scanOptions = ComposePreviewTester.Options.ScanOptions(
+                              packages = listOf($packagesExpr),
+                              includePrivatePreviews = $includePrivatePreviewsExpr, 
+                            )
+                        )
+                    }
+                } 
             }
         """.trimIndent()
     )
   }
 }
 
-fun verifyGenerateRobolectricPreviewTests(
+fun verifyGenerateComposePreviewRobolectricTests(
   project: Project,
   androidExtension: TestedExtension,
   extension: GenerateComposePreviewRobolectricTestsExtension
@@ -289,7 +328,8 @@ private fun verifyLibraryDependencies(
     val dependencies = this
     val libNameArray = libraryName.split(":")
     if (!dependencies.contains(libNameArray[0] to libNameArray[1])) {
-      val configurationNames = "'testImplementation'(For Android Project) or 'kotlin.sourceSets.androidUnitTest.dependencies.implementation'(For KMP)"
+      val configurationNames =
+        "'testImplementation'(For Android Project) or 'kotlin.sourceSets.androidUnitTest.dependencies.implementation'(For KMP)"
       error(
         "Roborazzi: Please add the following $configurationNames dependency to the 'dependencies' block in the 'build.gradle' file: '$libraryName' for the $configurationNames configuration.\n" +
           "For your convenience, visit https://www.google.com/search?q=" + URLEncoder.encode(

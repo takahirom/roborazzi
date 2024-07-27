@@ -1,7 +1,7 @@
 # Experimental Compose Preview Support
 
 Roborazzi provides support for generating screenshot tests and easy setup for Jetpack Compose Preview.
-This support uses [ComposePreviewScanner](https://github.com/sergio-sastre/ComposablePreviewScanner) to scan the Composable Previews in your project.
+This support uses [ComposablePreviewScanner](https://github.com/sergio-sastre/ComposablePreviewScanner) to scan the Composable Previews in your project.
 
 ## Generate Compose Preview screenshot tests
 
@@ -30,27 +30,29 @@ roborazzi {
     enable = true
     // The package names to scan for Composable Previews.
     packages = listOf("com.example")
-    // The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
-    testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
     // robolectricConfig will be passed to Robolectric's @Config annotation in the generated test class.
     // See https://robolectric.org/configuring/ for more information.
     robolectricConfig = mapOf(
       "sdk" to "[32]",
       "qualifiers" to "RobolectricDeviceQualifiers.Pixel5",
     )
+    // If true, the private previews will be included in the test.
+    includePrivatePreviews = true
+    // The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
+    testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
   }
 }
 ```
 
 ## Manually adding Compose Preview screenshot tests
 
-Roborazzi provides a helper function for ComposePreviewScanner.
+Roborazzi provides a helper function for ComposablePreviewScanner.
 You can add the following dependency to your project to use the helper function:
 
 `testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:[version]")`
 
 Then you can use the `ComposablePreview<AndroidPreviewInfo>.captureRoboImage()` function to capture the Composable Preview using the settings in Preview annotations.
-To obtain the `ComposablePreview` object, please refer to [ComposePreviewScanner](https://github.com/sergio-sastre/ComposablePreviewScanner).
+To obtain the `ComposablePreview` object, please refer to [ComposablePreviewScanner](https://github.com/sergio-sastre/ComposablePreviewScanner).
 
 ```kotlin
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(

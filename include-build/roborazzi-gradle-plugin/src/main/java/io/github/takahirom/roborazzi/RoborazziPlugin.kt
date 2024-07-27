@@ -450,7 +450,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
     project.pluginManager.withPlugin("com.android.application") {
       project.extensions.getByType(ApplicationAndroidComponentsExtension::class.java)
         .configureComponents()
-      verifyGenerateRobolectricPreviewTests(
+      verifyGenerateComposePreviewRobolectricTests(
         project = project,
         androidExtension = project.extensions.getByType(TestedExtension::class.java),
         extension = extension.generateComposePreviewRobolectricTests
@@ -459,7 +459,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
     project.pluginManager.withPlugin("com.android.library") {
       project.extensions.getByType(LibraryAndroidComponentsExtension::class.java)
         .configureComponents()
-      verifyGenerateRobolectricPreviewTests(
+      verifyGenerateComposePreviewRobolectricTests(
         project = project,
         androidExtension = project.extensions.getByType(TestedExtension::class.java),
         extension = extension.generateComposePreviewRobolectricTests
