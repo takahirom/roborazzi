@@ -966,7 +966,7 @@ roborazzi {
 }
 ```
 
-The plugin will not automatically change your settings or add dependencies to prevent conflicts with your existing setup. However, it will provide instructions on what to do next, such as adding dependencies and required code. You can also check the [sample project](./sample-generate-preview-tests) for a complete example.
+The plugin will not automatically change your settings or add dependencies to prevent conflicts with your existing setup. However, it will provide instructions on what to do next, such as adding dependencies and required code. You can also check the [sample project](https://github.com/takahirom/roborazzi/tree/main/sample-generate-preview-tests) for a complete example.
 
 After that, you can run the `recordRoborazziDebug` task to generate screenshots using the generated tests, as described in the [setup guide](https://takahirom.github.io/roborazzi/build-setup.html).
 
