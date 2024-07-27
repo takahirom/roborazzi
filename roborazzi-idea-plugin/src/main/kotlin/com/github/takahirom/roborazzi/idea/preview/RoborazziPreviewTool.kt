@@ -27,17 +27,20 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.containers.SLRUMap
 import com.intellij.util.messages.MessageBusConnection
+import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.launch
 import org.jetbrains.kotlin.codegen.inline.getOrPut
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 import java.awt.BorderLayout
 import java.awt.Component
+import java.awt.GridBagConstraints
 import java.awt.Image
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
 import java.io.File
 import javax.imageio.ImageIO
+import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.DefaultListModel
 import javax.swing.ImageIcon
@@ -69,11 +72,20 @@ class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
 
 class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
   private val listModel = DefaultListModel<Pair<String, Long>>()
-  private val statusGradleTaskPanel = StatusToolbarPanel(project) { taskName ->
+  private val statusGradleTaskPanel = TaskToolbarPanel(project) { taskName ->
     viewModel?.onRefreshButtonClicked(project, taskName)
   }
-  private val statusBar = JBBox.createHorizontalBox().apply {
-    statusGradleTaskPanel.statusLabel = "No images found"
+
+  private val _statusLabel = JBLabel().apply {
+    text = "No images found"
+  }
+  var statusLabel: String
+    get() = _statusLabel.text
+    set(value) {
+      _statusLabel.text = value
+    }
+
+  private val topBar = JBBox.createHorizontalBox().apply {
     add(statusGradleTaskPanel)
   }
 
@@ -121,24 +133,34 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
         }
       }
     )
-    project.messageBus.connect().subscribe(ExecutionManager.EXECUTION_TOPIC, object : ExecutionListener {
-      override fun processTerminated(
-        executorId: String,
-        env: ExecutionEnvironment,
-        handler: ProcessHandler,
-        exitCode: Int
-      ) {
-        super.processTerminated(executorId, env, handler, exitCode)
-        if (env.runProfile is GradleRunConfiguration) {
-          viewModel?.onTaskExecuted(project)
+    project.messageBus.connect()
+      .subscribe(ExecutionManager.EXECUTION_TOPIC, object : ExecutionListener {
+        override fun processTerminated(
+          executorId: String,
+          env: ExecutionEnvironment,
+          handler: ProcessHandler,
+          exitCode: Int
+        ) {
+          super.processTerminated(executorId, env, handler, exitCode)
+          if (env.runProfile is GradleRunConfiguration) {
+            viewModel?.onTaskExecuted(project)
+          }
         }
-      }
-    })
+      })
 
     val scrollPane = JBScrollPane(imageList)
     scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-    add(statusBar, BorderLayout.NORTH)
+    add(topBar, BorderLayout.NORTH)
     add(scrollPane, BorderLayout.CENTER)
+    add(JBBox.createHorizontalBox().apply {
+      setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4))
+      add(_statusLabel, GridBagConstraints().apply {
+        gridx = 0
+        gridy = 0
+        anchor = GridBagConstraints.WEST
+        insets = JBUI.insets(4)
+      })
+    }, BorderLayout.SOUTH)
     viewModel?.onInit(project)
     imageList.addListSelectionListener { event ->
       if (!event.valueIsAdjusting) {
@@ -183,15 +205,16 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
     }
     viewModel?.coroutineScope?.launch {
       viewModel?.statusText?.collect {
-        statusGradleTaskPanel.statusLabel = it
+        statusLabel = it
       }
     }
 
     viewModel?.coroutineScope?.launch {
       viewModel?.dropDownUiState?.collect {
-        statusGradleTaskPanel.isExecuteGradleTaskActionEnabled = it.flag == PreviewViewModel.ActionToolbarUiState.Flag.IDLE
+        statusGradleTaskPanel.isExecuteGradleTaskActionEnabled =
+          it.flag == PreviewViewModel.ActionToolbarUiState.Flag.IDLE
         statusGradleTaskPanel.setActions(
-          it.tasks.map { taskName -> StatusToolbarPanel.ToolbarAction(taskName, taskName)}
+          it.tasks.map { taskName -> TaskToolbarPanel.ToolbarAction(taskName, taskName) }
         )
       }
     }
