@@ -18,16 +18,18 @@ import com.intellij.openapi.util.Key
 import com.intellij.ui.components.JBBox
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
+import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
 import javax.swing.BorderFactory
 import javax.swing.JComponent
 
 class TaskToolbarPanel(
   project: Project,
   onTaskExecuteButtonClicked: (taskName: String) -> Unit
-) : JBPanel<JBPanel<*>>(GridBagLayout()) {
+) : JBPanel<JBPanel<*>>(BorderLayout()) {
+
+  private val jbBox = JBBox.createHorizontalBox()
   private val actionToolbar = RoborazziGradleTaskToolbar(
     project = project,
     place = "RoborazziGradleTaskToolbar",
@@ -43,28 +45,24 @@ class TaskToolbarPanel(
 
   init {
     actionToolbar.setTargetComponent(this)
-    setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4))
-    val actionToolbarConstraints = GridBagConstraints().apply {
-      insets = JBUI.insets(4)
-      gridx = 0
-      gridy = 0
-      anchor = GridBagConstraints.WEST
-    }
-    add(actionToolbar.component, actionToolbarConstraints)
-    add(JBBox.createHorizontalGlue(), GridBagConstraints().apply {
-      gridx = 1
-      gridy = 0
-      weightx = 1.0
-      fill = GridBagConstraints.HORIZONTAL
-    })
+    add(jbBox.apply {
+      isVisible = false
+      setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4))
+      add(actionToolbar.component, GridBagConstraints().apply {
+        gridx = 0
+        gridy = 0
+        anchor = GridBagConstraints.WEST
+        insets = JBUI.insets(4)
+      })
+    }, BorderLayout.WEST)
   }
 
   fun setActions(actions: List<ToolbarAction>) {
     if (actions.isEmpty()) {
-      actionToolbar.isVisible = false
+      jbBox.isVisible = false
       return
     }
-    actionToolbar.isVisible = true
+    jbBox.isVisible = true
     val actionList = listOf(*actions.toTypedArray())
     actionToolbar.setActions(actionList)
   }
