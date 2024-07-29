@@ -206,6 +206,7 @@ This is not a test task.
 
 </td><td>
 
+Note: This is an experimental task.
 This task will clear the saved images. This task also deletes the cached images.
 Please be careful when using this task.
 
