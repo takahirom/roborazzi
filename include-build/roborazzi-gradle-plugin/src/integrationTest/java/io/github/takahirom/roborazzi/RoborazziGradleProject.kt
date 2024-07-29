@@ -136,6 +136,11 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     return runTask(task)
   }
 
+  fun clear(): BuildResult {
+    val task = "clearRoborazziDebug"
+    return runTask(task)
+  }
+
   fun clean(): BuildResult {
     val task = "clean"
     return runTask(task)

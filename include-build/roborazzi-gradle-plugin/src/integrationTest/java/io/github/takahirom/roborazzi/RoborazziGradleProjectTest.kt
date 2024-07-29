@@ -54,6 +54,22 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun clear() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      record()
+
+      clear()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileNotExists("$screenshotAndName.testCapture.png")
+      checkResultFileExists(resultFileSuffix)
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+
+  @Test
   fun whenRecordAndRemovedOutputAndRecordThenSkipAndRestoreTheImages() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
       record()

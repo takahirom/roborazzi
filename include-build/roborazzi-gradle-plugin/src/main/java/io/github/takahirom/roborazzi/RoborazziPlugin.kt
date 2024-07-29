@@ -147,6 +147,30 @@ abstract class RoborazziPlugin : Plugin<Project> {
           )
         )
 
+      // e.g. clearRoborazziDebug
+      project.tasks.register("clearRoborazzi$variantSlug") {
+        it.doLast {
+          val outputDirFile = outputDir.get().asFile
+          if (outputDirFile.exists()) {
+            outputDirFile.walkTopDown().forEach { file ->
+              if (file.name.endsWith(".png") || file.name.endsWith(".gif")) {
+                file.delete()
+              }
+            }
+            outputDirFile.mkdirs()
+          }
+          val intermediateDirFile = intermediateDirForEachVariant.get().asFile
+          if (intermediateDirFile.exists()) {
+            intermediateDirFile.walkTopDown().forEach { file ->
+              if (file.name.endsWith(".png") || file.name.endsWith(".gif")) {
+                file.delete()
+              }
+            }
+            intermediateDirFile.mkdirs()
+          }
+        }
+      }
+
       //      val reportOutputDir = project.layout.buildDirectory.dir("reports/roborazzi")
       //      val snapshotOutputDir = project.layout.projectDirectory.dir("src/test/snapshots")
 
