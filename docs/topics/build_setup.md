@@ -195,6 +195,24 @@ baseline.
 </td>
 </tr>
 
+<tr>
+<td>
+
+`./gradlew clearRoborazziDebug`
+
+</td><td> 
+
+This is not a test task.
+
+</td><td>
+
+This task will clear the saved images. This task also deletes the cached images.
+Please be careful when using this task.
+
+</td>
+</tr>
+
+
 </table>
 
 The comparison image, saved as `[original]_compare.png`, is shown below:
