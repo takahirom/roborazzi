@@ -41,7 +41,12 @@ class RoborazziGradleTask {
         .map { gradleModuleData.data.id + ":" + it.data.name }
         .sortedWith(
           compareBy({
-            RoborazziTaskNames.getOrderOfTaskName(it)
+            val order = RoborazziTaskNames.getOrderOfTaskName(it)
+            if (order == -1) {
+              100
+            } else {
+              order
+            }
           }, {
             if (it.contains("iOS", true)) {
               2
@@ -49,6 +54,12 @@ class RoborazziGradleTask {
               1
             } else {
               0
+            }
+          }, {
+            if (it.contains("Debug", true)) {
+              0
+            } else {
+              1
             }
           })
         )
