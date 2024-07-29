@@ -42,7 +42,7 @@ class RoborazziGradleTask {
         .sortedWith(
           compareBy({
             val order = RoborazziTaskNames.getOrderOfTaskName(it)
-            if (order == -1) {
+            if (order == -1 || order == 0) {
               100
             } else {
               order
