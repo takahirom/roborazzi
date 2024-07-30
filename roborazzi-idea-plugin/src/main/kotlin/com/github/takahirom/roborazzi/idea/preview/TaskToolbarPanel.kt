@@ -54,7 +54,7 @@ class TaskToolbarPanel(
         anchor = GridBagConstraints.WEST
         insets = JBUI.insets(4)
       })
-    }, BorderLayout.WEST)
+    })
   }
 
   fun setActions(actions: List<ToolbarAction>) {
