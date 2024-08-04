@@ -734,6 +734,7 @@ private fun writeJson(
   }
   val json = Json {
     serializersModule = module
+    classDiscriminator = "result_type"
   }
   json.encodeToJsonElement(PolymorphicSerializer(CaptureResult::class), result)
     .toString()
