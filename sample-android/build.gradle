@@ -2,6 +2,7 @@ plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
   id 'io.github.takahirom.roborazzi'
+  id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
@@ -25,10 +26,6 @@ android {
   }
   buildFeatures {
     viewBinding true
-    compose true
-  }
-  composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
   }
   testOptions {
     unitTests {

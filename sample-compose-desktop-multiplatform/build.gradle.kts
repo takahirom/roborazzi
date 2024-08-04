@@ -5,6 +5,7 @@ plugins {
   kotlin("multiplatform")
   id("org.jetbrains.compose")
   id("io.github.takahirom.roborazzi")
+  id("org.jetbrains.kotlin.plugin.compose")
 }
 
 group = "com.github.takahirom.roborazzi.compose.desktop.kmp.sample"
