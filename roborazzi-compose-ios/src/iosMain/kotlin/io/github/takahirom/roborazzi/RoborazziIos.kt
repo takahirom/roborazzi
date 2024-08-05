@@ -7,6 +7,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.captureToImage
 import com.github.takahirom.roborazzi.CaptureResult
+import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.getReportFileName
@@ -732,7 +733,7 @@ private fun writeJson(
       CaptureResult.Unchanged.serializer()
     )
   }
-  val json = Json {
+  val json = Json(CaptureResults.json) {
     serializersModule = module
   }
   json.encodeToJsonElement(PolymorphicSerializer(CaptureResult::class), result)
