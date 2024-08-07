@@ -126,6 +126,7 @@ class PreviewModule(
               id("com.android.library")
               id("org.jetbrains.compose")
               id("io.github.takahirom.roborazzi")
+              id("org.jetbrains.kotlin.plugin.compose")
           }
 
           kotlin {
