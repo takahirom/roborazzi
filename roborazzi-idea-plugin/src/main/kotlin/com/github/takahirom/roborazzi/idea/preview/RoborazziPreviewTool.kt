@@ -241,6 +241,56 @@ class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
     val isSelected: Boolean
   )
 
+  private fun collapseFileNameToFitWidth(text: String, maxWidth: Int): String {
+    val label = JBLabel(text)
+    val fontMetrics = label.getFontMetrics(label.font)
+
+    // Adjust the maximum width to take into account the width of the scrollbar (about 20 pixels).
+    val bufferedWidth = maxWidth - 20
+
+    // Cache to store the width of previously computed substrings
+    val widthCache = mutableMapOf<String, Int>()
+
+    // Calculates the width of the given substring, using a cache for efficiency.
+    fun stringWidth(substring: String): Int {
+      return widthCache.getOrPut(substring) { fontMetrics.stringWidth(substring) }
+    }
+
+    /**
+     * Performs binary search to find the maximum number of characters that fit within the specified width.
+     * This helps to determine the end position of the substring that fits within the available width.
+     */
+    fun findMaxCharsForWidth(start: Int): Int {
+      var low = start
+      var high = minOf(text.length, start + bufferedWidth)
+
+      while (low < high) {
+        val mid = (low + high + 1) / 2
+        val substringWidth = stringWidth(text.substring(start, mid))
+        if (substringWidth <= bufferedWidth) {
+          low = mid
+        } else {
+          high = mid - 1
+        }
+      }
+
+      return low
+    }
+
+    var start = 0
+    val lines = mutableListOf<String>()
+
+    // Loop to split the text into multiple lines
+    while (start < text.length) {
+      val end = findMaxCharsForWidth(start)
+      lines.add(text.substring(start, end))
+      start = end
+    }
+
+    // Return the result in HTML format with <br> tags separating lines
+    return "<html>${lines.joinToString("<br>")}</html>"
+  }
+
   private val imageCache = SLRUMap<Pair<String, Long>, Image>(300, 50)
   private val lruCache = SLRUMap<CacheKey, Box>(300, 50)
   override fun getListCellRendererComponent(
@@ -282,7 +332,9 @@ class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
       val box = JBBox.createVerticalBox().apply {
         add(Box.createVerticalStrut(16))
         add(imageLabel)
-        add(JBLabel(file.name))
+
+        val label = JBLabel(collapseFileNameToFitWidth(file.name, list.width))
+        add(label)
         // Add space between items
         add(Box.createVerticalStrut(16))
       }
