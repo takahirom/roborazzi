@@ -246,7 +246,7 @@ class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
     val fontMetrics = label.getFontMetrics(label.font)
 
     // Adjust the maximum width to take into account the width of the scrollbar (about 20 pixels).
-    val bufferedWidth = maxWidth - 20
+    val bufferedWidth = maxOf(1, maxWidth - 20)
 
     // Cache to store the width of previously computed substrings
     val widthCache = mutableMapOf<String, Int>()
@@ -283,6 +283,9 @@ class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
     // Loop to split the text into multiple lines
     while (start < text.length) {
       val end = findMaxCharsForWidth(start)
+      if (end == start) {  // Prevent infinite loop
+        break
+      }
       lines.add(text.substring(start, end))
       start = end
     }
