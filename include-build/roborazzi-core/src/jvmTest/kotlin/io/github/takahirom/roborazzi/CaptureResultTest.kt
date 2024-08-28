@@ -1,16 +1,15 @@
 package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.CaptureResult
-import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import com.github.takahirom.roborazzi.CaptureResults
+import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import com.github.takahirom.roborazzi.ResultSummary
-import com.github.takahirom.roborazzi.absolutePath
-import kotlinx.io.files.Path
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.float
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
@@ -47,6 +46,7 @@ class CaptureResultTest {
         goldenFile = "/golden_file",
         actualFile = "/actual_file",
         timestampNs = 123456789,
+        diffPercentage = 0.123f,
         contextData = mapOf("key" to Long.MAX_VALUE - 100),
       ),
       CaptureResult.Unchanged(
@@ -95,6 +95,12 @@ class CaptureResultTest {
         expectedCaptureResult.timestampNs,
         actualJsonResult["timestamp"]?.jsonPrimitive?.long
       )
+      if (expectedCaptureResult is CaptureResult.Changed) {
+        assertEquals(
+          expectedCaptureResult.diffPercentage,
+          actualJsonResult["diff_percentage"]?.jsonPrimitive?.float
+        )
+      }
       assertEquals(
         expectedCaptureResult.contextData.entries.map { it.key to it.value },
         (actualJsonResult["context_data"]?.jsonObject?.entries
@@ -154,6 +160,7 @@ class CaptureResultTest {
                     "actual_file_path": "actual_file",
                     "golden_file_path": "golden_file",
                     "timestamp": 123456789,
+                    "diff_percentage": 0.123,
                     "context_data": {
                         "key": 9223372036854775707
                     }
@@ -201,6 +208,7 @@ class CaptureResultTest {
     assertEquals("actual_file", actualChangedResult.actualFile)
     assertEquals("golden_file", actualChangedResult.goldenFile)
     assertEquals(123456789, actualChangedResult.timestampNs)
+    assertEquals(0.123f, actualChangedResult.diffPercentage)
     assertEquals(9223372036854775707, actualChangedResult.contextData["key"])
 
     val actualUnchangedResult = actualCaptureResultList[3] as CaptureResult.Unchanged
