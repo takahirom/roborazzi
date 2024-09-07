@@ -32,6 +32,7 @@ class PreviewViewModel {
 
   var coroutineScope = MainScope()
   val imagesStateFlow = MutableStateFlow<List<Pair<String, Long>>>(listOf())
+  private var searchText = MutableStateFlow("")
   private val lastEditingFileName = MutableStateFlow<String?>(null)
   val statusText = MutableStateFlow("No images found")
   private val _dropDownUiState = MutableStateFlow(ActionToolbarUiState())
@@ -63,6 +64,16 @@ class PreviewViewModel {
       // debounce
       delay(400)
       roborazziLog("onCaretPositionChanged")
+      updateListJob?.cancel()
+      refreshListProcess(project)
+      selectListIndexByCaret(project)
+      fetchTasks(project)
+    }
+  }
+
+  fun onSearchTextChanged(project: Project, text: String) {
+    searchText.value = text
+    coroutineScope.launch {
       updateListJob?.cancel()
       refreshListProcess(project)
       selectListIndexByCaret(project)
@@ -194,8 +205,14 @@ class PreviewViewModel {
         }
     }
 
-    allPreviewImageFiles.addAll(findImages(classes, files))
-    allPreviewImageFiles.addAll(findImages(functions, files))
+    allPreviewImageFiles.addAll(
+      findImages(classes, files)
+        .filter { it.name.contains(searchText.value, ignoreCase = true) }
+    )
+    allPreviewImageFiles.addAll(
+      findImages(functions, files)
+        .filter { it.name.contains(searchText.value, ignoreCase = true) }
+    )
 
     if (allPreviewImageFiles.isEmpty()) {
       statusText.value = "No images found"

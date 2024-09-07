@@ -24,6 +24,7 @@ import com.intellij.ui.components.JBBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.containers.SLRUMap
 import com.intellij.util.messages.MessageBusConnection
@@ -49,13 +50,17 @@ import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.ListCellRenderer
 import javax.swing.ListSelectionModel
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 
 class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
   override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
     val contentFactory = ContentFactory.getInstance()
     val panel = RoborazziPreviewPanel(project)
+
     val content = contentFactory.createContent(panel, "", false)
+
     toolWindow.contentManager.addContent(content)
 
     if (toolWindow is ToolWindowEx) {
@@ -160,6 +165,22 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
         anchor = GridBagConstraints.WEST
         insets = JBUI.insets(4)
       })
+      add((JBTextField().apply {
+        emptyText.text = "Enter screenshot name..."
+        document.addDocumentListener(object : DocumentListener {
+          override fun insertUpdate(e: DocumentEvent) {
+            viewModel?.onSearchTextChanged(project, text)
+          }
+
+          override fun removeUpdate(e: DocumentEvent) {
+            viewModel?.onSearchTextChanged(project, text)
+          }
+
+          override fun changedUpdate(e: DocumentEvent) {
+            viewModel?.onSearchTextChanged(project, text)
+          }
+        })
+      }))
     }, BorderLayout.SOUTH)
     viewModel?.onInit(project)
     imageList.addListSelectionListener { event ->
