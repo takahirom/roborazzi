@@ -32,7 +32,7 @@ class PreviewViewModel {
 
   var coroutineScope = MainScope()
   val imagesStateFlow = MutableStateFlow<List<Pair<String, Long>>>(listOf())
-  private var searchText = MutableStateFlow("")
+  private val searchText = MutableStateFlow("")
   private val lastEditingFileName = MutableStateFlow<String?>(null)
   val statusText = MutableStateFlow("No images found")
   private val _dropDownUiState = MutableStateFlow(ActionToolbarUiState())
