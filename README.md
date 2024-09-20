@@ -991,10 +991,11 @@ After that, you can run the `recordRoborazziDebug` task to generate screenshots 
 
 ### Customizing the Preview screenshot test
 
-You can customize the generated test by adding the following configuration to your `build.gradle` file:
+You can customize the generated test by adding the following configuration to your `build.gradle.kts` file:
 
 ```kotlin
 roborazzi {
+  @OptIn(ExperimentalRoborazziApi::class)
   generateComposePreviewRobolectricTests {
     enable = true
     // The package names to scan for Composable Previews.
@@ -1012,6 +1013,30 @@ roborazzi {
   }
 }
 ```
+
+<details>
+<summary>build.gradle version</summary>
+<br>
+
+```groovy
+roborazzi {
+    generateComposePreviewRobolectricTests.enable.set(true)
+    // The package names to scan for Composable Previews.
+    generateComposePreviewRobolectricTests.packages.set(["com.example"])
+    // robolectricConfig will be passed to Robolectric's @Config annotation in the generated test class.
+    // See https://robolectric.org/configuring/ for more information.
+    generateComposePreviewRobolectricTests.robolectricConfig.set([
+        "sdk": "[32]",
+        "qualifiers": "RobolectricDeviceQualifiers.Pixel5",
+    ])
+    // If true, the private previews will be included in the test.
+    generateComposePreviewRobolectricTests.includePrivatePreviews.set(true)
+    // The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
+    generateComposePreviewRobolectricTests.testerQualifiedClassName.set("com.example.MyCustomComposePreviewTester")
+}
+```
+
+</details>
 
 ## Manually adding Compose Preview screenshot tests
 
