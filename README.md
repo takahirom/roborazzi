@@ -14,8 +14,7 @@
 
 Screenshot testing is key to validate your app's appearance and functionality. It efficiently
 detects visual issues and tests the app as users would use it, making it easier to spot problems.
-It's quicker than writing many assert statements, ensuring your app looks right and behaves
-correctly.
+It ensure your app looks right and behaves correctly.
 
 ### What are JVM tests and why test with JVM instead of on Android?
 
