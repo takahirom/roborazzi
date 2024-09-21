@@ -29,18 +29,6 @@ fun interface ComparisonCanvasFactory {
   ): RoboCanvas
 }
 
-fun interface AiCompareResultFactory {
-  operator fun invoke(
-    comparisonImageFilePath: String,
-    aiOptions: RoborazziOptions.CompareOptions.AiOptions
-  ): AiResult
-}
-
-var aiCompareResultFactory: AiCompareResultFactory? =
-  AiCompareResultFactory { comparisonImageFilePath, aiOptions ->
-    throw NotImplementedError("aiCompareCanvasFactory is not implemented")
-  }
-
 @InternalRoborazziApi
 fun processOutputImageAndReport(
   newRoboCanvas: RoboCanvas,

@@ -1,11 +1,11 @@
 package com.github.takahirom.roborazzi
 
-import android.graphics.BitmapFactory
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.FunctionType
-import com.google.ai.client.generativeai.type.Schema
-import com.google.ai.client.generativeai.type.content
-import com.google.ai.client.generativeai.type.generationConfig
+import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
+import dev.shreyaspatil.ai.client.generativeai.type.FunctionType
+import dev.shreyaspatil.ai.client.generativeai.type.PlatformImage
+import dev.shreyaspatil.ai.client.generativeai.type.Schema
+import dev.shreyaspatil.ai.client.generativeai.type.content
+import dev.shreyaspatil.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -26,13 +26,15 @@ class GeminiResult(
   val explanation: String?,
 )
 
+expect fun readByteArrayFromFile(filePath: String): PlatformImage
+
 @InternalRoborazziApi
 fun createAiResult(
-  aiOptions: RoborazziOptions.CompareOptions.AiOptions,
+  aiOptions: AiOptions,
   comparisonImageFilePath: String,
 ): AiResult {
   val model = aiOptions.model
-  if (model is RoborazziOptions.CompareOptions.AiOptions.Model.Gemini) {
+  if (model is AiOptions.Model.Gemini) {
     val generativeModel = GenerativeModel(
       modelName = model.modelName,
       apiKey = model.apiKey,
@@ -57,7 +59,7 @@ fun createAiResult(
     val template = aiOptions.template
 
     val inputContent = content {
-      image(BitmapFactory.decodeFile(comparisonImageFilePath))
+      image(readByteArrayFromFile(comparisonImageFilePath))
       text(template.replace("PROMPT", prompt))
     }
 

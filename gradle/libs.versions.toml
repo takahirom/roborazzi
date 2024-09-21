@@ -8,6 +8,7 @@ mavenPublish = "0.25.3"
 composeCompiler = "1.5.10"
 composeMultiplatform = "1.6.2"
 robolectric = "4.12.2"
+generativeaiGoogle = "0.9.0-1.0.1"
 robolectric-android-all = "Q-robolectric-5415296"
 
 roborazzi-for-replacing-by-include-build = "1.0.0"
@@ -55,6 +56,8 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit" }
+
+generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiGoogle" }
 
 # for sample
 composable-preview-scanner = { module = "com.github.sergio-sastre.ComposablePreviewScanner:android", version.ref = "composable-preview-scanner" }

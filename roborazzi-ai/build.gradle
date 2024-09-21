@@ -10,12 +10,13 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 android.compileSdk(34)
 
 kotlin {
-  // Wait for https://github.com/google-gemini/generative-ai-android/issues/14#issuecomment-2364980965
-  // iosX64()
-  // iosArm64()
-  // iosSimulatorArm64()
-  //
-  // jvm()
+  applyDefaultHierarchyTemplate()
+
+  iosX64()
+  iosArm64()
+  iosSimulatorArm64()
+
+  jvm()
 
   androidTarget {
     publishLibraryVariants("release")
@@ -24,8 +25,8 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        implementation(project(":roborazzi"))
-        implementation "com.google.ai.client.generativeai:generativeai:0.9.0"
+        implementation "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
+        implementation libs.generativeai.google
         implementation(libs.kotlinx.coroutines.core)
         implementation(libs.kotlinx.serialization.json)
       }

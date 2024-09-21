@@ -19,6 +19,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
+import com.github.takahirom.roborazzi.AiOptions
 import com.github.takahirom.roborazzi.Dump
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
@@ -64,15 +65,19 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         roborazziOptions = RoborazziOptions(
-          compareOptions = RoborazziOptions.CompareOptions(
-//            aiOptions = RoborazziOptions.CompareOptions.AiOptions(
-//              prompt = "it should have PREVIOUS button",
-//              requiredFulfillmentPercent = 50,
-//              model = RoborazziOptions.CompareOptions.Model.Gemini(
-//                apiKey = "xxxxxxxxxx"
-//              ),
-//            )
-          )
+          compareOptions = if (System.getenv("gemini_api_key")?.isNotBlank() == true) {
+            RoborazziOptions.CompareOptions(
+              aiOptions = AiOptions(
+                prompt = "it should have PREVIOUS button",
+                requiredFulfillmentPercent = 50,
+                model = AiOptions.Model.Gemini(
+                  apiKey = System.getenv("gemini_api_key")!!,
+                ),
+              )
+            )
+          } else {
+            RoborazziOptions.CompareOptions()
+          }
         )
       )
   }
