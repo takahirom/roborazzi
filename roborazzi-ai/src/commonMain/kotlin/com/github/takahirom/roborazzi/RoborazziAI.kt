@@ -32,7 +32,7 @@ fun createAiResult(
   comparisonImageFilePath: String,
 ): AiResult {
   val model = aiOptions.model
-  if (model is RoborazziOptions.CompareOptions.Model.Gemini) {
+  if (model is RoborazziOptions.CompareOptions.AiOptions.Model.Gemini) {
     val generativeModel = GenerativeModel(
       modelName = model.modelName,
       apiKey = model.apiKey,

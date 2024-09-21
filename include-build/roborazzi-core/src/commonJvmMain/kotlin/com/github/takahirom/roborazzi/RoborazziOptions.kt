@@ -123,13 +123,13 @@ User Input: "PROMPT"
        * If null, the AI result is not validated. But they are still included in the report.
        */
       val requiredFulfillmentPercent: Int? = null,
-    )
-
-    sealed interface Model {
-      data class Gemini(
-        val apiKey: String,
-        val modelName: String = "gemini-1.5-pro"
-      ) : Model
+    ) {
+      sealed interface Model {
+        data class Gemini(
+          val apiKey: String,
+          val modelName: String = "gemini-1.5-pro"
+        ) : Model
+      }
     }
 
     @ExperimentalRoborazziApi
