@@ -100,8 +100,38 @@ data class RoborazziOptions(
     val outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
     val imageComparator: ImageComparator = DefaultImageComparator,
     val comparisonStyle: ComparisonStyle = ComparisonStyle.Grid(),
+    val aiOptions: AiOptions? = null,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
   ) {
+    /**
+     * If you want to use AI to compare images, you can specify the model and prompt.
+     */
+    data class AiOptions(
+      val model: Model,
+      val prompt: String,
+      val template: String = """
+Evaluate the following user input for fulfillment in the new image: "PROMPT".
+The evaluation should be based on the comparison between the original image on the left and the new image on the right, with differences highlighted in red in the center. Focus on whether the new image fulfills the requirement specified in the user input.
+
+Output:
+A fulfillment percentage from 0 to 100.
+A brief explanation of how this percentage was determined.
+
+User Input: "PROMPT" 
+""",
+      /**
+       * If null, the AI result is not validated. But they are still included in the report.
+       */
+      val requiredFulfillmentPercent: Int? = null,
+    )
+
+    sealed interface Model {
+      data class Gemini(
+        val apiKey: String,
+        val modelName: String = "gemini-1.5-pro"
+      ) : Model
+    }
+
     @ExperimentalRoborazziApi
     sealed interface ComparisonStyle {
       @ExperimentalRoborazziApi
@@ -150,6 +180,36 @@ data class RoborazziOptions(
           VerifyCaptureResultReporter().report(captureResult, roborazziTaskType)
         } else {
           JsonOutputCaptureResultReporter().report(captureResult, roborazziTaskType)
+        }
+        AiCaptureResultReporter().report(captureResult, roborazziTaskType)
+      }
+    }
+
+    class AiCaptureResultReporter : CaptureResultReporter {
+      override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
+        val aiResult = when (captureResult) {
+          is CaptureResult.Changed -> {
+            captureResult.aiResult
+          }
+
+          is CaptureResult.Added -> {
+            captureResult.aiResult
+          }
+
+          else -> {
+            null
+          }
+        }
+        if (aiResult?.requiredFulfillmentPercent != null) {
+          if (aiResult.fulfillment < aiResult.requiredFulfillmentPercent) {
+            throw AssertionError(
+              "The generated image did not meet the required prompt fulfillment percentage.\n" +
+                "prompt:${aiResult.prompt}\n" +
+                "aiResult.fulfillment:${aiResult.fulfillment}\n" +
+                "requiredFulfillmentPercent:${aiResult.requiredFulfillmentPercent}\n" +
+                "explanation:${aiResult.explanation}"
+            )
+          }
         }
       }
     }

@@ -27,6 +27,7 @@ import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureRoboLastImage
+import com.github.takahirom.roborazzi.loadRoboAi
 import com.github.takahirom.roborazzi.roboOutputName
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.withComposeTestTag
@@ -53,6 +54,27 @@ class ManualTest {
   fun captureScreenLevelImageWithEspresso() {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
+  }
+
+
+  @Test
+  @Config
+  fun captureWithAi() {
+    loadRoboAi()
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        roborazziOptions = RoborazziOptions(
+          compareOptions = RoborazziOptions.CompareOptions(
+//            aiOptions = RoborazziOptions.CompareOptions.AiOptions(
+//              prompt = "it should have PREVIOUS button",
+//              requiredFulfillmentPercent = 50,
+//              model = RoborazziOptions.CompareOptions.Model.Gemini(
+//                apiKey = "xxxxxxxxxx"
+//              ),
+//            )
+          )
+        )
+      )
   }
 
   @Test
@@ -164,7 +186,8 @@ class ManualTest {
 
   @Test
   fun captureRoboImageSampleWithQuery() {
-    val filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_view.png"
+    val filePath =
+      "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_view.png"
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = filePath,

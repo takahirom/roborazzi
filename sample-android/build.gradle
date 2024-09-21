@@ -46,6 +46,7 @@ android {
 
 dependencies {
   testImplementation project(":roborazzi")
+  testImplementation project(":roborazzi-ai")
   testImplementation project(":roborazzi-compose")
   testImplementation project(":roborazzi-junit-rule")
 

@@ -1,0 +1,67 @@
+plugins {
+  id "org.jetbrains.kotlin.multiplatform"
+  id "com.android.library"
+  id("org.jetbrains.kotlin.plugin.serialization") version libs.versions.kotlin
+}
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
+}
+
+android.compileSdk(34)
+
+kotlin {
+  // Wait for https://github.com/google-gemini/generative-ai-android/issues/14#issuecomment-2364980965
+  // iosX64()
+  // iosArm64()
+  // iosSimulatorArm64()
+  //
+  // jvm()
+
+  androidTarget {
+    publishLibraryVariants("release")
+  }
+
+  sourceSets {
+    commonMain {
+      dependencies {
+        implementation(project(":roborazzi"))
+        implementation "com.google.ai.client.generativeai:generativeai:0.9.0"
+        implementation(libs.kotlinx.coroutines.core)
+        implementation(libs.kotlinx.serialization.json)
+      }
+    }
+  }
+  sourceSets.all {
+    it.languageSettings {
+      progressiveMode = true
+      optIn("com.github.takahirom.roborazzi.InternalRoborazziApi")
+      optIn("com.github.takahirom.roborazzi.ExperimentalRoborazziApi")
+    }
+  }
+}
+
+android {
+  namespace 'com.github.takahirom.roborazzi.ai'
+  compileSdk 34
+
+  defaultConfig {
+    minSdk 21
+    targetSdk 32
+
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+  }
+  buildFeatures {}
+  testOptions {
+    unitTests {
+      includeAndroidResources = true
+    }
+  }
+}
+
+dependencies {
+  compileOnly gradleApi()
+}
+
+sourceSets {
+  main.java.srcDir 'src/generated/kotlin'
+}
