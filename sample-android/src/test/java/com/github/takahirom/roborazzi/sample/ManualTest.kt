@@ -65,19 +65,15 @@ class ManualTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         roborazziOptions = RoborazziOptions(
-          compareOptions = if (System.getenv("gemini_api_key")?.isNotBlank() == true) {
-            RoborazziOptions.CompareOptions(
-              aiOptions = AiOptions(
-                prompt = "it should have PREVIOUS button",
-                requiredFulfillmentPercent = 50,
-                model = AiOptions.Model.Gemini(
-                  apiKey = System.getenv("gemini_api_key")!!,
-                ),
-              )
+          compareOptions = RoborazziOptions.CompareOptions(
+            aiOptions = AiOptions(
+              prompt = "it should have PREVIOUS button",
+              requiredFulfillmentPercent = 50,
+              aiModel = AiOptions.AiModel.Gemini(
+                apiKey = System.getenv("gemini_api_key")!!,
+              ),
             )
-          } else {
-            RoborazziOptions.CompareOptions()
-          }
+          )
         )
       )
   }

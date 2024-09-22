@@ -4,7 +4,7 @@ package com.github.takahirom.roborazzi
  * If you want to use AI to compare images, you can specify the model and prompt.
  */
 data class AiOptions(
-  val model: Model,
+  val aiModel: AiModel,
   val prompt: String,
   val template: String = """
 Evaluate the following user input for fulfillment in the new image: "PROMPT".
@@ -21,10 +21,15 @@ User Input: "PROMPT"
    */
   val requiredFulfillmentPercent: Int? = null,
 ) {
-  sealed interface Model {
+  interface AiModel {
     data class Gemini(
       val apiKey: String,
       val modelName: String = "gemini-1.5-pro"
-    ) : Model
+    ) : AiModel
+
+    /**
+     * You can use this model if you want to use other models.
+     */
+    interface Manual : AiModel, AiCompareResultFactory
   }
 }
