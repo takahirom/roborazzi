@@ -138,10 +138,14 @@ sealed interface CaptureResult {
 
 @Serializable
 data class AiResult(
-  val prompt: String,
+  val aiAssertions: List<AiAssertion> = emptyList()
+)
+
+@Serializable
+data class AiAssertion(
+  val assertPrompt: String,
   @SerialName("required_fulfillment_percent")
-  val requiredFulfillmentPercent: Int?,
-  @SerialName("fulfillment_percent")
-  val fulfillment: Int,
-  val explanation: String?
+  val requiredFulfillmentPercent: Int,
+  val fulfillmentPercent: Int,
+  val explanation: String?,
 )

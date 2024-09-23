@@ -172,14 +172,14 @@ data class RoborazziOptions(
             null
           }
         }
-        if (aiResult?.requiredFulfillmentPercent != null) {
-          if (aiResult.fulfillment < aiResult.requiredFulfillmentPercent) {
+        aiResult?.aiAssertions?.forEach { aiAssertion ->
+          if (aiAssertion.fulfillmentPercent < aiAssertion.requiredFulfillmentPercent) {
             throw AssertionError(
               "The generated image did not meet the required prompt fulfillment percentage.\n" +
-                "prompt:${aiResult.prompt}\n" +
-                "aiResult.fulfillment:${aiResult.fulfillment}\n" +
-                "requiredFulfillmentPercent:${aiResult.requiredFulfillmentPercent}\n" +
-                "explanation:${aiResult.explanation}"
+                "prompt:${aiAssertion.assertPrompt}\n" +
+                "aiAssertion.fulfillmentPercent:${aiAssertion.fulfillmentPercent}\n" +
+                "requiredFulfillmentPercent:${aiAssertion.requiredFulfillmentPercent}\n" +
+                "explanation:${aiAssertion.explanation}"
             )
           }
         }
@@ -243,6 +243,31 @@ data class RoborazziOptions(
 
   internal val shouldTakeBitmap: Boolean = captureType.shouldTakeScreenshot()
 
+  fun addedCompareAiAssertion(
+    assert: String,
+    requiredFulfillmentPercent: Int
+  ): RoborazziOptions {
+    return copy(
+      compareOptions = compareOptions.copy(
+        aiOptions = compareOptions.aiOptions!!.copy(
+          aiAssertions = compareOptions.aiOptions.aiAssertions + AiOptions.AiAssertion(
+            assertPrompt = assert,
+            requiredFulfillmentPercent = requiredFulfillmentPercent
+          )
+        )
+      )
+    )
+  }
+
+  fun addedCompareAiAssertions(vararg assertions: AiOptions.AiAssertion): RoborazziOptions {
+    return copy(
+      compareOptions = compareOptions.copy(
+        aiOptions = compareOptions.aiOptions!!.copy(
+          aiAssertions = compareOptions.aiOptions.aiAssertions + assertions
+        )
+      )
+    )
+  }
 }
 
 expect fun canScreenshot(): Boolean

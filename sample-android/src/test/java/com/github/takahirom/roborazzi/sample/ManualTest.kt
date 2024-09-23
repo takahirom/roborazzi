@@ -62,14 +62,23 @@ class ManualTest {
   @Config
   fun captureWithAi() {
     loadRoboAi()
+
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         roborazziOptions = RoborazziOptions(
           compareOptions = if (System.getenv("gemini_api_key")?.isNotBlank() == true) {
             RoborazziOptions.CompareOptions(
               aiOptions = AiOptions(
-                prompt = "it should have PREVIOUS button",
-                requiredFulfillmentPercent = 50,
+                aiAssertions = listOf(
+                  AiOptions.AiAssertion(
+                    assertPrompt = "it should have PREVIOUS button",
+                    requiredFulfillmentPercent = 90,
+                  ),
+                  AiOptions.AiAssertion(
+                    assertPrompt = "it should show First Fragment",
+                    requiredFulfillmentPercent = 90,
+                  ),
+                ),
                 aiModel = AiOptions.AiModel.Gemini(
                   apiKey = System.getenv("gemini_api_key")!!,
                 ),

@@ -20,7 +20,7 @@ val loaded = run {
 fun loadRoboAi() = loaded
 
 @Serializable
-class GeminiResult(
+data class AssertionResult(
   @SerialName("fulfillment_percent")
   val fulfillmentPercent: Int,
   val explanation: String?,
@@ -34,48 +34,69 @@ fun createAiResult(
   comparisonImageFilePath: String,
 ): AiResult {
   when (val aiModel = aiOptions.aiModel) {
-      is AiOptions.AiModel.Gemini -> {
-        val generativeModel = GenerativeModel(
-          modelName = aiModel.modelName,
-          apiKey = aiModel.apiKey,
-          generationConfig = generationConfig {
-            maxOutputTokens = 8192
-            responseMimeType = "application/json"
-            responseSchema = Schema.obj(
-              name = "content",
-              description = "content",
-              Schema.int("fulfillment_percent", "A fulfillment percentage from 0 to 100"),
-              Schema(
-                name = "explanation",
-                description = "A brief explanation of how this percentage was determined. If fulfillment_percent is 100, this field should be empty.",
-                type = FunctionType.STRING,
-                nullable = true,
-              )
-            )
-          },
-        )
-
-        val prompt = aiOptions.prompt
-        val template = aiOptions.template
-
-        val inputContent = content {
-          image(readByteArrayFromFile(comparisonImageFilePath))
-          text(template.replace("PROMPT", prompt))
-        }
-
-        val response = runBlocking { generativeModel.generateContent(inputContent) }
-        val geminiResult = CaptureResults.json.decodeFromString<GeminiResult>(
-          requireNotNull(
-            response.text
+    is AiOptions.AiModel.Gemini -> {
+      val generativeModel = GenerativeModel(
+        modelName = aiModel.modelName,
+        apiKey = aiModel.apiKey,
+        generationConfig = generationConfig {
+          maxOutputTokens = 8192
+          responseMimeType = "application/json"
+          responseSchema = Schema(
+            name = "content",
+            description = "content",
+            type = FunctionType.ARRAY,
+            items = Schema(
+              name = "assert_results",
+              description = "An array of assertion results",
+              type = FunctionType.OBJECT,
+              properties = mapOf(
+                "fulfillment_percent" to Schema.int(
+                  name = "fulfillment_percent",
+                  description = "A fulfillment percentage from 0 to 100",
+                ),
+                "explanation" to Schema(
+                  name = "explanation",
+                  description = "A brief explanation of how this percentage was determined. If fulfillment_percent is 100, this field should be empty.",
+                  type = FunctionType.STRING,
+                  nullable = true,
+                )
+              ),
+              required = listOf("fulfillment_percent")
+            ),
           )
-        )
-        return AiResult(
-          prompt = prompt,
-          fulfillment = geminiResult.fulfillmentPercent,
-          requiredFulfillmentPercent = aiOptions.requiredFulfillmentPercent,
-          explanation = geminiResult.explanation,
-        )
+        },
+      )
+
+      val template = aiOptions.template
+
+      val inputPrompt = aiOptions.inputPrompt(aiOptions)
+      val inputContent = content {
+        image(readByteArrayFromFile(comparisonImageFilePath))
+        text(template.replace("INPUT_PROMPT", inputPrompt))
       }
+
+      val response = runBlocking { generativeModel.generateContent(inputContent) }
+      println("response: ${response.text}")
+      val geminiResult = CaptureResults.json.decodeFromString<Array<AssertionResult>>(
+        requireNotNull(
+          response.text
+        )
+      )
+      return AiResult(
+        aiAssertions = aiOptions.aiAssertions.mapIndexed { index, it ->
+          val assertResult = geminiResult.getOrNull(index) ?: AssertionResult(
+            fulfillmentPercent = 0,
+            explanation = "AI model did not return a result for this assertion"
+          )
+          AiAssertion(
+            assertPrompt = it.assertPrompt,
+            requiredFulfillmentPercent = it.requiredFulfillmentPercent,
+            fulfillmentPercent = assertResult.fulfillmentPercent,
+            explanation = assertResult.explanation,
+          )
+        }
+      )
+    }
 
     is AiOptions.AiModel.Manual -> {
       return aiModel(comparisonImageFilePath, aiOptions)
