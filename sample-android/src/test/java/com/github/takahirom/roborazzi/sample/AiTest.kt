@@ -34,7 +34,7 @@ class AiTest {
         compareOptions = RoborazziOptions.CompareOptions(
           aiOptions = AiOptions(
             aiModel = AiOptions.AiModel.Gemini(
-              apiKey = System.getenv("gemini_api_key")!!
+              apiKey = System.getenv("gemini_api_key") ?: ""
             ),
           )
         )
@@ -45,6 +45,10 @@ class AiTest {
   @Test
   fun captureWithAi() {
     ROBORAZZI_DEBUG = true
+    if (System.getenv("gemini_api_key") == null) {
+      println("Skip the test because gemini_api_key is not set.")
+      return
+    }
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         roborazziOptions = provideRoborazziContext().options.addedCompareAiAssertions(
