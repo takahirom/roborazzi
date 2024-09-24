@@ -1,3 +1,4 @@
+@file:JvmName("RoborazziAi")
 package com.github.takahirom.roborazzi
 
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
@@ -9,6 +10,7 @@ import dev.shreyaspatil.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmName
 
 @InternalRoborazziApi
 val loaded = run {
@@ -72,11 +74,18 @@ fun createAiResult(
       val inputPrompt = aiOptions.inputPrompt(aiOptions)
       val inputContent = content {
         image(readByteArrayFromFile(comparisonImageFilePath))
-        text(template.replace("INPUT_PROMPT", inputPrompt))
+        val prompt = template.replace("INPUT_PROMPT", inputPrompt)
+        text(prompt)
+
+        debugLog {
+          "RoborazziAi: prompt:$prompt"
+        }
       }
 
       val response = runBlocking { generativeModel.generateContent(inputContent) }
-      println("response: ${response.text}")
+      debugLog {
+        "RoborazziAi: response: ${response.text}"
+      }
       val geminiResult = CaptureResults.json.decodeFromString<Array<AssertionResult>>(
         requireNotNull(
           response.text

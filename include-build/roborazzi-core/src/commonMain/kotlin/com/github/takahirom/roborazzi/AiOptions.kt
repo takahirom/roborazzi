@@ -8,7 +8,7 @@ data class AiOptions(
   val aiAssertions: List<AiAssertion> = emptyList(),
   val inputPrompt: (AiOptions) -> String = { aiOptions ->
     buildString {
-      aiAssertions.forEachIndexed { index, aiAssertion ->
+      aiOptions.aiAssertions.forEachIndexed { index, aiAssertion ->
         appendLine("Assertion ${index + 1}: ${aiAssertion.assertPrompt}\n")
       }
     }

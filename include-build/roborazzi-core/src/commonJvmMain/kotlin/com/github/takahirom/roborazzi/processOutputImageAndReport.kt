@@ -125,9 +125,9 @@ fun processOutputImageAndReport(
           contextData = contextData
         )
       val aiOptions = compareOptions.aiOptions
-      val aiResult = if (aiOptions != null) {
+      val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
         val aiResult = aiCompareResultFactory?.invoke(comparisonFile.absolutePath, aiOptions)
-          ?: throw NotImplementedError("aiCompareCanvasFactory is not implemented. Did you add roborazzi-ai dependency?")
+          ?: throw NotImplementedError("aiCompareCanvasFactory is not implemented. Did you add roborazzi-ai dependency and (call loadRoboAi() or use RoborazziRule)?")
         aiResult
       } else {
         null
