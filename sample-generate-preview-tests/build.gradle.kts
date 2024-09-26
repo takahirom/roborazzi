@@ -3,6 +3,7 @@ plugins {
 //  id("com.android.library")
   id("org.jetbrains.kotlin.android")
   id("io.github.takahirom.roborazzi")
+  id("org.jetbrains.kotlin.plugin.compose")
 }
 
 roborazzi {
@@ -26,12 +27,6 @@ android {
     minSdk = 24
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-  }
-  buildFeatures {
-    compose = true
-  }
-  composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
   }
 
   buildTypes {
