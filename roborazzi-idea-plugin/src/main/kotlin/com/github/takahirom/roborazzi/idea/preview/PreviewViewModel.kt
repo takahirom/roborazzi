@@ -275,7 +275,7 @@ class PreviewViewModel {
             val matches = it.name.matches(Regex(pattern))
             matches
           }
-      }
+      }.distinct()
     }
   }
 
