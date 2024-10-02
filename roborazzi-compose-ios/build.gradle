@@ -13,16 +13,16 @@ kotlin {
   targetHierarchy.custom {
     it.common {
       it.group("ios") {
-        it.withIosX64()
+        //it.withIosX64()
         it.withIosArm64()
-        it.withIosSimulatorArm64()
+        //it.withIosSimulatorArm64()
       }
     }
   }
 
-  iosX64()
+  //iosX64()
   iosArm64()
-  iosSimulatorArm64()
+  //iosSimulatorArm64()
 
   sourceSets {
     commonMain {
@@ -33,10 +33,12 @@ kotlin {
         implementation(libs.kotlinx.serialization.json)
         api(project.compose.dependencies.uiTest)
         implementation(compose.runtime)
+        api libs.dropbox.differ
       }
     }
     iosMain {
       dependencies {
+        api libs.dropbox.differ
       }
     }
     iosTest {

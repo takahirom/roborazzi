@@ -275,9 +275,9 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
   }
 
   override fun differ(
-    other: RoboCanvas,
-    resizeScale: Double,
-    imageComparator: ImageComparator
+      other: RoboCanvas,
+      resizeScale: Double,
+      imageComparator: ImageComparator
   ): ImageComparator.ComparisonResult {
     other as AwtRoboCanvas
     val otherImage = other.bufferedImage

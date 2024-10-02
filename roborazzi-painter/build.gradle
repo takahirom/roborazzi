@@ -14,16 +14,16 @@ kotlin {
         it.withJvm()
       }
       it.group("ios") {
-        it.withIosX64()
+        //it.withIosX64()
         it.withIosArm64()
-        it.withIosSimulatorArm64()
+        //it.withIosSimulatorArm64()
       }
     }
   }
 
-  iosX64()
+  //iosX64()
   iosArm64()
-  iosSimulatorArm64()
+  //iosSimulatorArm64()
 
   jvm()
 
@@ -33,13 +33,13 @@ kotlin {
         compileOnly libs.kotlinx.serialization.json
         // Please see settings.gradle
         api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
+        api libs.dropbox.differ
       }
     }
     commonJvmMain {
       dependencies {
         compileOnly libs.robolectric.android.all
         implementation libs.kotlinx.io.core
-        api libs.dropbox.differ
 
       }
     }
