@@ -61,6 +61,17 @@ class GeneratePreviewTestTest {
       checkHasPrivatePreviewImages()
     }
   }
+
+  @Test
+  fun whenNotIncludingPreviewScannerSupportDependencyAndRecordRunImagesShouldBeError() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.includePreviewScannerSupportDependenciy = false
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("Roborazzi: Please add the following 'testImplementation'(For Android Project) or 'kotlin.sourceSets.androidUnitTest.dependencies.implementation'(For KMP) dependency to the 'dependencies' block in the 'build.gradle' file: 'io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support' for the 'testImplementation'(For Android Project) or 'kotlin.sourceSets.androidUnitTest.dependencies.implementation'(For KMP) configuration."))
+      }
+    }
+  }
 }
 
 class PreviewModule(
@@ -76,6 +87,7 @@ class PreviewModule(
   class BuildGradle(private val projectFolder: TemporaryFolder) {
     private val PATH = moduleName + "/build.gradle.kts"
     var isKmp = false
+    var includePreviewScannerSupportDependenciy = true
     fun write() {
       val file =
         projectFolder.root.resolve(PATH)
@@ -119,7 +131,14 @@ class PreviewModule(
           }
 
       """.trimIndent()
-      val buildGradleText = if (isKmp)
+      val buildGradleText = if (isKmp) {
+        val previewScannerSupportDependency = if (includePreviewScannerSupportDependenciy) {
+          """
+          implementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
+          """.trimIndent()
+        } else {
+          ""
+        }
         """
           plugins {
               kotlin("multiplatform")
@@ -148,7 +167,7 @@ class PreviewModule(
                   
                   val androidUnitTest by getting {
                       dependencies {
-                          implementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
+                          $previewScannerSupportDependency
                           implementation(libs.junit)
                           implementation(libs.robolectric)
                           implementation(libs.composable.preview.scanner)
@@ -180,7 +199,15 @@ class PreviewModule(
               maven { url = uri("https://jitpack.io") }
           }
         """.trimIndent()
-      else """
+      } else {
+        val previewScannerSupportDependency = if (includePreviewScannerSupportDependenciy) {
+          """
+          testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
+          """.trimIndent()
+        } else {
+          ""
+        }
+        """
   plugins {
     id("com.android.application")
   //  id("com.android.library")
@@ -204,7 +231,7 @@ class PreviewModule(
     implementation(libs.androidx.compose.runtime)
 
     // replaced by dependency substitution
-    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
+    $previewScannerSupportDependency
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.compose.ui.test.junit4)
@@ -214,6 +241,7 @@ class PreviewModule(
     androidTestImplementation(libs.androidx.test.espresso.core)
   }
 """
+      }
       file.writeText(
         buildGradleText.trimIndent()
       )
@@ -248,8 +276,8 @@ class PreviewModule(
     }
   }
 
-  fun record(checks: BuildResult.() -> Unit = {}) {
-    val result = runTask("recordRoborazziDebug")
+  fun record(buildType: BuildType = BuildType.Build, checks: BuildResult.() -> Unit = {}) {
+    val result = runTask("recordRoborazziDebug", buildType)
     result.checks()
   }
 
