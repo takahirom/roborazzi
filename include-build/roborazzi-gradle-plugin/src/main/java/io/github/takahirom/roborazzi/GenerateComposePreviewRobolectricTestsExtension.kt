@@ -230,11 +230,11 @@ fun verifyGenerateComposePreviewRobolectricTests(
   androidExtension: TestedExtension,
   extension: GenerateComposePreviewRobolectricTestsExtension
 ) {
-  if ((extension.enable.orNull) != true) {
-    return
-  }
   val logger = project.logger
   project.afterEvaluate {
+    if ((extension.enable.orNull) != true) {
+      return@afterEvaluate
+    }
     verifyMavenRepository(project)
     verifyLibraryDependencies(project)
     verifyAndroidConfig(androidExtension, logger)
