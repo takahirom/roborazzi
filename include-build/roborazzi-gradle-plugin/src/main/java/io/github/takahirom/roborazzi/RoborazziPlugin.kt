@@ -218,7 +218,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
       val testTaskProvider = findTestTaskProvider(testTaskClass, testTaskName)
       val roborazziProperties: Map<String, Any?> =
-        project.properties.filterKeys { it != "roborazzi" && it.startsWith("roborazzi") }
+        project.providers.gradlePropertiesPrefixedBy("roborazzi").get()
 
       val doesRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
         isVerifyRun.flatMap { isVerifyRunValue ->
