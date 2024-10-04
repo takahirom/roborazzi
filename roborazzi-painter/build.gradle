@@ -14,16 +14,16 @@ kotlin {
         it.withJvm()
       }
       it.group("ios") {
-        //it.withIosX64()
+        it.withIosX64()
         it.withIosArm64()
-        //it.withIosSimulatorArm64()
+        it.withIosSimulatorArm64()
       }
     }
   }
 
-  //iosX64()
+  iosX64()
   iosArm64()
-  //iosSimulatorArm64()
+  iosSimulatorArm64()
 
   jvm()
 
