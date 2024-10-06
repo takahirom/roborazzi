@@ -196,7 +196,6 @@ class PreviewModule(
           repositories {
               mavenCentral()
               google()
-              maven { url = uri("https://jitpack.io") }
           }
         """.trimIndent()
       } else {
@@ -220,7 +219,6 @@ class PreviewModule(
   repositories {
     mavenCentral()
     google()
-    maven { url = uri("https://jitpack.io") }
   }
   $androidBlock
 

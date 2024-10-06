@@ -15,7 +15,6 @@ roborazzi {
 repositories {
   mavenCentral()
   google()
-  maven { url = uri("https://jitpack.io") }
 }
 
 android {
