@@ -4,7 +4,6 @@ import com.android.build.api.variant.Variant
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -16,7 +15,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.testing.Test
-import org.gradle.invocation.DefaultGradle
 import java.io.File
 import java.net.URLEncoder
 import java.util.Locale
@@ -235,36 +233,8 @@ fun verifyGenerateComposePreviewRobolectricTests(
     if ((extension.enable.orNull) != true) {
       return@afterEvaluate
     }
-    verifyMavenRepository(project)
     verifyLibraryDependencies(project)
     verifyAndroidConfig(androidExtension, logger)
-  }
-}
-
-private fun verifyMavenRepository(project: Project) {
-  // Check if the jitpack repository is added.
-  val hasJitpackRepo = project.repositories.any {
-    it is MavenArtifactRepository &&
-      it.url.toString().contains("https://jitpack.io")
-  }
-  // settingsEvaluated{} is not called
-  // when it is already evaluated so we need to call `settingsEvaluated`
-  // before the project is evaluated.
-  // So we need to use the following workaround.
-  // https://github.com/gradle/gradle/issues/27741
-  val setting = (project.gradle as? DefaultGradle)?.getSettings() ?: return
-  val hasJitpackRepoInSettings = setting.pluginManagement.repositories.any {
-    it is MavenArtifactRepository && it.url.toString().contains("https://jitpack.io")
-  } || setting.dependencyResolutionManagement.repositories.any {
-    it is MavenArtifactRepository && it.url.toString().contains("https://jitpack.io")
-  }
-  if (!hasJitpackRepo && !hasJitpackRepoInSettings) {
-    error(
-      "Roborazzi: Please add the following 'maven' repository to the 'repositories' block in the 'build.gradle' file.\n" +
-        "build.gradle: \nrepositories {\nmaven { url 'https://jitpack.io' } \n}\n" +
-        "build.gradle.kts: \nrepositories {\nmaven { url = uri(\"https://jitpack.io\") } \n}\n" +
-        "This is necessary to download the ComposablePreviewScanner."
-    )
   }
 }
 
