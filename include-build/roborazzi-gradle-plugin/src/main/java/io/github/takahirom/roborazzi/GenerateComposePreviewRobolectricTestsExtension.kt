@@ -315,7 +315,7 @@ private fun verifyLibraryDependencies(
     "io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support",
     "junit:junit",
     "org.robolectric:robolectric",
-    "com.github.sergio-sastre.ComposablePreviewScanner:android",
+    "io.github.sergio-sastre.ComposablePreviewScanner:android",
   )
   requiredLibraries.forEach { allDependencies.checkExists(it) }
 }
