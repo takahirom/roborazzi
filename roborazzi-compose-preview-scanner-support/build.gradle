@@ -8,7 +8,6 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 repositories {
   google()
   mavenCentral()
-  maven { url = uri("https://jitpack.io") }
 }
 
 android.buildFeatures.compose = true
