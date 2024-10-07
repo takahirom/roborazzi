@@ -36,11 +36,7 @@ kotlin {
         api libs.dropbox.differ
       }
     }
-    iosMain {
-      dependencies {
-        api libs.dropbox.differ
-      }
-    }
+
     iosTest {
       dependencies {
         implementation(compose.material3)
