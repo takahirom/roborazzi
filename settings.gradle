@@ -18,6 +18,7 @@ include ':roborazzi-junit-rule'
 include ':roborazzi-compose-desktop'
 include ':roborazzi-compose-ios'
 include ':roborazzi-compose'
+include ':roborazzi-ai'
 include ':roborazzi-painter'
 include ':roborazzi-compose-preview-scanner-support'
 

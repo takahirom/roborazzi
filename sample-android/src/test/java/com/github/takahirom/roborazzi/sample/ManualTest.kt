@@ -19,6 +19,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
+import com.github.takahirom.roborazzi.AiOptions
 import com.github.takahirom.roborazzi.Dump
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
@@ -27,6 +28,7 @@ import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureRoboLastImage
+import com.github.takahirom.roborazzi.loadRoboAi
 import com.github.takahirom.roborazzi.roboOutputName
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.withComposeTestTag
@@ -53,6 +55,40 @@ class ManualTest {
   fun captureScreenLevelImageWithEspresso() {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
+  }
+
+
+  @Test
+  @Config
+  fun captureWithAi() {
+    loadRoboAi()
+
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        roborazziOptions = RoborazziOptions(
+          compareOptions = if (System.getenv("gemini_api_key")?.isNotBlank() == true) {
+            RoborazziOptions.CompareOptions(
+              aiOptions = AiOptions(
+                aiAssertions = listOf(
+                  AiOptions.AiAssertion(
+                    assertPrompt = "it should have PREVIOUS button",
+                    requiredFulfillmentPercent = 90,
+                  ),
+                  AiOptions.AiAssertion(
+                    assertPrompt = "it should show First Fragment",
+                    requiredFulfillmentPercent = 90,
+                  ),
+                ),
+                aiModel = AiOptions.AiModel.Gemini(
+                  apiKey = System.getenv("gemini_api_key")!!,
+                ),
+              )
+            )
+          } else {
+            RoborazziOptions.CompareOptions()
+          }
+        )
+      )
   }
 
   @Test
@@ -164,7 +200,8 @@ class ManualTest {
 
   @Test
   fun captureRoboImageSampleWithQuery() {
-    val filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_view.png"
+    val filePath =
+      "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_view.png"
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = filePath,
