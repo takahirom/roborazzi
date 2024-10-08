@@ -33,12 +33,10 @@ kotlin {
         implementation(libs.kotlinx.serialization.json)
         api(project.compose.dependencies.uiTest)
         implementation(compose.runtime)
+        api libs.dropbox.differ
       }
     }
-    iosMain {
-      dependencies {
-      }
-    }
+
     iosTest {
       dependencies {
         implementation(compose.material3)
