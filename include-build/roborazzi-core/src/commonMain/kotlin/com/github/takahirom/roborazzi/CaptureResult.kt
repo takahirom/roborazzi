@@ -75,7 +75,7 @@ sealed interface CaptureResult {
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("diff_percentage")
-    val diffPercentage: Float,
+    val diffPercentage: Float?,
     @SerialName("context_data")
     override val contextData: Map<String,@Contextual Any>
   ) : CaptureResult {

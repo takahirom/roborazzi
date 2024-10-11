@@ -2,7 +2,6 @@ package com.github.takahirom.roborazzi
 
 import com.dropbox.differ.ImageComparator
 import java.io.File
-import kotlin.properties.Delegates
 
 fun interface EmptyCanvasFactory {
   operator fun invoke(
@@ -87,7 +86,7 @@ fun processOutputImageAndReport(
     }
 
     // Only used by CaptureResult.Changed
-    var diffPercentage by Delegates.notNull<Float>()
+    var diffPercentage: Float? = null
 
     val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
       val comparisonResult: ImageComparator.ComparisonResult =
@@ -101,7 +100,6 @@ fun processOutputImageAndReport(
       reportLog("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
-      diffPercentage = Float.NaN // diff. percentage is not defined if new canvas and golden canvas dimensions differ
       reportLog("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
       true
     }
