@@ -25,7 +25,7 @@ fun PreviewNormal() {
         .width(180.dp)
     ) {
       Text(
-        modifier = Modifier.padding(8.dp),
+        modifier = Modifier.padding(40.dp),
         text = "Generate Preview Test Sample"
       )
     }
