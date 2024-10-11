@@ -1,7 +1,7 @@
 plugins {
   id("java")
   id("org.jetbrains.kotlin.jvm")
-  id("org.jetbrains.intellij") version "1.17.2"
+  id("org.jetbrains.intellij.platform") version "2.1.0"
 }
 
 group = "io.github.takahirom.roborazzi"
@@ -13,17 +13,23 @@ repositories {
 
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-intellij {
-  updateSinceUntilBuild = false
+repositories {
+  mavenCentral()
 
-  version.set("2023.2.5")
-  type.set("IC") // Target IDE Platform
+  intellijPlatform {
+    defaultRepositories()
+  }
+}
 
-  plugins.set(listOf(
-    "java",
-    "Kotlin",
-    "com.intellij.gradle",
-  ))
+dependencies {
+  intellijPlatform {
+    intellijIdeaCommunity("2024.2.2", false)
+    bundledPlugin("com.intellij.java")
+    bundledPlugin("org.jetbrains.kotlin")
+    bundledPlugin("com.intellij.gradle")
+
+    instrumentationTools()
+  }
 }
 
 tasks {
