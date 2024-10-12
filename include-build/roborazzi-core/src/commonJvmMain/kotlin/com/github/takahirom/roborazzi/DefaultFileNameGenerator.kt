@@ -129,4 +129,8 @@ object DefaultFileNameGenerator {
     return testName
   }
 
+  @InternalRoborazziApi
+  fun reset() {
+    testNameToTakenCount.clear()
+  }
 }
