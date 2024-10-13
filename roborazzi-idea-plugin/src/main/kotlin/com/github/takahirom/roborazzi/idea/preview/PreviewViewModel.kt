@@ -21,6 +21,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtElement
@@ -156,6 +160,8 @@ class PreviewViewModel {
     roborazziLog("fetchTasks took ${System.currentTimeMillis() - startTime}ms")
   }
 
+  class ReportResult(val path: String, val className: String?)
+
   private suspend fun refreshListProcess(project: Project) {
     val start = System.currentTimeMillis()
     roborazziLog("refreshListProcess")
@@ -168,7 +174,6 @@ class PreviewViewModel {
       lastEditingFileName.value = kotlinFile.name
     }
     val allDeclarations = kotlinFile.declarations
-    val allPreviewImageFiles = mutableListOf<File>()
     fun hasPreviewOrTestAnnotationOrHasNameOfTestFunction(declaration: KtDeclaration): Boolean {
       return declaration.annotationEntries.any { annotation ->
         annotation.text.contains("Composable") ||
@@ -191,7 +196,72 @@ class PreviewViewModel {
 
     val searchPath = project.basePath
     statusText.value = "Searching images in $searchPath ..."
+    val reports = loadReports(project)
+    val useReports = reports.isEmpty()
+    val allPreviewImageFiles = if (useReports) {
+      findImageFiles(project, classes, functions)
+    } else {
+      findImageFilesWithReports(classes, functions, reports)
+    }
 
+    if (allPreviewImageFiles.isEmpty()) {
+      statusText.value = "No images found"
+    } else {
+      val reportOrFiles = if (useReports) "reports" else "files"
+      statusText.value =
+        "${allPreviewImageFiles.size} images found by $reportOrFiles"
+    }
+    val result = allPreviewImageFiles.sortedByClassesAndFunctions(classes, functions)
+      .map { it.path to it.lastModified() }
+      .distinct()
+    roborazziLog("refreshListProcess result.size:${result.size} by classes:${classes.map { it.name }} functions:${functions.map { it.name }} in ${System.currentTimeMillis() - start}ms")
+    imagesStateFlow.value = result
+  }
+
+  private suspend fun loadReports(project: Project): List<ReportResult> {
+    return withContext(Dispatchers.IO) {
+      ProjectRootManager.getInstance(project).contentRootsFromAllModules
+        .map { File(it.path + "/build/test-results/roborazzi/results-summary.json") }
+        .filter {
+          it.exists()
+        }
+        .flatMap {
+          val text = it.readText()
+          // It's difficult to use roborazzi-core in IntelliJ plugin so we use simple json parsing
+          Json.parseToJsonElement(text).jsonObject["results"]?.jsonArray?.mapNotNull { resultJson ->
+            ReportResult(
+              path = resultJson.jsonObject["golden_file_path"]?.jsonPrimitive?.content
+                ?: return@mapNotNull null,
+              className = resultJson.jsonObject["context_data"]?.jsonObject?.get("roborazzi_description_class")?.jsonPrimitive?.content
+            )
+          }.orEmpty()
+        }
+    }
+  }
+
+  private suspend fun findImageFilesWithReports(
+    classes: List<KtClass>,
+    functions: List<KtFunction>,
+    reports: List<ReportResult>
+  ): MutableList<File> {
+    val allPreviewImageFiles = mutableListOf<File>()
+    allPreviewImageFiles.addAll(
+      findElementImagesWithReports(classes, reports)
+        .filter { it.name.contains(searchText.value, ignoreCase = true) }
+    )
+    allPreviewImageFiles.addAll(
+      findElementImagesWithReports(functions, reports)
+        .filter { it.name.contains(searchText.value, ignoreCase = true) }
+    )
+    roborazziLog("findImageFilesWithReports All files.size:${reports.size} -> filtered -> allPreviewImageFiles.size:${allPreviewImageFiles.size}")
+    return allPreviewImageFiles
+  }
+
+  private suspend fun findImageFiles(
+    project: Project,
+    classes: List<KtClass>,
+    functions: List<KtFunction>
+  ): MutableList<File> {
     val files = withContext(Dispatchers.IO) {
       val roborazziFolders = ProjectRootManager.getInstance(project).contentRootsFromAllModules
         .map { File(it.path + AppSettingsState.instance.imagesPathForModule) }
@@ -205,24 +275,17 @@ class PreviewViewModel {
         }
     }
 
+    val allPreviewImageFiles = mutableListOf<File>()
     allPreviewImageFiles.addAll(
-      findImages(classes, files)
+      findElementImages(classes, files)
         .filter { it.name.contains(searchText.value, ignoreCase = true) }
     )
     allPreviewImageFiles.addAll(
-      findImages(functions, files)
+      findElementImages(functions, files)
         .filter { it.name.contains(searchText.value, ignoreCase = true) }
     )
-
-    if (allPreviewImageFiles.isEmpty()) {
-      statusText.value = "No images found"
-    } else {
-      statusText.value = "${allPreviewImageFiles.size} images found"
-    }
-    val result = allPreviewImageFiles.sortedByClassesAndFunctions(classes, functions)
-      .map { it.path to it.lastModified() }
-    roborazziLog("refreshListProcess result result.size:${result.size} in ${System.currentTimeMillis() - start}ms")
-    imagesStateFlow.value = result
+    roborazziLog("findImageFiles All files.size:${files.size} -> filtered -> allPreviewImageFiles.size:${allPreviewImageFiles.size}")
+    return allPreviewImageFiles
   }
 
   private suspend fun getCurrentKtFileOrNull(project: Project): KtFile? = readAction {
@@ -260,7 +323,7 @@ class PreviewViewModel {
     }
   }
 
-  private suspend fun findImages(
+  private suspend fun findElementImages(
     elements: List<KtElement>,
     files: List<File>
   ): List<File> {
@@ -272,10 +335,31 @@ class PreviewViewModel {
         val pattern = ".*$elementName.*.png"
         files
           .filter {
-            val matches = it.name.matches(Regex(pattern))
+            val matches = it.path.matches(Regex(pattern))
             matches
           }
-      }.distinct()
+      }
+    }
+  }
+
+  private suspend fun findElementImagesWithReports(
+    elements: List<KtElement>,
+    reports: List<ReportResult>
+  ): List<File> {
+    val elementNames = elements.mapNotNull { element ->
+      element.name
+    }
+    return withContext(Dispatchers.Default) {
+      elementNames.flatMap { elementName ->
+        val pattern = ".*$elementName.*.png"
+        reports
+          .filter {
+            val matches = it.path.matches(Regex(pattern)) ||
+              it.className?.contains(elementName) == true
+            matches
+          }
+      }
+        .map { File(it.path) }
     }
   }
 
