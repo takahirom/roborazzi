@@ -12,7 +12,7 @@ robolectric-android-all = "Q-robolectric-5415296"
 
 roborazzi-for-replacing-by-include-build = "1.0.0"
 
-androidx-activity = "1.7.2"
+androidx-activity = "1.9.3"
 androidx-appcompat = "1.7.0"
 androidx-compose-material = "1.6.8"
 androidx-compose-material3 = "1.2.1"
