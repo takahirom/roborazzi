@@ -634,6 +634,26 @@ data class RoborazziOptions(
 }
 ```
 
+#### Image comparator custom settings
+When comparing images, you may encounter differences due to minor changes related to antialiasing. You can use the options below to avoid this.
+```kotlin
+@get:Rule
+val roborazziRule = RoborazziRule(
+    options = RoborazziRule.Options(
+        roborazziOptions = RoborazziOptions(
+            compareOptions = RoborazziOptions.CompareOptions(
+                changeThreshold = 0.01, // For 1% accepted difference
+                imageComparator = SimpleImageComparator(
+                    maxDistance = 0.007F, // 0.001F is default value from Differ
+                    vShift = 2, // Increasing the shift can help resolve antialiasing issues
+                    hShift = 2 // Increasing the shift can help resolve antialiasing issues
+                )
+            )
+        )
+    )
+)
+```
+
 ### Dump mode
 
 If you are having trouble debugging your test, try Dump mode as follows.
