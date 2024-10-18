@@ -6,7 +6,7 @@ commons-compress = "1.23.0"
 kotlin = "1.9.22"
 mavenPublish = "0.25.3"
 composeCompiler = "1.5.10"
-composeMultiplatform = "1.6.2"
+composeMultiplatform = "1.7.0"
 robolectric = "4.12.2"
 robolectric-android-all = "Q-robolectric-5415296"
 
