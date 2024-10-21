@@ -22,7 +22,7 @@ sealed interface CaptureResult {
   val compareFile: String?
   val actualFile: String?
   val goldenFile: String?
-  val contextData: Map<String,@Contextual Any>
+  val contextData: Map<String, @Contextual Any>
 
   val reportFile: String
     get() = when (val result = this) {
@@ -35,11 +35,11 @@ sealed interface CaptureResult {
   @Serializable
   data class Recorded(
     @SerialName("golden_file_path")
-    override val goldenFile:@Contextual String,
+    override val goldenFile: @Contextual String,
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("context_data")
-    override val contextData: Map<String,@Contextual Any>
+    override val contextData: Map<String, @Contextual Any>
   ) : CaptureResult {
     override val type = "recorded"
     override val actualFile: String?
@@ -51,15 +51,17 @@ sealed interface CaptureResult {
   @Serializable
   data class Added(
     @SerialName("compare_file_path")
-    override val compareFile:@Contextual String,
+    override val compareFile: @Contextual String,
     @SerialName("actual_file_path")
-    override val actualFile:@Contextual String,
+    override val actualFile: @Contextual String,
     @SerialName("golden_file_path")
-    override val goldenFile:@Contextual String,
+    override val goldenFile: @Contextual String,
     @SerialName("timestamp")
     override val timestampNs: Long,
+    @SerialName("ai_result")
+    val aiResult: AiResult?,
     @SerialName("context_data")
-    override val contextData: Map<String,@Contextual Any>
+    override val contextData: Map<String, @Contextual Any>
   ) : CaptureResult {
     override val type = "added"
   }
@@ -67,17 +69,19 @@ sealed interface CaptureResult {
   @Serializable
   data class Changed(
     @SerialName("compare_file_path")
-    override val compareFile:@Contextual String,
+    override val compareFile: @Contextual String,
     @SerialName("golden_file_path")
-    override val goldenFile:@Contextual String,
+    override val goldenFile: @Contextual String,
     @SerialName("actual_file_path")
-    override val actualFile:@Contextual String,
+    override val actualFile: @Contextual String,
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("diff_percentage")
     val diffPercentage: Float?,
+    @SerialName("ai_result")
+    val aiResult: AiResult?,
     @SerialName("context_data")
-    override val contextData: Map<String,@Contextual Any>
+    override val contextData: Map<String, @Contextual Any>
   ) : CaptureResult {
     override val type = "changed"
   }
@@ -85,11 +89,11 @@ sealed interface CaptureResult {
   @Serializable
   data class Unchanged(
     @SerialName("golden_file_path")
-    override val goldenFile:@Contextual String,
+    override val goldenFile: @Contextual String,
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("context_data")
-    override val contextData: Map<String,@Contextual Any>
+    override val contextData: Map<String, @Contextual Any>
   ) : CaptureResult {
     override val type = "unchanged"
     override val actualFile: String?
@@ -122,12 +126,26 @@ sealed interface CaptureResult {
       require(decoder is JsonDecoder)
       val type = decoder.decodeJsonElement().jsonObject["type"]!!.jsonPrimitive.content
       return when (type) {
-      "recorded" -> decoder.decodeSerializableValue(Recorded.serializer())
-      "changed" -> decoder.decodeSerializableValue(Changed.serializer())
-      "unchanged" -> decoder.decodeSerializableValue(Unchanged.serializer())
-      "added" -> decoder.decodeSerializableValue(Added.serializer())
-      else -> throw IllegalArgumentException("Unknown type $type")
+        "recorded" -> decoder.decodeSerializableValue(Recorded.serializer())
+        "changed" -> decoder.decodeSerializableValue(Changed.serializer())
+        "unchanged" -> decoder.decodeSerializableValue(Unchanged.serializer())
+        "added" -> decoder.decodeSerializableValue(Added.serializer())
+        else -> throw IllegalArgumentException("Unknown type $type")
       }
     }
   }
 }
+
+@Serializable
+data class AiResult(
+  val aiAssertions: List<AiAssertion> = emptyList()
+)
+
+@Serializable
+data class AiAssertion(
+  val assertPrompt: String,
+  @SerialName("required_fulfillment_percent")
+  val requiredFulfillmentPercent: Int,
+  val fulfillmentPercent: Int,
+  val explanation: String?,
+)

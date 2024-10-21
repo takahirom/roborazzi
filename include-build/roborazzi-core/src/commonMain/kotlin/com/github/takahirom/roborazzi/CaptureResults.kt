@@ -158,11 +158,13 @@ data class CaptureResults(
   }
 
   companion object {
+    @OptIn(ExperimentalSerializationApi::class)
     val json = Json {
       isLenient = true
       encodeDefaults = true
       ignoreUnknownKeys = true
       classDiscriminator = "#class"
+      explicitNulls = false
       serializersModule = SerializersModule {
         contextual(Any::class, AnySerializer)
       }

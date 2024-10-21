@@ -100,8 +100,10 @@ data class RoborazziOptions(
     val outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
     val imageComparator: ImageComparator = DefaultImageComparator,
     val comparisonStyle: ComparisonStyle = ComparisonStyle.Grid(),
+    val aiOptions: AiOptions? = null,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
   ) {
+
     @ExperimentalRoborazziApi
     sealed interface ComparisonStyle {
       @ExperimentalRoborazziApi
@@ -150,6 +152,36 @@ data class RoborazziOptions(
           VerifyCaptureResultReporter().report(captureResult, roborazziTaskType)
         } else {
           JsonOutputCaptureResultReporter().report(captureResult, roborazziTaskType)
+        }
+        AiCaptureResultReporter().report(captureResult, roborazziTaskType)
+      }
+    }
+
+    class AiCaptureResultReporter : CaptureResultReporter {
+      override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
+        val aiResult = when (captureResult) {
+          is CaptureResult.Changed -> {
+            captureResult.aiResult
+          }
+
+          is CaptureResult.Added -> {
+            captureResult.aiResult
+          }
+
+          else -> {
+            null
+          }
+        }
+        aiResult?.aiAssertions?.forEach { aiAssertion ->
+          if (aiAssertion.fulfillmentPercent < aiAssertion.requiredFulfillmentPercent) {
+            throw AssertionError(
+              "The generated image did not meet the required prompt fulfillment percentage.\n" +
+                "prompt:${aiAssertion.assertPrompt}\n" +
+                "aiAssertion.fulfillmentPercent:${aiAssertion.fulfillmentPercent}\n" +
+                "requiredFulfillmentPercent:${aiAssertion.requiredFulfillmentPercent}\n" +
+                "explanation:${aiAssertion.explanation}"
+            )
+          }
         }
       }
     }
@@ -210,6 +242,32 @@ data class RoborazziOptions(
   }
 
   internal val shouldTakeBitmap: Boolean = captureType.shouldTakeScreenshot()
+
+  fun addedCompareAiAssertion(
+    assert: String,
+    requiredFulfillmentPercent: Int
+  ): RoborazziOptions {
+    return copy(
+      compareOptions = compareOptions.copy(
+        aiOptions = compareOptions.aiOptions!!.copy(
+          aiAssertions = compareOptions.aiOptions.aiAssertions + AiOptions.AiAssertion(
+            assertPrompt = assert,
+            requiredFulfillmentPercent = requiredFulfillmentPercent
+          )
+        )
+      )
+    )
+  }
+
+  fun addedCompareAiAssertions(vararg assertions: AiOptions.AiAssertion): RoborazziOptions {
+    return copy(
+      compareOptions = compareOptions.copy(
+        aiOptions = compareOptions.aiOptions!!.copy(
+          aiAssertions = compareOptions.aiOptions.aiAssertions + assertions
+        )
+      )
+    )
+  }
 }
 
 expect fun canScreenshot(): Boolean

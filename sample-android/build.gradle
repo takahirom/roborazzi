@@ -4,6 +4,14 @@ plugins {
   id 'io.github.takahirom.roborazzi'
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+  localPropertiesFile.withInputStream { instream ->
+    localProperties.load(instream)
+  }
+}
+
 android {
   namespace 'com.github.takahirom.roborazzi.sample'
   compileSdk 34
@@ -35,6 +43,9 @@ android {
       includeAndroidResources = true
       it.all {
         environment "robolectric.logging.enabled", "true"
+        if (localProperties.getProperty("gemini_api_key") != null) {
+          environment "gemini_api_key", localProperties.getProperty("gemini_api_key")
+        }
         // To run coverage report in Android Studio
         jvmArgs '-noverify'
         // Set the max heap size for the tests JVM(s)
@@ -46,6 +57,7 @@ android {
 
 dependencies {
   testImplementation project(":roborazzi")
+  testImplementation project(":roborazzi-ai")
   testImplementation project(":roborazzi-compose")
   testImplementation project(":roborazzi-junit-rule")
 
