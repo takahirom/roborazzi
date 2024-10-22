@@ -1,13 +1,13 @@
 package com.github.takahirom.roborazzi
 
-fun interface AiCompareResultFactory {
+fun interface AiComparisonResultFactory {
   operator fun invoke(
     comparisonImageFilePath: String,
-    aiOptions: AiOptions
-  ): AiResult
+    aiCompareOptions: AiCompareOptions
+  ): AiComparisonResult
 }
 
-var aiCompareResultFactory: AiCompareResultFactory? =
-  AiCompareResultFactory { comparisonImageFilePath, aiOptions ->
+var aiComparisonResultFactory: AiComparisonResultFactory? =
+  AiComparisonResultFactory { comparisonImageFilePath, aiOptions ->
     throw NotImplementedError("aiCompareCanvasFactory is not implemented")
   }

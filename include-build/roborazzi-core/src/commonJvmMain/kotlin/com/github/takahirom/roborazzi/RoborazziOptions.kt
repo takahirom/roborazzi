@@ -100,7 +100,7 @@ data class RoborazziOptions(
     val outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
     val imageComparator: ImageComparator = DefaultImageComparator,
     val comparisonStyle: ComparisonStyle = ComparisonStyle.Grid(),
-    val aiOptions: AiOptions? = null,
+    val aiCompareOptions: AiCompareOptions? = null,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
   ) {
 
@@ -161,25 +161,27 @@ data class RoborazziOptions(
       override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
         val aiResult = when (captureResult) {
           is CaptureResult.Changed -> {
-            captureResult.aiResult
+            captureResult.aiComparisonResult
           }
 
           is CaptureResult.Added -> {
-            captureResult.aiResult
+            captureResult.aiComparisonResult
           }
 
           else -> {
             null
           }
         }
-        aiResult?.aiAssertions?.forEach { aiAssertion ->
-          if (aiAssertion.fulfillmentPercent < aiAssertion.requiredFulfillmentPercent) {
+        aiResult?.aiConditionResults
+          ?.filter { conditionResult -> conditionResult.requiredFulfillmentPercent != null }
+          ?.forEach { conditionResult ->
+          if (conditionResult.fulfillmentPercent < conditionResult.requiredFulfillmentPercent!!) {
             throw AssertionError(
               "The generated image did not meet the required prompt fulfillment percentage.\n" +
-                "prompt:${aiAssertion.assertPrompt}\n" +
-                "aiAssertion.fulfillmentPercent:${aiAssertion.fulfillmentPercent}\n" +
-                "requiredFulfillmentPercent:${aiAssertion.requiredFulfillmentPercent}\n" +
-                "explanation:${aiAssertion.explanation}"
+                "prompt:${conditionResult.assertPrompt}\n" +
+                "aiAssertion.fulfillmentPercent:${conditionResult.fulfillmentPercent}\n" +
+                "requiredFulfillmentPercent:${conditionResult.requiredFulfillmentPercent}\n" +
+                "explanation:${conditionResult.explanation}"
             )
           }
         }
@@ -249,8 +251,8 @@ data class RoborazziOptions(
   ): RoborazziOptions {
     return copy(
       compareOptions = compareOptions.copy(
-        aiOptions = compareOptions.aiOptions!!.copy(
-          aiAssertions = compareOptions.aiOptions.aiAssertions + AiOptions.AiAssertion(
+        aiCompareOptions = compareOptions.aiCompareOptions!!.copy(
+          aiConditions = compareOptions.aiCompareOptions.aiConditions + AiCompareOptions.AiCondition(
             assertPrompt = assert,
             requiredFulfillmentPercent = requiredFulfillmentPercent
           )
@@ -259,11 +261,11 @@ data class RoborazziOptions(
     )
   }
 
-  fun addedCompareAiAssertions(vararg assertions: AiOptions.AiAssertion): RoborazziOptions {
+  fun addedCompareAiAssertions(vararg assertions: AiCompareOptions.AiCondition): RoborazziOptions {
     return copy(
       compareOptions = compareOptions.copy(
-        aiOptions = compareOptions.aiOptions!!.copy(
-          aiAssertions = compareOptions.aiOptions.aiAssertions + assertions
+        aiCompareOptions = compareOptions.aiCompareOptions!!.copy(
+          aiConditions = compareOptions.aiCompareOptions.aiConditions + assertions
         )
       )
     )

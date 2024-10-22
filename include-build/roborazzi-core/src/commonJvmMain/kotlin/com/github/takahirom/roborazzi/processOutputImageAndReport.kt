@@ -122,9 +122,9 @@ fun processOutputImageAndReport(
           resizeScale = resizeScale,
           contextData = contextData
         )
-      val aiOptions = compareOptions.aiOptions
-      val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
-        val aiResult = aiCompareResultFactory?.invoke(comparisonFile.absolutePath, aiOptions)
+      val aiOptions = compareOptions.aiCompareOptions
+      val aiResult = if (aiOptions != null && aiOptions.aiConditions.isNotEmpty()) {
+        val aiResult = aiComparisonResultFactory?.invoke(comparisonFile.absolutePath, aiOptions)
           ?: throw NotImplementedError("aiCompareCanvasFactory is not implemented. Did you add roborazzi-ai dependency and (call loadRoboAi() or use RoborazziRule)?")
         aiResult
       } else {
@@ -162,7 +162,7 @@ fun processOutputImageAndReport(
           goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
           diffPercentage = diffPercentage,
-          aiResult = aiResult,
+          aiComparisonResult = aiResult,
           contextData = contextData,
         )
       } else {
@@ -171,7 +171,7 @@ fun processOutputImageAndReport(
           actualFile = actualFile.absolutePath,
           goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
-          aiResult = aiResult,
+          aiComparisonResult = aiResult,
           contextData = contextData,
         )
       }
