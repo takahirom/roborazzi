@@ -59,7 +59,7 @@ sealed interface CaptureResult {
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("ai_result")
-    val aiResult: AiResult?,
+    val aiComparisonResult: AiComparisonResult?,
     @SerialName("context_data")
     override val contextData: Map<String, @Contextual Any>
   ) : CaptureResult {
@@ -79,7 +79,7 @@ sealed interface CaptureResult {
     @SerialName("diff_percentage")
     val diffPercentage: Float?,
     @SerialName("ai_result")
-    val aiResult: AiResult?,
+    val aiComparisonResult: AiComparisonResult?,
     @SerialName("context_data")
     override val contextData: Map<String, @Contextual Any>
   ) : CaptureResult {
@@ -137,15 +137,15 @@ sealed interface CaptureResult {
 }
 
 @Serializable
-data class AiResult(
-  val aiAssertions: List<AiAssertion> = emptyList()
+data class AiComparisonResult(
+  val aiConditionResults: List<AiConditionResult> = emptyList()
 )
 
 @Serializable
-data class AiAssertion(
+data class AiConditionResult(
   val assertPrompt: String,
   @SerialName("required_fulfillment_percent")
-  val requiredFulfillmentPercent: Int,
+  val requiredFulfillmentPercent: Int?,
   val fulfillmentPercent: Int,
   val explanation: String?,
 )

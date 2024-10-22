@@ -14,7 +14,7 @@ import kotlin.jvm.JvmName
 
 @InternalRoborazziApi
 val loaded = run {
-  aiCompareResultFactory = AiCompareResultFactory { comparisonImageFilePath, aiOptions ->
+  aiComparisonResultFactory = AiComparisonResultFactory { comparisonImageFilePath, aiOptions ->
     createAiResult(aiOptions, comparisonImageFilePath)
   }
 }
@@ -22,7 +22,7 @@ val loaded = run {
 fun loadRoboAi() = loaded
 
 @Serializable
-data class AssertionResult(
+data class GeminiAiConditionResult(
   @SerialName("fulfillment_percent")
   val fulfillmentPercent: Int,
   val explanation: String?,
@@ -32,14 +32,18 @@ expect fun readByteArrayFromFile(filePath: String): PlatformImage
 
 @InternalRoborazziApi
 fun createAiResult(
-  aiOptions: AiOptions,
+  aiCompareOptions: AiCompareOptions,
   comparisonImageFilePath: String,
-): AiResult {
-  when (val aiModel = aiOptions.aiModel) {
-    is AiOptions.AiModel.Gemini -> {
+): AiComparisonResult {
+  when (val aiModel = aiCompareOptions.aiModel) {
+    is AiCompareOptions.AiModel.Gemini -> {
+      val systemPrompt = aiCompareOptions.systemPrompt
       val generativeModel = GenerativeModel(
         modelName = aiModel.modelName,
         apiKey = aiModel.apiKey,
+        systemInstruction = content {
+          text(systemPrompt)
+        },
         generationConfig = generationConfig {
           maxOutputTokens = 8192
           responseMimeType = "application/json"
@@ -69,9 +73,9 @@ fun createAiResult(
         },
       )
 
-      val template = aiOptions.template
+      val template = aiCompareOptions.promptTemplate
 
-      val inputPrompt = aiOptions.inputPrompt(aiOptions)
+      val inputPrompt = aiCompareOptions.inputPrompt(aiCompareOptions)
       val inputContent = content {
         image(readByteArrayFromFile(comparisonImageFilePath))
         val prompt = template.replace("INPUT_PROMPT", inputPrompt)
@@ -86,18 +90,18 @@ fun createAiResult(
       debugLog {
         "RoborazziAi: response: ${response.text}"
       }
-      val geminiResult = CaptureResults.json.decodeFromString<Array<AssertionResult>>(
+      val geminiResult = CaptureResults.json.decodeFromString<Array<GeminiAiConditionResult>>(
         requireNotNull(
           response.text
         )
       )
-      return AiResult(
-        aiAssertions = aiOptions.aiAssertions.mapIndexed { index, it ->
-          val assertResult = geminiResult.getOrNull(index) ?: AssertionResult(
+      return AiComparisonResult(
+        aiConditionResults = aiCompareOptions.aiConditions.mapIndexed { index, it ->
+          val assertResult = geminiResult.getOrNull(index) ?: GeminiAiConditionResult(
             fulfillmentPercent = 0,
             explanation = "AI model did not return a result for this assertion"
           )
-          AiAssertion(
+          AiConditionResult(
             assertPrompt = it.assertPrompt,
             requiredFulfillmentPercent = it.requiredFulfillmentPercent,
             fulfillmentPercent = assertResult.fulfillmentPercent,
@@ -107,8 +111,8 @@ fun createAiResult(
       )
     }
 
-    is AiOptions.AiModel.Manual -> {
-      return aiModel(comparisonImageFilePath, aiOptions)
+    is AiCompareOptions.AiModel.Manual -> {
+      return aiModel(comparisonImageFilePath, aiCompareOptions)
     }
 
     else -> {
