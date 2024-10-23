@@ -7,7 +7,4 @@ fun interface AiComparisonResultFactory {
   ): AiComparisonResult
 }
 
-var aiComparisonResultFactory: AiComparisonResultFactory? =
-  AiComparisonResultFactory { comparisonImageFilePath, aiOptions ->
-    throw NotImplementedError("aiCompareCanvasFactory is not implemented")
-  }
+var aiComparisonResultFactory: AiComparisonResultFactory? = null
