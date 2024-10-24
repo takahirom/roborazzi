@@ -5,6 +5,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.AiCompareOptions
+import com.github.takahirom.roborazzi.GeminiAiModel
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -33,7 +34,7 @@ class AiTest {
       roborazziOptions = RoborazziOptions(
         compareOptions = RoborazziOptions.CompareOptions(
           aiCompareOptions = AiCompareOptions(
-            aiModel = AiCompareOptions.AiModel.Gemini(
+            aiModel = GeminiAiModel(
               apiKey = System.getenv("gemini_api_key") ?: ""
             ),
           )
@@ -43,7 +44,7 @@ class AiTest {
   )
 
   @Test
-  fun captureWithAi() {
+  fun captureWithAi2() {
     ROBORAZZI_DEBUG = true
     if (System.getenv("gemini_api_key") == null) {
       println("Skip the test because gemini_api_key is not set.")
