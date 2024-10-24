@@ -19,7 +19,9 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
+import com.github.takahirom.roborazzi.AiCompareOptions
 import com.github.takahirom.roborazzi.Dump
+import com.github.takahirom.roborazzi.GeminiAiModel
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -53,6 +55,38 @@ class ManualTest {
   fun captureScreenLevelImageWithEspresso() {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
+  }
+
+
+  @Test
+  @Config
+  fun captureWithAi() {
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        roborazziOptions = RoborazziOptions(
+          compareOptions = if (System.getenv("gemini_api_key")?.isNotBlank() == true) {
+            RoborazziOptions.CompareOptions(
+              aiCompareOptions = AiCompareOptions(
+                aiConditions = listOf(
+                  AiCompareOptions.AiCondition(
+                    assertPrompt = "it should have PREVIOUS button",
+                    requiredFulfillmentPercent = 90,
+                  ),
+                  AiCompareOptions.AiCondition(
+                    assertPrompt = "it should show First Fragment",
+                    requiredFulfillmentPercent = 90,
+                  ),
+                ),
+                aiModel = GeminiAiModel(
+                  apiKey = System.getenv("gemini_api_key")!!,
+                ),
+              )
+            )
+          } else {
+            RoborazziOptions.CompareOptions()
+          }
+        )
+      )
   }
 
   @Test
@@ -164,7 +198,8 @@ class ManualTest {
 
   @Test
   fun captureRoboImageSampleWithQuery() {
-    val filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_view.png"
+    val filePath =
+      "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_view.png"
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = filePath,
