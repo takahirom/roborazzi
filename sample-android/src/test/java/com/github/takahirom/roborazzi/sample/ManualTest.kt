@@ -21,6 +21,7 @@ import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
 import com.github.takahirom.roborazzi.AiCompareOptions
 import com.github.takahirom.roborazzi.Dump
+import com.github.takahirom.roborazzi.GeminiAiModel
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -28,7 +29,6 @@ import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureRoboLastImage
-import com.github.takahirom.roborazzi.loadRoboAi
 import com.github.takahirom.roborazzi.roboOutputName
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.withComposeTestTag
@@ -61,8 +61,6 @@ class ManualTest {
   @Test
   @Config
   fun captureWithAi() {
-    loadRoboAi()
-
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         roborazziOptions = RoborazziOptions(
@@ -79,7 +77,7 @@ class ManualTest {
                     requiredFulfillmentPercent = 90,
                   ),
                 ),
-                aiModel = AiCompareOptions.AiModel.Gemini(
+                aiModel = GeminiAiModel(
                   apiKey = System.getenv("gemini_api_key")!!,
                 ),
               )
