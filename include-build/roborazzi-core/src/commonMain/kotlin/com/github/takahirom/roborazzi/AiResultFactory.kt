@@ -6,5 +6,3 @@ fun interface AiComparisonResultFactory {
     aiCompareOptions: AiCompareOptions
   ): AiComparisonResult
 }
-
-var aiComparisonResultFactory: AiComparisonResultFactory? = null

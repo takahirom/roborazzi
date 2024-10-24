@@ -25,11 +25,6 @@ INPUT_PROMPT
   },
 ) {
   interface AiModel {
-    data class Gemini(
-      val apiKey: String,
-      val modelName: String = "gemini-1.5-pro"
-    ) : AiModel
-
     /**
      * You can use this model if you want to use other models.
      */
