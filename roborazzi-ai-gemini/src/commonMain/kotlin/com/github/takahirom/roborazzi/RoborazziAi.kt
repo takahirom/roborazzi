@@ -1,4 +1,5 @@
 @file:JvmName("RoborazziAi")
+
 package com.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.AiCompareOptions.AiModel
@@ -13,9 +14,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmName
 
-data class GeminiAiModel(
-  val apiKey: String,
-  val modelName: String = "gemini-1.5-pro"
+class GeminiAiModel(
+  private val apiKey: String,
+  private val modelName: String = "gemini-1.5-pro"
 ) : AiModel, AiComparisonResultFactory {
   override fun invoke(
     comparisonImageFilePath: String,
