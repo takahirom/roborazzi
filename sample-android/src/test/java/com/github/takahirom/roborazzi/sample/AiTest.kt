@@ -44,7 +44,7 @@ class AiTest {
   )
 
   @Test
-  fun captureWithAi2() {
+  fun captureWithAi() {
     ROBORAZZI_DEBUG = true
     if (System.getenv("gemini_api_key") == null) {
       println("Skip the test because gemini_api_key is not set.")
