@@ -43,8 +43,8 @@ jobs:
       - name: Process dependency diff reports
         id: process-diff
         run: |
-          report_library_exists_diff=$(grep 'exists-diff=' dependency-diff/outputs/report-library.txt | cut -d'=' -f2)
-          report_plugin_exists_diff=$(grep 'exists-diff=' dependency-diff/outputs/report-plugin.txt | cut -d'=' -f2)
+          report_library_exists_diff=$(grep 'exists-diff=' dependency-diff/report-library.txt | cut -d'=' -f2)
+          report_plugin_exists_diff=$(grep 'exists-diff=' dependency-diff/report-plugin.txt | cut -d'=' -f2)
 
           echo "report_library_exists_diff=$report_library_exists_diff" >> $GITHUB_ENV
           echo "report_plugin_exists_diff=$report_plugin_exists_diff" >> $GITHUB_ENV
