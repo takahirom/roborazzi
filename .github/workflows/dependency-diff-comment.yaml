@@ -18,7 +18,8 @@ jobs:
       actions: read
       contents: write
       pull-requests: write
-
+    env:
+      LOG_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
     steps:
       - name: Download PR number artifact
         uses: dawidd6/action-download-artifact@v2
