@@ -48,14 +48,14 @@ jobs:
           echo ${{ github.event.number }} > pr/NR
 
       - name: Upload Dependency Diff Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
           name: dependency-diff
           path: outputs/
           retention-days: 30
 
       - name: Upload PR Number Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
           name: pr
           path: pr/
