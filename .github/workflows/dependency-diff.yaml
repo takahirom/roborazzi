@@ -14,31 +14,51 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 19
-      - uses: yumemi-inc/gradle-dependency-diff-report@v2
+      - name: Generate dependency diff report for library
+        uses: yumemi-inc/gradle-dependency-diff-report@v2
         id: report-library
         with:
           configuration: 'releaseRuntimeClasspath'
           modules: |
-           roborazzi-compose-ios|commonMainImplementationDependenciesMetadata
-           roborazzi-compose-desktop|commonMainImplementationDependenciesMetadata
-           roborazzi
-           roborazzi-compose
-           roborazzi-compose-preview-scanner-support
-      - uses: yumemi-inc/gradle-dependency-diff-report@v2
+            roborazzi-compose-ios|commonMainImplementationDependenciesMetadata
+            roborazzi-compose-desktop|commonMainImplementationDependenciesMetadata
+            roborazzi
+            roborazzi-compose
+            roborazzi-compose-preview-scanner-support
+
+      - name: Save report-library outputs
+        run: |
+          mkdir -p outputs
+          echo "exists-diff=${{ steps.report-library.outputs.exists-diff }}" > outputs/report-library.txt
+
+      - name: Generate dependency diff report for plugin
+        uses: yumemi-inc/gradle-dependency-diff-report@v2
         id: report-plugin
         with:
           modules: 'roborazzi-gradle-plugin'
           configuration: 'runtimeClasspath'
           project-dir: 'include-build'
-      - name: Comment library
-        if: steps.report-library.outputs.exists-diff == 'true' || failure()
-        uses: yumemi-inc/comment-pull-request@v1
+
+      - name: Save report-plugin outputs
+        run: |
+          echo "exists-diff=${{ steps.report-plugin.outputs.exists-diff }}" > outputs/report-plugin.txt
+
+      - name: Save PR number
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          mkdir -p pr
+          echo ${{ github.event.number }} > pr/NR
+
+      - name: Upload Dependency Diff Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          comment: ':warning: There are differences in library dependencies. See details [here](${{ env.LOG_URL }}).'
-          comment-if-failure: ':exclamation: Report workflow failed. See details [here](${{ env.LOG_URL }}).'
-      - name: Comment plugin
-        if: steps.report-plugin.outputs.exists-diff == 'true' || failure()
-        uses: yumemi-inc/comment-pull-request@v1
+          name: dependency-diff
+          path: outputs/
+          retention-days: 30
+
+      - name: Upload PR Number Artifact
+        uses: actions/upload-artifact@v4
         with:
-          comment: ':warning: There are differences in plugin dependencies. See details [here](${{ env.LOG_URL }}).'
-          comment-if-failure: ':exclamation: Report workflow failed. See details [here](${{ env.LOG_URL }}).'
+          name: pr
+          path: pr/
+          retention-days: 30
