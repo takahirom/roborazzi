@@ -1,0 +1,44 @@
+name: Dependency Diff Report
+
+on: pull_request
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      LOG_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3.13.0
+        with:
+          distribution: 'zulu'
+          java-version: 19
+      - uses: yumemi-inc/gradle-dependency-diff-report@v2
+        id: report-library
+        with:
+          configuration: 'releaseRuntimeClasspath'
+          modules: |
+           roborazzi-compose-ios|commonMainImplementationDependenciesMetadata
+           roborazzi-compose-desktop|commonMainImplementationDependenciesMetadata
+           roborazzi
+           roborazzi-compose
+           roborazzi-compose-preview-scanner-support
+      - uses: yumemi-inc/gradle-dependency-diff-report@v2
+        id: report-plugin
+        with:
+          modules: 'roborazzi-gradle-plugin'
+          configuration: 'runtimeClasspath'
+          project-dir: 'include-build'
+      - name: Comment library
+        if: steps.report-library.outputs.exists-diff == 'true' || failure()
+        uses: yumemi-inc/comment-pull-request@v1
+        with:
+          comment: ':warning: There are differences in dependencies. See details [here](${{ env.LOG_URL }}).'
+          comment-if-failure: ':exclamation: Report workflow failed. See details [here](${{ env.LOG_URL }}).'
+      - name: Comment plugin
+        if: steps.report-plugin.outputs.exists-diff == 'true' || failure()
+        uses: yumemi-inc/comment-pull-request@v1
+        with:
+          comment: ':warning: There are differences in dependencies. See details [here](${{ env.LOG_URL }}).'
+          comment-if-failure: ':exclamation: Report workflow failed. See details [here](${{ env.LOG_URL }}).'
