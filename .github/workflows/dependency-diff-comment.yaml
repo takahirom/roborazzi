@@ -22,7 +22,7 @@ jobs:
       LOG_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
     steps:
       - name: Download PR number artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
         with:
           name: pr
           run_id: ${{ github.event.workflow_run.id }}
@@ -34,7 +34,7 @@ jobs:
           echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
 
       - name: Download dependency diff artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
         with:
           name: dependency-diff
           run_id: ${{ github.event.workflow_run.id }}
