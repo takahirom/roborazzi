@@ -41,7 +41,7 @@ squareup-okhttp = "5.0.0-alpha.11"
 kotlinx-io = "0.3.3"
 webjar-material-design-icons = "4.0.0"
 webjar-materialize = "1.0.0"
-webjars-locator-lite = "0.0.4"
+webjars-locator-lite = "0.0.6"
 
 composable-preview-scanner = "0.3.2"
 
