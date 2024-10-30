@@ -35,7 +35,7 @@ class OpenAiTest {
         compareOptions = RoborazziOptions.CompareOptions(
           aiCompareOptions = AiCompareOptions(
             aiModel = OpenAiAiModel(
-              apiKey = System.getenv("openai_api_key")!!,
+              apiKey = System.getenv("openai_api_key").orEmpty(),
               modelName = "gpt-4o",
             ),
           )
