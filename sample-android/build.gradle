@@ -46,6 +46,9 @@ android {
         if (localProperties.getProperty("gemini_api_key") != null) {
           environment "gemini_api_key", localProperties.getProperty("gemini_api_key")
         }
+        if (localProperties.getProperty("openai_api_key") != null) {
+          environment "openai_api_key", localProperties.getProperty("openai_api_key")
+        }
         // To run coverage report in Android Studio
         jvmArgs '-noverify'
         // Set the max heap size for the tests JVM(s)
@@ -58,6 +61,7 @@ android {
 dependencies {
   testImplementation project(":roborazzi")
   testImplementation project(":roborazzi-ai-gemini")
+  testImplementation(project(":roborazzi-ai-openai"))
   testImplementation project(":roborazzi-compose")
   testImplementation project(":roborazzi-junit-rule")
 
