@@ -1,0 +1,66 @@
+name: Dependency Diff Comment
+
+on:
+  workflow_run:
+    workflows: ["Dependency Diff Report"]
+    types:
+      - completed
+
+jobs:
+  comment-dependency-diff:
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+    env:
+      LOG_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+    steps:
+      - name: Download PR number artifact
+        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
+        with:
+          name: pr
+          run_id: ${{ github.event.workflow_run.id }}
+
+      - name: Get pull request number
+        id: get-pr-number
+        run: |
+          PR_NUMBER=$(cat NR)
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+
+      - name: Download dependency diff artifacts
+        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
+        with:
+          name: dependency-diff
+          run_id: ${{ github.event.workflow_run.id }}
+          path: dependency-diff
+
+      - name: Process dependency diff reports
+        id: process-diff
+        run: |
+          report_library_exists_diff=$(grep 'exists-diff=' dependency-diff/report-library.txt | cut -d'=' -f2)
+          report_plugin_exists_diff=$(grep 'exists-diff=' dependency-diff/report-plugin.txt | cut -d'=' -f2)
+
+          echo "report_library_exists_diff=$report_library_exists_diff" >> $GITHUB_ENV
+          echo "report_plugin_exists_diff=$report_plugin_exists_diff" >> $GITHUB_ENV
+
+      - name: Comment on PR for library
+        if: env.report_library_exists_diff == 'true' || failure()
+        uses: yumemi-inc/comment-pull-request@v1
+        with:
+          pull-request-number: ${{ env.PR_NUMBER }}
+          comment: ':warning: There are differences in library dependencies. See details [here](${{ env.LOG_URL }}).'
+          comment-if-failure: ':exclamation: Report workflow failed. See details [here](${{ env.LOG_URL }}).'
+
+      - name: Comment on PR for plugin
+        if: env.report_plugin_exists_diff == 'true' || failure()
+        uses: yumemi-inc/comment-pull-request@v1
+        with:
+          pull-request-number: ${{ env.PR_NUMBER }}
+          comment: ':warning: There are differences in plugin dependencies. See details [here](${{ env.LOG_URL }}).'
+          comment-if-failure: ':exclamation: Report workflow failed. See details [here](${{ env.LOG_URL }}).'
