@@ -5,7 +5,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.AiCompareOptions
-import com.github.takahirom.roborazzi.GeminiAiModel
+import com.github.takahirom.roborazzi.OpenAiAiModel
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -24,7 +24,7 @@ import org.robolectric.annotation.GraphicsMode
   sdk = [30],
   qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
-class AiTest {
+class OpenAiTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
@@ -34,8 +34,9 @@ class AiTest {
       roborazziOptions = RoborazziOptions(
         compareOptions = RoborazziOptions.CompareOptions(
           aiCompareOptions = AiCompareOptions(
-            aiModel = GeminiAiModel(
-              apiKey = System.getenv("gemini_api_key") ?: ""
+            aiModel = OpenAiAiModel(
+              apiKey = System.getenv("openai_api_key")!!,
+              modelName = "gpt-4o",
             ),
           )
         )
@@ -44,10 +45,10 @@ class AiTest {
   )
 
   @Test
-  fun captureWithAi() {
+  fun captureWithAi2() {
     ROBORAZZI_DEBUG = true
-    if (System.getenv("gemini_api_key") == null) {
-      println("Skip the test because gemini_api_key is not set.")
+    if (System.getenv("openai_api_key") == null) {
+      println("Skip the test because openai_api_key is not set.")
       return
     }
     onView(ViewMatchers.isRoot())

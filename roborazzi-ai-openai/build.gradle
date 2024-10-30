@@ -26,8 +26,13 @@ kotlin {
     commonMain {
       dependencies {
         implementation "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
-        implementation libs.generativeai.google
         implementation(libs.kotlinx.coroutines.core)
+        implementation(libs.ktor.serialization.json)
+        api(libs.ktor.client.core)
+        implementation(libs.ktor.client.cio)
+        implementation(libs.ktor.client.logging)
+        implementation(libs.ktor.client.contentnegotiation)
+        implementation(libs.kotlinx.io.core)
         implementation(libs.kotlinx.serialization.json)
       }
     }
@@ -42,7 +47,7 @@ kotlin {
 }
 
 android {
-  namespace 'com.github.takahirom.roborazzi.ai.gemini'
+  namespace 'com.github.takahirom.roborazzi.ai.openai'
   compileSdk 34
 
   defaultConfig {

@@ -1,5 +1,3 @@
-@file:JvmName("RoborazziAi")
-
 package com.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.AiCompareOptions.AiModel
@@ -12,7 +10,6 @@ import dev.shreyaspatil.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.jvm.JvmName
 
 class GeminiAiModel(
   private val apiKey: String,
