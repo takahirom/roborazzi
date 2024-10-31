@@ -39,7 +39,7 @@ jobs:
           ./gradlew sample-android:compareRoborazziDebug --stacktrace
           # Check if there are difference with sample-android/build/outputs/roborazzi/test_compare.png
           find sample-android/build/outputs/roborazzi
-          file_path="sample-android/build/outputs/roborazzi/com.github.takahirom.roborazzi.sample.ManualTest.captureScreenLevelImageWithEspresso_compare.webp"
+          file_path="sample-android/build/outputs/roborazzi/com.github.takahirom.roborazzi.sample.ManualTest.captureScreenLevelImageWithEspresso_compare.png"
           if [ ! -f "$file_path" ]; then
             echo "Error: File $file_path not found."
            exit 1
