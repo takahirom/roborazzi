@@ -55,7 +55,7 @@ dependencies {
   testImplementation libs.androidx.compose.ui.test.junit4
   debugImplementation libs.androidx.compose.ui.test.manifest
   implementation libs.androidx.activity.compose
-  testImplementation("com.twelvemonkeys.imageio:imageio-webp:3.9.4")
+  testImplementation("io.github.darkxanter:webp-imageio:0.3.0")
 
   implementation libs.androidx.core.ktx
   implementation libs.androidx.appcompat
