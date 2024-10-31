@@ -231,15 +231,16 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       // ignore
     }
     val scaledBufferedImage = croppedImage.scale(resizeScale)
+    val imageExtension = file.extension.ifBlank { "png" }
     if (contextData.isEmpty()) {
       ImageIO.write(
         scaledBufferedImage,
-        "png",
+        imageExtension,
         file
       )
       return
     }
-    val writer = getWriter(croppedImage, "png")
+    val writer = getWriter(croppedImage, imageExtension)
     val meta = writer.writeMetadata(contextData)
     writer.output = ImageIO.createImageOutputStream(file)
     writer.write(IIOImage(scaledBufferedImage, null, meta))
@@ -266,9 +267,9 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
 
   private fun getWriter(renderedImage: RenderedImage, extension: String): ImageWriter {
     val typeSpecifier = ImageTypeSpecifier.createFromRenderedImage(renderedImage)
-    val var3: Iterator<*> = ImageIO.getImageWriters(typeSpecifier, extension)
-    return if (var3.hasNext()) {
-      var3.next() as ImageWriter
+    val iterator: Iterator<*> = ImageIO.getImageWriters(typeSpecifier, extension)
+    return if (iterator.hasNext()) {
+      iterator.next() as ImageWriter
     } else {
       throw IllegalArgumentException("No ImageWriter found for $extension")
     }

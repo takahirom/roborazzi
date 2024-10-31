@@ -153,7 +153,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           val outputDirFile = outputDir.get().asFile
           if (outputDirFile.exists()) {
             outputDirFile.walkTopDown().forEach { file ->
-              if (file.name.endsWith(".png") || file.name.endsWith(".gif")) {
+              if (file.name.endsWith(".png") || file.name.endsWith(".webp") || file.name.endsWith(".gif")) {
                 file.delete()
               }
             }
@@ -162,7 +162,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           val intermediateDirFile = intermediateDirForEachVariant.get().asFile
           if (intermediateDirFile.exists()) {
             intermediateDirFile.walkTopDown().forEach { file ->
-              if (file.name.endsWith(".png") || file.name.endsWith(".gif")) {
+              if (file.name.endsWith(".png") || file.name.endsWith(".webp")|| file.name.endsWith(".gif")) {
                 file.delete()
               }
             }

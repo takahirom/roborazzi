@@ -33,7 +33,7 @@ import java.util.*
 
 
 fun ViewInteraction.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
@@ -59,7 +59,7 @@ fun ViewInteraction.captureRoboImage(
 }
 
 fun View.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
@@ -116,7 +116,7 @@ fun View.captureRoboImage(
  */
 @ExperimentalRoborazziApi
 fun captureScreenRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
@@ -165,7 +165,7 @@ fun captureScreenRoboImage(
 }
 
 fun Bitmap.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
@@ -225,7 +225,7 @@ fun ViewInteraction.captureRoboGif(
 }
 
 fun ViewInteraction.captureRoboLastImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
 ) {
@@ -261,7 +261,7 @@ fun ViewInteraction.captureRoboAllImage(
 }
 
 fun SemanticsNodeInteraction.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return

@@ -15,7 +15,7 @@ import java.io.File
 context(DesktopComposeUiTest)
 @OptIn(ExperimentalTestApi::class)
 fun SemanticsNodeInteraction.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) {
@@ -57,7 +57,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
 }
 
 fun ImageBitmap.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) {
