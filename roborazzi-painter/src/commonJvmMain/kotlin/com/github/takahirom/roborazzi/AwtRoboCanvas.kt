@@ -249,7 +249,10 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
   private fun ImageWriter.writeMetadata(
     contextData: Map<String, Any>
   ): IIOMetadata? {
-    val meta = getDefaultImageMetadata(ImageTypeSpecifier(croppedImage), null)
+    val meta = getDefaultImageMetadata(ImageTypeSpecifier(croppedImage), null) ?: run {
+      // If we use WebP, it seems that we can't get the metadata
+      return null
+    }
 
     val root = IIOMetadataNode(IIOMetadataFormatImpl.standardMetadataFormatName)
     contextData.forEach { (key, value) ->
