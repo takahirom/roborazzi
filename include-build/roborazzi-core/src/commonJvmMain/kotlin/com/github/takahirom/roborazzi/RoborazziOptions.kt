@@ -129,7 +129,11 @@ data class RoborazziOptions(
     )
 
     companion object {
-      val DefaultImageComparator = SimpleImageComparator(maxDistance = 0.07F)
+      val DefaultImageComparator = SimpleImageComparator(
+        maxDistance = 0.07F,
+        hShift = 2,
+        vShift = 2,
+      )
       val DefaultResultValidator = ThresholdValidator(0F)
     }
   }
