@@ -230,9 +230,9 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     val scaledBufferedImage = croppedImage.scale(resizeScale)
     (platformRecordOptions as JvmPlatformRecordOptions)
       .awtImageWriter.write(
-        dest = file,
+        destFile = file,
         contextData = contextData,
-        bufferedImage = scaledBufferedImage
+        image = scaledBufferedImage
       )
   }
 
