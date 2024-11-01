@@ -117,7 +117,7 @@ fun processOutputImageAndReportWithDefaults(
       AwtRoboCanvas.load(
         file = file,
         bufferedImageType = bufferedImageType,
-        platformRecordOptions = roborazziOptions.recordOptions.platformRecordOptions
+        imageIoFormat = roborazziOptions.recordOptions.imageIoFormat
       )
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->

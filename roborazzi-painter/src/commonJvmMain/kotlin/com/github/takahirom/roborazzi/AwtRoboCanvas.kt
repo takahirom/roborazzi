@@ -215,7 +215,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     path: String,
     resizeScale: Double,
     contextData: Map<String, Any>,
-    platformRecordOptions: PlatformRecordOptions
+    imageIoFormat: ImageIoFormat,
   ) {
     val file = File(path)
     drawPendingDraw()
@@ -228,7 +228,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       // ignore
     }
     val scaledBufferedImage = croppedImage.scale(resizeScale)
-    (platformRecordOptions as JvmPlatformRecordOptions)
+    (imageIoFormat as JvmImageIoFormat)
       .awtImageWriter.write(
         destFile = file,
         contextData = contextData,
@@ -270,8 +270,8 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
   }
 
   companion object {
-    fun load(file: File, bufferedImageType: Int, platformRecordOptions: PlatformRecordOptions): AwtRoboCanvas {
-      val loadedImage: BufferedImage = (platformRecordOptions as JvmPlatformRecordOptions).awtImageLoader.load(file)
+    fun load(file: File, bufferedImageType: Int, imageIoFormat: ImageIoFormat): AwtRoboCanvas {
+      val loadedImage: BufferedImage = (imageIoFormat as JvmImageIoFormat).awtImageLoader.load(file)
       val awtRoboCanvas = AwtRoboCanvas(
         loadedImage.width,
         height = loadedImage.height,

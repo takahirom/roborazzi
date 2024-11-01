@@ -120,7 +120,7 @@ fun processOutputImageAndReport(
           path = comparisonFile.absolutePath,
           resizeScale = resizeScale,
           contextData = contextData,
-          platformRecordOptions = recordOptions.platformRecordOptions,
+          imageIoFormat = recordOptions.imageIoFormat,
         )
       debugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
@@ -142,7 +142,7 @@ fun processOutputImageAndReport(
           path = actualFile.absolutePath,
           resizeScale = resizeScale,
           contextData = contextData,
-          platformRecordOptions = recordOptions.platformRecordOptions,
+          imageIoFormat = recordOptions.imageIoFormat,
         )
       debugLog {
         "processOutputImageAndReport(): actualCanvas is saved " +
@@ -189,7 +189,7 @@ fun processOutputImageAndReport(
       path = goldenFile.absolutePath,
       resizeScale = resizeScale,
       contextData = contextData,
-      platformRecordOptions = recordOptions.platformRecordOptions,
+      imageIoFormat = recordOptions.imageIoFormat,
     )
     debugLog {
       "processOutputImageAndReport: \n" +
