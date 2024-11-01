@@ -22,7 +22,6 @@ dependencies {
   compileOnly libs.androidx.compose.ui.test.junit4
 
   compileOnly libs.robolectric
-  implementation libs.androidx.core.ktx
   api libs.dropbox.differ
 
   api libs.androidx.test.espresso.core

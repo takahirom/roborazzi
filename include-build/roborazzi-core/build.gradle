@@ -53,6 +53,7 @@ kotlin {
     commonJvmMain {
       dependencies {
         implementation libs.junit
+        compileOnly(libs.webp.imageio)
       }
     }
     commonJvmTest {
