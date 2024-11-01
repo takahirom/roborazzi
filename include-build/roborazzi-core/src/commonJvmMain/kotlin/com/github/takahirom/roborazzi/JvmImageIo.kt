@@ -16,17 +16,17 @@ import javax.imageio.stream.FileImageOutputStream
 
 fun interface AwtImageWriter {
   fun write(
-    dest: File,
+    destFile: File,
     contextData: Map<String, Any>,
-    bufferedImage: BufferedImage
+    image: BufferedImage
   )
 }
 
 fun interface AwtImageLoader {
-  fun load(file: File): BufferedImage
+  fun load(inputFile: File): BufferedImage
 }
 
-open class JvmPlatformRecordOptions(
+data class JvmPlatformRecordOptions(
   val awtImageWriter: AwtImageWriter = AwtImageWriter { file, contextData, bufferedImage ->
     val imageExtension = file.extension.ifBlank { "png" }
     if (contextData.isEmpty()) {
@@ -42,7 +42,7 @@ open class JvmPlatformRecordOptions(
     writer.output = ImageIO.createImageOutputStream(file)
     writer.write(IIOImage(bufferedImage, null, meta))
   },
-  var awtImageLoader: AwtImageLoader = AwtImageLoader { ImageIO.read(it) }
+  val awtImageLoader: AwtImageLoader = AwtImageLoader { ImageIO.read(it) }
 ) : PlatformRecordOptions
 
 
