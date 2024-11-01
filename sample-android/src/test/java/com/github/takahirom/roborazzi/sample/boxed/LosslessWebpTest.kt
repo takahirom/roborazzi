@@ -13,7 +13,7 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.captureRoboImage
-import com.github.takahirom.roborazzi.losslessWebPSaver
+import com.github.takahirom.roborazzi.losslessWebPWriter
 import com.github.takahirom.roborazzi.nameWithoutExtension
 import com.github.takahirom.roborazzi.provideRoborazziContext
 import com.github.takahirom.roborazzi.sample.MainActivity
@@ -37,7 +37,7 @@ class LosslessWebpTest {
   val composeTestRule = createAndroidComposeRule<MainActivity>()
   val recordOptions = RoborazziOptions.RecordOptions(
     platformRecordOptions = JvmPlatformRecordOptions(
-      awtImageWriter = losslessWebPSaver()
+      awtImageWriter = losslessWebPWriter()
     )
   )
 

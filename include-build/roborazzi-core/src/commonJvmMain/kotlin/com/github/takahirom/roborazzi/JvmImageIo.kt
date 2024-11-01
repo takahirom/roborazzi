@@ -84,7 +84,7 @@ fun ImageWriter.writeMetadata(
 /**
  * Add testImplementation("io.github.darkxanter:webp-imageio:0.3.0") to use this
  */
-fun losslessWebPSaver(): AwtImageWriter =
+fun losslessWebPWriter(): AwtImageWriter =
   AwtImageWriter { file, context, bufferedImage ->
     val writer: ImageWriter =
       ImageIO.getImageWritersByMIMEType("image/webp").next()
