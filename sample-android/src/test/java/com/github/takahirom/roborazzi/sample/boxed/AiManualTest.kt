@@ -3,9 +3,9 @@ package com.github.takahirom.roborazzi.sample.boxed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.AiCompareOptions
-import com.github.takahirom.roborazzi.AiComparisonResult
-import com.github.takahirom.roborazzi.AiConditionResult
+import com.github.takahirom.roborazzi.AiAssertionOptions
+import com.github.takahirom.roborazzi.AiAssertionResult
+import com.github.takahirom.roborazzi.AiAssertionResults
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -56,26 +56,27 @@ class AiManualTest {
     // Even compare task, it will be failed because of the manual AI model.
     taskType = RoborazziTaskType.Compare,
     compareOptions = RoborazziOptions.CompareOptions(
-      aiCompareOptions = AiCompareOptions(
-        aiModel = object : AiCompareOptions.AiModel.Manual {
-          override fun invoke(
+      aiAssertionOptions = AiAssertionOptions(
+        aiAssertionModel = object : AiAssertionOptions.AiAssertionModel {
+          override fun assert(
             comparisonImageFilePath: String,
-            aiCompareOptions: AiCompareOptions
-          ): AiComparisonResult {
-            return AiComparisonResult(
-              aiConditionResults = aiCompareOptions.aiConditions.map {
-                AiConditionResult(
-                  assertPrompt = it.assertPrompt,
+            aiAssertionOptions: AiAssertionOptions
+          ): AiAssertionResults {
+            return AiAssertionResults(
+              aiAssertionResults = aiAssertionOptions.aiAssertions.map { assertion ->
+                AiAssertionResult(
+                  assertPrompt = assertion.assertPrompt,
                   fulfillmentPercent = fulfillmentPercent,
-                  requiredFulfillmentPercent = it.requiredFulfillmentPercent,
+                  requiredFulfillmentPercent = assertion.requiredFulfillmentPercent,
+                  failIfNotFulfilled = assertion.failIfNotFulfilled,
                   explanation = "This is a manual test.",
                 )
               }
             )
           }
         },
-        aiConditions = listOf(
-          AiCompareOptions.AiCondition(
+        aiAssertions = listOf(
+          AiAssertionOptions.AiAssertion(
             assertPrompt = "it should have PREVIOUS button",
             requiredFulfillmentPercent = 90,
           ),

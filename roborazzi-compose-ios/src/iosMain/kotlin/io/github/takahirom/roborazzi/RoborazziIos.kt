@@ -523,7 +523,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
-          aiComparisonResult = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -541,7 +541,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
           diffPercentage = Float.NaN,
-          aiComparisonResult = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -568,7 +568,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
-          aiComparisonResult = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -586,7 +586,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
           diffPercentage = Float.NaN,
-          aiComparisonResult = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -613,7 +613,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
-          aiComparisonResult = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -631,7 +631,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
           diffPercentage = Float.NaN,
-          aiComparisonResult = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -658,7 +658,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
-          aiComparisonResult = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -676,7 +676,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
           diffPercentage = Float.NaN,
-          aiComparisonResult = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
