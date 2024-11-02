@@ -3,10 +3,11 @@ package com.github.takahirom.roborazzi
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.logging.SIMPLE
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -43,10 +44,13 @@ class OpenAiAiModel(
     // log
     if (loggingEnabled) {
       install(Logging) {
-        logger = Logger.DEFAULT
+        logger = Logger.SIMPLE
         level = LogLevel.ALL
       }
     }
+  },
+  private val requestBuilderModifier: (HttpRequestBuilder.() -> Unit) = {
+    header("Authorization", "Bearer $apiKey")
   }
 ) : AiCompareOptions.AiModel, AiComparisonResultFactory {
 
@@ -59,22 +63,30 @@ class OpenAiAiModel(
     val inputPrompt = aiCompareOptions.inputPrompt(aiCompareOptions)
     val imageBytes = readByteArrayFromFile(comparisonImageFilePath)
     val imageBase64 = imageBytes.encodeBase64()
-    val contentList = listOf(
-      Content(
-        type = "text",
-        text = systemPrompt + "\n" + template.replace("INPUT_PROMPT", inputPrompt)
-      ),
-      Content(
-        type = "image_url",
-        imageUrl = ImageUrl(
-          url = "data:image/png;base64,$imageBase64"
-        )
-      )
-    )
     val messages = listOf(
       Message(
+        role = "system",
+        content = listOf(
+          Content(
+            type = "text",
+            text = systemPrompt
+          )
+        ),
+      ),
+      Message(
         role = "user",
-        content = contentList
+        content = listOf(
+          Content(
+            type = "text",
+            text = template.replace("INPUT_PROMPT", inputPrompt)
+          ),
+          Content(
+            type = "image_url",
+            imageUrl = ImageUrl(
+              url = "data:image/png;base64,$imageBase64"
+            )
+          )
+        )
       )
     )
     val responseText = runBlocking {
@@ -110,11 +122,13 @@ class OpenAiAiModel(
       seed = 1566
     )
     val response: HttpResponse = httpClient.post(baseUrl + "chat/completions") {
-      header("Authorization", "Bearer $apiKey")
+      requestBuilderModifier()
       contentType(ContentType.Application.Json)
       setBody(requestBody)
     }
-    val responseBody: ChatCompletionResponse = json.decodeFromString(response.bodyAsText())
+    val bodyText = response.bodyAsText()
+    debugLog { "OpenAiAiModel: response: $bodyText" }
+    val responseBody: ChatCompletionResponse = json.decodeFromString(bodyText)
     return responseBody.choices.firstOrNull()?.message?.content ?: ""
   }
 
