@@ -30,11 +30,18 @@ import kotlinx.serialization.json.jsonObject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-class OpenAiAiModel(
+class OpenAiAiAssertionModel(
   private val apiKey: String,
   private val modelName: String = "gpt-4o",
   private val baseUrl: String = "https://api.openai.com/v1/",
   private val loggingEnabled: Boolean = false,
+  private val temperature: Float = 0.4F,
+  private val maxTokens: Int = 300,
+  private val seed: Int = 1566,
+  private val requestBuilderModifier: (HttpRequestBuilder.() -> Unit) = {
+    header("Authorization", "Bearer $apiKey")
+  }
+) : AiAssertionOptions.AiAssertionModel {
   private val httpClient: HttpClient = HttpClient {
     install(ContentNegotiation) {
       json(
@@ -48,19 +55,15 @@ class OpenAiAiModel(
         level = LogLevel.ALL
       }
     }
-  },
-  private val requestBuilderModifier: (HttpRequestBuilder.() -> Unit) = {
-    header("Authorization", "Bearer $apiKey")
   }
-) : AiCompareOptions.AiModel, AiComparisonResultFactory {
 
-  override fun invoke(
+  override fun assert(
     comparisonImageFilePath: String,
-    aiCompareOptions: AiCompareOptions
-  ): AiComparisonResult {
-    val systemPrompt = aiCompareOptions.systemPrompt
-    val template = aiCompareOptions.promptTemplate
-    val inputPrompt = aiCompareOptions.inputPrompt(aiCompareOptions)
+    aiAssertionOptions: AiAssertionOptions
+  ): AiAssertionResults {
+    val systemPrompt = aiAssertionOptions.systemPrompt
+    val template = aiAssertionOptions.promptTemplate
+    val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
     val imageBytes = readByteArrayFromFile(comparisonImageFilePath)
     val imageBase64 = imageBytes.encodeBase64()
     val messages = listOf(
@@ -92,34 +95,32 @@ class OpenAiAiModel(
     val responseText = runBlocking {
       chatCompletion(
         messages = messages,
-        apiKey = apiKey,
         model = modelName
       )
     }
     debugLog {
       "OpenAiAiModel: response: $responseText"
     }
-    val aiConditionResults = parseOpenAiResponse(responseText, aiCompareOptions)
-    return AiComparisonResult(
-      aiConditionResults = aiConditionResults
+    val aiConditionResults = parseOpenAiResponse(responseText, aiAssertionOptions)
+    return AiAssertionResults(
+      aiAssertionResults = aiConditionResults
     )
   }
 
   private suspend fun chatCompletion(
     messages: List<Message>,
-    apiKey: String,
     model: String
   ): String {
     val requestBody = ChatCompletionRequest(
       model = model,
       messages = messages,
-      temperature = 0.7F,
-      maxTokens = 100,
+      temperature = temperature,
+      maxTokens = maxTokens,
       responseFormat = ResponseFormat(
         type = "json_schema",
         jsonSchema = buildJsonSchema(),
       ),
-      seed = 1566
+      seed = seed
     )
     val response: HttpResponse = httpClient.post(baseUrl + "chat/completions") {
       requestBuilderModifier()
@@ -171,12 +172,12 @@ class OpenAiAiModel(
 
 private fun parseOpenAiResponse(
   responseText: String,
-  aiCompareOptions: AiCompareOptions
-): List<AiConditionResult> {
+  aiAssertionOptions: AiAssertionOptions
+): List<AiAssertionResult> {
   val openAiResult = try {
     val element = json.parseToJsonElement(responseText)
     val resultsElement = element.jsonObject["results"]
-    val results = if (resultsElement != null) {
+    val results = if (resultsElement!=null) {
       json.decodeFromJsonElement<List<OpenAiConditionResult>>(resultsElement)
     } else {
       emptyList()
@@ -186,13 +187,14 @@ private fun parseOpenAiResponse(
     debugLog { "Failed to parse OpenAI response: ${e.message}" }
     OpenAiResponse(results = emptyList())
   }
-  return aiCompareOptions.aiConditions.mapIndexed { index, condition ->
+  return aiAssertionOptions.aiAssertions.mapIndexed { index, condition ->
     val result = openAiResult.results.getOrNull(index)
     val fulfillmentPercent = result?.fulfillmentPercent ?: 0
     val explanation = result?.explanation ?: "AI model did not return a result for this assertion"
-    AiConditionResult(
+    AiAssertionResult(
       assertPrompt = condition.assertPrompt,
       requiredFulfillmentPercent = condition.requiredFulfillmentPercent,
+      failIfNotFulfilled = condition.failIfNotFulfilled,
       fulfillmentPercent = fulfillmentPercent,
       explanation = explanation,
     )
@@ -215,7 +217,7 @@ data class ChatCompletionRequest(
   val model: String,
   val messages: List<Message>,
   val temperature: Float,
-  @SerialName("max_tokens") val maxTokens: Int,
+  @SerialName("max_completion_tokens") val maxTokens: Int,
   @SerialName("response_format") val responseFormat: ResponseFormat?,
   val seed: Int,
 )

@@ -26,7 +26,7 @@ kotlin {
     commonMain {
       dependencies {
         implementation "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
-        implementation libs.generativeai.google
+        api libs.generativeai.google
         implementation(libs.kotlinx.coroutines.core)
         implementation(libs.kotlinx.serialization.json)
       }
