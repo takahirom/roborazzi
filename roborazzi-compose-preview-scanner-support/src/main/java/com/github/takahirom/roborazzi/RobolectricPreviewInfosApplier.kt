@@ -11,9 +11,14 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 fun ComposablePreview<AndroidPreviewInfo>.applyToRobolectricConfiguration() {
   val preview = this
 
-  RobolectricDeviceQualifierBuilder.build(preview.previewInfo.device)?.run {
-    setQualifiers(this)
+  fun setDevice(device: String){
+    if (device.isNotBlank()) {
+      RobolectricDeviceQualifierBuilder.build(device)?.run {
+        setQualifiers(this)
+      }
+    }
   }
+  setDevice(preview.previewInfo.device)
 
   fun setUiMode(uiMode: Int) {
     val nightMode =
