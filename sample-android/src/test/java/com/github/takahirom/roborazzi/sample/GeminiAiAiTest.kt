@@ -4,8 +4,8 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.AiCompareOptions
-import com.github.takahirom.roborazzi.GeminiAiModel
+import com.github.takahirom.roborazzi.AiAssertionOptions
+import com.github.takahirom.roborazzi.GeminiAiAssertionModel
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -33,8 +33,8 @@ class GeminiAiAiTest {
     options = RoborazziRule.Options(
       roborazziOptions = RoborazziOptions(
         compareOptions = RoborazziOptions.CompareOptions(
-          aiCompareOptions = AiCompareOptions(
-            aiModel = GeminiAiModel(
+          aiAssertionOptions = AiAssertionOptions(
+            aiAssertionModel = GeminiAiAssertionModel(
               apiKey = System.getenv("gemini_api_key") ?: ""
             ),
           )
@@ -52,12 +52,12 @@ class GeminiAiAiTest {
     }
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
-        roborazziOptions = provideRoborazziContext().options.addedCompareAiAssertions(
-          AiCompareOptions.AiCondition(
+        roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
+          AiAssertionOptions.AiAssertion(
             assertPrompt = "it should have PREVIOUS button",
             requiredFulfillmentPercent = 90,
           ),
-          AiCompareOptions.AiCondition(
+          AiAssertionOptions.AiAssertion(
             assertPrompt = "it should show First Fragment",
             requiredFulfillmentPercent = 90,
           )

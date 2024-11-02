@@ -36,7 +36,7 @@ class CaptureResultTest {
         actualFile = "/actual_file",
         goldenFile = "/golden_file",
         timestampNs = 123456789,
-        aiComparisonResult = null,
+        aiAssertionResults = null,
         contextData = mapOf(
           "key" to 2,
           "keyDouble" to 2.5,
@@ -48,7 +48,7 @@ class CaptureResultTest {
         actualFile = "/actual_file",
         timestampNs = 123456789,
         diffPercentage = 0.123f,
-        aiComparisonResult = null,
+        aiAssertionResults = null,
         contextData = mapOf("key" to Long.MAX_VALUE - 100),
       ),
       CaptureResult.Unchanged(
