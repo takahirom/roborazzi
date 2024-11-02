@@ -15,7 +15,7 @@ import javax.imageio.metadata.IIOMetadataNode
 import javax.imageio.stream.FileImageOutputStream
 
 @Suppress("FunctionName")
-actual fun WebPImageIoFormat(): ImageIoFormat {
+actual fun LosslessWebPImageIoFormat(): ImageIoFormat {
   return JvmImageIoFormat(
     awtImageWriter = losslessWebPWriter()
   )

@@ -1,7 +1,7 @@
 package com.github.takahirom.roborazzi
 
 @Suppress("FunctionName")
-actual fun WebPImageIoFormat(): ImageIoFormat {
+actual fun LosslessWebPImageIoFormat(): ImageIoFormat {
   TODO("NOT IMPLEMENTED YET")
 }
 

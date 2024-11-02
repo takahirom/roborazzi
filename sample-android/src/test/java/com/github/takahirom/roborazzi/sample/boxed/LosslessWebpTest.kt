@@ -11,7 +11,7 @@ import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziTaskType
-import com.github.takahirom.roborazzi.WebPImageIoFormat
+import com.github.takahirom.roborazzi.LosslessWebPImageIoFormat
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.nameWithoutExtension
 import com.github.takahirom.roborazzi.provideRoborazziContext
@@ -35,7 +35,7 @@ class LosslessWebpTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
   val recordOptions = RoborazziOptions.RecordOptions(
-    imageIoFormat = WebPImageIoFormat(),
+    imageIoFormat = LosslessWebPImageIoFormat(),
   )
 
   @Test
