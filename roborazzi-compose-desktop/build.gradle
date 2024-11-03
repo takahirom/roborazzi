@@ -13,7 +13,6 @@ kotlin {
     compilations
       .named("main")
     .configure { compilation ->
-      compilation.kotlinOptions.freeCompilerArgs  += "-Xcontext-receivers"
     }
   }
   sourceSets {

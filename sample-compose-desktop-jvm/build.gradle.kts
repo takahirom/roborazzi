@@ -39,6 +39,5 @@ compose.desktop {
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     incremental = false
-    freeCompilerArgs += "-Xcontext-receivers"
   }
 }
