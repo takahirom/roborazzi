@@ -1,5 +1,7 @@
 package com.github.takahirom.roborazzi
 
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultMaxOutputTokens
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -36,8 +38,8 @@ class OpenAiAiAssertionModel(
   private val modelName: String = "gpt-4o",
   private val baseUrl: String = "https://api.openai.com/v1/",
   private val loggingEnabled: Boolean = false,
-  private val temperature: Float = 0.4F,
-  private val maxTokens: Int = 300,
+  private val temperature: Float = DefaultTemperature,
+  private val maxTokens: Int = DefaultMaxOutputTokens,
   private val seed: Int = 1566,
   private val requestBuilderModifier: (HttpRequestBuilder.() -> Unit) = {
     header("Authorization", "Bearer $apiKey")
