@@ -29,9 +29,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
   )
 }
 
-private fun SemanticsNodeInteraction.captureRoboImage(
-  roborazziOptions: RoborazziOptions,
-  file: File
+fun SemanticsNodeInteraction.captureRoboImage(
+  file: File,
+  roborazziOptions: RoborazziOptions
 ) {
   if (!roborazziOptions.taskType.isEnabled()) {
     return
