@@ -9,7 +9,7 @@
 </div>
 <div name="topic_preview_support">
 </div>
-<div name="ai_powered_image_assertion">
+<div name="topic_ai_powered_image_assertion">
 </div>
 <div name="topic_idea_plugin">
 </div>
