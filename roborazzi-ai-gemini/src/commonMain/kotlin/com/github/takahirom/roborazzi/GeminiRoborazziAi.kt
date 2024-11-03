@@ -1,6 +1,8 @@
 package com.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultMaxOutputTokens
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
 import dev.shreyaspatil.ai.client.generativeai.type.FunctionType
 import dev.shreyaspatil.ai.client.generativeai.type.GenerationConfig
@@ -15,9 +17,10 @@ import kotlinx.serialization.Serializable
 @ExperimentalRoborazziApi
 class GeminiAiAssertionModel(
   private val apiKey: String,
-  private val modelName: String = "gemini-1.5-pro",
+  private val modelName: String = "gemini-1.5-flash",
   private val generationConfigBuilder: GenerationConfig.Builder.() -> Unit = {
-    maxOutputTokens = 8192
+    maxOutputTokens = DefaultMaxOutputTokens
+    temperature = DefaultTemperature
   }
 ) : AiAssertionModel {
   override fun assert(
