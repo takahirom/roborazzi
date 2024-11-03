@@ -26,6 +26,7 @@ kotlin {
     commonMain {
       dependencies {
         implementation "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
+        // To expose generationConfigBuilder
         api libs.generativeai.google
         implementation(libs.kotlinx.coroutines.core)
         implementation(libs.kotlinx.serialization.json)
