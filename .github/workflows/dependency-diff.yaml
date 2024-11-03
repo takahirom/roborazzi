@@ -20,6 +20,8 @@ jobs:
           modules: |
             roborazzi-compose-ios|commonMainImplementationDependenciesMetadata
             roborazzi-compose-desktop|commonMainImplementationDependenciesMetadata
+            roborazzi-ai-gemini|commonMainImplementationDependenciesMetadata
+            roborazzi-ai-openai|commonMainImplementationDependenciesMetadata
             roborazzi
             roborazzi-compose
             roborazzi-compose-preview-scanner-support
