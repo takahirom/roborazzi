@@ -1105,11 +1105,11 @@ fun captureWithAi() {
     .captureRoboImage(
       roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
         AiAssertionOptions.AiAssertion(
-          assertPrompt = "it should have PREVIOUS button",
+          assertionPrompt = "it should have PREVIOUS button",
           requiredFulfillmentPercent = 90,
         ),
         AiAssertionOptions.AiAssertion(
-          assertPrompt = "it should show First Fragment",
+          assertionPrompt = "it should show First Fragment",
           requiredFulfillmentPercent = 90,
         )
       )
@@ -1151,7 +1151,7 @@ compareOptions = RoborazziOptions.CompareOptions(
         return AiAssertionResults(
           aiAssertionResults = aiAssertionOptions.aiAssertions.map { assertion ->
             AiAssertionResult(
-              assertPrompt = assertion.assertPrompt,
+              assertionPrompt = assertion.assertionPrompt,
               fulfillmentPercent = fulfillmentPercent,
               requiredFulfillmentPercent = assertion.requiredFulfillmentPercent,
               failIfNotFulfilled = assertion.failIfNotFulfilled,
@@ -1163,7 +1163,7 @@ compareOptions = RoborazziOptions.CompareOptions(
     },
     aiAssertions = listOf(
       AiAssertionOptions.AiAssertion(
-        assertPrompt = "it should have PREVIOUS button",
+        assertionPrompt = "it should have PREVIOUS button",
         requiredFulfillmentPercent = 90,
       ),
     ),

@@ -60,11 +60,11 @@ class GeminiAiAiTest {
       .captureRoboImage(
         roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
           AiAssertionOptions.AiAssertion(
-            assertPrompt = "it should have PREVIOUS button",
+            assertionPrompt = "it should have PREVIOUS button",
             requiredFulfillmentPercent = 90,
           ),
           AiAssertionOptions.AiAssertion(
-            assertPrompt = "it should show First Fragment",
+            assertionPrompt = "it should show First Fragment",
             requiredFulfillmentPercent = 90,
           )
         )

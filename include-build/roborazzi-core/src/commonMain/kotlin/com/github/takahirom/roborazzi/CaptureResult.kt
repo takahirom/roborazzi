@@ -145,7 +145,7 @@ data class AiAssertionResults(
 @Serializable
 data class AiAssertionResult(
   @SerialName("assert_prompt")
-  val assertPrompt: String,
+  val assertionPrompt: String,
   @SerialName("required_fulfillment_percent")
   val requiredFulfillmentPercent: Int?,
   @SerialName("fail_if_not_fulfilled")

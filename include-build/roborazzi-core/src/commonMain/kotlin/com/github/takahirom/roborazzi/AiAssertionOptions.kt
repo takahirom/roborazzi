@@ -20,7 +20,7 @@ INPUT_PROMPT
   val inputPrompt: (AiAssertionOptions) -> String = { aiOptions ->
     buildString {
       aiOptions.aiAssertions.forEachIndexed { index, aiAssertion ->
-        appendLine("Assertion ${index + 1}: ${aiAssertion.assertPrompt}\n")
+        appendLine("Assertion ${index + 1}: ${aiAssertion.assertionPrompt}\n")
       }
     }
   },
@@ -40,7 +40,7 @@ INPUT_PROMPT
   }
 
   data class AiAssertion(
-    val assertPrompt: String,
+    val assertionPrompt: String,
     val failIfNotFulfilled: Boolean = true,
     /**
      * If null, the AI result is not validated. But the fulfillment_percent are still included in the report.
