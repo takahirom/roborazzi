@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.AiAssertionOptions
 import com.github.takahirom.roborazzi.AiAssertionResult
 import com.github.takahirom.roborazzi.AiAssertionResults
+import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -40,7 +41,7 @@ class AiManualTest {
         .captureRoboImage(
           roborazziOptions = createOptionsFulfillmentPercent(0)
         )
-      File(roboOutputName() + "_compare.png").delete()
+      File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH +File.pathSeparator+ roboOutputName() + "_compare.png").delete()
     }
   }
 
@@ -52,7 +53,7 @@ class AiManualTest {
         .captureRoboImage(
           roborazziOptions = createOptionsFulfillmentPercent(100)
         )
-      File(roboOutputName() + "_compare.png").delete()
+      File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.pathSeparator + roboOutputName() + "_compare.png").delete()
     }
   }
 
