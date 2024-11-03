@@ -33,6 +33,10 @@ INPUT_PROMPT
       actualImageFilePath: String,
       aiAssertionOptions: AiAssertionOptions
     ): AiAssertionResults
+    companion object {
+      const val DefaultMaxOutputTokens = 300
+      const val DefaultTemperature = 0.4F
+    }
   }
 
   data class AiAssertion(
