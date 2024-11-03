@@ -58,8 +58,8 @@ sealed interface CaptureResult {
     override val goldenFile: @Contextual String,
     @SerialName("timestamp")
     override val timestampNs: Long,
-    @SerialName("ai_result")
-    val aiComparisonResult: AiComparisonResult?,
+    @SerialName("ai_assertion_results")
+    val aiAssertionResults: AiAssertionResults?,
     @SerialName("context_data")
     override val contextData: Map<String, @Contextual Any>
   ) : CaptureResult {
@@ -78,8 +78,8 @@ sealed interface CaptureResult {
     override val timestampNs: Long,
     @SerialName("diff_percentage")
     val diffPercentage: Float?,
-    @SerialName("ai_result")
-    val aiComparisonResult: AiComparisonResult?,
+    @SerialName("ai_assertion_results")
+    val aiAssertionResults: AiAssertionResults?,
     @SerialName("context_data")
     override val contextData: Map<String, @Contextual Any>
   ) : CaptureResult {
@@ -137,15 +137,21 @@ sealed interface CaptureResult {
 }
 
 @Serializable
-data class AiComparisonResult(
-  val aiConditionResults: List<AiConditionResult> = emptyList()
+data class AiAssertionResults(
+  @SerialName("ai_assertion_results")
+  val aiAssertionResults: List<AiAssertionResult> = emptyList()
 )
 
 @Serializable
-data class AiConditionResult(
+data class AiAssertionResult(
+  @SerialName("assert_prompt")
   val assertPrompt: String,
   @SerialName("required_fulfillment_percent")
   val requiredFulfillmentPercent: Int?,
+  @SerialName("fail_if_not_fulfilled")
+  val failIfNotFulfilled: Boolean,
+  @SerialName("fulfillment_percent")
   val fulfillmentPercent: Int,
+  @SerialName("explanation")
   val explanation: String?,
 )

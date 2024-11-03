@@ -100,7 +100,7 @@ data class RoborazziOptions(
     val outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
     val imageComparator: ImageComparator = DefaultImageComparator,
     val comparisonStyle: ComparisonStyle = ComparisonStyle.Grid(),
-    val aiCompareOptions: AiCompareOptions? = null,
+    val aiAssertionOptions: AiAssertionOptions? = null,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
   ) {
 
@@ -161,19 +161,19 @@ data class RoborazziOptions(
       override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
         val aiResult = when (captureResult) {
           is CaptureResult.Changed -> {
-            captureResult.aiComparisonResult
+            captureResult.aiAssertionResults
           }
 
           is CaptureResult.Added -> {
-            captureResult.aiComparisonResult
+            captureResult.aiAssertionResults
           }
 
           else -> {
             null
           }
         }
-        aiResult?.aiConditionResults
-          ?.filter { conditionResult -> conditionResult.requiredFulfillmentPercent != null }
+        aiResult?.aiAssertionResults
+          ?.filter { conditionResult -> conditionResult.requiredFulfillmentPercent != null && conditionResult.failIfNotFulfilled }
           ?.forEach { conditionResult ->
           if (conditionResult.fulfillmentPercent < conditionResult.requiredFulfillmentPercent!!) {
             throw AssertionError(
@@ -245,27 +245,25 @@ data class RoborazziOptions(
 
   internal val shouldTakeBitmap: Boolean = captureType.shouldTakeScreenshot()
 
-  fun addedCompareAiAssertion(
+  @ExperimentalRoborazziApi
+  fun addedAiAssertion(
     assert: String,
     requiredFulfillmentPercent: Int
   ): RoborazziOptions {
-    return copy(
-      compareOptions = compareOptions.copy(
-        aiCompareOptions = compareOptions.aiCompareOptions!!.copy(
-          aiConditions = compareOptions.aiCompareOptions.aiConditions + AiCompareOptions.AiCondition(
-            assertPrompt = assert,
-            requiredFulfillmentPercent = requiredFulfillmentPercent
-          )
-        )
+    return addedAiAssertions(
+      AiAssertionOptions.AiAssertion(
+        assertPrompt = assert,
+        requiredFulfillmentPercent = requiredFulfillmentPercent
       )
     )
   }
 
-  fun addedCompareAiAssertions(vararg assertions: AiCompareOptions.AiCondition): RoborazziOptions {
+  @ExperimentalRoborazziApi
+  fun addedAiAssertions(vararg assertions: AiAssertionOptions.AiAssertion): RoborazziOptions {
     return copy(
       compareOptions = compareOptions.copy(
-        aiCompareOptions = compareOptions.aiCompareOptions!!.copy(
-          aiConditions = compareOptions.aiCompareOptions.aiConditions + assertions
+        aiAssertionOptions = compareOptions.aiAssertionOptions!!.copy(
+          aiAssertions = compareOptions.aiAssertionOptions.aiAssertions + assertions
         )
       )
     )

@@ -1,8 +1,11 @@
 package com.github.takahirom.roborazzi
 
-import com.github.takahirom.roborazzi.AiCompareOptions.AiModel
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultMaxOutputTokens
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
 import dev.shreyaspatil.ai.client.generativeai.type.FunctionType
+import dev.shreyaspatil.ai.client.generativeai.type.GenerationConfig
 import dev.shreyaspatil.ai.client.generativeai.type.PlatformImage
 import dev.shreyaspatil.ai.client.generativeai.type.Schema
 import dev.shreyaspatil.ai.client.generativeai.type.content
@@ -11,15 +14,22 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-class GeminiAiModel(
+@ExperimentalRoborazziApi
+class GeminiAiAssertionModel(
   private val apiKey: String,
-  private val modelName: String = "gemini-1.5-pro"
-) : AiModel, AiComparisonResultFactory {
-  override fun invoke(
+  private val modelName: String = "gemini-1.5-flash",
+  private val generationConfigBuilder: GenerationConfig.Builder.() -> Unit = {
+    maxOutputTokens = DefaultMaxOutputTokens
+    temperature = DefaultTemperature
+  }
+) : AiAssertionModel {
+  override fun assert(
+    referenceImageFilePath: String,
     comparisonImageFilePath: String,
-    aiCompareOptions: AiCompareOptions
-  ): AiComparisonResult {
-    val systemPrompt = aiCompareOptions.systemPrompt
+    actualImageFilePath: String,
+    aiAssertionOptions: AiAssertionOptions
+  ): AiAssertionResults {
+    val systemPrompt = aiAssertionOptions.systemPrompt
     val generativeModel = GenerativeModel(
       modelName = modelName,
       apiKey = apiKey,
@@ -27,7 +37,6 @@ class GeminiAiModel(
         text(systemPrompt)
       },
       generationConfig = generationConfig {
-        maxOutputTokens = 8192
         responseMimeType = "application/json"
         responseSchema = Schema(
           name = "content",
@@ -52,12 +61,13 @@ class GeminiAiModel(
             required = listOf("fulfillment_percent")
           ),
         )
+        generationConfigBuilder()
       },
     )
 
-    val template = aiCompareOptions.promptTemplate
+    val template = aiAssertionOptions.promptTemplate
 
-    val inputPrompt = aiCompareOptions.inputPrompt(aiCompareOptions)
+    val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
     val inputContent = content {
       image(readByteArrayFromFile(comparisonImageFilePath))
       val prompt = template.replace("INPUT_PROMPT", inputPrompt)
@@ -77,15 +87,16 @@ class GeminiAiModel(
         response.text
       )
     )
-    return AiComparisonResult(
-      aiConditionResults = aiCompareOptions.aiConditions.mapIndexed { index, it ->
+    return AiAssertionResults(
+      aiAssertionResults = aiAssertionOptions.aiAssertions.mapIndexed { index, condition ->
         val assertResult = geminiResult.getOrNull(index) ?: GeminiAiConditionResult(
           fulfillmentPercent = 0,
           explanation = "AI model did not return a result for this assertion"
         )
-        AiConditionResult(
-          assertPrompt = it.assertPrompt,
-          requiredFulfillmentPercent = it.requiredFulfillmentPercent,
+        AiAssertionResult(
+          assertPrompt = condition.assertPrompt,
+          requiredFulfillmentPercent = condition.requiredFulfillmentPercent,
+          failIfNotFulfilled = condition.failIfNotFulfilled,
           fulfillmentPercent = assertResult.fulfillmentPercent,
           explanation = assertResult.explanation,
         )
@@ -96,10 +107,10 @@ class GeminiAiModel(
 
 
 @Serializable
-data class GeminiAiConditionResult(
+private data class GeminiAiConditionResult(
   @SerialName("fulfillment_percent")
   val fulfillmentPercent: Int,
   val explanation: String?,
 )
 
-expect fun readByteArrayFromFile(filePath: String): PlatformImage
+internal expect fun readByteArrayFromFile(filePath: String): PlatformImage

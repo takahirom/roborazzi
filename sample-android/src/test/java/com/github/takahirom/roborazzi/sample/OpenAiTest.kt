@@ -4,19 +4,23 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.AiCompareOptions
-import com.github.takahirom.roborazzi.OpenAiAiModel
+import com.github.takahirom.roborazzi.AiAssertionOptions
+import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
+import com.github.takahirom.roborazzi.OpenAiAiAssertionModel
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziRule
+import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.provideRoborazziContext
+import com.github.takahirom.roborazzi.roboOutputName
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -32,9 +36,10 @@ class OpenAiTest {
   val roborazziRule = RoborazziRule(
     options = RoborazziRule.Options(
       roborazziOptions = RoborazziOptions(
+        taskType =  RoborazziTaskType.Compare,
         compareOptions = RoborazziOptions.CompareOptions(
-          aiCompareOptions = AiCompareOptions(
-            aiModel = OpenAiAiModel(
+          aiAssertionOptions = AiAssertionOptions(
+            aiAssertionModel = OpenAiAiAssertionModel(
               apiKey = System.getenv("openai_api_key").orEmpty(),
               modelName = "gpt-4o",
             ),
@@ -45,24 +50,26 @@ class OpenAiTest {
   )
 
   @Test
-  fun captureWithAi2() {
+  fun captureWithAi() {
     ROBORAZZI_DEBUG = true
     if (System.getenv("openai_api_key") == null) {
       println("Skip the test because openai_api_key is not set.")
       return
     }
+    File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + ".png").delete()
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
-        roborazziOptions = provideRoborazziContext().options.addedCompareAiAssertions(
-          AiCompareOptions.AiCondition(
+        roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
+          AiAssertionOptions.AiAssertion(
             assertPrompt = "it should have PREVIOUS button",
             requiredFulfillmentPercent = 90,
           ),
-          AiCompareOptions.AiCondition(
+          AiAssertionOptions.AiAssertion(
             assertPrompt = "it should show First Fragment",
             requiredFulfillmentPercent = 90,
           )
         )
       )
+    File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + "_compare.png").delete()
   }
 }

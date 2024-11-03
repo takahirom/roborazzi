@@ -19,9 +19,9 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
-import com.github.takahirom.roborazzi.AiCompareOptions
+import com.github.takahirom.roborazzi.AiAssertionOptions
 import com.github.takahirom.roborazzi.Dump
-import com.github.takahirom.roborazzi.GeminiAiModel
+import com.github.takahirom.roborazzi.GeminiAiAssertionModel
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -66,18 +66,18 @@ class ManualTest {
         roborazziOptions = RoborazziOptions(
           compareOptions = if (System.getenv("gemini_api_key")?.isNotBlank() == true) {
             RoborazziOptions.CompareOptions(
-              aiCompareOptions = AiCompareOptions(
-                aiConditions = listOf(
-                  AiCompareOptions.AiCondition(
+              aiAssertionOptions = AiAssertionOptions(
+                aiAssertions = listOf(
+                  AiAssertionOptions.AiAssertion(
                     assertPrompt = "it should have PREVIOUS button",
                     requiredFulfillmentPercent = 90,
                   ),
-                  AiCompareOptions.AiCondition(
+                  AiAssertionOptions.AiAssertion(
                     assertPrompt = "it should show First Fragment",
                     requiredFulfillmentPercent = 90,
                   ),
                 ),
-                aiModel = GeminiAiModel(
+                aiAssertionModel = GeminiAiAssertionModel(
                   apiKey = System.getenv("gemini_api_key")!!,
                 ),
               )

@@ -122,18 +122,6 @@ fun processOutputImageAndReport(
           resizeScale = resizeScale,
           contextData = contextData
         )
-      val aiOptions = compareOptions.aiCompareOptions
-      val aiResult = if (aiOptions != null && aiOptions.aiConditions.isNotEmpty()) {
-        val comparisonResultFactory = if (aiOptions.aiModel is AiComparisonResultFactory) {
-          aiOptions.aiModel
-        } else {
-          throw NotImplementedError("aiCompareCanvasFactory is not implemented. Did you add roborazzi-ai dependency and (call loadRoboAi() or use RoborazziRule)?")
-        }
-        val aiResult = comparisonResultFactory.invoke(comparisonFile.absolutePath, aiOptions)
-        aiResult
-      } else {
-        null
-      }
       debugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
           "compareFile:${comparisonFile.absolutePath}"
@@ -155,6 +143,17 @@ fun processOutputImageAndReport(
           resizeScale = resizeScale,
           contextData = contextData
         )
+      val aiOptions = compareOptions.aiAssertionOptions
+      val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
+        aiOptions.aiAssertionModel.assert(
+          referenceImageFilePath = goldenFile.absolutePath,
+          comparisonImageFilePath = comparisonFile.absolutePath,
+          actualImageFilePath = actualFile.absolutePath,
+          aiAssertionOptions = aiOptions
+        )
+      } else {
+        null
+      }
       debugLog {
         "processOutputImageAndReport(): actualCanvas is saved " +
           "actualFile:${actualFile.absolutePath}"
@@ -166,7 +165,7 @@ fun processOutputImageAndReport(
           goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
           diffPercentage = diffPercentage,
-          aiComparisonResult = aiResult,
+          aiAssertionResults = aiResult,
           contextData = contextData,
         )
       } else {
@@ -175,7 +174,7 @@ fun processOutputImageAndReport(
           actualFile = actualFile.absolutePath,
           goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
-          aiComparisonResult = aiResult,
+          aiAssertionResults = aiResult,
           contextData = contextData,
         )
       }
