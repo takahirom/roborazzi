@@ -26,7 +26,9 @@ INPUT_PROMPT
 ) {
   interface AiAssertionModel {
     fun assert(
+      referenceImageFilePath: String,
       comparisonImageFilePath: String,
+      actualImageFilePath: String,
       aiAssertionOptions: AiAssertionOptions
     ): AiAssertionResults
   }
@@ -35,7 +37,7 @@ INPUT_PROMPT
     val assertPrompt: String,
     val failIfNotFulfilled: Boolean = true,
     /**
-     * If null, the AI result is not validated. But they are still included in the report.
+     * If null, the AI result is not validated. But the fulfillment_percent are still included in the report.
      */
     val requiredFulfillmentPercent: Int? = 80
   )

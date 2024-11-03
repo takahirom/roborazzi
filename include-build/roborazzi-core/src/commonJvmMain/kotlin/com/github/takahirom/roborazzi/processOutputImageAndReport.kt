@@ -122,12 +122,6 @@ fun processOutputImageAndReport(
           resizeScale = resizeScale,
           contextData = contextData
         )
-      val aiOptions = compareOptions.aiAssertionOptions
-      val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
-        aiOptions.aiAssertionModel.assert(comparisonFile.absolutePath, aiOptions)
-      } else {
-        null
-      }
       debugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
           "compareFile:${comparisonFile.absolutePath}"
@@ -149,6 +143,17 @@ fun processOutputImageAndReport(
           resizeScale = resizeScale,
           contextData = contextData
         )
+      val aiOptions = compareOptions.aiAssertionOptions
+      val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
+        aiOptions.aiAssertionModel.assert(
+          referenceImageFilePath = goldenFile.absolutePath,
+          comparisonImageFilePath = comparisonFile.absolutePath,
+          actualImageFilePath = actualFile.absolutePath,
+          aiAssertionOptions = aiOptions
+        )
+      } else {
+        null
+      }
       debugLog {
         "processOutputImageAndReport(): actualCanvas is saved " +
           "actualFile:${actualFile.absolutePath}"

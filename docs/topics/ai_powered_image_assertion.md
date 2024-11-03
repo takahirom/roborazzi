@@ -1,9 +1,9 @@
 # Experimental AI-Powered Image Assertion
 
-Roborazzi supports AI-powered image verification. 
-AI-powered image verification is an experimental feature. Screenshot tests are a great way to verify the UI of your app, but verifying the content of the image is challenging because it is a manual process. Roborazzi can help you automate this process by using AI-powered image verification.
+Roborazzi supports AI-powered image assertion. 
+AI-powered image assertion is an experimental feature. Screenshot tests are a great way to verify the UI of your app, but verifying the content of the image is challenging because it is a manual process. Roborazzi can help you automate this process by using AI-powered image assertion.
 
-There are two new library modules: `io.github.takahirom.roborazzi:roborazzi-ai-gemini` and `io.github.takahirom.roborazzi:roborazzi-ai-openai` for AI-powered image verification.
+There are two new library modules: `io.github.takahirom.roborazzi:roborazzi-ai-gemini` and `io.github.takahirom.roborazzi:roborazzi-ai-openai` for AI-powered image assertion.
 
 `roborazzi-ai-gemini` uses [Gemini](https://gemini.google.com/), and `roborazzi-ai-openai` uses the [OpenAI API](https://platform.openai.com/).
 
@@ -60,7 +60,9 @@ You must provide the `AiAssertionModel` to `RoborazziOptions` to use manual imag
 ```kotlin
 interface AiAssertionModel {
   fun assert(
+    referenceImageFilePath: String,
     comparisonImageFilePath: String,
+    actualImageFilePath: String,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults
 }

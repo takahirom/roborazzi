@@ -11,12 +11,14 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.roboOutputName
 import com.github.takahirom.roborazzi.sample.MainActivity
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -38,6 +40,7 @@ class AiManualTest {
         .captureRoboImage(
           roborazziOptions = createOptionsFulfillmentPercent(0)
         )
+      File(roboOutputName() + "_compare.png").delete()
     }
   }
 
@@ -49,6 +52,7 @@ class AiManualTest {
         .captureRoboImage(
           roborazziOptions = createOptionsFulfillmentPercent(100)
         )
+      File(roboOutputName() + "_compare.png").delete()
     }
   }
 
@@ -59,7 +63,9 @@ class AiManualTest {
       aiAssertionOptions = AiAssertionOptions(
         aiAssertionModel = object : AiAssertionOptions.AiAssertionModel {
           override fun assert(
+            referenceImageFilePath: String,
             comparisonImageFilePath: String,
+            actualImageFilePath: String,
             aiAssertionOptions: AiAssertionOptions
           ): AiAssertionResults {
             return AiAssertionResults(
