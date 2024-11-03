@@ -220,7 +220,7 @@ private data class ChatCompletionRequest(
   val model: String,
   val messages: List<Message>,
   val temperature: Float,
-  @SerialName("max_completion_tokens") val maxTokens: Int,
+  @SerialName("max_tokens") val maxTokens: Int,
   @SerialName("response_format") val responseFormat: ResponseFormat?,
   val seed: Int,
 )
