@@ -58,7 +58,9 @@ class OpenAiAiAssertionModel(
   }
 
   override fun assert(
+    referenceImageFilePath: String,
     comparisonImageFilePath: String,
+    actualImageFilePath: String,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults {
     val systemPrompt = aiAssertionOptions.systemPrompt
