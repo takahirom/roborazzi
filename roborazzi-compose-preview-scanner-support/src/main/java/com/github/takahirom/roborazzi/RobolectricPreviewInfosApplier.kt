@@ -13,7 +13,8 @@ fun ComposablePreview<AndroidPreviewInfo>.applyToRobolectricConfiguration() {
 
   fun setDevice(device: String){
     if (device.isNotBlank()) {
-      RobolectricDeviceQualifierBuilder.build(device)?.run {
+      // Requires `io.github.sergio-sastre.ComposablePreviewScanner:android:0.4.0` or later
+      RobolectricDeviceQualifierBuilder.build(device)?.run {      ```
         setQualifiers(this)
       }
     }
