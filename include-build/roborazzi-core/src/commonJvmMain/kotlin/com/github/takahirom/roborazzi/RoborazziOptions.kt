@@ -245,6 +245,7 @@ data class RoborazziOptions(
 
   internal val shouldTakeBitmap: Boolean = captureType.shouldTakeScreenshot()
 
+  @ExperimentalRoborazziApi
   fun addedAiAssertion(
     assert: String,
     requiredFulfillmentPercent: Int
@@ -257,6 +258,7 @@ data class RoborazziOptions(
     )
   }
 
+  @ExperimentalRoborazziApi
   fun addedAiAssertions(vararg assertions: AiAssertionOptions.AiAssertion): RoborazziOptions {
     return copy(
       compareOptions = compareOptions.copy(

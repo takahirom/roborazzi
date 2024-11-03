@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 /**
  * If you want to use AI to compare images, you can specify the model and prompt.
  */
+@ExperimentalRoborazziApi
 data class AiAssertionOptions(
   val aiAssertionModel: AiAssertionModel,
   val aiAssertions: List<AiAssertion> = emptyList(),
@@ -24,6 +25,7 @@ INPUT_PROMPT
     }
   },
 ) {
+  @ExperimentalRoborazziApi
   interface AiAssertionModel {
     fun assert(
       referenceImageFilePath: String,
