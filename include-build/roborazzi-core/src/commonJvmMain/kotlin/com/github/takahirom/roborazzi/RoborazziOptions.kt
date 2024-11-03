@@ -178,7 +178,8 @@ data class RoborazziOptions(
           if (conditionResult.fulfillmentPercent < conditionResult.requiredFulfillmentPercent!!) {
             throw AssertionError(
               "The generated image did not meet the required prompt fulfillment percentage.\n" +
-                "prompt:${conditionResult.assertPrompt}\n" +
+                "assertionPrompt:${conditionResult.assertionPrompt}\n" +
+                "failIfNotFulfilled:${conditionResult.failIfNotFulfilled}\n" +
                 "aiAssertion.fulfillmentPercent:${conditionResult.fulfillmentPercent}\n" +
                 "requiredFulfillmentPercent:${conditionResult.requiredFulfillmentPercent}\n" +
                 "explanation:${conditionResult.explanation}"
@@ -247,12 +248,12 @@ data class RoborazziOptions(
 
   @ExperimentalRoborazziApi
   fun addedAiAssertion(
-    assert: String,
+    assertionPrompt: String,
     requiredFulfillmentPercent: Int
   ): RoborazziOptions {
     return addedAiAssertions(
       AiAssertionOptions.AiAssertion(
-        assertPrompt = assert,
+        assertionPrompt = assertionPrompt,
         requiredFulfillmentPercent = requiredFulfillmentPercent
       )
     )
