@@ -25,7 +25,6 @@ import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readByteArray
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
@@ -169,7 +168,6 @@ class OpenAiAiAssertionModel(
   }
 }
     """.trimIndent()
-    val json = Json { ignoreUnknownKeys = true }
     return json.parseToJsonElement(schemaJson).jsonObject
   }
 }
