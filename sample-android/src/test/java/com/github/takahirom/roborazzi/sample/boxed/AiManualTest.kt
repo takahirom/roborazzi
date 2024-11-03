@@ -75,7 +75,7 @@ class AiManualTest {
             return AiAssertionResults(
               aiAssertionResults = aiAssertionOptions.aiAssertions.map { assertion ->
                 AiAssertionResult(
-                  assertPrompt = assertion.assertPrompt,
+                  assertionPrompt = assertion.assertionPrompt,
                   fulfillmentPercent = fulfillmentPercent,
                   requiredFulfillmentPercent = assertion.requiredFulfillmentPercent,
                   failIfNotFulfilled = assertion.failIfNotFulfilled,
@@ -87,7 +87,7 @@ class AiManualTest {
         },
         aiAssertions = listOf(
           AiAssertionOptions.AiAssertion(
-            assertPrompt = "it should have PREVIOUS button",
+            assertionPrompt = "it should have PREVIOUS button",
             requiredFulfillmentPercent = 90,
           ),
         ),

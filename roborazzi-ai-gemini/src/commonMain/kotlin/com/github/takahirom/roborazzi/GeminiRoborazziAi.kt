@@ -94,7 +94,7 @@ class GeminiAiAssertionModel(
           explanation = "AI model did not return a result for this assertion"
         )
         AiAssertionResult(
-          assertPrompt = condition.assertPrompt,
+          assertionPrompt = condition.assertionPrompt,
           requiredFulfillmentPercent = condition.requiredFulfillmentPercent,
           failIfNotFulfilled = condition.failIfNotFulfilled,
           fulfillmentPercent = assertResult.fulfillmentPercent,

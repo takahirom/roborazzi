@@ -195,7 +195,7 @@ private fun parseOpenAiResponse(
     val fulfillmentPercent = result?.fulfillmentPercent ?: 0
     val explanation = result?.explanation ?: "AI model did not return a result for this assertion"
     AiAssertionResult(
-      assertPrompt = condition.assertPrompt,
+      assertionPrompt = condition.assertionPrompt,
       requiredFulfillmentPercent = condition.requiredFulfillmentPercent,
       failIfNotFulfilled = condition.failIfNotFulfilled,
       fulfillmentPercent = fulfillmentPercent,
@@ -220,7 +220,7 @@ private data class ChatCompletionRequest(
   val model: String,
   val messages: List<Message>,
   val temperature: Float,
-  @SerialName("max_completion_tokens") val maxTokens: Int,
+  @SerialName("max_tokens") val maxTokens: Int,
   @SerialName("response_format") val responseFormat: ResponseFormat?,
   val seed: Int,
 )
