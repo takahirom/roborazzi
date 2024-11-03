@@ -36,12 +36,15 @@ class AiManualTest {
   )
   fun whenAiReturnError() {
     boxedEnvironment {
-      ROBORAZZI_DEBUG = true
-      composeTestRule.onRoot()
-        .captureRoboImage(
-          roborazziOptions = createOptionsFulfillmentPercent(0)
-        )
-      File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH +File.pathSeparator+ roboOutputName() + "_compare.png").delete()
+      try {
+        ROBORAZZI_DEBUG = true
+        composeTestRule.onRoot()
+          .captureRoboImage(
+            roborazziOptions = createOptionsFulfillmentPercent(0)
+          )
+      }finally {
+        File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH +File.separator+ roboOutputName() + "_compare.png").delete()
+      }
     }
   }
 
@@ -53,7 +56,7 @@ class AiManualTest {
         .captureRoboImage(
           roborazziOptions = createOptionsFulfillmentPercent(100)
         )
-      File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.pathSeparator + roboOutputName() + "_compare.png").delete()
+      File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + "_compare.png").delete()
     }
   }
 
