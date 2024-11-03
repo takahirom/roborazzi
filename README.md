@@ -1088,8 +1088,6 @@ val roborazziRule = RoborazziRule(
       compareOptions = RoborazziOptions.CompareOptions(
         aiAssertionOptions = AiAssertionOptions(
           aiAssertionModel = GeminiAiAssertionModel(
-            // DO NOT HARDCODE your API key in your code.
-            // This is an example passing API Key through unitTests.all{ environment(key, value) }
             apiKey = System.getenv("gemini_api_key") ?: ""
           ),
         )
@@ -1584,6 +1582,11 @@ android {
 It is discussed in [this issue](https://github.com/takahirom/roborazzi/issues/272).
 Additionally, it might be worth trying to run your tests with VisualVM to monitor memory usage and identify potential leaks.
 
+### Q: Roborazzi's Gradle task is not displayed.
+
+**A:** It is discussed in [this issue](https://github.com/takahirom/roborazzi/issues/493).  
+To enable the display of Roborazzi tasks, please enable ***Configure all Gradle tasks during Gradle Sync (this can make Gradle Sync slower)*** in the settings."  
+![Roborazzi Gradle Task](/docs/images/roborazzi_gradle_task_setting.png)
 </div>
 
 ### LICENSE
