@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@ExperimentalRoborazziApi
 class GeminiAiAssertionModel(
   private val apiKey: String,
   private val modelName: String = "gemini-1.5-pro",
@@ -103,10 +104,10 @@ class GeminiAiAssertionModel(
 
 
 @Serializable
-data class GeminiAiConditionResult(
+private data class GeminiAiConditionResult(
   @SerialName("fulfillment_percent")
   val fulfillmentPercent: Int,
   val explanation: String?,
 )
 
-expect fun readByteArrayFromFile(filePath: String): PlatformImage
+internal expect fun readByteArrayFromFile(filePath: String): PlatformImage
