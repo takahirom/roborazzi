@@ -19,9 +19,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
-import com.github.takahirom.roborazzi.AiAssertionOptions
 import com.github.takahirom.roborazzi.Dump
-import com.github.takahirom.roborazzi.GeminiAiAssertionModel
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -55,38 +53,6 @@ class ManualTest {
   fun captureScreenLevelImageWithEspresso() {
     onView(ViewMatchers.isRoot())
       .captureRoboImage()
-  }
-
-
-  @Test
-  @Config
-  fun captureWithAi() {
-    onView(ViewMatchers.isRoot())
-      .captureRoboImage(
-        roborazziOptions = RoborazziOptions(
-          compareOptions = if (System.getenv("gemini_api_key")?.isNotBlank() == true) {
-            RoborazziOptions.CompareOptions(
-              aiAssertionOptions = AiAssertionOptions(
-                aiAssertions = listOf(
-                  AiAssertionOptions.AiAssertion(
-                    assertPrompt = "it should have PREVIOUS button",
-                    requiredFulfillmentPercent = 90,
-                  ),
-                  AiAssertionOptions.AiAssertion(
-                    assertPrompt = "it should show First Fragment",
-                    requiredFulfillmentPercent = 90,
-                  ),
-                ),
-                aiAssertionModel = GeminiAiAssertionModel(
-                  apiKey = System.getenv("gemini_api_key")!!,
-                ),
-              )
-            )
-          } else {
-            RoborazziOptions.CompareOptions()
-          }
-        )
-      )
   }
 
   @Test
