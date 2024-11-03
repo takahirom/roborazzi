@@ -30,6 +30,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+@ExperimentalRoborazziApi
 class OpenAiAiAssertionModel(
   private val apiKey: String,
   private val modelName: String = "gpt-4o",
@@ -215,7 +216,7 @@ private fun ByteArray.encodeBase64(): String {
 // Request
 
 @Serializable
-data class ChatCompletionRequest(
+private data class ChatCompletionRequest(
   val model: String,
   val messages: List<Message>,
   val temperature: Float,
@@ -225,31 +226,31 @@ data class ChatCompletionRequest(
 )
 
 @Serializable
-data class ResponseFormat(
+private data class ResponseFormat(
   val type: String,
   @SerialName("json_schema") val jsonSchema: JsonObject
 )
 
 @Serializable
-data class Message(
+private data class Message(
   val role: String,
   val content: List<Content>
 )
 
 @Serializable
-data class Content(
+private data class Content(
   val type: String,
   val text: String? = null,
   @SerialName("image_url") val imageUrl: ImageUrl? = null
 )
 
 @Serializable
-data class ImageUrl(
+private data class ImageUrl(
   val url: String
 )
 
 @Serializable
-data class ChatCompletionResponse(
+private data class ChatCompletionResponse(
   val id: String,
   val `object`: String,
   val created: Long,
@@ -259,20 +260,20 @@ data class ChatCompletionResponse(
 )
 
 @Serializable
-data class Choice(
+private data class Choice(
   val index: Int,
   val message: ChoiceMessage,
   @SerialName("finish_reason") val finishReason: String? = null,
 )
 
 @Serializable
-data class ChoiceMessage(
+private data class ChoiceMessage(
   val role: String,
   val content: String
 )
 
 @Serializable
-data class Usage(
+private data class Usage(
   @SerialName("prompt_tokens") val promptTokens: Int,
   @SerialName("completion_tokens") val completionTokens: Int? = null,
   @SerialName("total_tokens") val totalTokens: Int,
@@ -282,12 +283,12 @@ data class Usage(
 // Response
 
 @Serializable
-data class OpenAiResponse(
+private data class OpenAiResponse(
   val results: List<OpenAiConditionResult>
 )
 
 @Serializable
-data class OpenAiConditionResult(
+private data class OpenAiConditionResult(
   @SerialName("fulfillment_percent")
   val fulfillmentPercent: Int,
   val explanation: String?,
