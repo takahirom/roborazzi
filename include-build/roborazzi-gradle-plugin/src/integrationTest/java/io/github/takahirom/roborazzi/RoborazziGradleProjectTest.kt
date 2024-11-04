@@ -395,6 +395,21 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun compareWithDeleteOldScreenshot() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      recordWithDeleteOldScreenshots()
+      changeScreen()
+      compareWithDeleteOldScreenshots()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkResultFileExists(resultFileSuffix)
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
   fun compareWithSystemParameter() {
     println("start compareWithSystemParameter")
     RoborazziGradleRootProject(testProjectDir).appModule.apply {

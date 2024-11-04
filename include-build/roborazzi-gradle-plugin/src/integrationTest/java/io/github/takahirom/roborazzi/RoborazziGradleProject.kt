@@ -18,7 +18,11 @@ class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
   val appModule = AppModule(this, testProjectDir)
   val previewModule = PreviewModule(this, testProjectDir)
 
-  fun runTask(task: String, buildType: BuildType, additionalParameters: Array<String>): BuildResult {
+  fun runTask(
+    task: String,
+    buildType: BuildType,
+    additionalParameters: Array<String>
+  ): BuildResult {
     val buildResult = GradleRunner.create()
       .withProjectDir(testProjectDir.root)
       .withArguments(
@@ -58,6 +62,11 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
   fun record(): BuildResult {
     val task = "recordRoborazziDebug"
     return runTask(task)
+  }
+
+  fun recordWithDeleteOldScreenshots(): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.deleteOldScreenshots=true"))
   }
 
   fun recordWithFilter1(): BuildResult {
@@ -136,6 +145,11 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     return runTask(task)
   }
 
+  fun compareWithDeleteOldScreenshots(): BuildResult {
+    val task = "compareRoborazziDebug"
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.deleteOldScreenshots=true"))
+  }
+
   fun clear(): BuildResult {
     val task = "clearRoborazziDebug"
     return runTask(task)
@@ -181,7 +195,7 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     buildGradle.addIncludeBuild()
 
     val buildResult = rootProject.runTask(
-      "app:"+task,
+      "app:" + task,
       buildType,
       additionalParameters
     )
@@ -192,8 +206,9 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     private val PATH = "app/build.gradle.kts"
     var removeOutputDirBeforeTestTypeTask = false
     var customOutputDirPath: String? = null
+
     init {
-        addIncludeBuild()
+      addIncludeBuild()
     }
 
     fun addIncludeBuild() {
@@ -300,14 +315,6 @@ dependencies {
           """.trimIndent()
         )
       }
-      buildFile.appendText(
-        """
-          
-          roborazzi {
-            deleteOldScreenshots = true
-          }
-        """.trimIndent()
-      )
     }
   }
 
