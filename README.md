@@ -1588,7 +1588,7 @@ Additionally, it might be worth trying to run your tests with VisualVM to monito
 
 **A:** It is discussed in [this issue](https://github.com/takahirom/roborazzi/issues/493).  
 To enable the display of Roborazzi tasks, please enable ***Configure all Gradle tasks during Gradle Sync (this can make Gradle Sync slower)*** in the Settings | Experimental | Gradle.  
-<img src="https://github.com/user-attachments/assets/b9cde28b-ddf5-4a55-a171-ea4685f01416" width="800" />
+<img src="https://github.com/user-attachments/assets/67fbb2a8-6b2a-458c-bb31-99025f1c1cab" width="800" />
 </div>
 
 ### LICENSE
