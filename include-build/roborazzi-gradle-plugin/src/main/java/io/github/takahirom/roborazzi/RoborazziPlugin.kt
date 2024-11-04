@@ -419,6 +419,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 test = test,
                 roborazziProperties = roborazziProperties,
                 outputDir = outputDir,
+                intermediateDir = intermediateDir,
                 roborazziResults = roborazziResults,
               )
 
@@ -558,10 +559,18 @@ abstract class RoborazziPlugin : Plugin<Project> {
     test: AbstractTestTask,
     roborazziProperties: Map<String, Any?>,
     outputDir: DirectoryProperty,
+    intermediateDir: DirectoryProperty,
     roborazziResults: CaptureResults,
   ) {
     if (roborazziProperties["roborazzi.deleteOldScreenshots"] == "true") {
-      // Remove all files not in the results
+      // Delete all images from the intermediateDir
+      intermediateDir.get().asFile.walkTopDown().forEach { file ->
+        if (KnownImageFileExtensions.contains(file.extension)) {
+          file.delete()
+        }
+      }
+
+      // Remove all files not in the results from the outputDir
       val removingFiles: MutableSet<String> = outputDir.get().asFile
         .listFiles()
         ?.toList()
