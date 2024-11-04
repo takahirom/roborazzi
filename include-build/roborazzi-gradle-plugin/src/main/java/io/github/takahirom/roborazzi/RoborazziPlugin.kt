@@ -46,6 +46,7 @@ private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
+
   @ExperimentalRoborazziApi
   val generateComposePreviewRobolectricTests: GenerateComposePreviewRobolectricTestsExtension =
     objects.newInstance(GenerateComposePreviewRobolectricTestsExtension::class.java)
@@ -56,6 +57,7 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   }
 }
 
+val KnownImageFileExtensions: Array<String> = arrayOf("png", "gif", "jpg", "jpeg", "webp")
 
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
@@ -153,7 +155,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           val outputDirFile = outputDir.get().asFile
           if (outputDirFile.exists()) {
             outputDirFile.walkTopDown().forEach { file ->
-              if (file.name.endsWith(".png") || file.name.endsWith(".gif")) {
+              if (KnownImageFileExtensions.contains(file.extension)) {
                 file.delete()
               }
             }
@@ -162,7 +164,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           val intermediateDirFile = intermediateDirForEachVariant.get().asFile
           if (intermediateDirFile.exists()) {
             intermediateDirFile.walkTopDown().forEach { file ->
-              if (file.name.endsWith(".png") || file.name.endsWith(".gif")) {
+              if (KnownImageFileExtensions.contains(file.extension)) {
                 file.delete()
               }
             }
@@ -292,29 +294,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
               val roborazziResults = CaptureResults.from(results)
               finalizeTestTask.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
 
-              if (roborazziProperties["roborazzi.deleteOldScreenshots"] == true) {
-                // Remove all files not in the results
-                val removingFiles: MutableSet<String> = outputDir.get().asFile
-                  .listFiles()
-                  ?.toList()
-                  .orEmpty()
-                  .filter { it.isFile }
-                  .map { it.absolutePath }
-                  .toMutableSet()
-                roborazziResults.captureResults.forEach { result ->
-                  val latestFiles = listOfNotNull(
-                    result.actualFile,
-                    result.compareFile,
-                    result.goldenFile
-                  ).map { File(it).absolutePath }
-                  removingFiles.removeAll(latestFiles)
-                }
-                finalizeTestTask.infoln("Roborazzi: Remove old files $removingFiles")
-                removingFiles.forEach { file ->
-                  File(file).delete()
-                }
-              }
-
               val jsonResult = roborazziResults.toJson()
               resultsSummaryFile.parentFile.mkdirs()
               resultsSummaryFile.writeText(jsonResult)
@@ -330,6 +309,30 @@ abstract class RoborazziPlugin : Plugin<Project> {
                   newValue = roborazziResults.toHtml(reportFile.parentFile.absolutePath)
                 )
               )
+
+              if (roborazziProperties["roborazzi.deleteOldScreenshots"] == "true") {
+                // Remove all files not in the results
+                val removingFiles: MutableSet<String> = outputDir.get().asFile
+                  .listFiles()
+                  ?.toList()
+                  .orEmpty()
+                  .filter { it.isFile && KnownImageFileExtensions.contains(it.extension) }
+                  .map { it.absolutePath }
+                  .toMutableSet()
+                roborazziResults.captureResults.forEach { result ->
+                  val latestFiles = listOfNotNull(
+                    result.actualFile,
+                    result.compareFile,
+                    result.goldenFile
+                  ).map { File(it).absolutePath }
+                  removingFiles.removeAll(latestFiles)
+                }
+                finalizeTestTask.infoln("Roborazzi: Delete old files $removingFiles")
+                removingFiles.forEach { file ->
+                  File(file).delete()
+                }
+              }
+
             }
           }
         })
