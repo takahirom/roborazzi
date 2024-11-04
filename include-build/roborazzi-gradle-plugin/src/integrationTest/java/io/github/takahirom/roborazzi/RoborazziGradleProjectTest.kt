@@ -18,7 +18,7 @@ class RoborazziGradleProjectTest {
   @get:Rule
   val testNameOutputRule = object : TestWatcher() {
     override fun starting(description: org.junit.runner.Description?) {
-      println("Test: ${description?.methodName}")
+      println("RoborazziGradleProjectTest.${description?.methodName} started")
     }
   }
 
