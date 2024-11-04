@@ -3,14 +3,24 @@ package io.github.takahirom.roborazzi
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.rules.TestWatcher
 
 /**
  * Run this test with `cd include-build` and `./gradlew roborazzi-gradle-plugin:check`
+ * You can also run this test with the following command:
+ * ./gradlew roborazzi-gradle-plugin:integrationTest --tests "*RoborazziGradleProjectTest.record"
  */
 class RoborazziGradleProjectTest {
 
   @get:Rule
   val testProjectDir = TemporaryFolder()
+
+  @get:Rule
+  val testNameOutputRule = object : TestWatcher() {
+    override fun starting(description: org.junit.runner.Description?) {
+      println("RoborazziGradleProjectTest.${description?.methodName} started")
+    }
+  }
 
   private val className = "com.github.takahirom.integration_test_project.RoborazziTest"
 
@@ -308,8 +318,7 @@ class RoborazziGradleProjectTest {
       removeTests()
       record()
 
-      // Summary file will be generated even if no test files
-      checkResultsSummaryFileExists()
+      checkResultsSummaryFileNotExists()
       // Test will be skipped when no source so no output
       checkResultFileNotExists(resultFileSuffix)
     }
@@ -393,6 +402,21 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun compareWithDeleteOldScreenshot() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      recordWithCleanupOldScreenshots()
+      changeScreen()
+      compareWithCleanupOldScreenshots()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkResultFileExists(resultFileSuffix)
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
   fun compareWithSystemParameter() {
     println("start compareWithSystemParameter")
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
@@ -417,6 +441,21 @@ class RoborazziGradleProjectTest {
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
       checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun ifWeUseCleanupOldScreenshotsTheOldScreenshotsShouldNotExit() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      recordWithCleanupOldScreenshots()
+      removeTests()
+      addTestCaptureWithCustomPathTest()
+      recordWithCleanupOldScreenshots()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileNotExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$customReferenceScreenshotAndName.png")
+      checkRecordedFileExists("app/build/outputs/roborazzi/custom_outputDirectoryPath_from_rule/custom_outputFileProvider-com.github.takahirom.integration_test_project.RoborazziTest.testCaptureWithCustomPath.png")
     }
   }
 
