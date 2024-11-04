@@ -302,9 +302,17 @@ abstract class RoborazziPlugin : Plugin<Project> {
                   .listFiles()?.toList().orEmpty().toMutableList()
                 roborazziResults.captureResults.forEach { result ->
                   removingFiles.removeIf { file ->
-                    file.name == result.actualFile || file.name == result.compareFile || file.name == result.goldenFile
+                    val files = listOfNotNull(
+                      result.actualFile,
+                      result.compareFile,
+                      result.goldenFile
+                    )
+                      .map { File(it) }
+                      .map { it.absolutePath }
+                    files.contains(file.absolutePath)
                   }
                 }
+                finalizeTestTask.infoln("Roborazzi: Remove old files $removingFiles")
                 removingFiles.forEach { file ->
                   file.delete()
                 }
