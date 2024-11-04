@@ -14,6 +14,7 @@ import javax.imageio.metadata.IIOMetadataFormatImpl
 import javax.imageio.metadata.IIOMetadataNode
 import javax.imageio.stream.FileImageOutputStream
 
+@ExperimentalRoborazziApi
 @Suppress("FunctionName")
 actual fun LosslessWebPImageIoFormat(): ImageIoFormat {
   return JvmImageIoFormat(
@@ -21,10 +22,12 @@ actual fun LosslessWebPImageIoFormat(): ImageIoFormat {
   )
 }
 
+@ExperimentalRoborazziApi
 actual fun ImageIoFormat(): ImageIoFormat {
   return JvmImageIoFormat()
 }
 
+@ExperimentalRoborazziApi
 fun interface AwtImageWriter {
   fun write(
     destFile: File,
@@ -33,10 +36,12 @@ fun interface AwtImageWriter {
   )
 }
 
+@ExperimentalRoborazziApi
 fun interface AwtImageLoader {
   fun load(inputFile: File): BufferedImage
 }
 
+@ExperimentalRoborazziApi
 data class JvmImageIoFormat(
   val awtImageWriter: AwtImageWriter = AwtImageWriter { file, contextData, bufferedImage ->
     val imageExtension = file.extension.ifBlank { "png" }
