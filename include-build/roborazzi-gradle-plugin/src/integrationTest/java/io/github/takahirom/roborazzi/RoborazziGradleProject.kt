@@ -300,6 +300,14 @@ dependencies {
           """.trimIndent()
         )
       }
+      buildFile.appendText(
+        """
+          
+          roborazzi {
+            deleteOldScreenshots = true
+          }
+        """.trimIndent()
+      )
     }
   }
 

@@ -35,6 +35,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import java.io.File
 import java.io.FileNotFoundException
 import java.util.Locale
 import javax.inject.Inject
@@ -45,6 +46,9 @@ private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
+  @ExperimentalRoborazziApi
+  val deleteOldScreenshots: Property<Boolean> = objects.property(Boolean::class.java)
+    .convention(false)
 
   @ExperimentalRoborazziApi
   val generateComposePreviewRobolectricTests: GenerateComposePreviewRobolectricTestsExtension =
@@ -77,7 +81,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
       else -> throw IllegalStateException("Unsupported test task type: $this")
     }
 
-  @OptIn(InternalRoborazziApi::class)
+  @OptIn(InternalRoborazziApi::class, ExperimentalRoborazziApi::class)
   override fun apply(project: Project) {
     val extension = project.extensions.create("roborazzi", RoborazziExtension::class.java)
 
@@ -291,6 +295,20 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
               val roborazziResults = CaptureResults.from(results)
               finalizeTestTask.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
+
+              if (extension.deleteOldScreenshots.get()) {
+                // Remove all files not in the results
+                val removingFiles: MutableList<File> = outputDir.get().asFile
+                  .listFiles()?.toList().orEmpty().toMutableList()
+                roborazziResults.captureResults.forEach { result ->
+                  removingFiles.removeIf { file ->
+                    file.name == result.actualFile || file.name == result.compareFile || file.name == result.goldenFile
+                  }
+                }
+                removingFiles.forEach { file ->
+                  file.delete()
+                }
+              }
 
               val jsonResult = roborazziResults.toJson()
               resultsSummaryFile.parentFile.mkdirs()
