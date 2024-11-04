@@ -19,7 +19,7 @@ class AppSettingsComponent {
 
   private val descriptionText = """
     <html>To enable the display of Roborazzi tasks, please enable<br>
-    <b>Configure all Gradle tasks during Gradle Sync (this can make Gradle Sync slower)</b> in the settings.</html>
+    <b>Configure all Gradle tasks during Gradle Sync (this can make Gradle Sync slower)</b> in the Settings | Experimental | Gradle.</html>
 """.trimIndent()
 
   init {
