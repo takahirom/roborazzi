@@ -6,6 +6,8 @@ import org.junit.rules.TemporaryFolder
 
 /**
  * Run this test with `cd include-build` and `./gradlew roborazzi-gradle-plugin:check`
+ * You can also run this test with the following command:
+ * ./gradlew roborazzi-gradle-plugin:integrationTest --tests "*RoborazziGradleProjectTest.record"
  */
 class RoborazziGradleProjectTest {
 

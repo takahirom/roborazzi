@@ -46,6 +46,7 @@ private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
+
   @ExperimentalRoborazziApi
   val deleteOldScreenshots: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
@@ -298,23 +299,24 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
               if (extension.deleteOldScreenshots.get()) {
                 // Remove all files not in the results
-                val removingFiles: MutableList<File> = outputDir.get().asFile
-                  .listFiles()?.toList().orEmpty().toMutableList()
+                val removingFiles: MutableSet<String> = outputDir.get().asFile
+                  .listFiles()
+                  ?.toList()
+                  .orEmpty()
+                  .filter { it.isFile }
+                  .map { it.absolutePath }
+                  .toMutableSet()
                 roborazziResults.captureResults.forEach { result ->
-                  removingFiles.removeIf { file ->
-                    val files = listOfNotNull(
-                      result.actualFile,
-                      result.compareFile,
-                      result.goldenFile
-                    )
-                      .map { File(it) }
-                      .map { it.absolutePath }
-                    files.contains(file.absolutePath)
-                  }
+                  val latestFiles = listOfNotNull(
+                    result.actualFile,
+                    result.compareFile,
+                    result.goldenFile
+                  ).map { File(it).absolutePath }
+                  removingFiles.removeAll(latestFiles)
                 }
                 finalizeTestTask.infoln("Roborazzi: Remove old files $removingFiles")
                 removingFiles.forEach { file ->
-                  file.delete()
+                  File(file).delete()
                 }
               }
 
