@@ -32,9 +32,7 @@ class AppSettingsComponent {
         false
       )
       // adjust margin between components
-      .addComponent(JPanel().apply {
-        add(Box.createVerticalStrut(8))
-      })
+      .addVerticalGap(8)
       .addComponent(createNoteSection())
       .addComponent(JBLabel(descriptionText).apply {
         verticalAlignment = JBLabel.TOP
