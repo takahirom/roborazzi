@@ -396,6 +396,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 // Run only root suite
                 return
               }
+              if (doesRoborazziRunProvider.get()) {
+                test.infoln("Roborazzi: test.afterSuite ${test.name}")
+              } else {
+                return
+              }
 
               val results: List<CaptureResult> = resultDirFileTree.get().mapNotNull {
                 if (it.name.endsWith(".json")) {
