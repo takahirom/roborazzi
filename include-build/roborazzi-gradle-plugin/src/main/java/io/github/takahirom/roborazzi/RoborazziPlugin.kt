@@ -396,17 +396,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 // Run only root suite
                 return
               }
-              // Copy all files from outputDir to intermediateDir
-              // so that we can use Gradle's output caching
-              test.infoln("Roborazzi: test.doLast Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
-              // outputDir.get().asFileTree.forEach {
-              //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
-              // }
-              outputDir.get().asFile.mkdirs()
-              outputDir.get().asFile.copyRecursively(
-                target = intermediateDir.get().asFile,
-                overwrite = true
-              )
 
               val results: List<CaptureResult> = resultDirFileTree.get().mapNotNull {
                 if (it.name.endsWith(".json")) {
@@ -431,6 +420,18 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 roborazziProperties = roborazziProperties,
                 outputDir = outputDir,
                 roborazziResults = roborazziResults,
+              )
+
+              // Copy all files from outputDir to intermediateDir
+              // so that we can use Gradle's output caching
+              test.infoln("Roborazzi: test.doLast Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
+              // outputDir.get().asFileTree.forEach {
+              //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
+              // }
+              outputDir.get().asFile.mkdirs()
+              outputDir.get().asFile.copyRecursively(
+                target = intermediateDir.get().asFile,
+                overwrite = true
               )
             }
 

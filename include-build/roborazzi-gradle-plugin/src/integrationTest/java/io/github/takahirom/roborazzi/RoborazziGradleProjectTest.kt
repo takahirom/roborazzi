@@ -446,7 +446,7 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
-  fun ifWeUseDeleteOldScreenshotsTheScreenshotsShouldNotExitOldScreenshot() {
+  fun ifWeUseDeleteOldScreenshotsTheOldScreenshotsShouldNotExit() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
       recordWithDeleteOldScreenshots()
       removeTests()
