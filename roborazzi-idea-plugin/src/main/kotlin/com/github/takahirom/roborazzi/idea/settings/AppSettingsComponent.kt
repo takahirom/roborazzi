@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi.idea.settings
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import com.intellij.util.ui.FormBuilder
+import java.awt.Dimension
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JComponent
@@ -35,7 +36,10 @@ class AppSettingsComponent {
         add(Box.createVerticalStrut(8))
       })
       .addComponent(createNoteSection())
-      .addComponent(JBLabel(descriptionText))
+      .addComponent(JBLabel(descriptionText).apply {
+        verticalAlignment = JBLabel.TOP
+        preferredSize = Dimension(400, 200)
+      })
       .addComponentFillVertically(JPanel(), 0)
       .panel
   }
