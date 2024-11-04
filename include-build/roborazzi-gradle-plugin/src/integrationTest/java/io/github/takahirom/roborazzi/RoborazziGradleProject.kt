@@ -64,9 +64,9 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     return runTask(task)
   }
 
-  fun recordWithDeleteOldScreenshots(): BuildResult {
+  fun recordWithCleanupOldScreenshots(): BuildResult {
     val task = "recordRoborazziDebug"
-    return runTask(task, additionalParameters = arrayOf("-Proborazzi.deleteOldScreenshots=true"))
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.cleanupOldScreenshots=true"))
   }
 
   fun recordWithFilter1(): BuildResult {
@@ -145,9 +145,9 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     return runTask(task)
   }
 
-  fun compareWithDeleteOldScreenshots(): BuildResult {
+  fun compareWithCleanupOldScreenshots(): BuildResult {
     val task = "compareRoborazziDebug"
-    return runTask(task, additionalParameters = arrayOf("-Proborazzi.deleteOldScreenshots=true"))
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.cleanupOldScreenshots=true"))
   }
 
   fun clear(): BuildResult {

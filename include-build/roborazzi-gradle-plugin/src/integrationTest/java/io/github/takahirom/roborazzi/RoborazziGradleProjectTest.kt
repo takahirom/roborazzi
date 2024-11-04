@@ -404,9 +404,9 @@ class RoborazziGradleProjectTest {
   @Test
   fun compareWithDeleteOldScreenshot() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
-      recordWithDeleteOldScreenshots()
+      recordWithCleanupOldScreenshots()
       changeScreen()
-      compareWithDeleteOldScreenshots()
+      compareWithCleanupOldScreenshots()
 
       checkResultsSummaryFileExists()
       checkRecordedFileExists("$screenshotAndName.testCapture.png")
@@ -445,12 +445,12 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
-  fun ifWeUseDeleteOldScreenshotsTheOldScreenshotsShouldNotExit() {
+  fun ifWeUseCleanupOldScreenshotsTheOldScreenshotsShouldNotExit() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
-      recordWithDeleteOldScreenshots()
+      recordWithCleanupOldScreenshots()
       removeTests()
       addTestCaptureWithCustomPathTest()
-      recordWithDeleteOldScreenshots()
+      recordWithCleanupOldScreenshots()
 
       checkResultsSummaryFileExists()
       checkRecordedFileNotExists("$screenshotAndName.testCapture.png")

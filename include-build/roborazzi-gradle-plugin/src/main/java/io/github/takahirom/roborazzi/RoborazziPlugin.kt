@@ -420,7 +420,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 reportFileProperty = reportFileProperty
               )
               // The reason why we do this in afterSuite() is that we want to change the tasks' output in the task execution phase.
-              deleteOldScreenshotsIfNeeded(
+              cleanupOldScreenshotsIfNeeded(
                 test = test,
                 roborazziProperties = roborazziProperties,
                 outputDir = outputDir,
@@ -560,14 +560,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
     )
   }
 
-  private fun deleteOldScreenshotsIfNeeded(
+  private fun cleanupOldScreenshotsIfNeeded(
     test: AbstractTestTask,
     roborazziProperties: Map<String, Any?>,
     outputDir: DirectoryProperty,
     intermediateDir: DirectoryProperty,
     roborazziResults: CaptureResults,
   ) {
-    if (roborazziProperties["roborazzi.deleteOldScreenshots"] == "true") {
+    if (roborazziProperties["roborazzi.cleanupOldScreenshots"] == "true") {
       // Delete all images from the intermediateDir
       intermediateDir.get().asFile.walkTopDown().forEach { file ->
         if (KnownImageFileExtensions.contains(file.extension)) {
@@ -591,7 +591,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         ).map { File(it).absolutePath }
         removingFiles.removeAll(latestFiles)
       }
-      test.infoln("Roborazzi: Delete old files $removingFiles")
+      test.infoln("Roborazzi: Cleanup old files $removingFiles")
       removingFiles.forEach { file ->
         File(file).delete()
       }
