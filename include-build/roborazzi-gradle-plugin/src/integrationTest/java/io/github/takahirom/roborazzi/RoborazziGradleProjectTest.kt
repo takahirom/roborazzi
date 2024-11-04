@@ -3,6 +3,7 @@ package io.github.takahirom.roborazzi
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.rules.TestWatcher
 
 /**
  * Run this test with `cd include-build` and `./gradlew roborazzi-gradle-plugin:check`
@@ -13,6 +14,13 @@ class RoborazziGradleProjectTest {
 
   @get:Rule
   val testProjectDir = TemporaryFolder()
+
+  @get:Rule
+  val testNameOutputRule = object : TestWatcher() {
+    override fun starting(description: org.junit.runner.Description?) {
+      println("Test: ${description?.methodName}")
+    }
+  }
 
   private val className = "com.github.takahirom.integration_test_project.RoborazziTest"
 
