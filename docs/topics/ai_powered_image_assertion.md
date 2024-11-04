@@ -19,6 +19,8 @@ val roborazziRule = RoborazziRule(
       compareOptions = RoborazziOptions.CompareOptions(
         aiAssertionOptions = AiAssertionOptions(
           aiAssertionModel = GeminiAiAssertionModel(
+            // DO NOT HARDCODE your API key in your code.
+            // This is an example passing API Key through unitTests.all{ environment(key, value) }
             apiKey = System.getenv("gemini_api_key") ?: ""
           ),
         )
