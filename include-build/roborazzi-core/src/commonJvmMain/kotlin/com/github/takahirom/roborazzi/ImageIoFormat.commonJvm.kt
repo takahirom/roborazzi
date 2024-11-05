@@ -98,7 +98,7 @@ fun ImageWriter.writeMetadata(
 }
 
 /**
- * Add testImplementation("io.github.darkxanter:webp-imageio:0.3.0") to use this
+ * Add testImplementation("io.github.darkxanter:webp-imageio:0.3.3") to use this
  */
 fun losslessWebPWriter(): AwtImageWriter =
   AwtImageWriter { file, context, bufferedImage ->

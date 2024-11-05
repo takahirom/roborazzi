@@ -574,7 +574,8 @@ You can set `roborazzi.record.image.extension` to `webp` in your `gradle.propert
 roborazzi.record.image.extension=webp
 ```
 
-WebP is a lossy image format by default, making it challenging to manage image differences. To address this, we provide a lossless WebP image comparison feature.
+WebP is a lossy image format by default, which can make managing image differences challenging. To address this, we provide a lossless WebP image comparison feature.
+To enable WebP support, add `testImplementation("io.github.darkxanter:webp-imageio:0.3.3")` to your `build.gradle.kts` file.
 
 ```kotlin
 onView(ViewMatchers.withId(R.id.textview_first))
