@@ -175,17 +175,22 @@ data class RoborazziOptions(
         aiResult?.aiAssertionResults
           ?.filter { conditionResult -> conditionResult.requiredFulfillmentPercent != null && conditionResult.failIfNotFulfilled }
           ?.forEach { conditionResult ->
-          if (conditionResult.fulfillmentPercent < conditionResult.requiredFulfillmentPercent!!) {
-            throw AssertionError(
-              "The generated image did not meet the required prompt fulfillment percentage.\n" +
-                "assertionPrompt:${conditionResult.assertionPrompt}\n" +
-                "failIfNotFulfilled:${conditionResult.failIfNotFulfilled}\n" +
-                "aiAssertion.fulfillmentPercent:${conditionResult.fulfillmentPercent}\n" +
-                "requiredFulfillmentPercent:${conditionResult.requiredFulfillmentPercent}\n" +
-                "explanation:${conditionResult.explanation}"
-            )
+            if (conditionResult.fulfillmentPercent < conditionResult.requiredFulfillmentPercent!!) {
+              throw AssertionError(
+                "The generated image did not meet the required prompt fulfillment percentage.\n" +
+                  "* Condition:\n" +
+                  "  - assertionPrompt: ${conditionResult.assertionPrompt}\n" +
+                  "  - failIfNotFulfilled: ${conditionResult.failIfNotFulfilled}\n" +
+                  "  - requiredFulfillmentPercent: ${conditionResult.requiredFulfillmentPercent}\n" +
+                  "* Result:\n" +
+                  "  - fulfillmentPercent: ${conditionResult.fulfillmentPercent}\n" +
+                  "  - explanation: ${conditionResult.explanation}\n" +
+                  "  - referenceFile: ${captureResult.goldenFile}\n" +
+                  "  - compareFile: ${captureResult.compareFile}\n" +
+                  "  - actualFile: ${captureResult.actualFile}\n"
+              )
+            }
           }
-        }
       }
     }
 
