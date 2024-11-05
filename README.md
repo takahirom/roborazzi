@@ -1594,6 +1594,11 @@ android {
 It is discussed in [this issue](https://github.com/takahirom/roborazzi/issues/272).
 Additionally, it might be worth trying to run your tests with VisualVM to monitor memory usage and identify potential leaks.
 
+### Q: [IDEA Plugin] Roborazzi Gradle task is not displayed in Tool Window.
+
+**A:** It is discussed in [this issue](https://github.com/takahirom/roborazzi/issues/493).  
+To enable the display of Roborazzi tasks, please enable ***Configure all Gradle tasks during Gradle Sync (this can make Gradle Sync slower)*** in the Settings | Experimental | Gradle.  
+<img src="https://github.com/user-attachments/assets/67fbb2a8-6b2a-458c-bb31-99025f1c1cab" width="800" />
 </div>
 
 ### LICENSE
