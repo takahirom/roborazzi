@@ -4,6 +4,8 @@ import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Compan
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.HttpTimeout.Plugin.INFINITE_TIMEOUT_MS
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -42,22 +44,25 @@ class OpenAiAiAssertionModel(
   private val seed: Int = 1566,
   private val requestBuilderModifier: (HttpRequestBuilder.() -> Unit) = {
     header("Authorization", "Bearer $apiKey")
-  }
-) : AiAssertionOptions.AiAssertionModel {
+  },
   private val httpClient: HttpClient = HttpClient {
     install(ContentNegotiation) {
       json(
         json = json
       )
     }
-    // log
+    install(HttpTimeout) {
+      requestTimeoutMillis = INFINITE_TIMEOUT_MS
+      socketTimeoutMillis = 80_000
+    }
     if (loggingEnabled) {
       install(Logging) {
         logger = Logger.SIMPLE
         level = LogLevel.ALL
       }
     }
-  }
+  },
+) : AiAssertionOptions.AiAssertionModel {
 
   override fun assert(
     referenceImageFilePath: String,
@@ -180,7 +185,7 @@ private fun parseOpenAiResponse(
   val openAiResult = try {
     val element = json.parseToJsonElement(responseText)
     val resultsElement = element.jsonObject["results"]
-    val results = if (resultsElement!=null) {
+    val results = if (resultsElement != null) {
       json.decodeFromJsonElement<List<OpenAiConditionResult>>(resultsElement)
     } else {
       emptyList()
