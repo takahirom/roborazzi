@@ -211,7 +211,7 @@ class RoborazziRule private constructor(
         if (!isOnlyFail || result.result.isFailure) {
           if (captureType is CaptureType.AllImage) {
             result.saveAllImage {
-              fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath("png"))
+              fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath())
             }
           } else {
             val file =
@@ -232,7 +232,7 @@ class RoborazziRule private constructor(
         }
         if (!captureType.onlyFail || result.isFailure) {
           val outputFile =
-            fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath("png"))
+            fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath())
           when (captureRoot) {
             is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureRoboImage(
               file = outputFile,

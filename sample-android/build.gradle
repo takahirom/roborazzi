@@ -71,6 +71,7 @@ dependencies {
   testImplementation libs.androidx.compose.ui.test.junit4
   debugImplementation libs.androidx.compose.ui.test.manifest
   implementation libs.androidx.activity.compose
+  testImplementation(libs.webp.imageio)
 
   implementation libs.androidx.core.ktx
   implementation libs.androidx.appcompat

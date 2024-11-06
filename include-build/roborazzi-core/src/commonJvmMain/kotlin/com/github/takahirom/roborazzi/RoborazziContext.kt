@@ -10,6 +10,7 @@ class RoborazziContextImpl {
 
   private var ruleOverrideFileProvider: FileProvider? = null
   private var ruleOverrideDescription: Description? = null
+  private var ruleOverrideImageExtension: String? = null
 
   @InternalRoborazziApi
   fun setRuleOverrideOutputDirectory(outputDirectory: String) {
@@ -50,6 +51,21 @@ class RoborazziContextImpl {
   fun clearRuleOverrideDescription() {
     ruleOverrideDescription = null
   }
+
+  // TODO provide this in Rule
+  @InternalRoborazziApi
+  fun setImageExtension(extension: String) {
+    ruleOverrideImageExtension = extension
+  }
+
+  @InternalRoborazziApi
+  fun clearImageExtension() {
+    ruleOverrideImageExtension = null
+  }
+
+  @InternalRoborazziApi
+  val imageExtension: String
+    get() = ruleOverrideImageExtension ?: roborazziSystemPropertyImageExtension()
 
   @InternalRoborazziApi
   val outputDirectory: String

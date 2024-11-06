@@ -235,6 +235,7 @@ data class RoborazziOptions(
     val resizeScale: Double = roborazziDefaultResizeScale(),
     val applyDeviceCrop: Boolean = false,
     val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
+    val imageIoFormat: ImageIoFormat = ImageIoFormat(),
   )
 
   enum class PixelBitConfig {

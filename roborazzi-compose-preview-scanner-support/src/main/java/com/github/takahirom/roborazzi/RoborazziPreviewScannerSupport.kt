@@ -9,7 +9,7 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = RoborazziOptions(),
 ) {
   val composablePreview = this

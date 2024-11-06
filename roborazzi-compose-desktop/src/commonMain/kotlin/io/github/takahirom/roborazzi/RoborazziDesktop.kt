@@ -17,7 +17,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 
 fun SemanticsNodeInteraction.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) {
@@ -57,7 +57,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
 }
 
 fun ImageBitmap.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) {
@@ -114,7 +114,11 @@ fun processOutputImageAndReportWithDefaults(
       )
     },
     canvasFactoryFromFile = { file, bufferedImageType ->
-      AwtRoboCanvas.load(file, bufferedImageType)
+      AwtRoboCanvas.load(
+        file = file,
+        bufferedImageType = bufferedImageType,
+        imageIoFormat = roborazziOptions.recordOptions.imageIoFormat
+      )
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(

@@ -13,7 +13,7 @@ import org.robolectric.Shadows
 import java.io.File
 
 fun captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   content: @Composable () -> Unit,
 ) {

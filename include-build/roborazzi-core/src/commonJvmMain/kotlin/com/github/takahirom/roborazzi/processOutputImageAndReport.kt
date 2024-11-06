@@ -120,7 +120,8 @@ fun processOutputImageAndReport(
         .save(
           path = comparisonFile.absolutePath,
           resizeScale = resizeScale,
-          contextData = contextData
+          contextData = contextData,
+          imageIoFormat = recordOptions.imageIoFormat,
         )
       debugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
@@ -141,7 +142,8 @@ fun processOutputImageAndReport(
         .save(
           path = actualFile.absolutePath,
           resizeScale = resizeScale,
-          contextData = contextData
+          contextData = contextData,
+          imageIoFormat = recordOptions.imageIoFormat,
         )
       val aiOptions = compareOptions.aiAssertionOptions
       val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
@@ -200,7 +202,8 @@ fun processOutputImageAndReport(
     newRoboCanvas.save(
       path = goldenFile.absolutePath,
       resizeScale = resizeScale,
-      contextData = contextData
+      contextData = contextData,
+      imageIoFormat = recordOptions.imageIoFormat,
     )
     debugLog {
       "processOutputImageAndReport: \n" +

@@ -11,9 +11,9 @@ interface RoboCanvas {
     path: String,
     resizeScale: Double,
     contextData: Map<String, Any>,
+    imageIoFormat: ImageIoFormat,
   )
   fun differ(other: RoboCanvas, resizeScale: Double, imageComparator: ImageComparator): ImageComparator.ComparisonResult
   fun release()
-
 }
 

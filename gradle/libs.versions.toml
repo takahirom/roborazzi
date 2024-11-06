@@ -44,6 +44,7 @@ kotlinx-io = "0.3.3"
 webjar-material-design-icons = "4.0.0"
 webjar-materialize = "1.0.0"
 webjars-locator-lite = "0.0.6"
+webpImageio = "0.3.3"
 
 composable-preview-scanner = "0.4.0"
 
@@ -110,3 +111,4 @@ kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.re
 webjars-material-design-icons = { module = "org.webjars:material-design-icons", version.ref = "webjar-material-design-icons" }
 webjars-materialize = { module = "org.webjars:materializecss", version.ref = "webjar-materialize" }
 webjars-locator-lite = { module = "org.webjars:webjars-locator-lite", version.ref = "webjars-locator-lite" }
+webp-imageio = { module = "io.github.darkxanter:webp-imageio", version.ref = "webpImageio" }

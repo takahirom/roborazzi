@@ -37,7 +37,7 @@ object DefaultFileNameGenerator {
   }
 
   @InternalRoborazziApi
-  fun generateFilePath(extension: String): String {
+  fun generateFilePath(extension: String = provideRoborazziContext().imageExtension): String {
     val roborazziContext = provideRoborazziContext()
     val fileCreator = roborazziContext.fileProvider
     val description = roborazziContext.description

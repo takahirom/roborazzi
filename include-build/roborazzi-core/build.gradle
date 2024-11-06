@@ -53,6 +53,9 @@ kotlin {
     commonJvmMain {
       dependencies {
         implementation libs.junit
+        // The library is a little bit heavy, so we use compileOnly here.
+        // Users need to add this library to their dependencies.
+        compileOnly(libs.webp.imageio)
       }
     }
     commonJvmTest {
