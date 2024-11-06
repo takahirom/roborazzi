@@ -10,7 +10,7 @@ fun roborazziSystemPropertyOutputDirectory(): String {
 
 @ExperimentalRoborazziApi
 fun roborazziSystemPropertyImageExtension(): String {
-  return getSystemProperty("roborazzi.image.extension", "png")
+  return getSystemProperty("roborazzi.record.image.extension", "png")
 }
 
 @ExperimentalRoborazziApi

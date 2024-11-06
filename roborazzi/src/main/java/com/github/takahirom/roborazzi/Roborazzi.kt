@@ -19,9 +19,14 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.core.view.drawToBitmap
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.*
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onIdle
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoActivityResumedException
+import androidx.test.espresso.Root
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.base.RootsOracle_Factory
 import androidx.test.platform.app.InstrumentationRegistry
 import com.dropbox.differ.ImageComparator
@@ -29,7 +34,7 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
 import java.io.File
-import java.util.*
+import java.util.Locale
 
 
 fun ViewInteraction.captureRoboImage(
@@ -644,7 +649,7 @@ fun processOutputImageAndReportWithDefaults(
       )
     },
     canvasFactoryFromFile = { file, bufferedImageType ->
-      AwtRoboCanvas.load(file, bufferedImageType)
+      AwtRoboCanvas.load(file, bufferedImageType, roborazziOptions.recordOptions.imageIoFormat)
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(

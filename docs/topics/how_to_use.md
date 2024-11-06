@@ -369,7 +369,7 @@ fun captureRoboGifSample() {
 
 <img width="350" src="https://user-images.githubusercontent.com/1386930/226362212-35d34c9e-6df1-4671-8949-10fad7ad98c9.gif" />
 
-### Automatically generate gif with test rule
+### Generate gif with test rule
 
 > **Note**  
 > You **don't need to use RoborazziRule** if you're using captureRoboImage().
@@ -409,7 +409,7 @@ class RuleTestWithOnlyFail {
 }
 ```
 
-### Automatically generate Jetpack Compose gif with test rule
+### Generate Jetpack Compose gif with test rule
 
 Test target
 
@@ -546,94 +546,6 @@ class RoborazziRule private constructor(
   }
 ```
 
-### Roborazzi options
-
-```kotlin
-data class RoborazziOptions(
-  val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
-  val compareOptions: CompareOptions = CompareOptions(),
-  val recordOptions: RecordOptions = RecordOptions(),
-) {
-  sealed interface CaptureType {
-    class Screenshot : CaptureType
-
-    data class Dump(
-      val takeScreenShot: Boolean = isNativeGraphicsEnabled(),
-      val basicSize: Int = 600,
-      val depthSlideSize: Int = 30,
-      val query: ((RoboComponent) -> Boolean)? = null,
-      val explanation: ((RoboComponent) -> String?) = DefaultExplanation,
-    ) : CaptureType {
-      companion object {
-        val DefaultExplanation: ((RoboComponent) -> String) = {
-          it.text
-        }
-        val AccessibilityExplanation: ((RoboComponent) -> String) = {
-          it.accessibilityText
-        }
-      }
-    }
-  }
-
-  data class CompareOptions(
-    val roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
-    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
-  ) {
-    constructor(
-      roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
-      /**
-       * This value determines the threshold of pixel change at which the diff image is output or not.
-       * The value should be between 0 and 1
-       */
-      changeThreshold: Float = 0.01F,
-    ) : this(roborazziCompareReporter, ThresholdValidator(changeThreshold))
-  }
-
-  interface RoborazziCompareReporter {
-    fun report(compareReportCaptureResult: CompareReportCaptureResult)
-
-    companion object {
-      operator fun invoke(): RoborazziCompareReporter {
-        ...
-      }
-    }
-
-    class JsonOutputRoborazziCompareReporter : RoborazziCompareReporter {
-      ...
-
-      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
-        ...
-      }
-    }
-
-    class VerifyRoborazziCompareReporter : RoborazziCompareReporter {
-      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
-        ...
-      }
-    }
-  }
-
-  data class RecordOptions(
-    val resizeScale: Double = roborazziDefaultResizeScale(),
-    val applyDeviceCrop: Boolean = false,
-    val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
-  )
-
-  enum class PixelBitConfig {
-    Argb8888,
-    Rgb565;
-
-    fun toBitmapConfig(): Bitmap.Config {
-      ...
-    }
-
-    fun toBufferedImageType(): Int {
-      ...
-    }
-  }
-}
-```
-
 #### Image comparator custom settings
 When comparing images, you may encounter differences due to minor changes related to antialiasing. You can use the options below to avoid this.
 ```kotlin
@@ -654,8 +566,44 @@ val roborazziRule = RoborazziRule(
 )
 ```
 
+### Experimental WebP support and other image formats
+
+You can set `roborazzi.record.image.extension` to `webp` in your `gradle.properties` file to generate WebP images.
+
+```kotlin
+roborazzi.record.image.extension=webp
+```
+
+WebP is a lossy image format by default, which can make managing image differences challenging. To address this, we provide a lossless WebP image comparison feature.
+To enable WebP support, add `testImplementation("io.github.darkxanter:webp-imageio:0.3.3")` to your `build.gradle.kts` file.
+
+```kotlin
+onView(ViewMatchers.withId(R.id.textview_first))
+  .captureRoboImage(
+    roborazziOptions = RoborazziOptions(
+      recordOptions = RoborazziOptions.RecordOptions(
+        imageIoFormat = LosslessWebPImageIoFormat(),
+      ),
+    )
+  )
+```
+
+You can also use other image formats by implementing your own `AwtImageWriter` and `AwtImageLoader`.
+
+```kotlin
+data class JvmImageIoFormat(
+  val awtImageWriter: AwtImageWriter,
+  val awtImageLoader: AwtImageLoader
+) : ImageIoFormat
+
+```
+
 ### Dump mode
 
 If you are having trouble debugging your test, try Dump mode as follows.
 
 ![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
+
+### Roborazzi options
+
+Please check out [RoborazziOptions](https://github.com/takahirom/roborazzi/blob/main/include-build/roborazzi-core/src/commonJvmMain/kotlin/com/github/takahirom/roborazzi/RoborazziOptions.kt) for available Roborazzi options.
