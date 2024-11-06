@@ -71,7 +71,7 @@ class RoborazziContextImpl {
   val outputDirectory: String
     get() = ruleOverrideOutputDirectory ?: roborazziSystemPropertyOutputDirectory()
 
-  @InternalRoborazziApi
+  @ExperimentalRoborazziApi
   val options: RoborazziOptions
     get() = ruleOverrideRoborazziOptions ?: RoborazziOptions()
 
