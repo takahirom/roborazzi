@@ -15,8 +15,10 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -35,6 +37,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import java.io.File
 import java.io.FileNotFoundException
 import java.util.Locale
 import javax.inject.Inject
@@ -56,6 +59,7 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   }
 }
 
+val KnownImageFileExtensions: Set<String> = setOf("png", "gif", "jpg", "jpeg", "webp")
 
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
@@ -77,7 +81,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
       else -> throw IllegalStateException("Unsupported test task type: $this")
     }
 
-  @OptIn(InternalRoborazziApi::class)
+  @OptIn(InternalRoborazziApi::class, ExperimentalRoborazziApi::class)
   override fun apply(project: Project) {
     val extension = project.extensions.create("roborazzi", RoborazziExtension::class.java)
 
@@ -153,7 +157,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           val outputDirFile = outputDir.get().asFile
           if (outputDirFile.exists()) {
             outputDirFile.walkTopDown().forEach { file ->
-              if (file.name.endsWith(".png") || file.name.endsWith(".webp") || file.name.endsWith(".gif")) {
+              if (KnownImageFileExtensions.contains(file.extension)) {
                 file.delete()
               }
             }
@@ -162,7 +166,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           val intermediateDirFile = intermediateDirForEachVariant.get().asFile
           if (intermediateDirFile.exists()) {
             intermediateDirFile.walkTopDown().forEach { file ->
-              if (file.name.endsWith(".png") || file.name.endsWith(".webp")|| file.name.endsWith(".gif")) {
+              if (KnownImageFileExtensions.contains(file.extension)) {
                 file.delete()
               }
             }
@@ -279,34 +283,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 overwrite = true
               )
               finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask Copy files from ${intermediateDir.get()} to ${outputDir.get()} end ${System.currentTimeMillis() - startCopy}ms")
-
-              val results: List<CaptureResult> = resultDirFileTree.get().mapNotNull {
-                if (it.name.endsWith(".json")) {
-                  CaptureResult.fromJsonFile(it.path)
-                } else {
-                  null
-                }
-              }
-              val resultsSummaryFile = resultSummaryFileProperty.get().asFile
-
-              val roborazziResults = CaptureResults.from(results)
-              finalizeTestTask.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
-
-              val jsonResult = roborazziResults.toJson()
-              resultsSummaryFile.parentFile.mkdirs()
-              resultsSummaryFile.writeText(jsonResult)
-              val reportFile = reportFileProperty.get().asFile
-
-              reportFile.parentFile.mkdirs()
-              WebAssets.create().writeToRoborazziReportsDir(reportFile.parentFile)
-              val reportHtml = readIndexHtmlFile()
-                ?: throw FileNotFoundException("index.html not found in resources/META-INF folder")
-              reportFile.writeText(
-                reportHtml.replace(
-                  oldValue = "REPORT_TEMPLATE_BODY",
-                  newValue = roborazziResults.toHtml(reportFile.parentFile.absolutePath)
-                )
-              )
             }
           }
         })
@@ -346,15 +322,15 @@ abstract class RoborazziPlugin : Plugin<Project> {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
           })
-          test.outputs.dir(resultDirFileProperty.let {
+          test.outputs.dir(resultDirFileProperty.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
           })
-          test.outputs.file(resultSummaryFileProperty.let {
+          test.outputs.file(resultSummaryFileProperty.map {
             test.infoln("Roborazzi: Set output file $it to test task")
             it
           })
-          test.outputs.file(reportFileProperty.let {
+          test.outputs.file(reportFileProperty.map {
             test.infoln("Roborazzi: Set output file $it to test task")
             it
           })
@@ -420,6 +396,38 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 // Run only root suite
                 return
               }
+              if (doesRoborazziRunProvider.get()) {
+                test.infoln("Roborazzi: test.afterSuite ${test.name}")
+              } else {
+                return
+              }
+
+              val results: List<CaptureResult> = resultDirFileTree.get().mapNotNull {
+                if (it.name.endsWith(".json")) {
+                  CaptureResult.fromJsonFile(it.path)
+                } else {
+                  null
+                }
+              }
+              val resultsSummaryFile = resultSummaryFileProperty.get().asFile
+
+              val roborazziResults = CaptureResults.from(results)
+              saveResults(
+                test = test,
+                resultsSummaryFile = resultsSummaryFile,
+                results = results,
+                roborazziResults = roborazziResults,
+                reportFileProperty = reportFileProperty
+              )
+              // The reason why we do this in afterSuite() is that we want to change the tasks' output in the task execution phase.
+              cleanupOldScreenshotsIfNeeded(
+                test = test,
+                roborazziProperties = roborazziProperties,
+                outputDir = outputDir,
+                intermediateDir = intermediateDir,
+                roborazziResults = roborazziResults,
+              )
+
               // Copy all files from outputDir to intermediateDir
               // so that we can use Gradle's output caching
               test.infoln("Roborazzi: test.doLast Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
@@ -522,6 +530,70 @@ abstract class RoborazziPlugin : Plugin<Project> {
             )
           }
         }
+      }
+    }
+  }
+
+  private fun saveResults(
+    test: AbstractTestTask,
+    resultsSummaryFile: File,
+    results: List<CaptureResult>,
+    roborazziResults: CaptureResults,
+    reportFileProperty: Provider<RegularFile>
+  ) {
+    test.infoln("Roborazzi: Save result to ${resultsSummaryFile.absolutePath} with results:${results.size} summary:${roborazziResults.resultSummary}")
+
+    val jsonResult = roborazziResults.toJson()
+    resultsSummaryFile.parentFile.mkdirs()
+    resultsSummaryFile.writeText(jsonResult)
+    val reportFile = reportFileProperty.get().asFile
+
+    reportFile.parentFile.mkdirs()
+    WebAssets.create().writeToRoborazziReportsDir(reportFile.parentFile)
+    val reportHtml = readIndexHtmlFile()
+      ?: throw FileNotFoundException("index.html not found in resources/META-INF folder")
+    reportFile.writeText(
+      reportHtml.replace(
+        oldValue = "REPORT_TEMPLATE_BODY",
+        newValue = roborazziResults.toHtml(reportFile.parentFile.absolutePath)
+      )
+    )
+  }
+
+  private fun cleanupOldScreenshotsIfNeeded(
+    test: AbstractTestTask,
+    roborazziProperties: Map<String, Any?>,
+    outputDir: DirectoryProperty,
+    intermediateDir: DirectoryProperty,
+    roborazziResults: CaptureResults,
+  ) {
+    if (roborazziProperties["roborazzi.cleanupOldScreenshots"] == "true") {
+      // Delete all images from the intermediateDir
+      intermediateDir.get().asFile.walkTopDown().forEach { file ->
+        if (KnownImageFileExtensions.contains(file.extension)) {
+          file.delete()
+        }
+      }
+
+      // Remove all files not in the results from the outputDir
+      val removingFiles: MutableSet<String> = outputDir.get().asFile
+        .listFiles()
+        ?.toList()
+        .orEmpty()
+        .filter { it.isFile && KnownImageFileExtensions.contains(it.extension) }
+        .map { it.absolutePath }
+        .toMutableSet()
+      roborazziResults.captureResults.forEach { result ->
+        val latestFiles = listOfNotNull(
+          result.actualFile,
+          result.compareFile,
+          result.goldenFile
+        ).map { File(it).absolutePath }
+        removingFiles.removeAll(latestFiles)
+      }
+      test.infoln("Roborazzi: Cleanup old files $removingFiles")
+      removingFiles.forEach { file ->
+        File(file).delete()
       }
     }
   }

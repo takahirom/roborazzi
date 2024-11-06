@@ -8,6 +8,7 @@ mavenPublish = "0.25.3"
 composeCompiler = "1.5.10"
 composeMultiplatform = "1.6.2"
 robolectric = "4.12.2"
+generativeaiGoogle = "0.9.0-1.0.1"
 robolectric-android-all = "Q-robolectric-5415296"
 
 roborazzi-for-replacing-by-include-build = "1.0.0"
@@ -35,8 +36,9 @@ kim = "0.17.7"
 dropbox-differ = "0.3.0"
 google-android-material = "1.5.0"
 junit = "4.13.2"
-ktor-serialization-kotlinx-xml = "2.3.11"
+ktor = "2.3.11"
 kotlinx-serialization = "1.6.3"
+kotlinx-coroutines = "1.6.0"
 squareup-okhttp = "5.0.0-alpha.11"
 kotlinx-io = "0.3.3"
 webjar-material-design-icons = "4.0.0"
@@ -44,7 +46,7 @@ webjar-materialize = "1.0.0"
 webjars-locator-lite = "0.0.6"
 webpImageio = "0.3.3"
 
-composable-preview-scanner = "0.3.2"
+composable-preview-scanner = "0.4.0"
 
 [libraries]
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi-for-replacing-by-include-build" }
@@ -55,6 +57,8 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit" }
+
+generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiGoogle" }
 
 # for sample
 composable-preview-scanner = { module = "io.github.sergio-sastre.ComposablePreviewScanner:android", version.ref = "composable-preview-scanner" }
@@ -91,7 +95,14 @@ dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-
 google-android-material = { module = "com.google.android.material:material", version.ref = "google-android-material" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-ktor-serialization-kotlinx-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor-serialization-kotlinx-xml" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+ktor-serialization-kotlinx-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+ktor-client-contentnegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-gson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktor" }
+ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 squareup-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "squareup-okhttp" }
 squareup-okhttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "squareup-okhttp" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
