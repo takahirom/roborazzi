@@ -57,7 +57,11 @@ class OpenAiAiAssertionModel(
     }
     if (loggingEnabled) {
       install(Logging) {
-        logger = Logger.SIMPLE
+        logger = object: Logger {
+          override fun log(message: String) {
+            Logger.SIMPLE.log(message.replace(apiKey, "****"))
+          }
+        }
         level = LogLevel.ALL
       }
     }
