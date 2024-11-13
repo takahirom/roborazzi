@@ -540,7 +540,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
-          diffPercentage = Float.NaN,
+          diffPercentage = null,
           aiAssertionResults = null,
           contextData = emptyMap()
         )
@@ -585,7 +585,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
-          diffPercentage = Float.NaN,
+          diffPercentage = null,
           aiAssertionResults = null,
           contextData = emptyMap()
         )
@@ -630,7 +630,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
-          diffPercentage = Float.NaN,
+          diffPercentage = null,
           aiAssertionResults = null,
           contextData = emptyMap()
         )
@@ -675,7 +675,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
-          diffPercentage = Float.NaN,
+          diffPercentage = null,
           aiAssertionResults = null,
           contextData = emptyMap()
         )
