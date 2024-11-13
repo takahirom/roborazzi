@@ -24,6 +24,38 @@ sealed interface CaptureResult {
   val goldenFile: String?
   val contextData: Map<String, @Contextual Any>
 
+  @InternalRoborazziApi
+  val aiAssertionResultsOrNull: AiAssertionResults?
+    get() = when (this) {
+      is Added -> aiAssertionResults
+      is Changed -> aiAssertionResults
+      else -> null
+    }
+
+  @InternalRoborazziApi
+  fun reportText(): String {
+    return buildString {
+      append(reportFile.name)
+      if (contextData.isNotEmpty() && contextData.all {
+          it.value.toString() != "null" && it.value.toString().isNotEmpty()
+        }) {
+        appendLine("contextData:$contextData")
+      }
+      aiAssertionResultsOrNull?.aiAssertionResults?.forEach { assertionResult ->
+        appendLine("aiAssertionResults:")
+        appendLine(
+          "* Condition:\n" +
+            "  - assertionPrompt: ${assertionResult.assertionPrompt}\n" +
+            "  - failIfNotFulfilled: ${assertionResult.failIfNotFulfilled}\n" +
+            "  - requiredFulfillmentPercent: ${assertionResult.requiredFulfillmentPercent}\n" +
+            "* Result:\n" +
+            "  - fulfillmentPercent: ${assertionResult.fulfillmentPercent}\n" +
+            "  - explanation: ${assertionResult.explanation}\n"
+        )
+      }
+    }
+  }
+
   val reportFile: String
     get() = when (val result = this) {
       is Added -> result.actualFile
