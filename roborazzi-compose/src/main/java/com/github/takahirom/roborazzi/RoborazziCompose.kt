@@ -34,13 +34,15 @@ fun captureRoboImage(
   captureRoboImageComposeInternal(
     roborazziOptions = roborazziOptions,
     content = content,
-    file = file,
     capture = { activity ->
       val composeView = activity.window.decorView
         .findViewById<ViewGroup>(R.id.content)
         .getChildAt(0) as ComposeView
       val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
-      viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+      viewRootForTest.view.captureRoboImage(
+        file = file,
+        roborazziOptions = roborazziOptions
+      )
     }
   )
   return
@@ -67,9 +69,11 @@ fun captureScreenRoboImage(
   captureRoboImageComposeInternal(
     roborazziOptions = roborazziOptions,
     content = content,
-    file = file,
   ) {
-    captureScreenRoboImage()
+    captureScreenRoboImage(
+      file = file,
+      roborazziOptions = roborazziOptions
+    )
   }
   return
 }
@@ -77,7 +81,6 @@ fun captureScreenRoboImage(
 private fun captureRoboImageComposeInternal(
   roborazziOptions: RoborazziOptions,
   content: @Composable () -> Unit,
-  file: File,
   capture: (activity: Activity) -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
@@ -86,7 +89,7 @@ private fun captureRoboImageComposeInternal(
   activityScenario.use {
     activityScenario.onActivity { activity ->
       activity.setContent(content = content)
-
+      capture(activity)
     }
 
     // Closing the activity is necessary to prevent memory leaks.
