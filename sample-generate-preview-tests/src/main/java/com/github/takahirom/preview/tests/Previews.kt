@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -97,6 +98,18 @@ fun PreviewWithProperties2() {
     Text(
       modifier = Modifier.padding(8.dp),
       text = "Hello, World!"
+    )
+  }
+}
+
+@Preview
+@Composable
+fun PreviewDialog() {
+  MaterialTheme {
+    AlertDialog(
+      onDismissRequest = {},
+      confirmButton = @Composable { Text("Confirm") },
+      text = @Composable { Text("Generate Preview Test Sample!") }
     )
   }
 }
