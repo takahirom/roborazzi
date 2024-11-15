@@ -28,6 +28,18 @@ class RoborazziRule private constructor(
   private val captureRoot: CaptureRoot,
   private val options: Options = Options()
 ) : TestWatcher() {
+  init {
+    try {
+      val clazz = Class.forName("com.github.takahirom.roborazzi.RoborazziAi")
+      // RoborazziAi is available
+      clazz.getDeclaredMethod("loadRoboAi").invoke(null)
+    } catch (ignored: ClassNotFoundException) {
+      // RoborazziAi is not available
+    } catch (ignored: NoSuchMethodException) {
+      // RoborazziAi is not available
+    }
+  }
+
   /**
    * If you add this annotation to the test, the test will be ignored by
    * roborazzi's CaptureType.LastImage, CaptureType.AllImage and CaptureType.Gif.
@@ -199,7 +211,7 @@ class RoborazziRule private constructor(
         if (!isOnlyFail || result.result.isFailure) {
           if (captureType is CaptureType.AllImage) {
             result.saveAllImage {
-              fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath("png"))
+              fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath())
             }
           } else {
             val file =
@@ -220,7 +232,7 @@ class RoborazziRule private constructor(
         }
         if (!captureType.onlyFail || result.isFailure) {
           val outputFile =
-            fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath("png"))
+            fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath())
           when (captureRoot) {
             is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureRoboImage(
               file = outputFile,

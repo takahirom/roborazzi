@@ -2,20 +2,22 @@ package io.github.takahirom.roborazzi
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toAwtImage
-import androidx.compose.ui.test.DesktopComposeUiTest
-import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import com.github.takahirom.roborazzi.*
+import com.github.takahirom.roborazzi.AwtRoboCanvas
+import com.github.takahirom.roborazzi.DefaultFileNameGenerator
+import com.github.takahirom.roborazzi.RoboCanvas
+import com.github.takahirom.roborazzi.RoborazziOptions
+import com.github.takahirom.roborazzi.fileWithRecordFilePathStrategy
+import com.github.takahirom.roborazzi.processOutputImageAndReport
+import com.github.takahirom.roborazzi.provideRoborazziContext
 import java.awt.image.BufferedImage
 import java.io.File
 
-context(DesktopComposeUiTest)
-@OptIn(ExperimentalTestApi::class)
 fun SemanticsNodeInteraction.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) {
@@ -27,8 +29,6 @@ fun SemanticsNodeInteraction.captureRoboImage(
   )
 }
 
-context(DesktopComposeUiTest)
-@OptIn(ExperimentalTestApi::class)
 fun SemanticsNodeInteraction.captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions
@@ -57,7 +57,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
 }
 
 fun ImageBitmap.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath("png"),
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) {
@@ -114,7 +114,11 @@ fun processOutputImageAndReportWithDefaults(
       )
     },
     canvasFactoryFromFile = { file, bufferedImageType ->
-      AwtRoboCanvas.load(file, bufferedImageType)
+      AwtRoboCanvas.load(
+        file = file,
+        bufferedImageType = bufferedImageType,
+        imageIoFormat = roborazziOptions.recordOptions.imageIoFormat
+      )
     },
     comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, bufferedImageType ->
       AwtRoboCanvas.generateCompareCanvas(

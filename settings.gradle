@@ -12,12 +12,14 @@ dependencyResolutionManagement {
     mavenCentral()
   }
 }
-rootProject.name = "roborazzi"
+rootProject.name = "roborazzi-root"
 include ':roborazzi'
 include ':roborazzi-junit-rule'
 include ':roborazzi-compose-desktop'
 include ':roborazzi-compose-ios'
 include ':roborazzi-compose'
+include ':roborazzi-ai-gemini'
+include ':roborazzi-ai-openai'
 include ':roborazzi-painter'
 include ':roborazzi-compose-preview-scanner-support'
 

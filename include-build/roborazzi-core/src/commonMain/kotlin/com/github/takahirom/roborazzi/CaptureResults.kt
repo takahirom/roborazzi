@@ -132,15 +132,7 @@ data class CaptureResults(
       append("<tbody>")
       images.forEach { image ->
         append("<tr class=\"row\">")
-
-        val contextData = if (image.contextData.isNotEmpty() && image.contextData.all {
-            it.value.toString() != "null" && it.value.toString().isNotEmpty()
-          }) {
-          "<br>contextData:${image.contextData}"
-        } else {
-          ""
-        }
-        append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.reportFile.name}$contextData</td>")
+        append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.reportText().lines().joinToString("<br>")}</td>")
         append(
           "<td class=\"$imgClass\"><img $imgAttributes src=\"${
             image.reportFile.pathFrom(
@@ -158,11 +150,13 @@ data class CaptureResults(
   }
 
   companion object {
+    @OptIn(ExperimentalSerializationApi::class)
     val json = Json {
       isLenient = true
       encodeDefaults = true
       ignoreUnknownKeys = true
       classDiscriminator = "#class"
+      explicitNulls = false
       serializersModule = SerializersModule {
         contextual(Any::class, AnySerializer)
       }

@@ -692,7 +692,7 @@ fun captureRoboGifSample() {
 
 <img width="350" src="https://user-images.githubusercontent.com/1386930/226362212-35d34c9e-6df1-4671-8949-10fad7ad98c9.gif" />
 
-### Automatically generate gif with test rule
+### Generate gif with test rule
 
 > **Note**  
 > You **don't need to use RoborazziRule** if you're using captureRoboImage().
@@ -732,7 +732,7 @@ class RuleTestWithOnlyFail {
 }
 ```
 
-### Automatically generate Jetpack Compose gif with test rule
+### Generate Jetpack Compose gif with test rule
 
 Test target
 
@@ -869,94 +869,6 @@ class RoborazziRule private constructor(
   }
 ```
 
-### Roborazzi options
-
-```kotlin
-data class RoborazziOptions(
-  val captureType: CaptureType = if (isNativeGraphicsEnabled()) CaptureType.Screenshot() else CaptureType.Dump(),
-  val compareOptions: CompareOptions = CompareOptions(),
-  val recordOptions: RecordOptions = RecordOptions(),
-) {
-  sealed interface CaptureType {
-    class Screenshot : CaptureType
-
-    data class Dump(
-      val takeScreenShot: Boolean = isNativeGraphicsEnabled(),
-      val basicSize: Int = 600,
-      val depthSlideSize: Int = 30,
-      val query: ((RoboComponent) -> Boolean)? = null,
-      val explanation: ((RoboComponent) -> String?) = DefaultExplanation,
-    ) : CaptureType {
-      companion object {
-        val DefaultExplanation: ((RoboComponent) -> String) = {
-          it.text
-        }
-        val AccessibilityExplanation: ((RoboComponent) -> String) = {
-          it.accessibilityText
-        }
-      }
-    }
-  }
-
-  data class CompareOptions(
-    val roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
-    val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean,
-  ) {
-    constructor(
-      roborazziCompareReporter: RoborazziCompareReporter = RoborazziCompareReporter(),
-      /**
-       * This value determines the threshold of pixel change at which the diff image is output or not.
-       * The value should be between 0 and 1
-       */
-      changeThreshold: Float = 0.01F,
-    ) : this(roborazziCompareReporter, ThresholdValidator(changeThreshold))
-  }
-
-  interface RoborazziCompareReporter {
-    fun report(compareReportCaptureResult: CompareReportCaptureResult)
-
-    companion object {
-      operator fun invoke(): RoborazziCompareReporter {
-        ...
-      }
-    }
-
-    class JsonOutputRoborazziCompareReporter : RoborazziCompareReporter {
-      ...
-
-      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
-        ...
-      }
-    }
-
-    class VerifyRoborazziCompareReporter : RoborazziCompareReporter {
-      override fun report(compareReportCaptureResult: CompareReportCaptureResult) {
-        ...
-      }
-    }
-  }
-
-  data class RecordOptions(
-    val resizeScale: Double = roborazziDefaultResizeScale(),
-    val applyDeviceCrop: Boolean = false,
-    val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
-  )
-
-  enum class PixelBitConfig {
-    Argb8888,
-    Rgb565;
-
-    fun toBitmapConfig(): Bitmap.Config {
-      ...
-    }
-
-    fun toBufferedImageType(): Int {
-      ...
-    }
-  }
-}
-```
-
 #### Image comparator custom settings
 When comparing images, you may encounter differences due to minor changes related to antialiasing. You can use the options below to avoid this.
 ```kotlin
@@ -977,11 +889,47 @@ val roborazziRule = RoborazziRule(
 )
 ```
 
+### Experimental WebP support and other image formats
+
+You can set `roborazzi.record.image.extension` to `webp` in your `gradle.properties` file to generate WebP images.
+
+```kotlin
+roborazzi.record.image.extension=webp
+```
+
+WebP is a lossy image format by default, which can make managing image differences challenging. To address this, we provide a lossless WebP image comparison feature.
+To enable WebP support, add `testImplementation("io.github.darkxanter:webp-imageio:0.3.3")` to your `build.gradle.kts` file.
+
+```kotlin
+onView(ViewMatchers.withId(R.id.textview_first))
+  .captureRoboImage(
+    roborazziOptions = RoborazziOptions(
+      recordOptions = RoborazziOptions.RecordOptions(
+        imageIoFormat = LosslessWebPImageIoFormat(),
+      ),
+    )
+  )
+```
+
+You can also use other image formats by implementing your own `AwtImageWriter` and `AwtImageLoader`.
+
+```kotlin
+data class JvmImageIoFormat(
+  val awtImageWriter: AwtImageWriter,
+  val awtImageLoader: AwtImageLoader
+) : ImageIoFormat
+
+```
+
 ### Dump mode
 
 If you are having trouble debugging your test, try Dump mode as follows.
 
 ![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
+
+### Roborazzi options
+
+Please check out [RoborazziOptions](https://github.com/takahirom/roborazzi/blob/main/include-build/roborazzi-core/src/commonJvmMain/kotlin/com/github/takahirom/roborazzi/RoborazziOptions.kt) for available Roborazzi options.
 
 </div>
 <div name="topic_preview_support">
@@ -1062,6 +1010,115 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 Currently, we don't support all the annotation options provided by the Compose Preview.
 You can check the supported annotations in the [source code](https://github.com/takahirom/roborazzi/blob/main/roborazzi-compose-preview-scanner-support/src/main/java/com/github/takahirom/roborazzi/RobolectricPreviewInfosApplier.kt).
 We are looking forward to your contributions to support more annotation options.
+
+</div>
+<div name="topic_ai_powered_image_assertion">
+
+<!-- Generated by docs/topics/ai_powered_image_assertion.md. Do not edit this file. -->
+# Experimental AI-Powered Image Assertion
+
+Roborazzi supports AI-powered image assertion.
+AI-powered image assertion is an experimental feature. Screenshot tests are a great way to verify your app's UI, but verifying the content of the images can be a tedious and time-consuming task. This manual effort reduces scalability. Roborazzi can help automate this process through AI-powered image assertion, making it more efficient and scalable.
+
+There are two new library modules: `io.github.takahirom.roborazzi:roborazzi-ai-gemini` and `io.github.takahirom.roborazzi:roborazzi-ai-openai` for AI-powered image assertion.
+
+`roborazzi-ai-gemini` leverages [Gemini](https://gemini.google.com/) and [generative-ai-kmp](https://github.com/PatilShreyas/generative-ai-kmp), while `roborazzi-ai-openai` utilizes the [OpenAI API](https://platform.openai.com/) through raw HTTP API calls implemented with Ktor and KotlinX Serialization
+
+```kotlin
+...
+@get:Rule
+val composeTestRule = createAndroidComposeRule<MainActivity>()
+
+@get:Rule
+val roborazziRule = RoborazziRule(
+  options = RoborazziRule.Options(
+    roborazziOptions = RoborazziOptions(
+      compareOptions = RoborazziOptions.CompareOptions(
+        aiAssertionOptions = AiAssertionOptions(
+          aiAssertionModel = GeminiAiAssertionModel(
+            // DO NOT HARDCODE your API key in your code.
+            // This is an example passing API Key through unitTests.all{ environment(key, value) }
+            apiKey = System.getenv("gemini_api_key") ?: ""
+          ),
+        )
+      )
+    )
+  )
+)
+
+@Test
+fun captureWithAi() {
+  ROBORAZZI_DEBUG = true
+  onView(ViewMatchers.isRoot())
+    .captureRoboImage(
+      roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
+        AiAssertionOptions.AiAssertion(
+          assertionPrompt = "it should have PREVIOUS button",
+          requiredFulfillmentPercent = 90,
+        ),
+        AiAssertionOptions.AiAssertion(
+          assertionPrompt = "it should show First Fragment",
+          requiredFulfillmentPercent = 90,
+        )
+      )
+    )
+}
+```
+
+## Behavior of AI-Powered Image Assertion
+
+AI-Powered Image Assertion runs only when the images are different. If the images are the same, AI-Powered Image Assertion is skipped.  
+This is because AI-Powered Image Assertion can be slow and expensive.
+
+## Manual Image Assertion
+
+You can use manual image assertion with Roborazzi. This allows you to utilize local LLMs or other LLMs. Manual Image Assertion doesn't require adding any dependencies other than Roborazzi itself.
+
+You must provide the `AiAssertionModel` to `RoborazziOptions` to use manual image assertion.
+
+```kotlin
+interface AiAssertionModel {
+  fun assert(
+    referenceImageFilePath: String,
+    comparisonImageFilePath: String,
+    actualImageFilePath: String,
+    aiAssertionOptions: AiAssertionOptions
+  ): AiAssertionResults
+}
+```
+
+```kotlin
+compareOptions = RoborazziOptions.CompareOptions(
+  aiAssertionOptions = AiAssertionOptions(
+    aiAssertionModel = object : AiAssertionOptions.AiAssertionModel {
+      override fun assert(
+        comparisonImageFilePath: String,
+        aiAssertionOptions: AiAssertionOptions
+      ): AiAssertionResults {
+        // You can use any LLMs here to create AiAssertionResults
+        return AiAssertionResults(
+          aiAssertionResults = aiAssertionOptions.aiAssertions.map { assertion ->
+            AiAssertionResult(
+              assertionPrompt = assertion.assertionPrompt,
+              fulfillmentPercent = fulfillmentPercent,
+              requiredFulfillmentPercent = assertion.requiredFulfillmentPercent,
+              failIfNotFulfilled = assertion.failIfNotFulfilled,
+              explanation = "This is a manual test.",
+            )
+          }
+        )
+      }
+    },
+    aiAssertions = listOf(
+      AiAssertionOptions.AiAssertion(
+        assertionPrompt = "it should have PREVIOUS button",
+        requiredFulfillmentPercent = 90,
+      ),
+    ),
+  )
+)
+          ...
+```
 
 </div>
 <div name="topic_idea_plugin">
@@ -1204,13 +1261,6 @@ kotlin {
       }
     }
     ...
-
-// Roborazzi Desktop support uses Context Receivers
-    tasks.withType<KotlinCompile>().configureEach {
-      kotlinOptions {
-        freeCompilerArgs += "-Xcontext-receivers"
-      }
-    }
 ```
 
 Test target Composable function
@@ -1289,7 +1339,8 @@ The sample image
 <!-- Generated by docs/topics/gradle_properties_options.md. Do not edit this file. -->
 # Roborazzi gradle.properties Options and Recommendations
 
-You can configure the following options in your `gradle.properties` file:
+You can configure the following options in your `gradle.properties` file.
+You can also use `-P` to set the options in the command line. For example, `./gradlew test -Proborazzi.test.record=true`.
 
 ## roborazzi.test
 
@@ -1330,6 +1381,15 @@ This option enables you to define the naming strategy for the recorded image. Th
 
 ```
 roborazzi.record.namingStrategy=testClassAndMethod
+```
+
+## roborazzi.cleanupOldScreenshots
+
+This option allows you to clean up old screenshots. By default, this option is set to false.
+The reason why Roborazzi does not delete old screenshots by default is that Roborazzi doesn't know if you are running filtered tests or not. If you are running filtered tests, Roborazzi will delete the screenshots that are not related to the current test run.
+
+```
+roborazzi.cleanupOldScreenshots=true
 ```
 
 ## Robolectric Options
@@ -1482,6 +1542,11 @@ android {
 It is discussed in [this issue](https://github.com/takahirom/roborazzi/issues/272).
 Additionally, it might be worth trying to run your tests with VisualVM to monitor memory usage and identify potential leaks.
 
+### Q: [IDEA Plugin] Roborazzi Gradle task is not displayed in Tool Window.
+
+**A:** It is discussed in [this issue](https://github.com/takahirom/roborazzi/issues/493).  
+To enable the display of Roborazzi tasks, please enable ***Configure all Gradle tasks during Gradle Sync (this can make Gradle Sync slower)*** in the Settings | Experimental | Gradle.  
+<img src="https://github.com/user-attachments/assets/67fbb2a8-6b2a-458c-bb31-99025f1c1cab" width="800" />
 </div>
 
 ### LICENSE

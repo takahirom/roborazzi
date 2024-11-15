@@ -4,11 +4,22 @@ import android.content.res.Configuration
 import org.robolectric.RuntimeEnvironment.setFontScale
 import org.robolectric.RuntimeEnvironment.setQualifiers
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
+import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.applyToRobolectricConfiguration() {
   val preview = this
+
+  fun setDevice(device: String){
+    if (device.isNotBlank()) {
+      // Requires `io.github.sergio-sastre.ComposablePreviewScanner:android:0.4.0` or later
+      RobolectricDeviceQualifierBuilder.build(device)?.run {
+        setQualifiers(this)
+      }
+    }
+  }
+  setDevice(preview.previewInfo.device)
 
   fun setUiMode(uiMode: Int) {
     val nightMode =

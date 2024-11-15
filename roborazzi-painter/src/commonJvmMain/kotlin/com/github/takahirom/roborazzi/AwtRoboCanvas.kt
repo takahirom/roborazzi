@@ -18,15 +18,7 @@ import java.awt.font.TextLayout
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
-import java.awt.image.RenderedImage
 import java.io.File
-import javax.imageio.IIOImage
-import javax.imageio.ImageIO
-import javax.imageio.ImageTypeSpecifier
-import javax.imageio.ImageWriter
-import javax.imageio.metadata.IIOMetadata
-import javax.imageio.metadata.IIOMetadataFormatImpl
-import javax.imageio.metadata.IIOMetadataNode
 
 class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: Int) : RoboCanvas {
   private val bufferedImage = BufferedImage(width, height, bufferedImageType)
@@ -219,7 +211,12 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     pendingDrawList.add(pendingDraw)
   }
 
-  override fun save(path: String, resizeScale: Double, contextData: Map<String, Any>) {
+  override fun save(
+    path: String,
+    resizeScale: Double,
+    contextData: Map<String, Any>,
+    imageIoFormat: ImageIoFormat,
+  ) {
     val file = File(path)
     drawPendingDraw()
     val directory = file.parentFile
@@ -231,47 +228,12 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       // ignore
     }
     val scaledBufferedImage = croppedImage.scale(resizeScale)
-    if (contextData.isEmpty()) {
-      ImageIO.write(
-        scaledBufferedImage,
-        "png",
-        file
+    (imageIoFormat as JvmImageIoFormat)
+      .awtImageWriter.write(
+        destFile = file,
+        contextData = contextData,
+        image = scaledBufferedImage
       )
-      return
-    }
-    val writer = getWriter(croppedImage, "png")
-    val meta = writer.writeMetadata(contextData)
-    writer.output = ImageIO.createImageOutputStream(file)
-    writer.write(IIOImage(scaledBufferedImage, null, meta))
-  }
-
-  private fun ImageWriter.writeMetadata(
-    contextData: Map<String, Any>
-  ): IIOMetadata? {
-    val meta = getDefaultImageMetadata(ImageTypeSpecifier(croppedImage), null)
-
-    val root = IIOMetadataNode(IIOMetadataFormatImpl.standardMetadataFormatName)
-    contextData.forEach { (key, value) ->
-      val textEntry = IIOMetadataNode("TextEntry")
-      textEntry.setAttribute("keyword", key)
-      textEntry.setAttribute("value", value.toString())
-      val text = IIOMetadataNode("Text")
-      text.appendChild(textEntry)
-      root.appendChild(text)
-    }
-
-    meta.mergeTree(IIOMetadataFormatImpl.standardMetadataFormatName, root)
-    return meta
-  }
-
-  private fun getWriter(renderedImage: RenderedImage, extension: String): ImageWriter {
-    val typeSpecifier = ImageTypeSpecifier.createFromRenderedImage(renderedImage)
-    val var3: Iterator<*> = ImageIO.getImageWriters(typeSpecifier, extension)
-    return if (var3.hasNext()) {
-      var3.next() as ImageWriter
-    } else {
-      throw IllegalArgumentException("No ImageWriter found for $extension")
-    }
   }
 
   override fun differ(
@@ -308,8 +270,8 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
   }
 
   companion object {
-    fun load(file: File, bufferedImageType: Int): AwtRoboCanvas {
-      val loadedImage: BufferedImage = ImageIO.read(file)
+    fun load(file: File, bufferedImageType: Int, imageIoFormat: ImageIoFormat): AwtRoboCanvas {
+      val loadedImage: BufferedImage = (imageIoFormat as JvmImageIoFormat).awtImageLoader.load(file)
       val awtRoboCanvas = AwtRoboCanvas(
         loadedImage.width,
         height = loadedImage.height,
@@ -595,3 +557,4 @@ private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {
   graphics.dispose()
   return result
 }
+
