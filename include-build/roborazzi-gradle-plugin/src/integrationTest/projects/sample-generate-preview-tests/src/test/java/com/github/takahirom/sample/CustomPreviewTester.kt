@@ -34,6 +34,6 @@ class CustomPreviewTester : ComposePreviewTester<AndroidPreviewInfo> by AndroidC
     composeTestRule.setContent {
       preview()
     }
-    composeTestRule.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/${preview.methodName}.png")
+    composeTestRule.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/${preview.methodName}.${roborazziContext().options.imageExtension}")
   }
 }
