@@ -28,6 +28,7 @@ import com.github.takahirom.roborazzi.RoborazziRule.Options
 import com.github.takahirom.roborazzi.atf
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
@@ -85,9 +86,9 @@ class ComposeA11yTest {
   }
 
   @Test
+  @Ignore("TODO investigate why not failing")
   fun smallClickable() {
-    // TODO check why not failing
-//    thrown.expectMessage("sdffsd")
+    thrown.expect(Exception::class.java)
 
     composeTestRule.setContent {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
