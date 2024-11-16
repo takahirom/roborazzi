@@ -84,14 +84,20 @@ fun processOutputImageAndReport(
         bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
       )
     }
+
+    // Only used by CaptureResult.Changed
+    var diffPercentage: Float? = null
+
+    val compareOptions = roborazziOptions.compareOptions
     val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
       val comparisonResult: ImageComparator.ComparisonResult =
         newRoboCanvas.differ(
           other = goldenRoboCanvas,
           resizeScale = resizeScale,
-          imageComparator = roborazziOptions.compareOptions.imageComparator
+          imageComparator = compareOptions.imageComparator
         )
-      val changed = !roborazziOptions.compareOptions.resultValidator(comparisonResult)
+      diffPercentage = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
+      val changed = !compareOptions.resultValidator(comparisonResult)
       reportLog("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
@@ -101,7 +107,7 @@ fun processOutputImageAndReport(
 
     val result: CaptureResult = if (changed) {
       val comparisonFile = File(
-        roborazziOptions.compareOptions.outputDirectoryPath,
+        compareOptions.outputDirectoryPath,
         goldenFile.nameWithoutExtension + "_compare." + goldenFile.extension
       )
       val comparisonCanvas = comparisonCanvasFactory(
@@ -114,7 +120,8 @@ fun processOutputImageAndReport(
         .save(
           path = comparisonFile.absolutePath,
           resizeScale = resizeScale,
-          contextData = contextData
+          contextData = contextData,
+          imageIoFormat = recordOptions.imageIoFormat,
         )
       debugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
@@ -127,7 +134,7 @@ fun processOutputImageAndReport(
         goldenFile
       } else {
         File(
-          roborazziOptions.compareOptions.outputDirectoryPath,
+          compareOptions.outputDirectoryPath,
           goldenFile.nameWithoutExtension + "_actual." + goldenFile.extension
         )
       }
@@ -135,8 +142,20 @@ fun processOutputImageAndReport(
         .save(
           path = actualFile.absolutePath,
           resizeScale = resizeScale,
-          contextData = contextData
+          contextData = contextData,
+          imageIoFormat = recordOptions.imageIoFormat,
         )
+      val aiOptions = compareOptions.aiAssertionOptions
+      val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
+        aiOptions.aiAssertionModel.assert(
+          referenceImageFilePath = goldenFile.absolutePath,
+          comparisonImageFilePath = comparisonFile.absolutePath,
+          actualImageFilePath = actualFile.absolutePath,
+          aiAssertionOptions = aiOptions
+        )
+      } else {
+        null
+      }
       debugLog {
         "processOutputImageAndReport(): actualCanvas is saved " +
           "actualFile:${actualFile.absolutePath}"
@@ -147,6 +166,8 @@ fun processOutputImageAndReport(
           actualFile = actualFile.absolutePath,
           goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
+          diffPercentage = diffPercentage,
+          aiAssertionResults = aiResult,
           contextData = contextData,
         )
       } else {
@@ -155,6 +176,7 @@ fun processOutputImageAndReport(
           actualFile = actualFile.absolutePath,
           goldenFile = goldenFile.absolutePath,
           timestampNs = System.nanoTime(),
+          aiAssertionResults = aiResult,
           contextData = contextData,
         )
       }
@@ -180,7 +202,8 @@ fun processOutputImageAndReport(
     newRoboCanvas.save(
       path = goldenFile.absolutePath,
       resizeScale = resizeScale,
-      contextData = contextData
+      contextData = contextData,
+      imageIoFormat = recordOptions.imageIoFormat,
     )
     debugLog {
       "processOutputImageAndReport: \n" +

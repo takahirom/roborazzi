@@ -1,9 +1,6 @@
 name: CompareScreenshot
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
 
 permissions: {}
@@ -16,10 +13,11 @@ jobs:
     permissions:
       contents: read # for clone
       actions: write # for upload-artifact
+      checks: read # for wait-on-check-action
 
     steps:
       - name: Checkout base branch
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           ref: ${{ github.base_ref }}
       - name: Set up JDK 17
@@ -39,19 +37,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
+      - name: Wait for base unit-test to succeed before downloading base branch screenshot artifact
+        uses: lewagon/wait-on-check-action@ccfb013c15c8afb7bf2b7c028fb74dc5a068cccc # v1.3.4
+        with:
+          ref: ${{ steps.get_base_branch_head.outputs.sha }}
+          check-name: 'store-screenshot-test'
+          repo-token: ${{ github.token }}
+          wait-interval: 10
+
       - uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
         continue-on-error: true
         with:
           name: screenshot
           workflow: StoreScreenshot.yml
           commit: ${{ steps.get_base_branch_head.outputs.sha }}
+          if_no_artifact_found: fail
 
       - name: compare screenshot test
         id: compare-screenshot-test
         run: |
-          ./gradlew compareRoborazziDebug compareRoborazziDesktop compareRoborazziJvm compareRoborazziIosX64  --stacktrace --info
+          ./gradlew compareRoborazziDebug compareRoborazziDesktop compareRoborazziJvm compareRoborazziIosArm64 compareRoborazziIosX64  --stacktrace --info
 
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         if: ${{ always() }}
         with:
           name: screenshot-diff
@@ -59,7 +66,7 @@ jobs:
             **/build/outputs/roborazzi
           retention-days: 30
 
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         if: ${{ always() }}
         with:
           name: screenshot-diff-reports
@@ -68,7 +75,7 @@ jobs:
             **/build/outputs/roborazzi
           retention-days: 30
 
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         if: ${{ always() }}
         with:
           name: screenshot-diff-test-results
@@ -81,7 +88,7 @@ jobs:
         run: |
           mkdir -p ./pr
           echo ${{ github.event.number }} > ./pr/NR
-      - uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
           name: pr
           path: pr/

@@ -164,7 +164,8 @@ class ManualTest {
 
   @Test
   fun captureRoboImageSampleWithQuery() {
-    val filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_view.png"
+    val filePath =
+      "${roborazziSystemPropertyOutputDirectory()}/manual_view_first_screen_with_query_view.png"
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         filePath = filePath,

@@ -1,13 +1,13 @@
 package com.github.takahirom.roborazzi
 
 @ExperimentalRoborazziApi
-enum class RoborazziTaskType {
-  None,
-  Record,
-  Compare,
-  Verify,
-  VerifyAndRecord,
-  CompareAndRecord;
+enum class RoborazziTaskType(private val taskName: String) {
+  None(""),
+  Record("record"),
+  Compare("compare"),
+  Verify("verify"),
+  VerifyAndRecord("verifyAndRecord"),
+  CompareAndRecord("compareAndRecord");
 
   fun isEnabled(): Boolean {
     return this != None
@@ -51,6 +51,12 @@ enum class RoborazziTaskType {
         isComparing -> Compare
         else -> None
       }
+    }
+
+    @Deprecated("This API will be removed")
+    @InternalRoborazziApi
+    fun getOrderOfTaskName(taskName: String): Int {
+      return values().indexOfLast { taskName.contains(it.taskName, true) }
     }
   }
 }

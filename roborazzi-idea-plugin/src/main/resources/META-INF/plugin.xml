@@ -32,10 +32,8 @@
     <toolWindow id="RoborazziPreview"
                 anchor="right"
                 factoryClass="com.github.takahirom.roborazzi.idea.preview.RoborazziPreviewToolWindowFactory"
-                icon="/icons/previewIcon.svg"
-                canCloseContents="true"
-                stripeTitle="Roborazzi Preview"
-                type="DOCKED">
+                icon="/icons/icon.svg"
+                >
     </toolWindow>
     <applicationService
       serviceImplementation="com.github.takahirom.roborazzi.idea.settings.AppSettingsState"/>

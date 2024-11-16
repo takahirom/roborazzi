@@ -29,14 +29,14 @@ jobs:
           cd include-build
           ./gradlew roborazzi-gradle-plugin:check --stacktrace
 
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         if: ${{ always() }}
         with:
           name: test-reports
           path: include-build/roborazzi-gradle-plugin/build/reports
           retention-days: 30
 
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         if: ${{ always() }}
         with:
           name: test-test-results

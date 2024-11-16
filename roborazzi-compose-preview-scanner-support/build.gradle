@@ -1,0 +1,27 @@
+plugins {
+  id 'com.android.library'
+  id 'org.jetbrains.kotlin.android'
+}
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
+}
+repositories {
+  google()
+  mavenCentral()
+}
+
+android.buildFeatures.compose = true
+
+// TODO: Use build-logic
+apply from: rootProject.file('gradle/android.gradle')
+
+android.namespace 'com.github.takahirom.roborazzi.preview.support'
+
+dependencies {
+  api project(":roborazzi")
+  api project(":roborazzi-compose")
+
+  compileOnly libs.androidx.compose.runtime
+  compileOnly libs.composable.preview.scanner
+  compileOnly libs.robolectric
+}

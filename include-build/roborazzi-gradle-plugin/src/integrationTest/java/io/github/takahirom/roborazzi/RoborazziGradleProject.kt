@@ -6,15 +6,67 @@ import org.gradle.testkit.runner.GradleRunner
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
-class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
-  var buildDirName = "build"
+enum class BuildType {
+  Build, BuildAndFail
+}
+
+class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
   init {
     File("./src/integrationTest/projects").copyRecursively(testProjectDir.root, true)
   }
 
+  val appModule = AppModule(this, testProjectDir)
+  val previewModule = PreviewModule(this, testProjectDir)
+
+  fun runTask(
+    task: String,
+    buildType: BuildType,
+    additionalParameters: Array<String>
+  ): BuildResult {
+    val buildResult = GradleRunner.create()
+      .withProjectDir(testProjectDir.root)
+      .withArguments(
+        task,
+        "--stacktrace",
+        "--build-cache",
+        "--info",
+        *additionalParameters
+      )
+      .withPluginClasspath()
+      .forwardStdOutput(System.out.writer())
+      .forwardStdError(System.err.writer())
+      .withEnvironment(
+        mapOf(
+          "ANDROID_HOME" to System.getenv("ANDROID_HOME"),
+          "INTEGRATION_TEST" to "true",
+          "ROBORAZZI_ROOT_PATH" to File("../..").absolutePath,
+          "ROBORAZZI_INCLUDE_BUILD_ROOT_PATH" to File("..").absolutePath,
+//          "GRADLE_USER_HOME" to File(testProjectDir.root, "gradle").absolutePath,
+        )
+      )
+      .let {
+        if (buildType == BuildType.BuildAndFail) {
+          it.buildAndFail()
+        } else {
+          it.build()
+        }
+      }
+    return buildResult
+  }
+}
+
+class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir: TemporaryFolder) {
+
+  var buildDirName = "build"
+
   fun record(): BuildResult {
     val task = "recordRoborazziDebug"
     return runTask(task)
+  }
+
+  fun recordWithCleanupOldScreenshots(): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.cleanupOldScreenshots=true"))
   }
 
   fun recordWithFilter1(): BuildResult {
@@ -93,6 +145,16 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     return runTask(task)
   }
 
+  fun compareWithCleanupOldScreenshots(): BuildResult {
+    val task = "compareRoborazziDebug"
+    return runTask(task, additionalParameters = arrayOf("-Proborazzi.cleanupOldScreenshots=true"))
+  }
+
+  fun clear(): BuildResult {
+    val task = "clearRoborazziDebug"
+    return runTask(task)
+  }
+
   fun clean(): BuildResult {
     val task = "clean"
     return runTask(task)
@@ -125,55 +187,29 @@ class RoborazziGradleProject(val testProjectDir: TemporaryFolder) {
     assert(output.contains("testDebugUnitTest FROM-CACHE"))
   }
 
-  enum class BuildType {
-    Build, BuildAndFail
-  }
-
   private fun runTask(
     task: String,
     buildType: BuildType = BuildType.Build,
     additionalParameters: Array<String> = arrayOf()
   ): BuildResult {
-    appBuildFile.addIncludeBuild()
+    buildGradle.addIncludeBuild()
 
-    val buildResult = GradleRunner.create()
-      .withProjectDir(testProjectDir.root)
-      .withArguments(
-        task,
-        "--stacktrace",
-        "--build-cache",
-        "--info",
-        *additionalParameters
-      )
-      .withPluginClasspath()
-      .forwardStdOutput(System.out.writer())
-      .forwardStdError(System.err.writer())
-      .withEnvironment(
-        mapOf(
-          "ANDROID_HOME" to System.getenv("ANDROID_HOME"),
-          "INTEGRATION_TEST" to "true",
-          "ROBORAZZI_ROOT_PATH" to File("../..").absolutePath,
-          "ROBORAZZI_INCLUDE_BUILD_ROOT_PATH" to File("..").absolutePath,
-        )
-      )
-      .let {
-        if (buildType == BuildType.BuildAndFail) {
-          it.buildAndFail()
-        } else {
-          it.build()
-        }
-      }
-    println(
-      "app/output/roborazzi/ list files:" + testProjectDir.root.resolve("app/output/roborazzi/")
-        .listFiles()
+    val buildResult = rootProject.runTask(
+      "app:" + task,
+      buildType,
+      additionalParameters
     )
     return buildResult
   }
 
-  class AppBuildFile(private val folder: TemporaryFolder) {
+  class BuildGradle(private val folder: TemporaryFolder) {
     private val PATH = "app/build.gradle.kts"
     var removeOutputDirBeforeTestTypeTask = false
     var customOutputDirPath: String? = null
+
+    init {
+      addIncludeBuild()
+    }
 
     fun addIncludeBuild() {
       folder.root.resolve(PATH).delete()
@@ -321,19 +357,7 @@ dependencies {
   ) {
     val recordedFile =
       testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
-    val results = CaptureResults.fromJsonFile(recordedFile.absolutePath)
-    assert(results.resultSummary.recorded == recorded) {
-      "Expected count: $recorded, actual count: ${results.resultSummary.recorded} summary:${results.resultSummary}"
-    }
-    assert(results.resultSummary.added == added) {
-      "Expected count: $added, actual count: ${results.resultSummary.added} summary:${results.resultSummary}"
-    }
-    assert(results.resultSummary.changed == changed) {
-      "Expected count: $changed, actual count: ${results.resultSummary.changed} summary:${results.resultSummary}"
-    }
-    assert(results.resultSummary.unchanged == unchanged) {
-      "Expected count: $unchanged, actual count: ${results.resultSummary.unchanged} summary:${results.resultSummary}"
-    }
+    checkResultCount(recordedFile, recorded, added, changed, unchanged)
   }
 
   fun checkRecordedFileExists(path: String) {
@@ -628,5 +652,27 @@ class RoborazziTest {
     )
   }
 
-  val appBuildFile = AppBuildFile(testProjectDir)
+  val buildGradle = BuildGradle(testProjectDir)
+}
+
+fun checkResultCount(
+  recordedFile: File,
+  recorded: Int = 0,
+  added: Int = 0,
+  changed: Int = 0,
+  unchanged: Int = 0
+) {
+  val results = CaptureResults.fromJsonFile(recordedFile.absolutePath)
+  assert(results.resultSummary.recorded == recorded) {
+    "Expected count: $recorded, actual count: ${results.resultSummary.recorded} summary:${results.resultSummary}"
+  }
+  assert(results.resultSummary.added == added) {
+    "Expected count: $added, actual count: ${results.resultSummary.added} summary:${results.resultSummary}"
+  }
+  assert(results.resultSummary.changed == changed) {
+    "Expected count: $changed, actual count: ${results.resultSummary.changed} summary:${results.resultSummary}"
+  }
+  assert(results.resultSummary.unchanged == unchanged) {
+    "Expected count: $unchanged, actual count: ${results.resultSummary.unchanged} summary:${results.resultSummary}"
+  }
 }

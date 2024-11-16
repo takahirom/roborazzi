@@ -12,13 +12,16 @@ dependencyResolutionManagement {
     mavenCentral()
   }
 }
-rootProject.name = "roborazzi"
+rootProject.name = "roborazzi-root"
 include ':roborazzi'
 include ':roborazzi-junit-rule'
 include ':roborazzi-compose-desktop'
 include ':roborazzi-compose-ios'
 include ':roborazzi-compose'
+include ':roborazzi-ai-gemini'
+include ':roborazzi-ai-openai'
 include ':roborazzi-painter'
+include ':roborazzi-compose-preview-scanner-support'
 
 include ':roborazzi-idea-plugin'
 
@@ -26,6 +29,7 @@ include ':sample-android'
 include ':sample-android-without-compose'
 include ':sample-compose-desktop-multiplatform'
 include ':sample-compose-desktop-jvm'
+include ':sample-generate-preview-tests'
 
 includeBuild("include-build") {
   dependencySubstitution {

@@ -15,6 +15,11 @@ internal class DifferBufferedImage(private val bufferedImage: BufferedImage) : I
       // Waiting for dropbox differs next release to support size difference
       return Color(0, 0, 0, 0)
     }
-    return Color(bufferedImage.getRGB(x, y))
+    val color = Color(bufferedImage.getRGB(x, y))
+    if (color.a == 0F) {
+      // I'm not sure why, but WebP images return r = 1, g = 0, b = 0, a = 0 for transparent pixels.
+      return Color(0, 0, 0, 0)
+    }
+    return color
   }
 }

@@ -11,6 +11,19 @@ object DefaultFileNameGenerator {
     EscapedTestPackageAndClassAndMethod("escapedTestPackageAndClassAndMethod"),
     TestClassAndMethod("testClassAndMethod");
 
+    @ExperimentalRoborazziApi
+    fun generateOutputName(className: String, methodName: String?): String {
+      return when (this) {
+        TestPackageAndClassAndMethod -> "$className.$methodName"
+        EscapedTestPackageAndClassAndMethod -> className.replace(
+          ".",
+          "_"
+        ) + "." + methodName
+
+        TestClassAndMethod -> className.substringAfterLast(".") + "." + methodName
+      }
+    }
+
     companion object {
       fun fromOptionName(optionName: String): DefaultNamingStrategy {
         return values().firstOrNull { it.optionName == optionName } ?: TestPackageAndClassAndMethod
@@ -24,7 +37,7 @@ object DefaultFileNameGenerator {
   }
 
   @InternalRoborazziApi
-  fun generateFilePath(extension: String): String {
+  fun generateFilePath(extension: String = provideRoborazziContext().imageExtension): String {
     val roborazziContext = provideRoborazziContext()
     val fileCreator = roborazziContext.fileProvider
     val description = roborazziContext.description
@@ -89,7 +102,7 @@ object DefaultFileNameGenerator {
       }
       ?: throw IllegalArgumentException("Roborazzi can't find method of test. Please specify file name or use Rule")
     val testName =
-      generateOutputName(stackTraceElement.className, stackTraceElement.methodName)
+      defaultNamingStrategy.generateOutputName(stackTraceElement.className, stackTraceElement.methodName)
     return testName
   }
 
@@ -112,19 +125,12 @@ object DefaultFileNameGenerator {
   internal fun generateOutputNameWithDescription(description: Description): String {
     val className = description.className
     val methodName = description.methodName
-    val testName = generateOutputName(className, methodName)
+    val testName = defaultNamingStrategy.generateOutputName(className, methodName)
     return testName
   }
 
-  private fun generateOutputName(className: String, methodName: String?): String {
-    return when (defaultNamingStrategy) {
-      DefaultNamingStrategy.TestPackageAndClassAndMethod -> "$className.$methodName"
-      DefaultNamingStrategy.EscapedTestPackageAndClassAndMethod -> className.replace(
-        ".",
-        "_"
-      ) + "." + methodName
-
-      DefaultNamingStrategy.TestClassAndMethod -> className.substringAfterLast(".") + "." + methodName
-    }
+  @InternalRoborazziApi
+  fun reset() {
+    testNameToTakenCount.clear()
   }
 }

@@ -7,6 +7,10 @@
 </div>
 <div name="topic_how_to_use">
 </div>
+<div name="topic_preview_support">
+</div>
+<div name="topic_ai_powered_image_assertion">
+</div>
 <div name="topic_idea_plugin">
 </div>
 <div name="topic_compose_multiplatform">

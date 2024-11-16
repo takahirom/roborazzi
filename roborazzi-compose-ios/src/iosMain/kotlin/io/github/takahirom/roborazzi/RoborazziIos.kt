@@ -7,6 +7,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.captureToImage
 import com.github.takahirom.roborazzi.CaptureResult
+import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.getReportFileName
@@ -522,6 +523,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -538,6 +540,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
+          diffPercentage = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -564,6 +568,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -580,6 +585,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = actualFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
+          diffPercentage = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -606,6 +613,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -622,6 +630,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
+          diffPercentage = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -648,6 +658,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -664,6 +675,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
           actualFile = goldenFilePath,
           goldenFile = goldenFilePath,
           timestampNs = getNanoTime(),
+          diffPercentage = null,
+          aiAssertionResults = null,
           contextData = emptyMap()
         )
         writeJson(result, resultsDir, nameWithoutExtension)
@@ -732,7 +745,7 @@ private fun writeJson(
       CaptureResult.Unchanged.serializer()
     )
   }
-  val json = Json {
+  val json = Json(CaptureResults.json) {
     serializersModule = module
   }
   json.encodeToJsonElement(PolymorphicSerializer(CaptureResult::class), result)

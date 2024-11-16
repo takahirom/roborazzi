@@ -1,7 +1,10 @@
 package com.github.takahirom.roborazzi.idea.preview
 
 import com.github.takahirom.roborazzi.idea.settings.AppSettingsConfigurable
-import com.github.takahirom.roborazzi.idea.settings.AppSettingsState
+import com.intellij.execution.ExecutionListener
+import com.intellij.execution.ExecutionManager
+import com.intellij.execution.process.ProcessHandler
+import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -12,65 +15,52 @@ import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.openapi.wm.ex.ToolWindowEx
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.impl.source.tree.CompositeElement
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.containers.SLRUMap
 import com.intellij.util.messages.MessageBusConnection
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.yield
 import org.jetbrains.kotlin.codegen.inline.getOrPut
-import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtDeclaration
-import org.jetbrains.kotlin.psi.KtElement
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 import java.awt.BorderLayout
 import java.awt.Component
+import java.awt.GridBagConstraints
 import java.awt.Image
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import java.io.File
 import javax.imageio.ImageIO
+import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.DefaultListModel
 import javax.swing.ImageIcon
-import javax.swing.JLabel
 import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.ListCellRenderer
 import javax.swing.ListSelectionModel
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 
 class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
   override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
     val contentFactory = ContentFactory.getInstance()
     val panel = RoborazziPreviewPanel(project)
+
     val content = contentFactory.createContent(panel, "", false)
+
     toolWindow.contentManager.addContent(content)
 
     if (toolWindow is ToolWindowEx) {
@@ -85,232 +75,25 @@ class RoborazziPreviewToolWindowFactory : ToolWindowFactory {
   }
 }
 
-class PreviewViewModel {
-
-  var coroutineScope = MainScope()
-  val imagesStateFlow = MutableStateFlow<List<Pair<String, Long>>>(listOf())
-  private val lastEditingFileName = MutableStateFlow<String?>(null)
-  val statusText = MutableStateFlow("No images found")
-  val shouldSeeIndex = MutableStateFlow(-1)
-  private var updateListJob: Job? = null
-
-  fun onRefreshClicked(project: Project) {
-    roborazziLog("onRefreshClicked")
-    refreshList(project)
-  }
-
-  fun onInit(project: Project) {
-    roborazziLog("onInit")
-    refreshList(project)
-  }
-
-  fun onSelectedFileChanged(project: Project) {
-    roborazziLog("onSelectedFileChanged")
-    coroutineScope.launch {
-      updateListJob?.cancel()
-      refreshListProcess(project)
-      selectListIndexByCaret(project)
-    }
-  }
-
-  fun onCaretPositionChanged(project: Project) {
-    roborazziLog("onCaretPositionChanged")
-    coroutineScope.launch {
-      updateListJob?.cancel()
-      refreshListProcess(project)
-      selectListIndexByCaret(project)
-    }
-  }
-
-  private fun selectListIndexByCaret(project: Project) {
-    val editor = FileEditorManager.getInstance(project).selectedTextEditor
-    val offset = editor?.caretModel?.offset
-    if (offset != null) {
-      val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) as? KtFile
-        ?: return
-      val kotlinFile = psiFile as? KtFile ?: return
-      val pe: PsiElement = kotlinFile.findElementAt(editor.caretModel.offset) ?: return
-      val method: KtFunction = findFunction(pe) ?: return
-      roborazziLog("imagesStateFlow.value = ${imagesStateFlow.value}")
-      imagesStateFlow.value.indexOfFirst {
-        it.first.substringAfterLast(File.separator).contains(method.name ?: "")
-      }
-        .let {
-          roborazziLog("shouldSeeIndex.value = $it")
-          shouldSeeIndex.value = it
-        }
-    }
-  }
-
-  private fun findFunction(element: PsiElement): KtFunction? {
-    var methodCnadidate: KtDeclaration? = null
-    while (true) {
-      methodCnadidate = if (methodCnadidate == null) {
-        PsiTreeUtil.getParentOfType(
-          element,
-          KtDeclaration::class.java
-        )
-      } else {
-        if ((element is CompositeElement)) methodCnadidate else PsiTreeUtil.getParentOfType(
-          methodCnadidate,
-          KtDeclaration::class.java
-        )
-      }
-      if (methodCnadidate is KtFunction) {
-        if (methodCnadidate.isLocal) {
-          continue
-        }
-        break
-      }
-      if (methodCnadidate == null) {
-        break
-      }
-    }
-
-    return methodCnadidate as? KtFunction
-  }
-
-  private fun refreshList(project: Project) {
-    updateListJob?.cancel()
-    updateListJob = coroutineScope.launch {
-      refreshListProcess(project)
-    }
-  }
-
-  private suspend fun refreshListProcess(project: Project) {
-    val start = System.currentTimeMillis()
-    roborazziLog("refreshListProcess")
-    statusText.value = "Loading..."
-    yield()
-    val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return run {
-      statusText.value = "No editor found"
-      imagesStateFlow.value = emptyList()
-    }
-
-    val psiFile: PsiFile =
-      PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return run {
-        statusText.value = "No psi file found"
-        imagesStateFlow.value = emptyList()
-      }
-    val kotlinFile = psiFile as? KtFile ?: return run {
-      statusText.value = "No kotlin file found"
-      imagesStateFlow.value = emptyList()
-    }
-    if (lastEditingFileName.value != kotlinFile.name) {
-      imagesStateFlow.value = emptyList()
-      delay(10)
-      lastEditingFileName.value = kotlinFile.name
-    }
-    val allDeclarations = kotlinFile.declarations
-    val allPreviewImageFiles = mutableListOf<File>()
-    fun hasPreviewOrTestAnnotationOrHasNameOfTestFunction(declaration: KtDeclaration): Boolean {
-      return declaration.annotationEntries.any { annotation ->
-        annotation.text.contains("Composable") ||
-          annotation.text.contains("Preview") || annotation.text.contains("Test")
-      } || (declaration is KtFunction && declaration.name?.startsWith("test") == true)
-    }
-
-    val functions: List<KtFunction> = allDeclarations.filterIsInstance<KtFunction>()
-      .filter { hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it) }
-    val classes: List<KtClass> = allDeclarations.filterIsInstance<KtClass>()
-      .filter {
-        it.name?.contains("Test") == true || it.declarations.any {
-          hasPreviewOrTestAnnotationOrHasNameOfTestFunction(it)
-        }
-      }
-
-    val searchPath = project.basePath
-    statusText.value = "Searching images in $searchPath ..."
-
-    val files = withContext(Dispatchers.IO) {
-      val roborazziFolders = ProjectRootManager.getInstance(project).contentRootsFromAllModules
-        .map { File(it.path + AppSettingsState.instance.imagesPathForModule) }
-        .filter {
-          it.exists()
-        }
-
-      roborazziFolders
-        .flatMap { folder ->
-          folder.walkTopDown().filter { it.isFile }
-        }
-    }
-
-    allPreviewImageFiles.addAll(findImages(classes, files))
-    allPreviewImageFiles.addAll(findImages(functions, files))
-
-    if (allPreviewImageFiles.isEmpty()) {
-      statusText.value = "No images found"
-    } else {
-      statusText.value = "${allPreviewImageFiles.size} images found"
-    }
-    val result = allPreviewImageFiles.sortedByClassesAndFunctions(classes, functions)
-      .map { it.path to it.lastModified() }
-    roborazziLog("refreshListProcess result result.size:${result.size} in ${System.currentTimeMillis() - start}ms")
-    imagesStateFlow.value = result
-  }
-
-  private suspend fun List<File>.sortedByClassesAndFunctions(
-    classes: List<KtClass>,
-    functions: List<KtFunction>
-  ): List<File> {
-    val allFunctionNamesOrder = (classes
-      .flatMap { it.declarations.filterIsInstance<KtFunction>() } + functions
-      ).map { it.name }
-    val files = this
-    return withContext(Dispatchers.Default) {
-      files.sortedBy { file ->
-        allFunctionNamesOrder.indexOfFirst { functionName ->
-          file.name.contains(functionName ?: "")
-        }
-      }
-    }
-  }
-
-  private suspend fun findImages(
-    elements: List<KtElement>,
-    files: List<File>
-  ): List<File> {
-    val elementNames = elements.mapNotNull { element ->
-      element.name
-    }
-    return withContext(Dispatchers.Default) {
-      elementNames.flatMap { elementName ->
-        val pattern = ".*$elementName.*.png"
-        files
-          .filter {
-            val matches = it.name.matches(Regex(pattern))
-            matches
-          }
-      }
-    }
-  }
-
-  private fun cancel() {
-    coroutineScope.cancel()
-  }
-
-  fun onHide() {
-    cancel()
-  }
-
-  fun onShouldSeeIndexHandled() {
-    shouldSeeIndex.value = -1
-  }
-}
-
 class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
   private val listModel = DefaultListModel<Pair<String, Long>>()
-  private val statusLabel = JBLabel("No images found")
-  private val statusBar = JBBox.createHorizontalBox().apply {
-    add(JLabel("Refresh: ").apply {
-      addMouseListener(object : MouseAdapter() {
-        override fun mouseClicked(e: MouseEvent) {
-          viewModel?.onRefreshClicked(project)
-        }
-      })
-    })
-    add(statusLabel)
+  private val statusGradleTaskPanel = TaskToolbarPanel(project) { taskName ->
+    viewModel?.onRefreshButtonClicked(project, taskName)
   }
+
+  private val _statusLabel = JBLabel().apply {
+    text = "No images found"
+  }
+  var statusLabel: String
+    get() = _statusLabel.text
+    set(value) {
+      _statusLabel.text = value
+    }
+
+  private val topBar = JBBox.createHorizontalBox().apply {
+    add(statusGradleTaskPanel)
+  }
+
   private val imageList = object : JBList<Pair<String, Long>>(listModel) {
     override fun getScrollableTracksViewportWidth(): Boolean {
       return true
@@ -355,10 +138,50 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
         }
       }
     )
+    project.messageBus.connect()
+      .subscribe(ExecutionManager.EXECUTION_TOPIC, object : ExecutionListener {
+        override fun processTerminated(
+          executorId: String,
+          env: ExecutionEnvironment,
+          handler: ProcessHandler,
+          exitCode: Int
+        ) {
+          super.processTerminated(executorId, env, handler, exitCode)
+          if (env.runProfile is GradleRunConfiguration) {
+            viewModel?.onTaskExecuted(project)
+          }
+        }
+      })
+
     val scrollPane = JBScrollPane(imageList)
     scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-    add(statusBar, BorderLayout.NORTH)
+    add(topBar, BorderLayout.NORTH)
     add(scrollPane, BorderLayout.CENTER)
+    add(JBBox.createHorizontalBox().apply {
+      setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4))
+      add(_statusLabel, GridBagConstraints().apply {
+        gridx = 0
+        gridy = 0
+        anchor = GridBagConstraints.WEST
+        insets = JBUI.insets(4)
+      })
+      add((JBTextField().apply {
+        emptyText.text = "Enter screenshot name..."
+        document.addDocumentListener(object : DocumentListener {
+          override fun insertUpdate(e: DocumentEvent) {
+            viewModel?.onSearchTextChanged(project, text)
+          }
+
+          override fun removeUpdate(e: DocumentEvent) {
+            viewModel?.onSearchTextChanged(project, text)
+          }
+
+          override fun changedUpdate(e: DocumentEvent) {
+            viewModel?.onSearchTextChanged(project, text)
+          }
+        })
+      }))
+    }, BorderLayout.SOUTH)
     viewModel?.onInit(project)
     imageList.addListSelectionListener { event ->
       if (!event.valueIsAdjusting) {
@@ -403,11 +226,21 @@ class RoborazziPreviewPanel(project: Project) : JPanel(BorderLayout()) {
     }
     viewModel?.coroutineScope?.launch {
       viewModel?.statusText?.collect {
-        statusLabel.text = it
+        statusLabel = it
+      }
+    }
+
+    viewModel?.coroutineScope?.launch {
+      viewModel?.dropDownUiState?.collect {
+        statusGradleTaskPanel.isExecuteGradleTaskActionEnabled =
+          it.flag == PreviewViewModel.ActionToolbarUiState.Flag.IDLE
+        statusGradleTaskPanel.setActions(
+          it.tasks.map { taskName -> TaskToolbarPanel.ToolbarAction(taskName, taskName) }
+        )
       }
     }
     viewModel?.coroutineScope?.launch {
-      viewModel?.shouldSeeIndex?.collect {
+      viewModel?.shouldSeeImageIndex?.collect {
         if (it == -1) {
           return@collect
         }
@@ -429,6 +262,59 @@ class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
     val isSelected: Boolean
   )
 
+  private fun collapseFileNameToFitWidth(text: String, maxWidth: Int): String {
+    val label = JBLabel(text)
+    val fontMetrics = label.getFontMetrics(label.font)
+
+    // Adjust the maximum width to take into account the width of the scrollbar (about 20 pixels).
+    val bufferedWidth = maxOf(1, maxWidth - 20)
+
+    // Cache to store the width of previously computed substrings
+    val widthCache = mutableMapOf<String, Int>()
+
+    // Calculates the width of the given substring, using a cache for efficiency.
+    fun stringWidth(substring: String): Int {
+      return widthCache.getOrPut(substring) { fontMetrics.stringWidth(substring) }
+    }
+
+    /**
+     * Performs binary search to find the maximum number of characters that fit within the specified width.
+     * This helps to determine the end position of the substring that fits within the available width.
+     */
+    fun findMaxCharsForWidth(start: Int): Int {
+      var low = start
+      var high = minOf(text.length, start + bufferedWidth)
+
+      while (low < high) {
+        val mid = (low + high + 1) / 2
+        val substringWidth = stringWidth(text.substring(start, mid))
+        if (substringWidth <= bufferedWidth) {
+          low = mid
+        } else {
+          high = mid - 1
+        }
+      }
+
+      return low
+    }
+
+    var start = 0
+    val lines = mutableListOf<String>()
+
+    // Loop to split the text into multiple lines
+    while (start < text.length) {
+      val end = findMaxCharsForWidth(start)
+      if (end == start) {  // Prevent infinite loop
+        break
+      }
+      lines.add(text.substring(start, end))
+      start = end
+    }
+
+    // Return the result in HTML format with <br> tags separating lines
+    return "<html>${lines.joinToString("<br>")}</html>"
+  }
+
   private val imageCache = SLRUMap<Pair<String, Long>, Image>(300, 50)
   private val lruCache = SLRUMap<CacheKey, Box>(300, 50)
   override fun getListCellRendererComponent(
@@ -440,7 +326,8 @@ class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
   ): Component {
     return lruCache.getOrPut(
       CacheKey(
-        width = list.width,
+        // For performance, we use the rounded width to reduce the number of cache invalidations
+        width = list.width - (list.width % 30),
         filePath = value.first,
         lastModified = value.second,
         isSelected = isSelected
@@ -469,7 +356,9 @@ class ImageListCellRenderer : ListCellRenderer<Pair<String, Long>> {
       val box = JBBox.createVerticalBox().apply {
         add(Box.createVerticalStrut(16))
         add(imageLabel)
-        add(JBLabel(file.name))
+
+        val label = JBLabel(collapseFileNameToFitWidth(file.name, list.width))
+        add(label)
         // Add space between items
         add(Box.createVerticalStrut(16))
       }

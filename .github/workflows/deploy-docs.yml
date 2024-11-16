@@ -38,7 +38,7 @@ jobs:
             docker-version: ${{ env.DOCKER_VERSION }}
 
         - name: Upload documentation
-          uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+          uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
           with:
             name: docs
             path: |
@@ -62,7 +62,7 @@ jobs:
 
         steps:
             - name: Download artifacts
-              uses: actions/download-artifact@18f0f591fbc635562c815484d73b6e8e3980482e # v1
+              uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
               with:
                 name: docs
                 path: artifacts
@@ -81,7 +81,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Download artifact
-              uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3
+              uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
               with:
                 name: docs
 

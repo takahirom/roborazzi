@@ -12,9 +12,6 @@ version = "1.0-SNAPSHOT"
 
 kotlin {
   jvm("desktop") {
-    val test by compilations.getting {
-      kotlinOptions.freeCompilerArgs += "-Xcontext-receivers"
-    }
   }
   sourceSets {
     val desktopMain by getting {
@@ -49,6 +46,5 @@ compose.desktop {
 
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
-    freeCompilerArgs += "-Xcontext-receivers"
   }
 }
