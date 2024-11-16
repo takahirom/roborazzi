@@ -39,7 +39,9 @@ android {
 dependencies {
   implementation project(':roborazzi')
   implementation libs.androidx.test.ext.junit.ktx
+  compileOnly libs.robolectric
   compileOnly libs.androidx.test.ext.junit.ktx
   compileOnly libs.androidx.compose.ui.test
   compileOnly libs.androidx.compose.ui.test.junit4
+  api libs.accessibility.test.framework
 }

@@ -236,7 +236,21 @@ data class RoborazziOptions(
     val applyDeviceCrop: Boolean = false,
     val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
     val imageIoFormat: ImageIoFormat = ImageIoFormat(),
+    val accessibilityChecks: AccessibilityChecks = AccessibilityChecks.Disabled
   )
+
+  interface AccessibilityChecker {
+    companion object
+  }
+
+  @ExperimentalRoborazziApi
+  sealed interface AccessibilityChecks {
+    data class Validate(
+      val checker: AccessibilityChecker
+    ) : AccessibilityChecks
+
+    data object Disabled : AccessibilityChecks
+  }
 
   enum class PixelBitConfig {
     Argb8888,
