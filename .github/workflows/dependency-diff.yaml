@@ -19,6 +19,8 @@ jobs:
           configuration: 'releaseRuntimeClasspath'
           modules: |
             roborazzi-compose-ios|commonMainImplementationDependenciesMetadata
+            roborazzi-compose-ios|iosArm64CompilationApi
+            roborazzi-compose-ios|iosArm64CompileKlibraries
             roborazzi-compose-desktop|commonMainImplementationDependenciesMetadata
             roborazzi-ai-gemini|commonMainImplementationDependenciesMetadata
             roborazzi-ai-gemini|androidReleaseRuntimeClasspath
