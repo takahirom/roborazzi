@@ -1,17 +1,16 @@
 package com.github.takahirom.roborazzi
 
-import android.annotation.SuppressLint
-import androidx.compose.ui.platform.ViewRootForTest
+import android.os.Build
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.test.espresso.ViewInteraction
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
+import com.google.android.apps.common.testing.accessibility.framework.AccessibilityHierarchyCheck
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityViewCheckResult
-import com.google.android.apps.common.testing.accessibility.framework.integrations.espresso.AccessibilityValidator
+import org.hamcrest.Matcher
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
-import org.robolectric.shadows.ShadowBuild
 import java.io.File
 
 private val defaultFileProvider: FileProvider =
@@ -62,7 +61,26 @@ class RoborazziRule private constructor(
     val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
       ?: defaultFileProvider,
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+    val accessibilityChecks: AccessibilityChecks = AccessibilityChecks.Disabled,
   )
+
+  @ExperimentalRoborazziApi
+  data class ATFAccessibilityChecker(
+    val checks: Set<AccessibilityHierarchyCheck>,
+    val suppressions: Matcher<in AccessibilityViewCheckResult>,
+    val failureLevel: AccessibilityCheckResultType,
+  ) {
+    companion object
+  }
+
+  @ExperimentalRoborazziApi
+  sealed interface AccessibilityChecks {
+    data class Validate(
+      val checker: ATFAccessibilityChecker
+    ) : AccessibilityChecks
+
+    data object Disabled : AccessibilityChecks
+  }
 
   sealed interface CaptureType {
     /**
@@ -165,12 +183,21 @@ class RoborazziRule private constructor(
   ) {
     val evaluate: () -> Unit = {
       try {
-        val accessibilityValidator: AccessibilityValidator? = findActiveAccessibilityValidator()
+        val accessibilityValidator = ((options.accessibilityChecks as? AccessibilityChecks.Validate)?.checker)
         // TODO enable a11y before showing content
 
         base.evaluate()
 
-        accessibilityValidator?.runAccessibilityChecks(captureRoot)
+        if (accessibilityValidator != null) {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            accessibilityValidator.runAccessibilityChecks(
+              captureRoot = captureRoot,
+              roborazziOptions = options.roborazziOptions
+            )
+          } else {
+            System.err.println("Skipping accessibilityChecks on API " + Build.VERSION.SDK_INT + "(< ${Build.VERSION_CODES.UPSIDE_DOWN_CAKE})")
+          }
+        }
       } catch (e: Exception) {
         throw e
       }
@@ -265,54 +292,5 @@ class RoborazziRule private constructor(
         }
       }
     }
-
-  }
-
-  @SuppressLint("VisibleForTests")
-  private fun AccessibilityValidator.runAccessibilityChecks(
-    captureRoot: CaptureRoot,
-  ) {
-    // TODO remove this once ATF doesn't bail out
-    // https://github.com/google/Accessibility-Test-Framework-for-Android/blob/c65cab02b2a845c29c3da100d6adefd345a144e3/src/main/java/com/google/android/apps/common/testing/accessibility/framework/uielement/AccessibilityHierarchyAndroid.java#L667
-    ShadowBuild.setFingerprint("roborazzi")
-
-    if (captureRoot is CaptureRoot.Compose) {
-      setRunChecksFromRootView(true)
-      val view = (captureRoot.semanticsNodeInteraction.fetchSemanticsNode().root as ViewRootForTest).view.rootView
-
-      // Will throw based on configuration
-      val results = checkAndReturnResults(view)
-
-      // Report on any warnings in the log output if not failing
-      results.forEach { check ->
-        when (check.accessibilityHierarchyCheckResult.type) {
-          AccessibilityCheckResultType.ERROR -> System.err.println("Error: " + check.explain())
-          AccessibilityCheckResultType.WARNING -> System.err.println(
-            "Warning: " + check.explain()
-          )
-
-          AccessibilityCheckResultType.INFO -> println(
-            "Info: " + check.explain()
-          )
-
-          else -> {}
-        }
-      }
-      // TODO handle View cases
-//    } else if (captureRoot is CaptureRoot.View) {
-    }
-  }
-
-  private fun AccessibilityViewCheckResult.explain() = "" + accessibilityHierarchyCheckResult.getShortMessage(
-    java.util.Locale.getDefault()
-  ) + " " + this.element
-
-  private fun findActiveAccessibilityValidator(): AccessibilityValidator? {
-    var accessibilityValidator: AccessibilityValidator? = null
-    val accessibilityChecks = options.roborazziOptions.recordOptions.accessibilityChecks
-    if (accessibilityChecks is RoborazziOptions.AccessibilityChecks.Validate) {
-      accessibilityValidator = (accessibilityChecks.checker as? ATFAccessibilityChecker)?.accessibilityValidator
-    }
-    return accessibilityValidator
   }
 }
