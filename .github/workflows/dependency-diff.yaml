@@ -21,8 +21,13 @@ jobs:
             roborazzi-compose-ios|commonMainImplementationDependenciesMetadata
             roborazzi-compose-desktop|commonMainImplementationDependenciesMetadata
             roborazzi-ai-gemini|commonMainImplementationDependenciesMetadata
+            roborazzi-ai-gemini|androidReleaseRuntimeClasspath
             roborazzi-ai-openai|commonMainImplementationDependenciesMetadata
+            roborazzi-ai-openai|androidReleaseRuntimeClasspath
+            roborazzi-painter|commonMainImplementationDependenciesMetadata
+            roborazzi-painter|jvmRuntimeClasspath
             roborazzi
+            roborazzi-junit-rule
             roborazzi-compose
             roborazzi-compose-preview-scanner-support
 
