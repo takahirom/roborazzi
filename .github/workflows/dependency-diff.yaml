@@ -40,7 +40,10 @@ jobs:
         uses: yumemi-inc/gradle-dependency-diff-report@v2
         id: report-plugin
         with:
-          modules: 'roborazzi-gradle-plugin'
+          modules: |
+            roborazzi-core|commonMainImplementationDependenciesMetadata
+            roborazzi-core|androidReleaseRuntimeClasspath
+            roborazzi-gradle-plugin
           configuration: 'runtimeClasspath'
           project-dir: 'include-build'
 
