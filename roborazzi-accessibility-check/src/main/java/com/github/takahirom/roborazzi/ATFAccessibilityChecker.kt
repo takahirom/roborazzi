@@ -47,7 +47,12 @@ data class ATFAccessibilityChecker(
           roborazziOptions = roborazziOptions
         ).image
 
-      val results = runAllChecks(view, screenshot, checks)
+      val results = runAllChecks(
+        view = view,
+        screenshotBitmap = screenshot,
+        checks = checks,
+        suppressions = suppressions
+      )
 
       reportResults(results, failureLevel)
 
@@ -70,7 +75,8 @@ data class ATFAccessibilityChecker(
           val results = runAllChecks(
             view = view,
             screenshotBitmap = RoboComponent.View(view, roborazziOptions).image,
-            checks = checks
+            checks = checks,
+            suppressions = suppressions
           )
           reportResults(results, failureLevel)
         }

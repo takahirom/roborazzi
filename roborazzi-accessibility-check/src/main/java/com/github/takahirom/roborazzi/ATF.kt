@@ -14,10 +14,11 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 
 @RequiresApi(34)
-internal fun ATFAccessibilityChecker.runAllChecks(
+internal fun runAllChecks(
   view: View,
   screenshotBitmap: Bitmap?,
   checks: Set<AccessibilityHierarchyCheck>,
+  suppressions: Matcher<in AccessibilityViewCheckResult>,
 ): List<AccessibilityViewCheckResult> {
   val parameters = Parameters().apply {
     if (screenshotBitmap != null) {
