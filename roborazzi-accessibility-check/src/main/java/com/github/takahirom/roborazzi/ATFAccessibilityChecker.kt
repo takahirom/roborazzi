@@ -107,6 +107,7 @@ data class ATFAccessibilityChecker(
   companion object
 }
 
+@ExperimentalRoborazziApi
 enum class CheckLevel(private vararg val failedTypes: AccessibilityCheckResultType) {
   Error(AccessibilityCheckResultType.ERROR),
 
@@ -120,6 +121,7 @@ enum class CheckLevel(private vararg val failedTypes: AccessibilityCheckResultTy
   fun isFailure(type: AccessibilityCheckResultType): Boolean = failedTypes.contains(type)
 }
 
+@ExperimentalRoborazziApi
 data class AccessibilityChecksValidate(
   val checker: ATFAccessibilityChecker = ATFAccessibilityChecker.atf(),
   val failureLevel: CheckLevel = CheckLevel.Error,
