@@ -26,7 +26,6 @@ import com.github.takahirom.roborazzi.CheckLevel
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
-import com.github.takahirom.roborazzi.atf
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesElements
 import com.google.android.apps.common.testing.accessibility.framework.matcher.ElementMatchers.withTestTag
@@ -54,7 +53,7 @@ class ComposeA11yTest {
     captureRoot = composeTestRule.onRoot(),
     options = Options(
       accessibilityChecks = AccessibilityChecksValidate(
-        checker = ATFAccessibilityChecker.atf(
+        checker = ATFAccessibilityChecker(
           preset = AccessibilityCheckPreset.LATEST,
           suppressions = matchesElements(withTestTag("suppress"))
         ),

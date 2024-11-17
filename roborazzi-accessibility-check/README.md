@@ -17,7 +17,7 @@
     captureRoot = composeTestRule.onRoot(),
     options = Options(
       accessibilityChecks = AccessibilityChecksValidate(
-        checker = ATFAccessibilityChecker.atf(
+        checker = ATFAccessibilityChecker(
           preset = AccessibilityCheckPreset.LATEST,
           suppressions = matchesElements(withTestTag("suppress"))
         ),
