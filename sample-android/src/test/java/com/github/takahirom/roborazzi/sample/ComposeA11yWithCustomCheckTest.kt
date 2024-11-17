@@ -9,6 +9,7 @@ import androidx.compose.material.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,7 @@ import com.google.android.apps.common.testing.accessibility.framework.Accessibil
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesElements
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityHierarchyCheck
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityHierarchyCheckResult
+import com.google.android.apps.common.testing.accessibility.framework.HashMapResultMetadata
 import com.google.android.apps.common.testing.accessibility.framework.Parameters
 import com.google.android.apps.common.testing.accessibility.framework.ResultMetadata
 import com.google.android.apps.common.testing.accessibility.framework.matcher.ElementMatchers.withTestTag
@@ -85,29 +87,29 @@ class ComposeA11yWithCustomCheckTest {
       parameters: Parameters?
     ): List<AccessibilityHierarchyCheckResult> {
       return getElementsToEvaluate(element, hierarchy).map { childElement ->
-        val mostRedTextColor: Color? = primaryTextColor(childElement, parameters)
+        val textColors = primaryTextColors(childElement, parameters)
 
-        if (mostRedTextColor == null) {
-          result(childElement, NOT_RUN, 1)
-        } else if (mostRedTextColor.isMostlyRed()) {
-          result(childElement, ERROR, 3)
+        if (textColors == null) {
+          result(childElement, NOT_RUN, 1, null)
+        } else if (textColors.find { it.isMostlyRed() } != null) {
+          result(childElement, ERROR, 3, textColors)
         } else {
-          result(childElement, INFO, 3)
+          result(childElement, INFO, 3, textColors)
         }
       }
     }
 
-    private fun primaryTextColor(
+    private fun primaryTextColors(
       childElement: ViewHierarchyElement,
       parameters: Parameters?
-    ) = if (childElement.text == null) {
+    ): Set<Color>? = if (childElement.text == null) {
       null
     } else if (childElement.isVisibleToUser != true) {
       null
     } else {
       val textColor = childElement.textColor
       if (textColor != null) {
-        Color(textColor)
+        setOf(Color(textColor))
       } else {
         val screenCapture = parameters?.screenCapture
         val textCharacterLocations = childElement.textCharacterLocations
@@ -115,12 +117,9 @@ class ComposeA11yWithCustomCheckTest {
         if (screenCapture == null || textCharacterLocations.isEmpty()) {
           null
         } else {
-          val argb = textCharacterLocations.firstNotNullOfOrNull { rect ->
-            screenCapture.crop(rect.left, rect.top, rect.width, rect.height).pixels.firstOrNull {
-              Color(it).isMostlyRed()
-            }
-          }
-          if (argb != null) Color(argb) else null
+          textCharacterLocations.flatMap { rect ->
+            screenCapture.crop(rect.left, rect.top, rect.width, rect.height).pixels.asSequence()
+          }.distinct().map { Color(it) }.toSet()
         }
       }
     }
@@ -132,13 +131,18 @@ class ComposeA11yWithCustomCheckTest {
     private fun result(
       childElement: ViewHierarchyElement?,
       result: AccessibilityCheckResultType,
-      resultId: Int
+      resultId: Int,
+      textColors: Iterable<Color>?
     ) = CustomAccessibilityHierarchyCheckResult(
       this::class.java,
       result,
       childElement,
       resultId,
-      null
+      HashMapResultMetadata().apply {
+        if (textColors != null) {
+          putString("textColors", textColors.joinToString { "0x${it.toArgb().toUInt().toString(16)}" })
+        }
+      }
     )
   }
 
