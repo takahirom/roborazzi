@@ -1,8 +1,8 @@
 package com.github.takahirom.roborazzi
 
+import android.graphics.Bitmap
 import android.view.View
 import androidx.annotation.RequiresApi
-import com.github.takahirom.roborazzi.RoborazziRule.CaptureRoot
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityHierarchyCheck
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityViewCheckResult
@@ -15,17 +15,13 @@ import org.hamcrest.Matchers
 
 @RequiresApi(34)
 internal fun ATFAccessibilityChecker.runAllChecks(
-  roborazziOptions: RoborazziOptions,
   view: View,
-  captureRoot: CaptureRoot.Compose,
+  screenshotBitmap: Bitmap?,
   checks: Set<AccessibilityHierarchyCheck>,
 ): List<AccessibilityViewCheckResult> {
-  val screenshot =
-    RoboComponent.Compose(captureRoot.semanticsNodeInteraction.fetchSemanticsNode(), roborazziOptions).image
-
   val parameters = Parameters().apply {
-    if (screenshot != null) {
-      putScreenCapture(BitmapImage(screenshot))
+    if (screenshotBitmap != null) {
+      putScreenCapture(BitmapImage(screenshotBitmap))
     }
     setSaveViewImages(true)
   }

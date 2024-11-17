@@ -1,14 +1,19 @@
 package com.github.takahirom.roborazzi
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.os.Build
+import android.view.View
 import androidx.compose.ui.platform.ViewRootForTest
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
 import com.github.takahirom.roborazzi.RoborazziRule.CaptureRoot
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityHierarchyCheck
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityViewCheckResult
 import com.google.android.apps.common.testing.accessibility.framework.integrations.espresso.AccessibilityViewCheckException
 import org.hamcrest.Matcher
+import org.hamcrest.Matchers
 import org.robolectric.shadows.ShadowBuild
 
 @ExperimentalRoborazziApi
@@ -35,31 +40,67 @@ data class ATFAccessibilityChecker(
         (captureRoot.semanticsNodeInteraction.fetchSemanticsNode().root as ViewRootForTest).view.rootView
 
       // Will throw based on configuration
-      val results = runAllChecks(roborazziOptions, view, captureRoot, checks)
 
-      // Report on any warnings in the log output if not failing
-      results.forEach { check ->
-        when (check.type) {
-          AccessibilityCheckResultType.ERROR -> roborazziErrorLog("Error: $check")
-          AccessibilityCheckResultType.WARNING -> roborazziErrorLog(
-            "Warning: $check"
-          )
+      val screenshot: Bitmap? =
+        RoboComponent.Compose(
+          node = captureRoot.semanticsNodeInteraction.fetchSemanticsNode(),
+          roborazziOptions = roborazziOptions
+        ).image
 
-          AccessibilityCheckResultType.INFO -> roborazziReportLog(
-            "Info: $check"
-          )
+      val results = runAllChecks(view, screenshot, checks)
 
-          else -> {}
+      reportResults(results, failureLevel)
+
+    } else if (captureRoot is CaptureRoot.View) {
+      val viewInteraction = captureRoot.viewInteraction
+      // Use perform to get the view
+      viewInteraction.perform(object : ViewAction {
+        override fun getDescription(): String {
+          return "Run accessibility checks"
         }
-      }
 
-      val failures = results.filter { failureLevel.isFailure(it.type) }
-      if (failures.isNotEmpty()) {
-        throw AccessibilityViewCheckException(failures.toMutableList())
-      }
+        override fun getConstraints(): Matcher<View> {
+          return Matchers.any(View::class.java)
+        }
 
-      // TODO handle View cases
-//    } else if (captureRoot is CaptureRoot.View) {
+        override fun perform(uiController: UiController?, view: View?) {
+          if (view == null) {
+            throw IllegalStateException("View is null")
+          }
+          val results = runAllChecks(
+            view = view,
+            screenshotBitmap = RoboComponent.View(view, roborazziOptions).image,
+            checks = checks
+          )
+          reportResults(results, failureLevel)
+        }
+      })
+    }
+  }
+
+  private fun reportResults(
+    results: List<AccessibilityViewCheckResult>,
+    failureLevel: CheckLevel
+  ) {
+    // Report on any warnings in the log output if not failing
+    results.forEach { check ->
+      when (check.type) {
+        AccessibilityCheckResultType.ERROR -> roborazziErrorLog("Error: $check")
+        AccessibilityCheckResultType.WARNING -> roborazziErrorLog(
+          "Warning: $check"
+        )
+
+        AccessibilityCheckResultType.INFO -> roborazziReportLog(
+          "Info: $check"
+        )
+
+        else -> {}
+      }
+    }
+
+    val failures = results.filter { failureLevel.isFailure(it.type) }
+    if (failures.isNotEmpty()) {
+      throw AccessibilityViewCheckException(failures.toMutableList())
     }
   }
 
