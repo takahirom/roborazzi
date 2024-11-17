@@ -20,12 +20,12 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.ATFAccessibilityChecker
+import com.github.takahirom.roborazzi.AccessibilityChecksValidate
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziOptions.RecordOptions
 import com.github.takahirom.roborazzi.RoborazziRule
-import com.github.takahirom.roborazzi.RoborazziRule.ATFAccessibilityChecker
-import com.github.takahirom.roborazzi.RoborazziRule.AccessibilityChecks
 import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule.Options
 import com.github.takahirom.roborazzi.atf
@@ -67,7 +67,7 @@ class ComposeA11yTest {
           applyDeviceCrop = true
         ),
       ),
-      accessibilityChecks = AccessibilityChecks.Validate(
+      accessibilityChecks = AccessibilityChecksValidate(
         checker = atfAccessibilityChecker
       )
     )

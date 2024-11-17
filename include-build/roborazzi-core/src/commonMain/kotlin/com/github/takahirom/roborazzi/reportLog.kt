@@ -1,5 +1,9 @@
 package com.github.takahirom.roborazzi
 
-fun reportLog(message: String) {
+@InternalRoborazziApi
+fun roborazziReportLog(message: String) {
   println("Roborazzi: $message")
 }
+
+@InternalRoborazziApi
+expect fun roborazziErrorLog(message: String)
