@@ -44,7 +44,7 @@ fun processOutputImageAndReport(
       "\ngoldenFile:${goldenFile.absolutePath}"
   }
   if (taskType.isEnabled() && !roborazziSystemPropertyTaskType().isEnabled()) {
-    println(
+    roborazziReportLog(
       "Roborazzi Warning:\n" +
         "You have specified '$taskType' without the necessary plugin configuration like roborazzi.test.record=true or ./gradlew recordRoborazziDebug.\n" +
         "This may complicate your screenshot testing process because the behavior is not changeable. And it doesn't allow Roborazzi plugin to generate test report.\n" +
@@ -98,10 +98,10 @@ fun processOutputImageAndReport(
         )
       diffPercentage = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
       val changed = !compareOptions.resultValidator(comparisonResult)
-      reportLog("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
+      roborazziReportLog("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
       changed
     } else {
-      reportLog("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
+      roborazziReportLog("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
       true
     }
 

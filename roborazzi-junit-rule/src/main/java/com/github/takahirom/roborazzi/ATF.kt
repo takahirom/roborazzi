@@ -38,12 +38,12 @@ internal fun ATFAccessibilityChecker.runAccessibilityChecks(
     // Report on any warnings in the log output if not failing
     results.forEach { check ->
       when (check.type) {
-        AccessibilityCheckResultType.ERROR -> System.err.println("Error: $check")
-        AccessibilityCheckResultType.WARNING -> System.err.println(
+        AccessibilityCheckResultType.ERROR -> roborazziErrorLog("Error: $check")
+        AccessibilityCheckResultType.WARNING -> roborazziErrorLog(
           "Warning: $check"
         )
 
-        AccessibilityCheckResultType.INFO -> println(
+        AccessibilityCheckResultType.INFO -> roborazziReportLog(
           "Info: $check"
         )
 

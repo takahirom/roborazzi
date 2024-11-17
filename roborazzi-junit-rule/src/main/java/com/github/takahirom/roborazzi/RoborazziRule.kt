@@ -195,7 +195,7 @@ class RoborazziRule private constructor(
               roborazziOptions = options.roborazziOptions
             )
           } else {
-            System.err.println("Skipping accessibilityChecks on API " + Build.VERSION.SDK_INT + "(< ${Build.VERSION_CODES.UPSIDE_DOWN_CAKE})")
+            roborazziErrorLog("Skipping accessibilityChecks on API " + Build.VERSION.SDK_INT + "(< ${Build.VERSION_CODES.UPSIDE_DOWN_CAKE})")
           }
         }
       } catch (e: Exception) {

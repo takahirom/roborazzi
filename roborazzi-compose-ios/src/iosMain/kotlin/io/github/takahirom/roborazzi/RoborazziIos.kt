@@ -1,3 +1,5 @@
+@file:OptIn(InternalRoborazziApi::class)
+
 package io.github.takahirom.roborazzi
 
 import androidx.compose.ui.graphics.PixelMap
@@ -9,9 +11,10 @@ import androidx.compose.ui.test.captureToImage
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.getReportFileName
-import com.github.takahirom.roborazzi.reportLog
+import com.github.takahirom.roborazzi.roborazziReportLog
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
@@ -209,7 +212,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
   newImage: UIImage
 ): CGImageRef? {
   if (goldenImage == null) {
-    reportLog("CompareImage Golden image is null")
+    roborazziReportLog("CompareImage Golden image is null")
     return newImage.CIImage?.CGImage
   }
 
@@ -240,7 +243,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
     bitmapInfo
   )
   if (context == null) {
-    reportLog("CompareImage Failed to create context")
+    roborazziReportLog("CompareImage Failed to create context")
     return null
   }
 
@@ -333,7 +336,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
 
   val cgBitmapContextCreateImage = CGBitmapContextCreateImage(context)
   if (cgBitmapContextCreateImage == null) {
-    reportLog("CompareImage Failed to create image")
+    roborazziReportLog("CompareImage Failed to create image")
   }
   return cgBitmapContextCreateImage
 }
@@ -379,7 +382,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
             newPixelIndex = newPixelIndex,
           )
         ) {
-          reportLog("Pixel changed at ($x, $y) from rgba(${goldenPtr[goldenPixelIndex]}, ${goldenPtr[goldenPixelIndex + 1]}, ${goldenPtr[goldenPixelIndex + 2]}, ${goldenPtr[goldenPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
+          roborazziReportLog("Pixel changed at ($x, $y) from rgba(${goldenPtr[goldenPixelIndex]}, ${goldenPtr[goldenPixelIndex + 1]}, ${goldenPtr[goldenPixelIndex + 2]}, ${goldenPtr[goldenPixelIndex + 3]}) to rgba(${newPtr[newPixelIndex]}, ${newPtr[newPixelIndex + 1]}, ${newPtr[newPixelIndex + 2]}, ${newPtr[newPixelIndex + 3]})")
           val stringBuilder = StringBuilder()
 
           // properties
@@ -419,7 +422,7 @@ private fun unpremultiplyAlpha(cgImage: CGImageRef): CGImageRef? {
             )
           )
           stringBuilder.appendLine("new CGImageGetBytesPerRow" + CGImageGetBytesPerRow(newCgImage))
-          reportLog(stringBuilder.toString())
+          roborazziReportLog(stringBuilder.toString())
 
           return true
         }
@@ -697,7 +700,7 @@ private fun writeImage(newImage: UIImage, path: String) {
     path,
     true
   )
-  reportLog("Image is saved $path")
+  roborazziReportLog("Image is saved $path")
 }
 
 private fun loadGoldenImage(
@@ -709,11 +712,11 @@ private fun loadGoldenImage(
   @Suppress("USELESS_CAST")
   val image: UIImage? = UIImage(filePath) as UIImage?
   if (image == null) {
-    reportLog("can't load reference image from $filePath")
+    roborazziReportLog("can't load reference image from $filePath")
   }
   val goldenImage = image ?.let { convertImageFormat(it) }
   if (goldenImage == null) {
-    reportLog("can't convert reference image from $filePath")
+    roborazziReportLog("can't convert reference image from $filePath")
   }
   return goldenImage
 }
@@ -759,7 +762,7 @@ private fun writeJson(
       ), atomically = true
     )
 
-  reportLog(
+  roborazziReportLog(
     "Report file is saved ${
       getReportFileName(
         absolutePath = resultsDir,
