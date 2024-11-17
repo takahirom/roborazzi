@@ -15,12 +15,12 @@ import org.robolectric.shadows.ShadowBuild
 data class ATFAccessibilityChecker(
   val checks: Set<AccessibilityHierarchyCheck>,
   val suppressions: Matcher<in AccessibilityViewCheckResult>,
-  val failureLevel: AccessibilityCheckResultType,
 ) {
   @SuppressLint("VisibleForTests")
   fun runAccessibilityChecks(
     captureRoot: CaptureRoot,
     roborazziOptions: RoborazziOptions,
+    failureLevel: CheckLevel,
   ) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
       roborazziErrorLog("Skipping accessibilityChecks on API " + Build.VERSION.SDK_INT + "(< ${Build.VERSION_CODES.UPSIDE_DOWN_CAKE})")
@@ -53,7 +53,7 @@ data class ATFAccessibilityChecker(
         }
       }
 
-      val failures = results.filter { it.type.ordinal <= failureLevel.ordinal }
+      val failures = results.filter { failureLevel.isFailure(it.type) }
       if (failures.isNotEmpty()) {
         throw AccessibilityViewCheckException(failures.toMutableList())
       }
@@ -66,8 +66,22 @@ data class ATFAccessibilityChecker(
   companion object
 }
 
+enum class CheckLevel(private vararg val failedTypes: AccessibilityCheckResultType) {
+  Error(AccessibilityCheckResultType.ERROR),
+
+  Warning(
+    AccessibilityCheckResultType.ERROR,
+    AccessibilityCheckResultType.WARNING
+  ),
+
+  LogOnly;
+
+  fun isFailure(type: AccessibilityCheckResultType): Boolean = failedTypes.contains(type)
+}
+
 data class AccessibilityChecksValidate(
-  val checker: ATFAccessibilityChecker
+  val checker: ATFAccessibilityChecker = ATFAccessibilityChecker.atf(),
+  val failureLevel: CheckLevel = CheckLevel.Error,
 ) : RoborazziRule.AccessibilityChecks {
   override fun runAccessibilityChecks(
     captureRoot: CaptureRoot,
@@ -76,6 +90,7 @@ data class AccessibilityChecksValidate(
     checker.runAccessibilityChecks(
       captureRoot = captureRoot,
       roborazziOptions = roborazziOptions,
+      failureLevel = failureLevel,
     )
   }
 }

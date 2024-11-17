@@ -4,7 +4,6 @@ import android.view.View
 import androidx.annotation.RequiresApi
 import com.github.takahirom.roborazzi.RoborazziRule.CaptureRoot
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
-import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityHierarchyCheck
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityViewCheckResult
 import com.google.android.apps.common.testing.accessibility.framework.Parameters
@@ -47,21 +46,17 @@ internal fun ATFAccessibilityChecker.runAllChecks(
 fun ATFAccessibilityChecker.Companion.atf(
   preset: AccessibilityCheckPreset? = AccessibilityCheckPreset.LATEST,
   suppressions: Matcher<in AccessibilityViewCheckResult> = Matchers.not(Matchers.anything()),
-  failureLevel: AccessibilityCheckResultType = AccessibilityCheckResultType.ERROR,
 ) =
   ATFAccessibilityChecker(
     checks = AccessibilityCheckPreset.getAccessibilityHierarchyChecksForPreset(preset),
     suppressions = suppressions,
-    failureLevel = failureLevel
   )
 
 fun ATFAccessibilityChecker.Companion.atf(
   checks: Set<AccessibilityHierarchyCheck>,
   suppressions: Matcher<in AccessibilityViewCheckResult> = Matchers.not(Matchers.anything()),
-  failureLevel: AccessibilityCheckResultType = AccessibilityCheckResultType.ERROR,
 ) =
   ATFAccessibilityChecker(
     checks = checks,
     suppressions = suppressions,
-    failureLevel = failureLevel
   )

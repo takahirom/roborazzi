@@ -22,15 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.ATFAccessibilityChecker
 import com.github.takahirom.roborazzi.AccessibilityChecksValidate
+import com.github.takahirom.roborazzi.CheckLevel
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
-import com.github.takahirom.roborazzi.RoborazziOptions
-import com.github.takahirom.roborazzi.RoborazziOptions.RecordOptions
 import com.github.takahirom.roborazzi.RoborazziRule
-import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule.Options
 import com.github.takahirom.roborazzi.atf
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
-import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesElements
 import com.google.android.apps.common.testing.accessibility.framework.matcher.ElementMatchers.withTestTag
 import org.junit.Rule
@@ -51,24 +48,17 @@ class ComposeA11yTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-  val atfAccessibilityChecker = ATFAccessibilityChecker.atf(
-    preset = AccessibilityCheckPreset.LATEST,
-    failureLevel = AccessibilityCheckResultType.WARNING,
-    suppressions = matchesElements(withTestTag("suppress"))
-  )
-
   @get:Rule
   val roborazziRule = RoborazziRule(
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = Options(
-      captureType = CaptureType.LastImage(), roborazziOptions = RoborazziOptions(
-        recordOptions = RecordOptions(
-          applyDeviceCrop = true
-        ),
-      ),
       accessibilityChecks = AccessibilityChecksValidate(
-        checker = atfAccessibilityChecker
+        checker = ATFAccessibilityChecker.atf(
+          preset = AccessibilityCheckPreset.LATEST,
+          suppressions = matchesElements(withTestTag("suppress"))
+        ),
+        failureLevel = CheckLevel.Warning,
       )
     )
   )
