@@ -41,6 +41,11 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.util.Locale
 
+/**
+ * Test demonstrating a completely custom ATF Check. Expected to be a niche usecase, but critical when required.
+ *
+ *
+ */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = RobolectricDeviceQualifiers.Pixel4, sdk = [35])
@@ -67,6 +72,9 @@ class ComposeA11yWithCustomCheckTest {
     )
   )
 
+  /**
+   * Custom Check that demonstrates accessing the screenshot and element data.
+   */
   class NoRedTextCheck : AccessibilityHierarchyCheck() {
     override fun getHelpTopic(): String? = null
 
