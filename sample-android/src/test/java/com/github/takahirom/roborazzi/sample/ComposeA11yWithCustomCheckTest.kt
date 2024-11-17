@@ -43,8 +43,6 @@ import java.util.Locale
 
 /**
  * Test demonstrating a completely custom ATF Check. Expected to be a niche usecase, but critical when required.
- *
- *
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
