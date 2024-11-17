@@ -8,7 +8,7 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 
 
 android {
-  namespace 'com.github.takahirom.roborazzi.junit.rule'
+  namespace 'com.github.takahirom.roborazzi.accessibility.check'
   compileSdk 34
 
   defaultConfig {
@@ -26,9 +26,6 @@ android {
   }
   buildFeatures {
   }
-  composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-  }
   testOptions {
     unitTests {
       includeAndroidResources = true
@@ -37,6 +34,7 @@ android {
 }
 
 dependencies {
+  implementation project(':roborazzi-junit-rule')
   implementation project(':roborazzi')
   implementation libs.androidx.test.ext.junit.ktx
   compileOnly libs.robolectric

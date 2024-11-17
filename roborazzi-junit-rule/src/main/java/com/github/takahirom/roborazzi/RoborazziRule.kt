@@ -1,13 +1,8 @@
 package com.github.takahirom.roborazzi
 
-import android.os.Build
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.test.espresso.ViewInteraction
-import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
-import com.google.android.apps.common.testing.accessibility.framework.AccessibilityHierarchyCheck
-import com.google.android.apps.common.testing.accessibility.framework.AccessibilityViewCheckResult
-import org.hamcrest.Matcher
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
@@ -65,21 +60,20 @@ class RoborazziRule private constructor(
   )
 
   @ExperimentalRoborazziApi
-  data class ATFAccessibilityChecker(
-    val checks: Set<AccessibilityHierarchyCheck>,
-    val suppressions: Matcher<in AccessibilityViewCheckResult>,
-    val failureLevel: AccessibilityCheckResultType,
-  ) {
-    companion object
-  }
-
-  @ExperimentalRoborazziApi
-  sealed interface AccessibilityChecks {
-    data class Validate(
-      val checker: ATFAccessibilityChecker
-    ) : AccessibilityChecks
-
-    data object Disabled : AccessibilityChecks
+  interface AccessibilityChecks {
+    fun runAccessibilityChecks(
+      captureRoot: CaptureRoot,
+      roborazziOptions: RoborazziOptions,
+    )
+    // Use `roborazzi-accessibility-check`'s AccessibilityChecksValidate
+    data object Disabled : AccessibilityChecks {
+      override fun runAccessibilityChecks(
+        captureRoot: CaptureRoot,
+        roborazziOptions: RoborazziOptions
+      ) {
+        // Do nothing
+      }
+    }
   }
 
   sealed interface CaptureType {
@@ -119,7 +113,8 @@ class RoborazziRule private constructor(
     ) : CaptureType
   }
 
-  internal sealed interface CaptureRoot {
+  @InternalRoborazziApi
+  sealed interface CaptureRoot {
     object None : CaptureRoot
     class Compose(
       val composeRule: ComposeTestRule,
@@ -183,21 +178,16 @@ class RoborazziRule private constructor(
   ) {
     val evaluate: () -> Unit = {
       try {
-        val accessibilityValidator = ((options.accessibilityChecks as? AccessibilityChecks.Validate)?.checker)
+        val accessibilityChecks = options.accessibilityChecks
         // TODO enable a11y before showing content
 
         base.evaluate()
 
-        if (accessibilityValidator != null) {
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            accessibilityValidator.runAccessibilityChecks(
-              captureRoot = captureRoot,
-              roborazziOptions = options.roborazziOptions
-            )
-          } else {
-            roborazziErrorLog("Skipping accessibilityChecks on API " + Build.VERSION.SDK_INT + "(< ${Build.VERSION_CODES.UPSIDE_DOWN_CAKE})")
-          }
-        }
+        accessibilityChecks.runAccessibilityChecks(
+          captureRoot = captureRoot,
+          roborazziOptions = options.roborazziOptions
+        )
+
       } catch (e: Exception) {
         throw e
       }
