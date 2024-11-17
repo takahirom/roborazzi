@@ -9,15 +9,16 @@ import com.google.android.apps.common.testing.accessibility.framework.Accessibil
 import com.google.android.apps.common.testing.accessibility.framework.Parameters
 import com.google.android.apps.common.testing.accessibility.framework.ViewChecker
 import com.google.android.apps.common.testing.accessibility.framework.utils.contrast.BitmapImage
+import com.google.common.collect.ImmutableSet
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
-
 
 @RequiresApi(34)
 internal fun ATFAccessibilityChecker.runAllChecks(
   roborazziOptions: RoborazziOptions,
   view: View,
-  captureRoot: CaptureRoot.Compose
+  captureRoot: CaptureRoot.Compose,
+  checks: Set<AccessibilityHierarchyCheck>,
 ): List<AccessibilityViewCheckResult> {
   val screenshot =
     RoboComponent.Compose(captureRoot.semanticsNodeInteraction.fetchSemanticsNode(), roborazziOptions).image
@@ -33,10 +34,7 @@ internal fun ATFAccessibilityChecker.runAllChecks(
     setObtainCharacterLocations(true)
   }
 
-  val preset = AccessibilityCheckPreset.LATEST
-  val checks = AccessibilityCheckPreset.getAccessibilityHierarchyChecksForPreset(preset)
-
-  val results = viewChecker.runChecksOnView(checks, view, parameters)
+  val results = viewChecker.runChecksOnView(ImmutableSet.copyOf(checks), view, parameters)
 
   return results.filter {
     !suppressions.matches(it)

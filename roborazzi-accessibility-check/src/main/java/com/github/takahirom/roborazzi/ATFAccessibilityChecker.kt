@@ -35,7 +35,7 @@ data class ATFAccessibilityChecker(
         (captureRoot.semanticsNodeInteraction.fetchSemanticsNode().root as ViewRootForTest).view.rootView
 
       // Will throw based on configuration
-      val results = runAllChecks(roborazziOptions, view, captureRoot)
+      val results = runAllChecks(roborazziOptions, view, captureRoot, checks)
 
       // Report on any warnings in the log output if not failing
       results.forEach { check ->
