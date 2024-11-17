@@ -42,5 +42,4 @@ dependencies {
   compileOnly libs.robolectric
   compileOnly libs.androidx.compose.ui.test
   compileOnly libs.androidx.compose.ui.test.junit4
-  api libs.accessibility.test.framework
 }
