@@ -73,9 +73,9 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           Modifier
-            .size(48.dp)
-            .background(Color.Black)
-            .clickable {})
+              .size(48.dp)
+              .background(Color.Black)
+              .clickable {})
       }
     }
   }
@@ -88,11 +88,11 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           Modifier
-            .size(48.dp)
-            .background(Color.Black)
-            .semantics {
-              contentDescription = ""
-            })
+              .size(48.dp)
+              .background(Color.Black)
+              .semantics {
+                  contentDescription = ""
+              })
       }
     }
   }
@@ -108,8 +108,8 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Button(
           onClick = {}, modifier = Modifier
-            .size(30.dp)
-            .testTag("clickable")
+                .size(30.dp)
+                .testTag("clickable")
         ) {
           Text("Something to Click")
         }
@@ -136,12 +136,12 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           Modifier
-            .size(48.dp)
-            .background(Color.Black)
-            .testTag("suppress")
-            .semantics {
-              contentDescription = ""
-            })
+              .size(48.dp)
+              .background(Color.Black)
+              .testTag("suppress")
+              .semantics {
+                  contentDescription = ""
+              })
       }
     }
   }
@@ -154,8 +154,8 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           modifier = Modifier
-            .size(100.dp)
-            .background(Color.DarkGray)
+              .size(100.dp)
+              .background(Color.DarkGray)
         ) {
           Text("Something hard to read", color = Color.DarkGray)
         }
@@ -169,8 +169,8 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           modifier = Modifier
-            .size(100.dp)
-            .background(Color.DarkGray)
+              .size(100.dp)
+              .background(Color.DarkGray)
         ) {
           Text("Something not hard to read", color = Color.White)
         }
@@ -188,20 +188,21 @@ class ComposeA11yTest {
       ) {
         Box(
           modifier = Modifier
-            .size(100.dp)
-            .background(Color.DarkGray)
-            .testTag("nothard")
+              .size(100.dp)
+              .background(Color.DarkGray)
+              .testTag("nothard")
         ) {
           Text("Something not hard to read", color = Color.White)
         }
-        Box(
+        // Use a single text otherwise the Box and Text both trigger and must be suppressed
+        Text(
           modifier = Modifier
-            .size(100.dp)
-            .background(Color.DarkGray)
-            .testTag("suppress")
-        ) {
-          Text("Something hard to read", color = Color.DarkGray)
-        }
+              .size(100.dp)
+              .background(Color.DarkGray)
+              .testTag("suppress"),
+          text = "Something hard to read",
+          color = Color.DarkGray
+        )
       }
     }
 
