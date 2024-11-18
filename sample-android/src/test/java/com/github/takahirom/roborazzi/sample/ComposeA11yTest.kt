@@ -144,7 +144,7 @@ class ComposeA11yTest {
     composeTestRule.setContent {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(modifier = Modifier.size(100.dp).background(Color.DarkGray)) {
-          Text("Something hard to read", color = Color.White)
+          Text("Something not hard to read", color = Color.White)
         }
       }
     }
