@@ -60,7 +60,7 @@ class ComposeA11yTest {
           preset = AccessibilityCheckPreset.LATEST,
           suppressions = matchesElements(withTestTag("suppress"))
         ),
-        failureLevel = CheckLevel.LogOnly,
+        failureLevel = CheckLevel.Warning,
       )
     )
   )
