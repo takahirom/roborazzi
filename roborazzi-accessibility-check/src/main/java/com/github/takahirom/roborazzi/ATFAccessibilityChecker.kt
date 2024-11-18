@@ -1,5 +1,6 @@
 package com.github.takahirom.roborazzi
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Build
 import android.view.View
@@ -62,6 +63,7 @@ data class ATFAccessibilityChecker(
     }
   }
 
+  @SuppressLint("VisibleForTests")
   internal fun runAccessibilityChecks(
     captureRoot: CaptureRoot,
     roborazziOptions: RoborazziOptions,
@@ -79,7 +81,7 @@ data class ATFAccessibilityChecker(
     }
 
     if (captureRoot is CaptureRoot.Compose) {
-      val view = (captureRoot.semanticsNodeInteraction.fetchSemanticsNode().root as ViewRootForTest).view.rootView
+      val view = (captureRoot.semanticsNodeInteraction.fetchSemanticsNode().root as ViewRootForTest).view
 
       // Will throw based on configuration
 
