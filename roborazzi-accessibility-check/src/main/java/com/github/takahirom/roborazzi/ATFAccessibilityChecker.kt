@@ -1,6 +1,5 @@
 package com.github.takahirom.roborazzi
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Build
 import android.view.View
@@ -63,8 +62,7 @@ data class ATFAccessibilityChecker(
     }
   }
 
-  @SuppressLint("VisibleForTests")
-  fun runAccessibilityChecks(
+  internal fun runAccessibilityChecks(
     captureRoot: CaptureRoot,
     roborazziOptions: RoborazziOptions,
     failureLevel: CheckLevel,

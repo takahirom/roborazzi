@@ -61,6 +61,7 @@ class RoborazziRule private constructor(
 
   @ExperimentalRoborazziApi
   interface AccessibilityChecks {
+    @InternalRoborazziApi
     fun runAccessibilityChecks(
       captureRoot: CaptureRoot,
       roborazziOptions: RoborazziOptions,
