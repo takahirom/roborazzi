@@ -6,8 +6,10 @@ import android.os.Build
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
+import androidx.test.espresso.ViewInteraction
 import com.github.takahirom.roborazzi.RoborazziRule.CaptureRoot
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
@@ -21,6 +23,30 @@ import com.google.common.collect.ImmutableSet
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.robolectric.shadows.ShadowBuild
+
+fun SemanticsNodeInteraction.checkRoboAccessibility(
+  checker: ATFAccessibilityChecker = ATFAccessibilityChecker(),
+  failureLevel: CheckLevel = CheckLevel.Error,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+) {
+  checker.runAccessibilityChecks(
+    checkNode = ATFAccessibilityChecker.CheckNode.Compose(this),
+    roborazziOptions = roborazziOptions,
+    failureLevel = failureLevel,
+  )
+}
+
+fun ViewInteraction.checkRoboAccessibility(
+  checker: ATFAccessibilityChecker = ATFAccessibilityChecker(),
+  failureLevel: CheckLevel = CheckLevel.Error,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+) {
+  checker.runAccessibilityChecks(
+    checkNode = ATFAccessibilityChecker.CheckNode.View(this),
+    roborazziOptions = roborazziOptions,
+    failureLevel = failureLevel,
+  )
+}
 
 @ExperimentalRoborazziApi
 data class ATFAccessibilityChecker(
@@ -63,9 +89,14 @@ data class ATFAccessibilityChecker(
     }
   }
 
+  internal sealed interface CheckNode {
+    data class View(val viewInteraction: ViewInteraction) : CheckNode
+    data class Compose(val semanticsNodeInteraction: SemanticsNodeInteraction) : CheckNode
+  }
+
   @SuppressLint("VisibleForTests")
   internal fun runAccessibilityChecks(
-    captureRoot: CaptureRoot,
+    checkNode: CheckNode,
     roborazziOptions: RoborazziOptions,
     failureLevel: CheckLevel,
   ) {
@@ -80,13 +111,15 @@ data class ATFAccessibilityChecker(
       ShadowBuild.setFingerprint("roborazzi")
     }
 
-    if (captureRoot is CaptureRoot.Compose) {
-      val view = (captureRoot.semanticsNodeInteraction.fetchSemanticsNode().root as ViewRootForTest).view
+    if (checkNode is CheckNode.Compose) {
+      val view =
+        (checkNode.semanticsNodeInteraction.fetchSemanticsNode().root as ViewRootForTest).view
 
       // Will throw based on configuration
 
       val screenshot: Bitmap? = RoboComponent.Compose(
-        node = captureRoot.semanticsNodeInteraction.fetchSemanticsNode(), roborazziOptions = roborazziOptions
+        node = checkNode.semanticsNodeInteraction.fetchSemanticsNode(),
+        roborazziOptions = roborazziOptions
       ).image
 
       val results = runAllChecks(
@@ -95,8 +128,8 @@ data class ATFAccessibilityChecker(
 
       reportResults(results, failureLevel)
 
-    } else if (captureRoot is CaptureRoot.View) {
-      val viewInteraction = captureRoot.viewInteraction
+    } else if (checkNode is CheckNode.View) {
+      val viewInteraction = checkNode.viewInteraction
       // Use perform to get the view
       viewInteraction.perform(object : ViewAction {
         override fun getDescription(): String {
@@ -165,7 +198,7 @@ enum class CheckLevel(private vararg val failedTypes: AccessibilityCheckResultTy
 }
 
 @ExperimentalRoborazziApi
-data class AccessibilityChecksValidate(
+data class ValidateAfterTest(
   val checker: ATFAccessibilityChecker = ATFAccessibilityChecker(),
   val failureLevel: CheckLevel = CheckLevel.Error,
 ) : RoborazziRule.AccessibilityChecks {
@@ -173,7 +206,16 @@ data class AccessibilityChecksValidate(
     captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions
   ) {
     checker.runAccessibilityChecks(
-      captureRoot = captureRoot,
+      checkNode = when (captureRoot) {
+        is CaptureRoot.Compose -> ATFAccessibilityChecker.CheckNode.Compose(
+          semanticsNodeInteraction = captureRoot.semanticsNodeInteraction
+        )
+
+        CaptureRoot.None -> return
+        is CaptureRoot.View -> ATFAccessibilityChecker.CheckNode.View(
+          viewInteraction = captureRoot.viewInteraction
+        )
+      },
       roborazziOptions = roborazziOptions,
       failureLevel = failureLevel,
     )

@@ -23,12 +23,11 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.ATFAccessibilityChecker
-import com.github.takahirom.roborazzi.AccessibilityChecksValidate
 import com.github.takahirom.roborazzi.CheckLevel
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
-import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
+import com.github.takahirom.roborazzi.checkRoboAccessibility
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesElements
 import com.google.android.apps.common.testing.accessibility.framework.matcher.ElementMatchers.withTestTag
@@ -73,9 +72,9 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           Modifier
-              .size(48.dp)
-              .background(Color.Black)
-              .clickable {})
+            .size(48.dp)
+            .background(Color.Black)
+            .clickable {})
       }
     }
   }
@@ -88,11 +87,11 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           Modifier
-              .size(48.dp)
-              .background(Color.Black)
-              .semantics {
-                  contentDescription = ""
-              })
+            .size(48.dp)
+            .background(Color.Black)
+            .semantics {
+              contentDescription = ""
+            })
       }
     }
   }
@@ -108,8 +107,8 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Button(
           onClick = {}, modifier = Modifier
-                .size(30.dp)
-                .testTag("clickable")
+            .size(30.dp)
+            .testTag("clickable")
         ) {
           Text("Something to Click")
         }
@@ -136,12 +135,12 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           Modifier
-              .size(48.dp)
-              .background(Color.Black)
-              .testTag("suppress")
-              .semantics {
-                  contentDescription = ""
-              })
+            .size(48.dp)
+            .background(Color.Black)
+            .testTag("suppress")
+            .semantics {
+              contentDescription = ""
+            })
       }
     }
   }
@@ -154,8 +153,8 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           modifier = Modifier
-              .size(100.dp)
-              .background(Color.DarkGray)
+            .size(100.dp)
+            .background(Color.DarkGray)
         ) {
           Text("Something hard to read", color = Color.DarkGray)
         }
@@ -169,8 +168,8 @@ class ComposeA11yTest {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
           modifier = Modifier
-              .size(100.dp)
-              .background(Color.DarkGray)
+            .size(100.dp)
+            .background(Color.DarkGray)
         ) {
           Text("Something not hard to read", color = Color.White)
         }
@@ -188,18 +187,18 @@ class ComposeA11yTest {
       ) {
         Box(
           modifier = Modifier
-              .size(100.dp)
-              .background(Color.DarkGray)
-              .testTag("nothard")
+            .size(100.dp)
+            .background(Color.DarkGray)
+            .testTag("nothard")
         ) {
           Text("Something not hard to read", color = Color.White)
         }
         // Use a single text otherwise the Box and Text both trigger and must be suppressed
         Text(
           modifier = Modifier
-              .size(100.dp)
-              .background(Color.DarkGray)
-              .testTag("suppress"),
+            .size(100.dp)
+            .background(Color.DarkGray)
+            .testTag("suppress"),
           text = "Something hard to read",
           color = Color.DarkGray
         )
@@ -207,22 +206,13 @@ class ComposeA11yTest {
     }
 
     // Now run without suppressions
-    val a11yChecks = AccessibilityChecksValidate(
-      checker = ATFAccessibilityChecker(
+    // Run only against nothard, shouldn't fail because of the hard to read text
+    composeTestRule.onNodeWithTag("nothard").checkRoboAccessibility(
+      ATFAccessibilityChecker(
         preset = AccessibilityCheckPreset.LATEST,
       ),
-      failureLevel = CheckLevel.Warning,
+      CheckLevel.Warning
     )
-
-    // Run only against nothard, shouldn't fail because of the hard to read text
-    a11yChecks
-      .runAccessibilityChecks(
-        captureRoot = RoborazziRule.CaptureRoot.Compose(
-          composeTestRule,
-          composeTestRule.onNodeWithTag("nothard"),
-        ),
-        roborazziOptions = RoborazziOptions()
-      )
   }
 }
 

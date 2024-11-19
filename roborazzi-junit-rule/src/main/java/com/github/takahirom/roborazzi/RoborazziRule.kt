@@ -66,7 +66,7 @@ class RoborazziRule private constructor(
       captureRoot: CaptureRoot,
       roborazziOptions: RoborazziOptions,
     )
-    // Use `roborazzi-accessibility-check`'s AccessibilityChecksValidate
+    // Use `roborazzi-accessibility-check`'s ValidateAfterTest
     data object Disabled : AccessibilityChecks {
       override fun runAccessibilityChecks(
         captureRoot: CaptureRoot,
