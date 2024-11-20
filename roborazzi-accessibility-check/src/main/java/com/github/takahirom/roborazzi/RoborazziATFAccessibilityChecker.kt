@@ -25,31 +25,31 @@ import org.hamcrest.Matchers
 import org.robolectric.shadows.ShadowBuild
 
 fun SemanticsNodeInteraction.checkRoboAccessibility(
-  checker: ATFAccessibilityChecker = ATFAccessibilityChecker(),
-  failureLevel: CheckLevel = CheckLevel.Error,
+  checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
+  failureLevel: RoborazziAccessibilityCheckLevel = RoborazziAccessibilityCheckLevel.Error,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   checker.runAccessibilityChecks(
-    checkNode = ATFAccessibilityChecker.CheckNode.Compose(this),
+    checkNode = RoborazziATFAccessibilityChecker.CheckNode.Compose(this),
     roborazziOptions = roborazziOptions,
     failureLevel = failureLevel,
   )
 }
 
 fun ViewInteraction.checkRoboAccessibility(
-  checker: ATFAccessibilityChecker = ATFAccessibilityChecker(),
-  failureLevel: CheckLevel = CheckLevel.Error,
+  checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
+  failureLevel: RoborazziAccessibilityCheckLevel = RoborazziAccessibilityCheckLevel.Error,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   checker.runAccessibilityChecks(
-    checkNode = ATFAccessibilityChecker.CheckNode.View(this),
+    checkNode = RoborazziATFAccessibilityChecker.CheckNode.View(this),
     roborazziOptions = roborazziOptions,
     failureLevel = failureLevel,
   )
 }
 
 @ExperimentalRoborazziApi
-data class ATFAccessibilityChecker(
+data class RoborazziATFAccessibilityChecker(
   val checks: Set<AccessibilityHierarchyCheck> = AccessibilityCheckPreset.getAccessibilityHierarchyChecksForPreset(
     AccessibilityCheckPreset.LATEST
   ),
@@ -98,7 +98,7 @@ data class ATFAccessibilityChecker(
   internal fun runAccessibilityChecks(
     checkNode: CheckNode,
     roborazziOptions: RoborazziOptions,
-    failureLevel: CheckLevel,
+    failureLevel: RoborazziAccessibilityCheckLevel,
   ) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
       roborazziErrorLog("Skipping accessibilityChecks on API " + Build.VERSION.SDK_INT + "(< ${Build.VERSION_CODES.UPSIDE_DOWN_CAKE})")
@@ -157,7 +157,7 @@ data class ATFAccessibilityChecker(
   }
 
   private fun reportResults(
-    results: List<AccessibilityViewCheckResult>, failureLevel: CheckLevel
+    results: List<AccessibilityViewCheckResult>, failureLevel: RoborazziAccessibilityCheckLevel
   ) {
     // Report on any warnings in the log output if not failing
     results.forEach { check ->
@@ -185,7 +185,7 @@ data class ATFAccessibilityChecker(
 }
 
 @ExperimentalRoborazziApi
-enum class CheckLevel(private vararg val failedTypes: AccessibilityCheckResultType) {
+enum class RoborazziAccessibilityCheckLevel(private vararg val failedTypes: AccessibilityCheckResultType) {
   Error(AccessibilityCheckResultType.ERROR),
 
   Warning(
@@ -198,21 +198,21 @@ enum class CheckLevel(private vararg val failedTypes: AccessibilityCheckResultTy
 }
 
 @ExperimentalRoborazziApi
-data class ValidateAfterTest(
-  val checker: ATFAccessibilityChecker = ATFAccessibilityChecker(),
-  val failureLevel: CheckLevel = CheckLevel.Error,
+data class AccessibilityCheckAfterTest(
+  val checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
+  val failureLevel: RoborazziAccessibilityCheckLevel = RoborazziAccessibilityCheckLevel.Error,
 ) : RoborazziRule.AccessibilityChecks {
   override fun runAccessibilityChecks(
     captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions
   ) {
     checker.runAccessibilityChecks(
       checkNode = when (captureRoot) {
-        is CaptureRoot.Compose -> ATFAccessibilityChecker.CheckNode.Compose(
+        is CaptureRoot.Compose -> RoborazziATFAccessibilityChecker.CheckNode.Compose(
           semanticsNodeInteraction = captureRoot.semanticsNodeInteraction
         )
 
         CaptureRoot.None -> return
-        is CaptureRoot.View -> ATFAccessibilityChecker.CheckNode.View(
+        is CaptureRoot.View -> RoborazziATFAccessibilityChecker.CheckNode.View(
           viewInteraction = captureRoot.viewInteraction
         )
       },

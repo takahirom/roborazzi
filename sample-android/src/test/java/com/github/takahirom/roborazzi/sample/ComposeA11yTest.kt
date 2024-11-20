@@ -22,12 +22,12 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.ATFAccessibilityChecker
-import com.github.takahirom.roborazzi.CheckLevel
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
+import com.github.takahirom.roborazzi.RoborazziAccessibilityCheckLevel
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
-import com.github.takahirom.roborazzi.ValidateAfterTest
+import com.github.takahirom.roborazzi.AccessibilityCheckAfterTest
 import com.github.takahirom.roborazzi.checkRoboAccessibility
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesElements
@@ -55,12 +55,12 @@ class ComposeA11yTest {
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = Options(
-      accessibilityChecks = ValidateAfterTest(
-        checker = ATFAccessibilityChecker(
+      accessibilityChecks = AccessibilityCheckAfterTest(
+        checker = RoborazziATFAccessibilityChecker(
           preset = AccessibilityCheckPreset.LATEST,
           suppressions = matchesElements(withTestTag("suppress"))
         ),
-        failureLevel = CheckLevel.Warning,
+        failureLevel = RoborazziAccessibilityCheckLevel.Warning,
       )
     )
   )
@@ -209,10 +209,10 @@ class ComposeA11yTest {
     // Now run without suppressions
     // Run only against nothard, shouldn't fail because of the hard to read text
     composeTestRule.onNodeWithTag("nothard").checkRoboAccessibility(
-      ATFAccessibilityChecker(
+      RoborazziATFAccessibilityChecker(
         preset = AccessibilityCheckPreset.LATEST,
       ),
-      CheckLevel.Warning
+      RoborazziAccessibilityCheckLevel.Warning
     )
   }
 }
