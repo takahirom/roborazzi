@@ -16,11 +16,11 @@
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = Options(
-      accessibilityChecks = ValidateAfterTest(
-        checker = ATFAccessibilityChecker(
-          preset = AccessibilityCheckPreset.LATEST,
-          suppressions = matchesElements(withTestTag("suppress"))
-        ),
+      accessibilityChecker = RoborazziATFAccessibilityChecker(
+        checks = setOf(NoRedTextCheck()),
+        suppressions = matchesElements(withTestTag("suppress"))
+      ),
+      accessibilityChecks = AccessibilityCheckAfterTest(
         failureLevel = CheckLevel.Warning,
       )
     )
