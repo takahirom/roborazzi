@@ -24,6 +24,7 @@ import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.robolectric.shadows.ShadowBuild
 
+@ExperimentalRoborazziApi
 fun SemanticsNodeInteraction.checkRoboAccessibility(
   roborazziATFAccessibilityCheckOptions: RoborazziATFAccessibilityCheckOptions = provideATFAccessibilityOptionsOrCreateDefault(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
@@ -35,6 +36,7 @@ fun SemanticsNodeInteraction.checkRoboAccessibility(
   )
 }
 
+@ExperimentalRoborazziApi
 fun ViewInteraction.checkRoboAccessibility(
   roborazziATFAccessibilityCheckOptions: RoborazziATFAccessibilityCheckOptions = RoborazziATFAccessibilityCheckOptions(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
@@ -50,6 +52,7 @@ private fun provideATFAccessibilityOptionsOrCreateDefault(): RoborazziATFAccessi
   ((provideRoborazziContext().roborazziAccessibilityOptions as? RoborazziATFAccessibilityCheckOptions)
     ?: RoborazziATFAccessibilityCheckOptions())
 
+@ExperimentalRoborazziApi
 data class RoborazziATFAccessibilityCheckOptions(
   val checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
   val failureLevel: RoborazziATFAccessibilityChecker.CheckLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
