@@ -207,7 +207,7 @@ data class RoborazziATFAccessibilityChecker(
 }
 
 @ExperimentalRoborazziApi
-data class AccessibilityCheckAfterTest(
+data class AccessibilityCheckAfterTestStrategy(
   val accessibilityOptionsFactory: () -> RoborazziATFAccessibilityCheckOptions = { provideATFAccessibilityOptionsOrCreateDefault() },
 ) : RoborazziRule.AccessibilityCheckStrategy {
   override fun runAccessibilityChecks(

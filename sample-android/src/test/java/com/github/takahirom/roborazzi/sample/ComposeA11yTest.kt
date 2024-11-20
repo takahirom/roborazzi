@@ -22,7 +22,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.AccessibilityCheckAfterTest
+import com.github.takahirom.roborazzi.AccessibilityCheckAfterTestStrategy
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
@@ -62,7 +62,7 @@ class ComposeA11yTest {
         ),
         failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning,
       ),
-      accessibilityCheckStrategy = AccessibilityCheckAfterTest()
+      accessibilityCheckStrategy = AccessibilityCheckAfterTestStrategy()
     )
   )
 
