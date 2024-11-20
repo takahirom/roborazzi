@@ -17,6 +17,7 @@ import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
+import com.github.takahirom.roborazzi.checkRoboAccessibility
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesElements
 import com.google.android.apps.common.testing.accessibility.framework.matcher.ElementMatchers.withTestTag
@@ -115,6 +116,29 @@ class ViewA11yTest {
     }
   }
 
+
+  @Test
+  fun checkRoboAccessibilityCheck() {
+    thrown.expectMessage("TextContrastCheck")
+    activityScenarioRule.scenario.onActivity { activity ->
+      val frameLayout = FrameLayout(activity)
+      activity.setContentView(
+        frameLayout.apply {
+          setBackgroundColor(Color.BLACK)
+          addView(
+            TextView(activity).apply {
+              text = "Something hard to read"
+              setTextColor(Color.DKGRAY)
+            }
+          )
+        }
+      )
+      onView(ViewMatchers.isRoot())
+        .checkRoboAccessibility()
+      frameLayout.removeAllViews()
+    }
+  }
+
   @Test
   fun supressionsTakeEffect() {
     activityScenarioRule.scenario.onActivity { activity ->
@@ -162,7 +186,7 @@ class ViewA11yTest {
           setBackgroundColor(Color.DKGRAY)
           addView(
             TextView(activity).apply {
-              text = "Something hard to read"
+              text = "Something not hard to read"
               setTextColor(Color.WHITE)
             }
           )

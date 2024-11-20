@@ -38,7 +38,7 @@ fun SemanticsNodeInteraction.checkRoboAccessibility(
 
 @ExperimentalRoborazziApi
 fun ViewInteraction.checkRoboAccessibility(
-  roborazziATFAccessibilityCheckOptions: RoborazziATFAccessibilityCheckOptions = RoborazziATFAccessibilityCheckOptions(),
+  roborazziATFAccessibilityCheckOptions: RoborazziATFAccessibilityCheckOptions = provideATFAccessibilityOptionsOrCreateDefault(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   roborazziATFAccessibilityCheckOptions.checker.runAccessibilityChecks(
