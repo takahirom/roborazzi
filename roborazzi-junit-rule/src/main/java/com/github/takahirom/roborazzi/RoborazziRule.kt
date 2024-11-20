@@ -67,7 +67,7 @@ class RoborazziRule private constructor(
       captureRoot: CaptureRoot,
       roborazziOptions: RoborazziOptions,
     )
-    // Use `roborazzi-accessibility-check`'s AccessibilityCheckAfterTest
+    // Use `roborazzi-accessibility-check`'s [com.github.takahirom.roborazzi.AccessibilityCheckAfterTestStrategy]
     data object None : AccessibilityCheckStrategy {
       override fun runAccessibilityChecks(
         captureRoot: CaptureRoot,
