@@ -210,11 +210,11 @@ class ComposeA11yTest {
     // Now run without suppressions
     // Run only against nothard, shouldn't fail because of the hard to read text
     composeTestRule.onNodeWithTag("nothard").checkRoboAccessibility(
-      RoborazziATFAccessibilityCheckOptions(
-        RoborazziATFAccessibilityChecker(
+      roborazziATFAccessibilityCheckOptions = RoborazziATFAccessibilityCheckOptions(
+        checker = RoborazziATFAccessibilityChecker(
           preset = AccessibilityCheckPreset.LATEST,
         ),
-        RoborazziATFAccessibilityChecker.CheckLevel.Warning
+        failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning
       )
     )
   }
