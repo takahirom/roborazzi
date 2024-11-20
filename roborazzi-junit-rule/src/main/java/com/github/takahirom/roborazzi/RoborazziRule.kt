@@ -56,7 +56,7 @@ class RoborazziRule private constructor(
     val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
       ?: defaultFileProvider,
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-    val accessibilityChecker: AccessibilityChecker? = null,
+    val roborazziAccessibilityOptions: RoborazziAccessibilityOptions = provideRoborazziContext().roborazziAccessibilityOptions,
     val accessibilityCheckStrategy: AccessibilityCheckStrategy = AccessibilityCheckStrategy.None,
   )
 
@@ -162,14 +162,14 @@ class RoborazziRule private constructor(
           provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
           provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
           provideRoborazziContext().setRuleOverrideDescription(description)
-          provideRoborazziContext().setRuleOverrideAccessibilityChecker(options.accessibilityChecker)
+          provideRoborazziContext().setRuleOverrideAccessibilityOptions(options.roborazziAccessibilityOptions)
           runTest(base, description, captureRoot)
         } finally {
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
           provideRoborazziContext().clearRuleOverrideFileProvider()
           provideRoborazziContext().clearRuleOverrideDescription()
-          provideRoborazziContext().clearRuleOverrideAccessibilityChecker()
+          provideRoborazziContext().clearRuleOverrideAccessibilityOptions()
         }
       }
     }

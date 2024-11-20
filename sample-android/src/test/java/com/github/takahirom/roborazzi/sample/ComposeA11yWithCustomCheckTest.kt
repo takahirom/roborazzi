@@ -14,8 +14,8 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.AccessibilityCheckAfterTest
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
@@ -59,13 +59,13 @@ class ComposeA11yWithCustomCheckTest {
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = Options(
-      accessibilityChecker = RoborazziATFAccessibilityChecker(
-        checks = setOf(NoRedTextCheck()),
-        suppressions = matchesElements(withTestTag("suppress"))
+      roborazziAccessibilityOptions = RoborazziATFAccessibilityCheckOptions(
+        checker = RoborazziATFAccessibilityChecker(
+          checks = setOf(NoRedTextCheck()),
+          suppressions = matchesElements(withTestTag("suppress"))
+        ),
+        failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning
       ),
-      accessibilityCheckStrategy = AccessibilityCheckAfterTest(
-        failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning,
-      )
     )
   )
 

@@ -16,13 +16,13 @@
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = Options(
-      accessibilityChecker = RoborazziATFAccessibilityChecker(
-        checks = setOf(NoRedTextCheck()),
-        suppressions = matchesElements(withTestTag("suppress"))
+      roborazziAccessibilityOptions = RoborazziATFAccessibilityCheckOptions(
+        checker = RoborazziATFAccessibilityChecker(
+          checks = setOf(NoRedTextCheck()),
+          suppressions = matchesElements(withTestTag("suppress"))
+        ),
+        failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning
       ),
-      accessibilityChecks = AccessibilityCheckAfterTest(
-        failureLevel = CheckLevel.Warning,
-      )
     )
   )
 ```

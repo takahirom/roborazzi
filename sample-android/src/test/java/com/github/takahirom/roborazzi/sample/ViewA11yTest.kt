@@ -11,8 +11,8 @@ import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.AccessibilityCheckAfterTest
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
@@ -41,12 +41,12 @@ class ViewA11yTest {
   val roborazziRule = RoborazziRule(
     captureRoot = Espresso.onView(ViewMatchers.isRoot()),
     options = Options(
-      accessibilityChecker = RoborazziATFAccessibilityChecker(
-        preset = AccessibilityCheckPreset.LATEST,
-        suppressions = matchesElements(withTestTag("suppress"))
-      ),
-      accessibilityCheckStrategy = AccessibilityCheckAfterTest(
-        failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning,
+      roborazziAccessibilityOptions = RoborazziATFAccessibilityCheckOptions(
+        checker = RoborazziATFAccessibilityChecker(
+          preset = AccessibilityCheckPreset.LATEST,
+          suppressions = matchesElements(withTestTag("suppress"))
+        ),
+        failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning
       )
     )
   )
