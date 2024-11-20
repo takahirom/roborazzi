@@ -25,31 +25,31 @@ import org.hamcrest.Matchers
 import org.robolectric.shadows.ShadowBuild
 
 fun SemanticsNodeInteraction.checkRoboAccessibility(
-  checker: ATFAccessibilityChecker = ATFAccessibilityChecker(),
-  failureLevel: CheckLevel = CheckLevel.Error,
+  checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
+  failureLevel: RoborazziATFAccessibilityChecker.CheckLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   checker.runAccessibilityChecks(
-    checkNode = ATFAccessibilityChecker.CheckNode.Compose(this),
+    checkNode = RoborazziATFAccessibilityChecker.CheckNode.Compose(this),
     roborazziOptions = roborazziOptions,
     failureLevel = failureLevel,
   )
 }
 
 fun ViewInteraction.checkRoboAccessibility(
-  checker: ATFAccessibilityChecker = ATFAccessibilityChecker(),
-  failureLevel: CheckLevel = CheckLevel.Error,
+  checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
+  failureLevel: RoborazziATFAccessibilityChecker.CheckLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   checker.runAccessibilityChecks(
-    checkNode = ATFAccessibilityChecker.CheckNode.View(this),
+    checkNode = RoborazziATFAccessibilityChecker.CheckNode.View(this),
     roborazziOptions = roborazziOptions,
     failureLevel = failureLevel,
   )
 }
 
 @ExperimentalRoborazziApi
-data class ATFAccessibilityChecker(
+data class RoborazziATFAccessibilityChecker(
   val checks: Set<AccessibilityHierarchyCheck> = AccessibilityCheckPreset.getAccessibilityHierarchyChecksForPreset(
     AccessibilityCheckPreset.LATEST
   ),
@@ -63,36 +63,25 @@ data class ATFAccessibilityChecker(
     suppressions = suppressions,
   )
 
-
-  @RequiresApi(34)
-  internal fun runAllChecks(
-    view: View,
-    screenshotBitmap: Bitmap?,
-    checks: Set<AccessibilityHierarchyCheck>,
-    suppressions: Matcher<in AccessibilityViewCheckResult>,
-  ): List<AccessibilityViewCheckResult> {
-    val parameters = Parameters().apply {
-      if (screenshotBitmap != null) {
-        putScreenCapture(BitmapImage(screenshotBitmap))
-      }
-      setSaveViewImages(true)
-    }
-
-    val viewChecker = ViewChecker().apply {
-      setObtainCharacterLocations(true)
-    }
-
-    val results = viewChecker.runChecksOnView(ImmutableSet.copyOf(checks), view, parameters)
-
-    return results.filter {
-      !suppressions.matches(it)
-    }
-  }
-
   internal sealed interface CheckNode {
     data class View(val viewInteraction: ViewInteraction) : CheckNode
     data class Compose(val semanticsNodeInteraction: SemanticsNodeInteraction) : CheckNode
   }
+
+
+  @ExperimentalRoborazziApi
+  enum class CheckLevel(private vararg val failedTypes: AccessibilityCheckResultType) {
+    Error(AccessibilityCheckResultType.ERROR),
+
+    Warning(
+      AccessibilityCheckResultType.ERROR, AccessibilityCheckResultType.WARNING
+    ),
+
+    LogOnly;
+
+    fun isFailure(type: AccessibilityCheckResultType): Boolean = failedTypes.contains(type)
+  }
+
 
   @SuppressLint("VisibleForTests")
   internal fun runAccessibilityChecks(
@@ -156,6 +145,32 @@ data class ATFAccessibilityChecker(
     }
   }
 
+  @RequiresApi(34)
+  internal fun runAllChecks(
+    view: View,
+    screenshotBitmap: Bitmap?,
+    checks: Set<AccessibilityHierarchyCheck>,
+    suppressions: Matcher<in AccessibilityViewCheckResult>,
+  ): List<AccessibilityViewCheckResult> {
+    val parameters = Parameters().apply {
+      if (screenshotBitmap != null) {
+        putScreenCapture(BitmapImage(screenshotBitmap))
+      }
+      setSaveViewImages(true)
+    }
+
+    val viewChecker = ViewChecker().apply {
+      setObtainCharacterLocations(true)
+    }
+
+    val results = viewChecker.runChecksOnView(ImmutableSet.copyOf(checks), view, parameters)
+
+    return results.filter {
+      !suppressions.matches(it)
+    }
+  }
+
+
   private fun reportResults(
     results: List<AccessibilityViewCheckResult>, failureLevel: CheckLevel
   ) {
@@ -185,34 +200,21 @@ data class ATFAccessibilityChecker(
 }
 
 @ExperimentalRoborazziApi
-enum class CheckLevel(private vararg val failedTypes: AccessibilityCheckResultType) {
-  Error(AccessibilityCheckResultType.ERROR),
-
-  Warning(
-    AccessibilityCheckResultType.ERROR, AccessibilityCheckResultType.WARNING
-  ),
-
-  LogOnly;
-
-  fun isFailure(type: AccessibilityCheckResultType): Boolean = failedTypes.contains(type)
-}
-
-@ExperimentalRoborazziApi
-data class ValidateAfterTest(
-  val checker: ATFAccessibilityChecker = ATFAccessibilityChecker(),
-  val failureLevel: CheckLevel = CheckLevel.Error,
+data class AccessibilityCheckAfterTest(
+  val checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
+  val failureLevel: RoborazziATFAccessibilityChecker.CheckLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
 ) : RoborazziRule.AccessibilityChecks {
   override fun runAccessibilityChecks(
     captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions
   ) {
     checker.runAccessibilityChecks(
       checkNode = when (captureRoot) {
-        is CaptureRoot.Compose -> ATFAccessibilityChecker.CheckNode.Compose(
+        is CaptureRoot.Compose -> RoborazziATFAccessibilityChecker.CheckNode.Compose(
           semanticsNodeInteraction = captureRoot.semanticsNodeInteraction
         )
 
         CaptureRoot.None -> return
-        is CaptureRoot.View -> ATFAccessibilityChecker.CheckNode.View(
+        is CaptureRoot.View -> RoborazziATFAccessibilityChecker.CheckNode.View(
           viewInteraction = captureRoot.viewInteraction
         )
       },
