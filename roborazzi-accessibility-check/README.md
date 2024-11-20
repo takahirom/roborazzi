@@ -1,5 +1,8 @@
 # Roborazzi Acessibility Checks
 
+Roborazzi Accessibility Checks is a library that integrates accessibility checks into Roborazzi.
+It uses [ Accessibility Test Framework](https://github.com/google/Accessibility-Test-Framework-for-Android) to check accessibility.
+
 ## How to use
 
 ### Add dependencies
@@ -29,7 +32,7 @@
   )
 ```
 
-### Add a11y checks
+### Add accessibility checks
 
 ```kotlin
 composeTestRule.onNodeWithTag("nothard").checkRoboAccessibility(
