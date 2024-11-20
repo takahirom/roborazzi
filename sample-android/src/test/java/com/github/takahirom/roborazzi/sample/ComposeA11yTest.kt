@@ -54,11 +54,11 @@ class ComposeA11yTest {
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = Options(
-      accessibilityChecks = AccessibilityCheckAfterTest(
-        checker = RoborazziATFAccessibilityChecker(
-          preset = AccessibilityCheckPreset.LATEST,
-          suppressions = matchesElements(withTestTag("suppress"))
-        ),
+      accessibilityChecker = RoborazziATFAccessibilityChecker(
+        preset = AccessibilityCheckPreset.LATEST,
+        suppressions = matchesElements(withTestTag("suppress"))
+      ),
+      accessibilityCheckStrategy = AccessibilityCheckAfterTest(
         failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning,
       )
     )

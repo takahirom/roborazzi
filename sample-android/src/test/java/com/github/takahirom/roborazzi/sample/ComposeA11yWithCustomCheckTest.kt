@@ -14,11 +14,11 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
+import com.github.takahirom.roborazzi.AccessibilityCheckAfterTest
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
-import com.github.takahirom.roborazzi.AccessibilityCheckAfterTest
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType.ERROR
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType.INFO
@@ -59,11 +59,11 @@ class ComposeA11yWithCustomCheckTest {
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = Options(
-      accessibilityChecks = AccessibilityCheckAfterTest(
-        checker = RoborazziATFAccessibilityChecker(
-          checks = setOf(NoRedTextCheck()),
-          suppressions = matchesElements(withTestTag("suppress"))
-        ),
+      accessibilityChecker = RoborazziATFAccessibilityChecker(
+        checks = setOf(NoRedTextCheck()),
+        suppressions = matchesElements(withTestTag("suppress"))
+      ),
+      accessibilityCheckStrategy = AccessibilityCheckAfterTest(
         failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning,
       )
     )

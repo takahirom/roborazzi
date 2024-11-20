@@ -56,18 +56,19 @@ class RoborazziRule private constructor(
     val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
       ?: defaultFileProvider,
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-    val accessibilityChecks: AccessibilityChecks = AccessibilityChecks.Disabled,
+    val accessibilityChecker: AccessibilityChecker? = null,
+    val accessibilityCheckStrategy: AccessibilityCheckStrategy = AccessibilityCheckStrategy.None,
   )
 
   @ExperimentalRoborazziApi
-  interface AccessibilityChecks {
+  interface AccessibilityCheckStrategy {
     @InternalRoborazziApi
     fun runAccessibilityChecks(
       captureRoot: CaptureRoot,
       roborazziOptions: RoborazziOptions,
     )
-    // Use `roborazzi-accessibility-check`'s ValidateAfterTest
-    data object Disabled : AccessibilityChecks {
+    // Use `roborazzi-accessibility-check`'s AccessibilityCheckAfterTest
+    data object None : AccessibilityCheckStrategy {
       override fun runAccessibilityChecks(
         captureRoot: CaptureRoot,
         roborazziOptions: RoborazziOptions
@@ -161,12 +162,14 @@ class RoborazziRule private constructor(
           provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
           provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
           provideRoborazziContext().setRuleOverrideDescription(description)
+          provideRoborazziContext().setRuleOverrideAccessibilityChecker(options.accessibilityChecker)
           runTest(base, description, captureRoot)
         } finally {
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
           provideRoborazziContext().clearRuleOverrideFileProvider()
           provideRoborazziContext().clearRuleOverrideDescription()
+          provideRoborazziContext().clearRuleOverrideAccessibilityChecker()
         }
       }
     }
@@ -179,7 +182,7 @@ class RoborazziRule private constructor(
   ) {
     val evaluate: () -> Unit = {
       try {
-        val accessibilityChecks = options.accessibilityChecks
+        val accessibilityChecks = options.accessibilityCheckStrategy
         // TODO enable a11y before showing content
 
         base.evaluate()

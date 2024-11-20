@@ -25,7 +25,7 @@ import org.hamcrest.Matchers
 import org.robolectric.shadows.ShadowBuild
 
 fun SemanticsNodeInteraction.checkRoboAccessibility(
-  checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
+  checker: RoborazziATFAccessibilityChecker = provideATFAccessibilityCheckerOrCreateDefault(),
   failureLevel: RoborazziATFAccessibilityChecker.CheckLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
@@ -37,7 +37,7 @@ fun SemanticsNodeInteraction.checkRoboAccessibility(
 }
 
 fun ViewInteraction.checkRoboAccessibility(
-  checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
+  checker: RoborazziATFAccessibilityChecker = provideATFAccessibilityCheckerOrCreateDefault(),
   failureLevel: RoborazziATFAccessibilityChecker.CheckLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
@@ -48,13 +48,18 @@ fun ViewInteraction.checkRoboAccessibility(
   )
 }
 
+private fun provideATFAccessibilityCheckerOrCreateDefault() =
+  ((provideRoborazziContext().accessibilityChecker as? RoborazziATFAccessibilityChecker)
+    ?: RoborazziATFAccessibilityChecker())
+
+
 @ExperimentalRoborazziApi
 data class RoborazziATFAccessibilityChecker(
   val checks: Set<AccessibilityHierarchyCheck> = AccessibilityCheckPreset.getAccessibilityHierarchyChecksForPreset(
     AccessibilityCheckPreset.LATEST
   ),
   val suppressions: Matcher<in AccessibilityViewCheckResult> = Matchers.not(Matchers.anything()),
-) {
+) : AccessibilityChecker {
   constructor(
     preset: AccessibilityCheckPreset,
     suppressions: Matcher<in AccessibilityViewCheckResult> = Matchers.not(Matchers.anything()),
@@ -201,25 +206,25 @@ data class RoborazziATFAccessibilityChecker(
 
 @ExperimentalRoborazziApi
 data class AccessibilityCheckAfterTest(
-  val checker: RoborazziATFAccessibilityChecker = RoborazziATFAccessibilityChecker(),
   val failureLevel: RoborazziATFAccessibilityChecker.CheckLevel = RoborazziATFAccessibilityChecker.CheckLevel.Error,
-) : RoborazziRule.AccessibilityChecks {
+) : RoborazziRule.AccessibilityCheckStrategy {
   override fun runAccessibilityChecks(
     captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions
   ) {
-    checker.runAccessibilityChecks(
-      checkNode = when (captureRoot) {
-        is CaptureRoot.Compose -> RoborazziATFAccessibilityChecker.CheckNode.Compose(
-          semanticsNodeInteraction = captureRoot.semanticsNodeInteraction
-        )
+    provideATFAccessibilityCheckerOrCreateDefault()
+      .runAccessibilityChecks(
+        checkNode = when (captureRoot) {
+          is CaptureRoot.Compose -> RoborazziATFAccessibilityChecker.CheckNode.Compose(
+            semanticsNodeInteraction = captureRoot.semanticsNodeInteraction
+          )
 
-        CaptureRoot.None -> return
-        is CaptureRoot.View -> RoborazziATFAccessibilityChecker.CheckNode.View(
-          viewInteraction = captureRoot.viewInteraction
-        )
-      },
-      roborazziOptions = roborazziOptions,
-      failureLevel = failureLevel,
-    )
+          CaptureRoot.None -> return
+          is CaptureRoot.View -> RoborazziATFAccessibilityChecker.CheckNode.View(
+            viewInteraction = captureRoot.viewInteraction
+          )
+        },
+        roborazziOptions = roborazziOptions,
+        failureLevel = failureLevel,
+      )
   }
 }

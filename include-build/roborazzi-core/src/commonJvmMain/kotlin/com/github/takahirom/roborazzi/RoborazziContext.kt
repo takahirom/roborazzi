@@ -63,6 +63,22 @@ class RoborazziContextImpl {
     ruleOverrideImageExtension = null
   }
 
+  private var ruleOverrideAccessibilityChecker: AccessibilityChecker? = null
+
+  @InternalRoborazziApi
+  fun setRuleOverrideAccessibilityChecker(checker: AccessibilityChecker?) {
+    ruleOverrideAccessibilityChecker = checker
+  }
+
+  @InternalRoborazziApi
+  fun clearRuleOverrideAccessibilityChecker() {
+    ruleOverrideAccessibilityChecker = null
+  }
+
+  @InternalRoborazziApi
+  val accessibilityChecker: AccessibilityChecker?
+    get() = ruleOverrideAccessibilityChecker
+
   @InternalRoborazziApi
   val imageExtension: String
     get() = ruleOverrideImageExtension ?: roborazziSystemPropertyImageExtension()
