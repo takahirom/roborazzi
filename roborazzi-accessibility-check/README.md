@@ -23,8 +23,24 @@
         ),
         failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning
       ),
+      // If you want to check a11y after test, use AccessibilityCheckAfterTestStrategy
+      accessibilityCheckStrategy = AccessibilityCheckAfterTestStrategy(),
     )
   )
+```
+
+### Add a11y checks
+
+```kotlin
+composeTestRule.onNodeWithTag("nothard").checkRoboAccessibility(
+  // You can also use the roborazziAccessibilityOptions from RoborazziRule
+  RoborazziATFAccessibilityCheckOptions(
+    RoborazziATFAccessibilityChecker(
+      preset = AccessibilityCheckPreset.LATEST,
+    ),
+    RoborazziATFAccessibilityChecker.CheckLevel.Warning
+  )
+)
 ```
 
 ### Checking Log output
