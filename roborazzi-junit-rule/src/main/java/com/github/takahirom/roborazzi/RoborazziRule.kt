@@ -56,7 +56,27 @@ class RoborazziRule private constructor(
     val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
       ?: defaultFileProvider,
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+    val roborazziAccessibilityOptions: RoborazziAccessibilityOptions = provideRoborazziContext().roborazziAccessibilityOptions,
+    val accessibilityCheckStrategy: AccessibilityCheckStrategy = AccessibilityCheckStrategy.None,
   )
+
+  @ExperimentalRoborazziApi
+  interface AccessibilityCheckStrategy {
+    @InternalRoborazziApi
+    fun runAccessibilityChecks(
+      captureRoot: CaptureRoot,
+      roborazziOptions: RoborazziOptions,
+    )
+    // Use `roborazzi-accessibility-check`'s [com.github.takahirom.roborazzi.AccessibilityCheckAfterTestStrategy]
+    data object None : AccessibilityCheckStrategy {
+      override fun runAccessibilityChecks(
+        captureRoot: CaptureRoot,
+        roborazziOptions: RoborazziOptions
+      ) {
+        // Do nothing
+      }
+    }
+  }
 
   sealed interface CaptureType {
     /**
@@ -95,7 +115,8 @@ class RoborazziRule private constructor(
     ) : CaptureType
   }
 
-  internal sealed interface CaptureRoot {
+  @InternalRoborazziApi
+  sealed interface CaptureRoot {
     object None : CaptureRoot
     class Compose(
       val composeRule: ComposeTestRule,
@@ -141,12 +162,14 @@ class RoborazziRule private constructor(
           provideRoborazziContext().setRuleOverrideRoborazziOptions(options.roborazziOptions)
           provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
           provideRoborazziContext().setRuleOverrideDescription(description)
+          provideRoborazziContext().setRuleOverrideAccessibilityOptions(options.roborazziAccessibilityOptions)
           runTest(base, description, captureRoot)
         } finally {
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
           provideRoborazziContext().clearRuleOverrideFileProvider()
           provideRoborazziContext().clearRuleOverrideDescription()
+          provideRoborazziContext().clearRuleOverrideAccessibilityOptions()
         }
       }
     }
@@ -157,9 +180,18 @@ class RoborazziRule private constructor(
     description: Description,
     captureRoot: CaptureRoot
   ) {
-    val evaluate = {
+    val evaluate: () -> Unit = {
       try {
+        val accessibilityChecks = options.accessibilityCheckStrategy
+        // TODO enable a11y before showing content
+
         base.evaluate()
+
+        accessibilityChecks.runAccessibilityChecks(
+          captureRoot = captureRoot,
+          roborazziOptions = options.roborazziOptions
+        )
+
       } catch (e: Exception) {
         throw e
       }
@@ -254,6 +286,5 @@ class RoborazziRule private constructor(
         }
       }
     }
-
   }
 }

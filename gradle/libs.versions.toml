@@ -1,4 +1,5 @@
 [versions]
+accessibilityTestFramework = "4.1.1"
 javaToolchain = "17"
 javaTarget = "11"
 agp = "8.6.1"
@@ -49,6 +50,7 @@ webpImageio = "0.3.3"
 composable-preview-scanner = "0.4.0"
 
 [libraries]
+accessibility-test-framework = { module = "com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework", version.ref = "accessibilityTestFramework" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi-for-replacing-by-include-build" }
 roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi-for-replacing-by-include-build" }
 roborazzi-rule = { module = "io.github.takahirom.roborazzi:roborazzi-rule", version.ref = "roborazzi-for-replacing-by-include-build" }

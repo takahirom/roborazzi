@@ -467,7 +467,7 @@ private fun saveLastImage(
 ) {
   val roboCanvas = canvases.lastOrNull()
   if (roboCanvas == null) {
-    println("Roborazzi could not capture for this test")
+    roborazziErrorLog("Roborazzi could not capture for this test")
     return
   }
   processOutputImageAndReportWithDefaults(

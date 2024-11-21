@@ -64,6 +64,7 @@ dependencies {
   testImplementation(project(":roborazzi-ai-openai"))
   testImplementation project(":roborazzi-compose")
   testImplementation project(":roborazzi-junit-rule")
+  testImplementation project(":roborazzi-accessibility-check")
 
   implementation libs.androidx.compose.material3
   implementation libs.androidx.compose.ui
