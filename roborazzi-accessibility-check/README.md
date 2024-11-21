@@ -21,7 +21,7 @@ It uses [ Accessibility Test Framework](https://github.com/google/Accessibility-
     options = Options(
       roborazziAccessibilityOptions = RoborazziATFAccessibilityCheckOptions(
         checker = RoborazziATFAccessibilityChecker(
-          checks = setOf(NoRedTextCheck()),
+          preset = AccessibilityCheckPreset.LATEST,
           suppressions = matchesElements(withTestTag("suppress"))
         ),
         failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning
