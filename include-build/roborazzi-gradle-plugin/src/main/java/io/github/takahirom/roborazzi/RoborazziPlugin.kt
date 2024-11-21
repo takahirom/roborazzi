@@ -276,13 +276,13 @@ abstract class RoborazziPlugin : Plugin<Project> {
               project.path + ":"
             }
             finalizeTestTask.doLast {
-              val startCopy = System.currentTimeMillis()
-              intermediateDir.get().asFile.mkdirs()
-              intermediateDir.get().asFile.copyRecursively(
-                target = outputDir.get().asFile,
-                overwrite = true
-              )
-              finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask Copy files from ${intermediateDir.get()} to ${outputDir.get()} end ${System.currentTimeMillis() - startCopy}ms")
+//              val startCopy = System.currentTimeMillis()
+//              intermediateDir.get().asFile.mkdirs()
+//              intermediateDir.get().asFile.copyRecursively(
+//                target = outputDir.get().asFile,
+//                overwrite = true
+//              )
+//              finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask Copy files from ${intermediateDir.get()} to ${outputDir.get()} end ${System.currentTimeMillis() - startCopy}ms")
             }
           }
         })
