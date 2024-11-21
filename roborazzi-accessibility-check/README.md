@@ -21,7 +21,9 @@ It uses [ Accessibility Test Framework](https://github.com/google/Accessibility-
     options = Options(
       roborazziAccessibilityOptions = RoborazziATFAccessibilityCheckOptions(
         checker = RoborazziATFAccessibilityChecker(
-          checks = setOf(NoRedTextCheck()),
+          // You can also create your own checks. Please refer to the following test
+          // https://github.com/takahirom/roborazzi/blob/52eef81d963bc73135e7b7a34834a56776259284/sample-android/src/test/java/com/github/takahirom/roborazzi/sample/ComposeA11yWithCustomCheckTest.kt#L65
+          preset = AccessibilityCheckPreset.LATEST,
           suppressions = matchesElements(withTestTag("suppress"))
         ),
         failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning
