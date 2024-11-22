@@ -49,7 +49,8 @@ allprojects {
       allWarningsAsErrors = true
     }
   }
-  if(project.name.startsWith("roborazzi")) {
+  if(project.name.startsWith("roborazzi") &&
+          project.name != "roborazzi-idea-plugin") {
       tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
           compilerOptions {
               freeCompilerArgs.addAll(
