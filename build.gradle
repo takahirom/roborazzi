@@ -46,11 +46,7 @@ allprojects {
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     compilerOptions {
       jvmTarget.set(jvmTargetVersion)
-
-      freeCompilerArgs.addAll(
-        "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi",
-        "-Xopt-in=com.github.takahirom.roborazzi.ExperimentalRoborazziApi",
-      )
+      allWarningsAsErrors = true
     }
   }
 
@@ -81,6 +77,14 @@ allprojects {
           }
         }
       }
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            compilerOptions {
+                freeCompilerArgs.addAll(
+                    "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi",
+                    "-Xopt-in=com.github.takahirom.roborazzi.ExperimentalRoborazziApi",
+                )
+            }
+        }
     }
   }
 

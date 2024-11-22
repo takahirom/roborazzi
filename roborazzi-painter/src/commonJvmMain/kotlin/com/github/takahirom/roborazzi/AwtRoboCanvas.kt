@@ -146,7 +146,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
   }
 
   fun drawText(textPointX: Float, textPointY: Float, texts: List<String>, paint: Paint) {
-    bufferedImage.graphics { graphics: Graphics2D ->
+    bufferedImage.graphics {
       val graphics2D = bufferedImage.createGraphics()
       graphics2D.color = Color(paint.getColor(), true)
 
@@ -522,8 +522,6 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
           val rgbComp = comparedImage.getRGB(x, y)
           if (rgbOrig != rgbComp) {
             diffImage.setRGB(x, y, -0x10000)
-          } else {
-            0x0
           }
         }
       }

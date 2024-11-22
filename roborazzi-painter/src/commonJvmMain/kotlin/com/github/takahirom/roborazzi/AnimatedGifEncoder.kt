@@ -129,7 +129,7 @@ class AnimatedGifEncoder {
    */
   fun addFrame(canvas: AwtRoboCanvas, resizeImage: Double): Boolean {
     val im = canvas.outputImage(resizeImage)
-    if (im == null || !started) {
+    if (!started) {
       return false
     }
     var ok = true
@@ -219,11 +219,11 @@ class AnimatedGifEncoder {
    * @return
    */
   fun setQuality(quality: Int) {
-    var quality = quality
-    if (quality < 1) {
-      quality = 1
+    var localQuality = quality
+    if (localQuality < 1) {
+      localQuality = 1
     }
-    sample = quality
+    sample =localQuality
   }
 
   /**
@@ -281,7 +281,7 @@ class AnimatedGifEncoder {
    * @return false if open or initial write failed.
    */
   fun start(file: String?): Boolean {
-    var ok = true
+    var ok: Boolean
     try {
       out = BufferedOutputStream(FileOutputStream(file))
       ok = start(out)
@@ -367,7 +367,7 @@ class AnimatedGifEncoder {
    * Extracts image pixels into byte array "pixels"
    */
   private val imagePixels: Unit
-    private get() {
+    get() {
       val w = image!!.width
       val h = image!!.height
       val type = image!!.type
@@ -835,7 +835,6 @@ internal class NeuQuant(thepic: ByteArray?, len: Int, sample: Int) {
    */
   fun unbiasnet() {
     var i: Int
-    var j: Int
     i = 0
     while (i < netsize) {
       network[i]!![0] = network[i]!![0] shr netbiasshift
