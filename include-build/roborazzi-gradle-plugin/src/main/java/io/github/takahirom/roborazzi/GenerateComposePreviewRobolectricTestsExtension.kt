@@ -184,7 +184,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 @get:Rule
                 val rule = RuleChain.outerRule(
                   if(testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
-                    (testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions).testRuleFactory()
+                    testLifecycleOptions.testRuleFactory()
                   } else {
                     object : TestWatcher() {}
                   }
