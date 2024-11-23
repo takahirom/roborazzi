@@ -5,7 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,7 +19,10 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.RoborazziRule
+import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule.Options
+import com.github.takahirom.roborazzi.RoborazziTaskType
+import com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType.ERROR
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType.INFO
@@ -55,11 +58,14 @@ class ComposeA11yWithCustomCheckTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
+  val taskType: RoborazziTaskType = roborazziSystemPropertyTaskType()
+
   @get:Rule
   val roborazziRule = RoborazziRule(
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = Options(
+      captureType = CaptureType.LastImage(),
       roborazziAccessibilityOptions = RoborazziATFAccessibilityCheckOptions(
         checker = RoborazziATFAccessibilityChecker(
           checks = setOf(NoRedTextCheck()),
@@ -74,19 +80,7 @@ class ComposeA11yWithCustomCheckTest {
   /**
    * Custom Check that demonstrates accessing the screenshot and element data.
    */
-  class NoRedTextCheck : AccessibilityHierarchyCheck() {
-    override fun getHelpTopic(): String? = null
-
-    override fun getCategory(): Category = Category.IMPLEMENTATION
-
-    override fun getTitleMessage(locale: Locale): String = "No Red Text"
-
-    override fun getMessageForResultData(locale: Locale, p1: Int, metadata: ResultMetadata?): String =
-      "No Red Text $metadata"
-
-    override fun getShortMessageForResultData(locale: Locale, p1: Int, metadata: ResultMetadata?): String =
-      "No Red Text $metadata"
-
+  class NoRedTextCheck : CustomAccessibilityHierarchyCheck("No Red Text") {
     override fun runCheckOnHierarchy(
       hierarchy: AccessibilityHierarchy,
       element: ViewHierarchyElement?,
@@ -96,7 +90,7 @@ class ComposeA11yWithCustomCheckTest {
         val textColors = primaryTextColors(childElement, parameters)
 
         if (textColors == null) {
-          result(childElement, NOT_RUN, 1, null)
+          this.result(childElement, NOT_RUN, 1, null)
         } else if (textColors.find { it.isMostlyRed() } != null) {
           result(childElement, ERROR, 3, textColors)
         } else {
@@ -133,40 +127,13 @@ class ComposeA11yWithCustomCheckTest {
     private fun Color.isMostlyRed(): Boolean {
       return red > 0.8f && blue < 0.2f && green < 0.2f
     }
-
-    private fun result(
-      childElement: ViewHierarchyElement?,
-      result: AccessibilityCheckResultType,
-      resultId: Int,
-      textColors: Iterable<Color>?
-    ) = CustomAccessibilityHierarchyCheckResult(
-      this::class.java,
-      result,
-      childElement,
-      resultId,
-      HashMapResultMetadata().apply {
-        if (textColors != null) {
-          putString("textColors", textColors.joinToString { "0x${it.toArgb().toUInt().toString(16)}" })
-        }
-      }
-    )
-  }
-
-  // TODO fix after https://github.com/google/Accessibility-Test-Framework-for-Android/issues/64
-  class CustomAccessibilityHierarchyCheckResult(
-    val checkClass: Class<out AccessibilityHierarchyCheck>,
-    type: AccessibilityCheckResultType,
-    element: ViewHierarchyElement?,
-    resultId: Int,
-    metadata: ResultMetadata?
-  ) : AccessibilityHierarchyCheckResult(checkClass, type, element, resultId, metadata) {
-    override fun getMessage(locale: Locale?): CharSequence =
-      (checkClass.newInstance()).getMessageForResult(locale, this)
   }
 
   @Test
   fun redText() {
-    thrown.expectMessage("NoRedTextCheck")
+    if (taskType.isEnabled()) {
+      thrown.expectMessage("NoRedTextCheck")
+    }
 
     composeTestRule.setContent {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -187,5 +154,50 @@ class ComposeA11yWithCustomCheckTest {
       }
     }
   }
+}
+
+// TODO fix after https://github.com/google/Accessibility-Test-Framework-for-Android/issues/64
+class CustomAccessibilityHierarchyCheckResult(
+  val checkClass: Class<out AccessibilityHierarchyCheck>,
+  type: AccessibilityCheckResultType,
+  element: ViewHierarchyElement?,
+  resultId: Int,
+  metadata: ResultMetadata?
+) : AccessibilityHierarchyCheckResult(checkClass, type, element, resultId, metadata) {
+  override fun getMessage(locale: Locale?): CharSequence =
+    (checkClass.newInstance()).getMessageForResult(locale, this)
+}
+
+abstract class CustomAccessibilityHierarchyCheck(
+  val name: String
+) : AccessibilityHierarchyCheck() {
+    override fun getHelpTopic(): String? = null
+
+    override fun getCategory(): Category = Category.IMPLEMENTATION
+
+    override fun getTitleMessage(locale: Locale): String = name
+
+    override fun getMessageForResultData(locale: Locale, p1: Int, metadata: ResultMetadata?): String =
+      "$name $metadata"
+
+    override fun getShortMessageForResultData(locale: Locale, p1: Int, metadata: ResultMetadata?): String =
+      "$name $metadata"
+
+  protected fun result(
+    childElement: ViewHierarchyElement?,
+    result: AccessibilityCheckResultType,
+    resultId: Int,
+    textColors: Iterable<Color>?
+  ) = CustomAccessibilityHierarchyCheckResult(
+    this::class.java,
+    result,
+    childElement,
+    resultId,
+    HashMapResultMetadata().apply {
+      if (textColors != null) {
+        putString("textColors", textColors.joinToString { "0x${it.toArgb().toUInt().toString(16)}" })
+      }
+    }
+  )
 }
 

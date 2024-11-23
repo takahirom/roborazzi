@@ -222,7 +222,7 @@ fun ViewInteraction.captureRoboGif(
 ) {
   // currently, gif compare is not supported
   if (!roborazziOptions.taskType.isRecording()) return
-  captureAndroidView(roborazziOptions, block).apply {
+  captureAndroidView(roborazziOptions = roborazziOptions, onEach = {}, block = block).apply {
     saveGif(file)
     clear()
     result.getOrThrow()
@@ -244,7 +244,7 @@ fun ViewInteraction.captureRoboLastImage(
   block: () -> Unit
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  captureAndroidView(roborazziOptions, block).apply {
+  captureAndroidView(roborazziOptions = roborazziOptions, onEach = {}, block = block).apply {
     saveLastImage(file)
     clear()
     result.getOrThrow()
@@ -257,7 +257,7 @@ fun ViewInteraction.captureRoboAllImage(
   block: () -> Unit
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  captureAndroidView(roborazziOptions, block).apply {
+  captureAndroidView(roborazziOptions = roborazziOptions, onEach = {}, block = block).apply {
     saveAllImage(fileNameCreator)
     clear()
     result.getOrThrow()
@@ -321,7 +321,12 @@ fun SemanticsNodeInteraction.captureRoboGif(
 ) {
   // currently, gif compare is not supported
   if (!roborazziOptions.taskType.isRecording()) return
-  captureComposeNode(composeRule, roborazziOptions, block).apply {
+  captureComposeNode(
+    composeRule = composeRule,
+    roborazziOptions = roborazziOptions,
+    onEach = {},
+    block = block
+  ).apply {
     saveGif(file)
     clear()
     result.getOrThrow()
@@ -340,6 +345,7 @@ class CaptureInternalResult(
 @InternalRoborazziApi
 fun ViewInteraction.captureAndroidView(
   roborazziOptions: RoborazziOptions,
+  onEach: () -> Unit = {},
   block: () -> Unit
 ): CaptureInternalResult {
   var removeListener = {}
@@ -351,7 +357,9 @@ fun ViewInteraction.captureAndroidView(
     handler.postAtFrontOfQueue {
       this@captureAndroidView.perform(
         ImageCaptureViewAction(roborazziOptions) { canvas ->
-          canvases.addIfChanged(canvas, roborazziOptions)
+          if (canvases.addIfChanged(canvas, roborazziOptions)) {
+            onEach()
+          }
         }
       )
     }
@@ -404,7 +412,9 @@ fun ViewInteraction.captureAndroidView(
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     perform(
       ImageCaptureViewAction(roborazziOptions) { canvas ->
-        canvases.addIfChanged(canvas, roborazziOptions)
+        if (canvases.addIfChanged(canvas, roborazziOptions)) {
+          onEach()
+        }
       }
     )
     perform(viewTreeListenerAction)
@@ -445,18 +455,20 @@ fun ViewInteraction.captureAndroidView(
 private fun MutableList<AwtRoboCanvas>.addIfChanged(
   next: AwtRoboCanvas,
   roborazziOptions: RoborazziOptions
-) {
+): Boolean {
   val prev = this.lastOrNull() ?: run {
     this.add(next)
-    return
+    return true
   }
   val differ: ImageComparator.ComparisonResult =
     prev.differ(next, 1.0, roborazziOptions.compareOptions.imageComparator)
   if (!roborazziOptions.compareOptions.resultValidator(differ)) {
     this.add(next)
+    return true
   } else {
     // If the image is not changed, we should release the image.
     next.release()
+    return false
   }
 }
 
@@ -481,6 +493,7 @@ private fun saveLastImage(
 fun SemanticsNodeInteraction.captureComposeNode(
   composeRule: ComposeTestRule,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  onEach: () -> Unit = {},
   block: () -> Unit
 ): CaptureInternalResult {
   val canvases = mutableListOf<AwtRoboCanvas>()
@@ -493,7 +506,9 @@ fun SemanticsNodeInteraction.captureComposeNode(
       ),
       roborazziOptions = roborazziOptions
     ) {
-      canvases.addIfChanged(it, roborazziOptions)
+      if (canvases.addIfChanged(it, roborazziOptions)) {
+        onEach()
+      }
     }
   }
   val handler = Handler(Looper.getMainLooper())

@@ -10,6 +10,8 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
+import com.github.takahirom.roborazzi.RoborazziRule.AccessibilityCheckStrategy
+import com.github.takahirom.roborazzi.RoborazziRule.AccessibilityCheckStrategy.CheckPoint
 import com.github.takahirom.roborazzi.RoborazziRule.CaptureRoot
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
@@ -228,14 +230,14 @@ data class RoborazziATFAccessibilityChecker(
   companion object
 }
 
-@ExperimentalRoborazziApi
-data class AccessibilityCheckAfterTestStrategy(
-  val accessibilityOptionsFactory: () -> RoborazziATFAccessibilityCheckOptions = { provideATFAccessibilityOptionsOrCreateDefault() },
-) : RoborazziRule.AccessibilityCheckStrategy {
+abstract class BaseAccessibilityCheckStrategy: AccessibilityCheckStrategy {
+  abstract val accessibilityOptionsFactory: () -> RoborazziATFAccessibilityCheckOptions
+
+  private val accessibilityOptions by lazy { accessibilityOptionsFactory() }
+
   override fun runAccessibilityChecks(
     captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions
   ) {
-    val accessibilityOptions = accessibilityOptionsFactory()
     accessibilityOptions
       .checker
       .runAccessibilityChecks(
@@ -252,5 +254,23 @@ data class AccessibilityCheckAfterTestStrategy(
         roborazziOptions = roborazziOptions,
         failureLevel = accessibilityOptions.failureLevel,
       )
+  }
+}
+
+@ExperimentalRoborazziApi
+data class AccessibilityCheckEachScreenshotStrategy(
+  override val accessibilityOptionsFactory: () -> RoborazziATFAccessibilityCheckOptions = { provideATFAccessibilityOptionsOrCreateDefault() },
+) : BaseAccessibilityCheckStrategy() {
+  override fun shouldRunAt(checkPoint: CheckPoint): Boolean {
+    return checkPoint == CheckPoint.AfterScreenshot || checkPoint == CheckPoint.AfterTest
+  }
+}
+
+@ExperimentalRoborazziApi
+data class AccessibilityCheckAfterTestStrategy(
+  override val accessibilityOptionsFactory: () -> RoborazziATFAccessibilityCheckOptions = { provideATFAccessibilityOptionsOrCreateDefault() },
+) : BaseAccessibilityCheckStrategy() {
+  override fun shouldRunAt(checkPoint: CheckPoint): Boolean {
+    return checkPoint == CheckPoint.AfterTest
   }
 }
