@@ -104,6 +104,11 @@ data class RoborazziATFAccessibilityChecker(
       return
     }
 
+    if (!canScreenshot()) {
+      roborazziErrorLog("Skipping accessibilityChecks on GraphicsMode.Mode.LEGACY")
+      return
+    }
+
     if (Build.FINGERPRINT == "robolectric") {
       // TODO remove this once ATF doesn't bail out
       // https://github.com/google/Accessibility-Test-Framework-for-Android/blob/c65cab02b2a845c29c3da100d6adefd345a144e3/src/main/java/com/google/android/apps/common/testing/accessibility/framework/uielement/AccessibilityHierarchyAndroid.java#L667
