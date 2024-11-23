@@ -104,50 +104,59 @@ data class RoborazziATFAccessibilityChecker(
       return
     }
 
-    whileAvoidingRobolectricFingerprint {
-      if (checkNode is CheckNode.Compose) {
-        val view =
-          (checkNode.semanticsNodeInteraction.fetchSemanticsNode().root as ViewRootForTest).view
+    if (!canScreenshot()) {
+      roborazziErrorLog("Skipping accessibilityChecks on GraphicsMode.Mode.LEGACY")
+      return
+    }
 
-        // Will throw based on configuration
+    if (Build.FINGERPRINT == "robolectric") {
+      // TODO remove this once ATF doesn't bail out
+      // https://github.com/google/Accessibility-Test-Framework-for-Android/blob/c65cab02b2a845c29c3da100d6adefd345a144e3/src/main/java/com/google/android/apps/common/testing/accessibility/framework/uielement/AccessibilityHierarchyAndroid.java#L667
+      ShadowBuild.setFingerprint("roborazzi")
+    }
 
-        val screenshot: Bitmap? = RoboComponent.Compose(
-          node = checkNode.semanticsNodeInteraction.fetchSemanticsNode(),
-          roborazziOptions = roborazziOptions
-        ).image
+    if (checkNode is CheckNode.Compose) {
+      val view =
+        (checkNode.semanticsNodeInteraction.fetchSemanticsNode().root as ViewRootForTest).view
 
-        val results = runAllChecks(
-          view = view, screenshotBitmap = screenshot, checks = checks, suppressions = suppressions
-        )
+      // Will throw based on configuration
 
-        reportResults(results, failureLevel)
+      val screenshot: Bitmap? = RoboComponent.Compose(
+        node = checkNode.semanticsNodeInteraction.fetchSemanticsNode(),
+        roborazziOptions = roborazziOptions
+      ).image
 
-      } else if (checkNode is CheckNode.View) {
-        val viewInteraction = checkNode.viewInteraction
-        // Use perform to get the view
-        viewInteraction.perform(object : ViewAction {
-          override fun getDescription(): String {
-            return "Run accessibility checks"
+      val results = runAllChecks(
+        view = view, screenshotBitmap = screenshot, checks = checks, suppressions = suppressions
+      )
+
+      reportResults(results, failureLevel)
+
+    } else if (checkNode is CheckNode.View) {
+      val viewInteraction = checkNode.viewInteraction
+      // Use perform to get the view
+      viewInteraction.perform(object : ViewAction {
+        override fun getDescription(): String {
+          return "Run accessibility checks"
+        }
+
+        override fun getConstraints(): Matcher<View> {
+          return Matchers.any(View::class.java)
+        }
+
+        override fun perform(uiController: UiController?, view: View?) {
+          if (view == null) {
+            throw IllegalStateException("View is null")
           }
-
-          override fun getConstraints(): Matcher<View> {
-            return Matchers.any(View::class.java)
-          }
-
-          override fun perform(uiController: UiController?, view: View?) {
-            if (view == null) {
-              throw IllegalStateException("View is null")
-            }
-            val results = runAllChecks(
-              view = view,
-              screenshotBitmap = RoboComponent.View(view, roborazziOptions).image,
-              checks = checks,
-              suppressions = suppressions
-            )
-            reportResults(results, failureLevel)
-          }
-        })
-      }
+          val results = runAllChecks(
+            view = view,
+            screenshotBitmap = RoboComponent.View(view, roborazziOptions).image,
+            checks = checks,
+            suppressions = suppressions
+          )
+          reportResults(results, failureLevel)
+        }
+      })
     }
   }
 

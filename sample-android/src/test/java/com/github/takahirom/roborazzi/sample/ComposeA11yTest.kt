@@ -218,5 +218,41 @@ class ComposeA11yTest {
       )
     )
   }
+
+  @Test
+  @Config(sdk = [33])
+  fun wrongApi() {
+    composeTestRule.setContent {
+      // No failures because not API 34
+
+      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+          modifier = Modifier
+            .size(100.dp)
+            .background(Color.DarkGray)
+        ) {
+          Text("Something hard to read", color = Color.DarkGray)
+        }
+      }
+    }
+  }
+
+  @Test
+  @GraphicsMode(GraphicsMode.Mode.LEGACY)
+  fun notNative() {
+    // No failures because legacy
+
+    composeTestRule.setContent {
+      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+          modifier = Modifier
+            .size(100.dp)
+            .background(Color.DarkGray)
+        ) {
+          Text("Something hard to read", color = Color.DarkGray)
+        }
+      }
+    }
+  }
 }
 
