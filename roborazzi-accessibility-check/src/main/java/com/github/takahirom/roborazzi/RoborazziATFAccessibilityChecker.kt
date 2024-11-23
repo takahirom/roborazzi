@@ -175,8 +175,20 @@ data class RoborazziATFAccessibilityChecker(
 
     val results = viewChecker.runChecksOnView(ImmutableSet.copyOf(checks), view, parameters)
 
-    return results.filter {
-      !suppressions.matches(it)
+    return results.applySuppressions(suppressions)
+  }
+
+  private fun List<AccessibilityViewCheckResult>.applySuppressions(
+    suppressions: Matcher<in AccessibilityViewCheckResult>
+  ): List<AccessibilityViewCheckResult> {
+    val ranTypes = listOf(
+      AccessibilityCheckResultType.ERROR,
+      AccessibilityCheckResultType.WARNING,
+      AccessibilityCheckResultType.INFO
+    )
+
+    return map {
+      if (suppressions.matches(it) && ranTypes.contains(it.type)) it.suppressedResultCopy else it
     }
   }
 
@@ -190,6 +202,9 @@ data class RoborazziATFAccessibilityChecker(
         AccessibilityCheckResultType.ERROR -> roborazziErrorLog("Error: $check")
         AccessibilityCheckResultType.WARNING -> roborazziErrorLog(
           "Warning: $check"
+        )
+        AccessibilityCheckResultType.SUPPRESSED -> roborazziReportLog(
+          "Suppressed: $check"
         )
 
         AccessibilityCheckResultType.INFO -> roborazziReportLog(
