@@ -190,15 +190,14 @@ class RoborazziRule private constructor(
     description: Description,
     captureRoot: CaptureRoot
   ) {
-    val captureType = options.captureType
     val evaluate: () -> Unit = {
       try {
-        println("evaluate $captureType")
         base.evaluate()
       } catch (e: Exception) {
         throw e
       }
     }
+    val captureType = options.captureType
     if (!options.roborazziOptions.taskType.isEnabled()) {
       evaluate()
       return
@@ -284,7 +283,6 @@ class RoborazziRule private constructor(
 
           evaluate()
 
-          println("Checking")
           if (accessibilityChecks.shouldRunAt(CheckPoint.AfterTest)) {
             accessibilityChecks.runAccessibilityChecks(
               captureRoot = captureRoot,
