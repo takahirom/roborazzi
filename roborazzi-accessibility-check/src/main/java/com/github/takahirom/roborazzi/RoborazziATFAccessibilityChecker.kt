@@ -192,8 +192,12 @@ data class RoborazziATFAccessibilityChecker(
       AccessibilityCheckResultType.INFO
     )
 
-    return map {
-      if (suppressions.matches(it) && ranTypes.contains(it.type)) it.suppressedResultCopy else it
+    return map { checkResult ->
+      if (suppressions.matches(checkResult) && ranTypes.contains(checkResult.type)) {
+        checkResult.suppressedResultCopy
+      } else {
+        checkResult
+      }
     }
   }
 
