@@ -16,6 +16,7 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.RoborazziRule
+import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule.Options
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.checkRoboAccessibility
@@ -45,8 +46,9 @@ class ViewA11yTest {
 
   @get:Rule
   val roborazziRule = RoborazziRule(
-    captureRoot = Espresso.onView(ViewMatchers.isRoot()),
+    captureRoot = onView(ViewMatchers.isRoot()),
     options = Options(
+      captureType = CaptureType.LastImage(),
       roborazziAccessibilityOptions = RoborazziATFAccessibilityCheckOptions(
         checker = RoborazziATFAccessibilityChecker(
           preset = AccessibilityCheckPreset.LATEST,
