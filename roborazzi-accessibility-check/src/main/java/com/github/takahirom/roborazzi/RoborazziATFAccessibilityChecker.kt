@@ -79,7 +79,6 @@ data class RoborazziATFAccessibilityChecker(
     data class Compose(val semanticsNodeInteraction: SemanticsNodeInteraction) : CheckNode
   }
 
-
   @ExperimentalRoborazziApi
   enum class CheckLevel(private vararg val failedTypes: AccessibilityCheckResultType) {
     Error(AccessibilityCheckResultType.ERROR),
@@ -249,6 +248,7 @@ data class RoborazziATFAccessibilityChecker(
   companion object
 }
 
+@ExperimentalRoborazziApi
 abstract class BaseAccessibilityCheckStrategy : AccessibilityCheckStrategy {
   abstract val accessibilityOptionsFactory: () -> RoborazziATFAccessibilityCheckOptions
 
