@@ -93,7 +93,6 @@ class ComposeA11yTest {
 
   @Test
   fun boxWithEmptyContentDescription() {
-    println(taskType)
     if (taskType.isEnabled()) {
       thrown.expectMessage("SpeakableTextPresentCheck")
     }
