@@ -254,6 +254,7 @@ abstract class BaseAccessibilityCheckStrategy : AccessibilityCheckStrategy {
 
   private val accessibilityOptions by lazy { accessibilityOptionsFactory() }
 
+  @InternalRoborazziApi
   fun runAccessibilityChecks(
     captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions
   ) {
