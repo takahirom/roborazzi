@@ -3,7 +3,6 @@ package com.github.takahirom.roborazzi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.test.espresso.ViewInteraction
-import com.github.takahirom.roborazzi.RoborazziRule.AccessibilityCheckStrategy.CheckPoint
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
@@ -83,29 +82,11 @@ class RoborazziRule private constructor(
 
   @ExperimentalRoborazziApi
   interface AccessibilityCheckStrategy {
-    @InternalRoborazziApi
-    fun runAccessibilityChecks(
-      captureRoot: CaptureRoot,
-      roborazziOptions: RoborazziOptions,
-    )
-
-    enum class CheckPoint {
-      AfterTest, AfterScreenshot
-    }
-
-    fun shouldRunAt(checkPoint: CheckPoint): Boolean
+    fun afterScreenshot(captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions) {}
+    fun afterTest(captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions) {}
 
     // Use `roborazzi-accessibility-check`'s [com.github.takahirom.roborazzi.AccessibilityCheckAfterTestStrategy]
-    data object None : AccessibilityCheckStrategy {
-      override fun runAccessibilityChecks(
-        captureRoot: CaptureRoot,
-        roborazziOptions: RoborazziOptions
-      ) {
-        // Do nothing
-      }
-
-      override fun shouldRunAt(checkPoint: CheckPoint): Boolean = false
-    }
+    data object None : AccessibilityCheckStrategy
   }
 
   sealed interface CaptureType {
@@ -240,20 +221,16 @@ class RoborazziRule private constructor(
       }
 
       is CaptureType.AllImage, is CaptureType.Gif -> {
-        val accessibilityChecks = options.accessibilityCheckStrategy
-
         val result = when (captureRoot) {
           is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureComposeNode(
             composeRule = captureRoot.composeRule,
             roborazziOptions = roborazziOptions,
             block = evaluate,
             onEach = {
-              if (accessibilityChecks.shouldRunAt(CheckPoint.AfterScreenshot)) {
-                accessibilityChecks.runAccessibilityChecks(
-                  captureRoot = captureRoot,
-                  roborazziOptions = options.roborazziOptions
-                )
-              }
+              options.accessibilityCheckStrategy.afterScreenshot(
+                captureRoot = captureRoot,
+                roborazziOptions = options.roborazziOptions
+              )
             },
           )
 
@@ -261,12 +238,10 @@ class RoborazziRule private constructor(
             roborazziOptions = roborazziOptions,
             block = evaluate,
             onEach = {
-              if (accessibilityChecks.shouldRunAt(CheckPoint.AfterScreenshot)) {
-                accessibilityChecks.runAccessibilityChecks(
-                  captureRoot = captureRoot,
-                  roborazziOptions = options.roborazziOptions
-                )
-              }
+              options.accessibilityCheckStrategy.afterScreenshot(
+                captureRoot = captureRoot,
+                roborazziOptions = options.roborazziOptions
+              )
             },
           )
 
@@ -299,16 +274,12 @@ class RoborazziRule private constructor(
 
       is CaptureType.LastImage -> {
         val result = runCatching {
-          val accessibilityChecks = options.accessibilityCheckStrategy
-
           evaluate()
 
-          if (accessibilityChecks.shouldRunAt(CheckPoint.AfterTest)) {
-            accessibilityChecks.runAccessibilityChecks(
-              captureRoot = captureRoot,
-              roborazziOptions = options.roborazziOptions
-            )
-          }
+          options.accessibilityCheckStrategy.afterTest(
+            captureRoot = captureRoot,
+            roborazziOptions = options.roborazziOptions
+          )
         }
         if (!captureType.onlyFail || result.isFailure) {
           val outputFile =

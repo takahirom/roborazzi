@@ -11,7 +11,6 @@ import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
 import com.github.takahirom.roborazzi.RoborazziRule.AccessibilityCheckStrategy
-import com.github.takahirom.roborazzi.RoborazziRule.AccessibilityCheckStrategy.CheckPoint
 import com.github.takahirom.roborazzi.RoborazziRule.CaptureRoot
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResult.AccessibilityCheckResultType
@@ -228,6 +227,7 @@ data class RoborazziATFAccessibilityChecker(
         AccessibilityCheckResultType.WARNING -> roborazziErrorLog(
           "Warning: $check"
         )
+
         AccessibilityCheckResultType.SUPPRESSED -> roborazziReportLog(
           "Suppressed: $check"
         )
@@ -249,12 +249,12 @@ data class RoborazziATFAccessibilityChecker(
   companion object
 }
 
-abstract class BaseAccessibilityCheckStrategy: AccessibilityCheckStrategy {
+abstract class BaseAccessibilityCheckStrategy : AccessibilityCheckStrategy {
   abstract val accessibilityOptionsFactory: () -> RoborazziATFAccessibilityCheckOptions
 
   private val accessibilityOptions by lazy { accessibilityOptionsFactory() }
 
-  override fun runAccessibilityChecks(
+  fun runAccessibilityChecks(
     captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions
   ) {
     accessibilityOptions
@@ -280,8 +280,12 @@ abstract class BaseAccessibilityCheckStrategy: AccessibilityCheckStrategy {
 data class AccessibilityCheckEachScreenshotStrategy(
   override val accessibilityOptionsFactory: () -> RoborazziATFAccessibilityCheckOptions = { provideATFAccessibilityOptionsOrCreateDefault() },
 ) : BaseAccessibilityCheckStrategy() {
-  override fun shouldRunAt(checkPoint: CheckPoint): Boolean {
-    return checkPoint == CheckPoint.AfterScreenshot || checkPoint == CheckPoint.AfterTest
+  override fun afterScreenshot(captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions) {
+    runAccessibilityChecks(captureRoot, roborazziOptions)
+  }
+
+  override fun afterTest(captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions) {
+    runAccessibilityChecks(captureRoot, roborazziOptions)
   }
 }
 
@@ -289,7 +293,8 @@ data class AccessibilityCheckEachScreenshotStrategy(
 data class AccessibilityCheckAfterTestStrategy(
   override val accessibilityOptionsFactory: () -> RoborazziATFAccessibilityCheckOptions = { provideATFAccessibilityOptionsOrCreateDefault() },
 ) : BaseAccessibilityCheckStrategy() {
-  override fun shouldRunAt(checkPoint: CheckPoint): Boolean {
-    return checkPoint == CheckPoint.AfterTest
+
+  override fun afterTest(captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions) {
+    runAccessibilityChecks(captureRoot, roborazziOptions)
   }
 }
