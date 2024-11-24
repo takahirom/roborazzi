@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.AccessibilityCheckAfterTestStrategy
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
@@ -47,6 +48,7 @@ import java.util.Locale
 /**
  * Test demonstrating a completely custom ATF Check. Expected to be a niche usecase, but critical when required.
  */
+@OptIn(ExperimentalRoborazziApi::class)
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = RobolectricDeviceQualifiers.Pixel4, sdk = [35])
@@ -165,7 +167,7 @@ class CustomAccessibilityHierarchyCheckResult(
   metadata: ResultMetadata?
 ) : AccessibilityHierarchyCheckResult(checkClass, type, element, resultId, metadata) {
   override fun getMessage(locale: Locale?): CharSequence =
-    (checkClass.newInstance()).getMessageForResult(locale, this)
+    (checkClass.getDeclaredConstructor().newInstance()).getMessageForResult(locale, this)
 }
 
 abstract class CustomAccessibilityHierarchyCheck(

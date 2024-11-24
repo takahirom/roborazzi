@@ -11,6 +11,7 @@ import com.ashampoo.kim.format.png.chunk.PngTextChunk
 import com.ashampoo.kim.input.KotlinIoSourceByteReader
 import com.ashampoo.kim.input.use
 import com.github.takahirom.roborazzi.CaptureResult
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -25,6 +26,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
+@OptIn(ExperimentalRoborazziApi::class)
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
