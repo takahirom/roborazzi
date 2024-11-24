@@ -1,16 +1,26 @@
 package com.github.takahirom.roborazzi
 
+import android.app.Activity
 import android.app.Application
 import android.content.ComponentName
 import android.view.ViewGroup
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import org.robolectric.Shadows
+import org.robolectric.shadows.ShadowDisplay
 import java.io.File
+import kotlin.math.roundToInt
 
 fun captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath(),
@@ -30,7 +40,7 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  registerRoborazziActivityToRobolectricIfNeeded()
+  registerRoborazziActivityToRobolectricIfNeeded(RoborazziTransparentActivity::class.java)
   val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
   activityScenario.use {
     activityScenario.onActivity { activity ->
@@ -51,13 +61,15 @@ fun captureRoboImage(
 /**
  * Workaround for https://github.com/takahirom/roborazzi/issues/100
  */
-private fun registerRoborazziActivityToRobolectricIfNeeded() {
+internal fun registerRoborazziActivityToRobolectricIfNeeded(
+  activityClass: Class<out Activity>
+) {
   try {
     val appContext: Application = ApplicationProvider.getApplicationContext()
     Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
       ComponentName(
         appContext.packageName,
-        RoborazziTransparentActivity::class.java.name,
+        activityClass::class.java.name,
       )
     )
   } catch (e: ClassNotFoundException) {

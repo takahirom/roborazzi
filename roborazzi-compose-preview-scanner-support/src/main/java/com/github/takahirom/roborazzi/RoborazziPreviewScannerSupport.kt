@@ -14,7 +14,14 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 ) {
   val composablePreview = this
   composablePreview.applyToRobolectricConfiguration()
-  captureRoboImage(filePath = filePath, roborazziOptions = roborazziOptions) {
+  captureSizedRoboImage(
+    filePath = filePath,
+    roborazziOptions = roborazziOptions,
+    widthDp = composablePreview.previewInfo.widthDp,
+    heightDp = composablePreview.previewInfo.heightDp,
+    showBackground = composablePreview.previewInfo.showBackground,
+    backgroundColor = composablePreview.previewInfo.backgroundColor
+  ) {
     composablePreview()
   }
 }
