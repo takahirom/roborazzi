@@ -58,7 +58,27 @@ class RoborazziRule private constructor(
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
     val roborazziAccessibilityOptions: RoborazziAccessibilityOptions = provideRoborazziContext().roborazziAccessibilityOptions,
     val accessibilityCheckStrategy: AccessibilityCheckStrategy = AccessibilityCheckStrategy.None,
-  )
+  ) {
+    // Stable parameters
+    constructor(
+      captureType: CaptureType = CaptureType.None,
+      /**
+       * output directory path
+       */
+      outputDirectoryPath: String = provideRoborazziContext().outputDirectory,
+
+      outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
+        ?: defaultFileProvider,
+      roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+    ): this(
+      captureType = captureType,
+      outputDirectoryPath = outputDirectoryPath,
+      outputFileProvider = outputFileProvider,
+      roborazziOptions = roborazziOptions,
+      roborazziAccessibilityOptions = provideRoborazziContext().roborazziAccessibilityOptions,
+      accessibilityCheckStrategy = AccessibilityCheckStrategy.None
+    )
+  }
 
   @ExperimentalRoborazziApi
   interface AccessibilityCheckStrategy {

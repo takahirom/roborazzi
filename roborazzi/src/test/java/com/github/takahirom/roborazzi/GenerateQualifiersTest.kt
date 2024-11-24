@@ -2,6 +2,7 @@ package com.github.takahirom.roborazzi
 
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
+import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import nl.adaptivity.xmlutil.serialization.DefaultXmlSerializationPolicy
 import nl.adaptivity.xmlutil.serialization.XML
 import nl.adaptivity.xmlutil.serialization.XmlConfig.Companion.IGNORING_UNKNOWN_CHILD_HANDLER
@@ -21,7 +22,9 @@ import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 
 
-@Ignore
+@Suppress("DEPRECATION")
+@Ignore("We only need to run this once to generate the qualifiers")
+@OptIn(ExperimentalXmlUtilApi::class)
 class GenerateQualifiersTest {
   val devicesTarGz =
     ("https://android.googlesource.com" +
@@ -56,7 +59,7 @@ class GenerateQualifiersTest {
       )
       deviceTypes.forEach { (tagId, devices) ->
         writeUtf8("\n\t// Type: ${tagId ?: "default"}\n")
-        devices.forEach { device ->
+        devices.forEach device@{ device ->
           // find device name
           val name = device.name
             .replace(" ", "")
@@ -67,11 +70,11 @@ class GenerateQualifiersTest {
             .replace(".", "")
             .replace("\"", "")
 
-          val shouldSkipDevice = shouldSkip(name, device)
+          val shouldSkipDevice = shouldSkip(name)
 
           if (shouldSkipDevice) {
             println("skip device:$name")
-            return@forEach
+            return@device
           }
 
           writeUtf8("\tconst val $name = \"${device.qualifier}\"\n")
@@ -82,7 +85,7 @@ class GenerateQualifiersTest {
     }
   }
 
-  private fun shouldSkip(name: String, device: Device): Boolean {
+  private fun shouldSkip(name: String): Boolean {
     if (name[0] in '0'..'9') return true
     val skippingDevicePrefixes =
       listOf(

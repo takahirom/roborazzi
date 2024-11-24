@@ -5,6 +5,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -20,6 +21,7 @@ import org.robolectric.annotation.GraphicsMode
   sdk = [30],
   qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
+@OptIn(ExperimentalRoborazziApi::class)
 class ComparisonStyleTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()

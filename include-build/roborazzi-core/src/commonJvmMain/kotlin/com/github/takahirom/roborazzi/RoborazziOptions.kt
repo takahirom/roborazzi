@@ -79,6 +79,21 @@ data class RoborazziOptions(
   val compareOptions: CompareOptions = CompareOptions(),
   val recordOptions: RecordOptions = RecordOptions(),
 ) {
+  // Stable parameters
+  constructor(
+    captureType: CaptureType = if (canScreenshot()) CaptureType.Screenshot() else defaultCaptureType(),
+    reportOptions: ReportOptions = ReportOptions(),
+    compareOptions: CompareOptions = CompareOptions(),
+    recordOptions: RecordOptions = RecordOptions(),
+  ) : this(
+    taskType = roborazziSystemPropertyTaskType(),
+    contextData = emptyMap(),
+    captureType = captureType,
+    reportOptions = reportOptions,
+    compareOptions = compareOptions,
+    recordOptions = recordOptions,
+  )
+
   interface CaptureType {
     class Screenshot : CaptureType {
       override fun shouldTakeScreenshot(): Boolean {
@@ -91,10 +106,14 @@ data class RoborazziOptions(
     companion object
   }
 
-  @ExperimentalRoborazziApi
   data class ReportOptions(
     val captureResultReporter: CaptureResultReporter = CaptureResultReporter(),
-  )
+  ) {
+    // Stable parameters
+    constructor() : this(
+      captureResultReporter = CaptureResultReporter()
+    )
+  }
 
   data class CompareOptions(
     val outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
@@ -103,6 +122,15 @@ data class RoborazziOptions(
     val aiAssertionOptions: AiAssertionOptions? = null,
     val resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
   ) {
+    // Stable parameters
+    constructor(
+      imageComparator: ImageComparator = DefaultImageComparator,
+      resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
+    ): this(
+      outputDirectoryPath = roborazziSystemPropertyOutputDirectory(),
+      imageComparator = imageComparator,
+      resultValidator = resultValidator,
+    )
 
     @ExperimentalRoborazziApi
     sealed interface ComparisonStyle {
@@ -236,7 +264,19 @@ data class RoborazziOptions(
     val applyDeviceCrop: Boolean = false,
     val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
     val imageIoFormat: ImageIoFormat = ImageIoFormat(),
-  )
+  ) {
+    // Stable parameters
+    constructor(
+      resizeScale: Double = roborazziDefaultResizeScale(),
+      applyDeviceCrop: Boolean = false,
+      pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
+    ) : this(
+      resizeScale = resizeScale,
+      applyDeviceCrop = applyDeviceCrop,
+      pixelBitConfig = pixelBitConfig,
+      imageIoFormat = ImageIoFormat(),
+    )
+  }
 
   enum class PixelBitConfig {
     Argb8888,
