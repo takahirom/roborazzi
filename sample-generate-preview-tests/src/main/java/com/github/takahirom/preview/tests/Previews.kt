@@ -2,6 +2,8 @@ package com.github.takahirom.preview.tests
 
 import android.content.res.Configuration
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
@@ -59,19 +61,18 @@ fun PreviewDarkMode() {
 
 @Preview(
   name = "Preview Name",
-  // These properties are not supported by Roborazzi yet.
   group = "Preview Group",
-  apiLevel = 30,
-  widthDp = 320,
-  heightDp = 640,
   locale = "ja-rJP",
   fontScale = 1.5f,
+  widthDp = 320,
+  heightDp = 640,
+  // These properties are not supported by Roborazzi yet.
+  apiLevel = 30
 )
 @Composable
 fun PreviewWithProperties1() {
   Card(
-    Modifier
-      .width(100.dp)
+    Modifier.width(100.dp)
   ) {
     Text(
       modifier = Modifier.padding(8.dp),
@@ -93,6 +94,78 @@ fun PreviewWithProperties2() {
   Card(
     Modifier
       .width(100.dp)
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview width & height large",
+  group = "Preview Group",
+  widthDp = 2000,
+  heightDp = 1000,
+)
+@Composable
+fun PreviewWithWidthAndHeight() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview width & height",
+  group = "Preview Group",
+  widthDp = 30,
+  heightDp = 30,
+)
+@Composable
+fun PreviewWithWidthAndHeightSmall() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview width",
+  group = "Preview Group",
+  widthDp = 500,
+  // These properties are not supported by Roborazzi yet.
+  apiLevel = 30
+)
+@Composable
+fun PreviewWithWidth() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview height",
+  group = "Preview Group",
+  heightDp = 500,
+)
+@Composable
+fun PreviewWithHeight() {
+  Card(
+    Modifier.fillMaxSize()
   ) {
     Text(
       modifier = Modifier.padding(8.dp),

@@ -3,5 +3,6 @@
   <application>
     <activity android:name=".RoborazziTransparentActivity"
       android:theme="@style/RoborazziTransparentTheme"/>
+    <activity android:name=".RoborazziComposePreviewsActivity"/>
   </application>
 </manifest>

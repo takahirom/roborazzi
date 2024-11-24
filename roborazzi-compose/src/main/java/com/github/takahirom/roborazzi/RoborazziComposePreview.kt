@@ -1,12 +1,18 @@
 package com.github.takahirom.roborazzi
 
 import android.app.Activity
+import android.app.Application
+import android.app.Instrumentation
+import android.content.ComponentName
 import android.graphics.Color
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -15,9 +21,9 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowDisplay
-import java.io.File
 import kotlin.math.roundToInt
 
 fun captureSizedRoboImage(
@@ -30,12 +36,13 @@ fun captureSizedRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  registerRoborazziActivityToRobolectricIfNeeded(ComponentActivity::class.java)
+  registerRoborazziComposePreviewsActivityToRobolectricIfNeeded()
 
   val activityScenario = ActivityScenario.launch(ComponentActivity::class.java)
 
-  activityScenario.onActivity {
-    it.setShadowDisplay(
+  activityScenario.onActivity { activity ->
+
+    activity.setDisplaySize(
       widthDp = widthDp,
       heightDp = heightDp
     )
@@ -79,7 +86,7 @@ fun Activity.setBackgroundColor(
   }
 }
 
-fun Activity.setShadowDisplay(
+fun Activity.setDisplaySize(
   widthDp: Int,
   heightDp: Int
 ) {
@@ -117,7 +124,24 @@ private fun (@Composable () -> Unit).withSize(
       heightDp > 0 -> Modifier.height(heightDp.dp)
       else -> Modifier
     }
-    Box(modifier = modifier) { this@withSize() }
+    Box(modifier = modifier) {
+      this@withSize()
+    }
   }
   return resizedPreview
+}
+
+private fun registerRoborazziComposePreviewsActivityToRobolectricIfNeeded() {
+  try {
+    val appContext: Application = ApplicationProvider.getApplicationContext()
+    Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
+      ComponentName(
+        appContext.packageName,
+        ComponentActivity::class.java.name,
+      )
+    )
+  } catch (e: ClassNotFoundException) {
+    // Configured to run even without Robolectric
+    e.printStackTrace()
+  }
 }
