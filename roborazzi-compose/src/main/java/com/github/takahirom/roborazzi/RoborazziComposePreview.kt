@@ -2,17 +2,12 @@ package com.github.takahirom.roborazzi
 
 import android.app.Activity
 import android.app.Application
-import android.app.Instrumentation
 import android.content.ComponentName
 import android.graphics.Color
 import android.view.ViewGroup
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -36,9 +31,9 @@ fun captureSizedRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  registerRoborazziComposePreviewsActivityToRobolectricIfNeeded()
+  registerTransparentActivityToRobolectricIfNeeded()
 
-  val activityScenario = ActivityScenario.launch(ComponentActivity::class.java)
+  val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
 
   activityScenario.onActivity { activity ->
 
@@ -100,8 +95,9 @@ fun Activity.setDisplaySize(
       }
     }
     if (heightDp > 0) {
-      heightDp.let {
-        val heightPx = (heightDp * density).roundToInt()
+      val effectiveHeightDp = heightDp + 56 // 56dp is the size of the ActionBar
+      effectiveHeightDp.let {
+        val heightPx = (effectiveHeightDp * density).roundToInt()
         Shadows.shadowOf(display).setHeight(heightPx)
       }
     }
@@ -131,13 +127,13 @@ private fun (@Composable () -> Unit).withSize(
   return resizedPreview
 }
 
-private fun registerRoborazziComposePreviewsActivityToRobolectricIfNeeded() {
+private fun registerTransparentActivityToRobolectricIfNeeded() {
   try {
     val appContext: Application = ApplicationProvider.getApplicationContext()
     Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
       ComponentName(
         appContext.packageName,
-        ComponentActivity::class.java.name,
+        RoborazziTransparentActivity::class.java.name,
       )
     )
   } catch (e: ClassNotFoundException) {
