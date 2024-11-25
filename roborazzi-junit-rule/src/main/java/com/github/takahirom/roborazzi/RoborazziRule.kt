@@ -25,7 +25,7 @@ private val defaultFileProvider: FileProvider =
  * 2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
  */
 class RoborazziRule private constructor(
-  private val captureRoot: CaptureRoot,
+  private val ruleCaptureRoot: RuleCaptureRoot,
   private val options: Options = Options()
 ) : TestWatcher() {
   init {
@@ -82,8 +82,8 @@ class RoborazziRule private constructor(
 
   @ExperimentalRoborazziApi
   interface AccessibilityCheckStrategy {
-    fun afterScreenshot(captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions) {}
-    fun afterTest(captureRoot: CaptureRoot, roborazziOptions: RoborazziOptions) {}
+    fun afterScreenshot(ruleCaptureRoot: RuleCaptureRoot, roborazziOptions: RoborazziOptions) {}
+    fun afterTest(ruleCaptureRoot: RuleCaptureRoot, roborazziOptions: RoborazziOptions) {}
 
     // Use `roborazzi-accessibility-check`'s [com.github.takahirom.roborazzi.AccessibilityCheckAfterTestStrategy]
     data object None : AccessibilityCheckStrategy
@@ -127,21 +127,21 @@ class RoborazziRule private constructor(
   }
 
   @InternalRoborazziApi
-  sealed interface CaptureRoot {
-    object None : CaptureRoot
+  sealed interface RuleCaptureRoot {
+    object None : RuleCaptureRoot
     class Compose(
       val composeRule: ComposeTestRule,
       val semanticsNodeInteraction: SemanticsNodeInteraction
-    ) : CaptureRoot
+    ) : RuleCaptureRoot
 
-    class View(val viewInteraction: ViewInteraction) : CaptureRoot
+    class View(val viewInteraction: ViewInteraction) : RuleCaptureRoot
   }
 
   constructor(
     captureRoot: ViewInteraction,
     options: Options = Options()
   ) : this(
-    captureRoot = CaptureRoot.View(captureRoot),
+    ruleCaptureRoot = RuleCaptureRoot.View(captureRoot),
     options = options
   )
 
@@ -150,14 +150,14 @@ class RoborazziRule private constructor(
     captureRoot: SemanticsNodeInteraction,
     options: Options = Options()
   ) : this(
-    captureRoot = CaptureRoot.Compose(composeRule, captureRoot),
+    ruleCaptureRoot = RuleCaptureRoot.Compose(composeRule, captureRoot),
     options = options
   )
 
   constructor(
     options: Options = Options()
   ) : this(
-    captureRoot = CaptureRoot.None,
+    ruleCaptureRoot = RuleCaptureRoot.None,
     options = options
   )
 
@@ -174,7 +174,7 @@ class RoborazziRule private constructor(
           provideRoborazziContext().setRuleOverrideFileProvider(options.outputFileProvider)
           provideRoborazziContext().setRuleOverrideDescription(description)
           provideRoborazziContext().setRuleOverrideAccessibilityOptions(options.roborazziAccessibilityOptions)
-          runTest(base, description, captureRoot)
+          runTest(base, description, ruleCaptureRoot)
         } finally {
           provideRoborazziContext().clearRuleOverrideOutputDirectory()
           provideRoborazziContext().clearRuleOverrideRoborazziOptions()
@@ -189,7 +189,7 @@ class RoborazziRule private constructor(
   private fun runTest(
     base: Statement,
     description: Description,
-    captureRoot: CaptureRoot
+    ruleCaptureRoot: RuleCaptureRoot
   ) {
     val evaluate: () -> Unit = {
       try {
@@ -221,31 +221,31 @@ class RoborazziRule private constructor(
       }
 
       is CaptureType.AllImage, is CaptureType.Gif -> {
-        val result = when (captureRoot) {
-          is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureComposeNode(
-            composeRule = captureRoot.composeRule,
+        val result = when (ruleCaptureRoot) {
+          is RuleCaptureRoot.Compose -> ruleCaptureRoot.semanticsNodeInteraction.captureComposeNode(
+            composeRule = ruleCaptureRoot.composeRule,
             roborazziOptions = roborazziOptions,
             block = evaluate,
             onEach = {
               options.accessibilityCheckStrategy.afterScreenshot(
-                captureRoot = captureRoot,
+                ruleCaptureRoot = ruleCaptureRoot,
                 roborazziOptions = options.roborazziOptions
               )
             },
           )
 
-          is CaptureRoot.View -> captureRoot.viewInteraction.captureAndroidView(
+          is RuleCaptureRoot.View -> ruleCaptureRoot.viewInteraction.captureAndroidView(
             roborazziOptions = roborazziOptions,
             block = evaluate,
             onEach = {
               options.accessibilityCheckStrategy.afterScreenshot(
-                captureRoot = captureRoot,
+                ruleCaptureRoot = ruleCaptureRoot,
                 roborazziOptions = options.roborazziOptions
               )
             },
           )
 
-          CaptureRoot.None -> {
+          RuleCaptureRoot.None -> {
             error("captureRoot is required for AllImage and Gif")
           }
         }
@@ -277,25 +277,25 @@ class RoborazziRule private constructor(
           evaluate()
 
           options.accessibilityCheckStrategy.afterTest(
-            captureRoot = captureRoot,
+            ruleCaptureRoot = ruleCaptureRoot,
             roborazziOptions = options.roborazziOptions
           )
         }
         if (!captureType.onlyFail || result.isFailure) {
           val outputFile =
             fileWithRecordFilePathStrategy(DefaultFileNameGenerator.generateFilePath())
-          when (captureRoot) {
-            is CaptureRoot.Compose -> captureRoot.semanticsNodeInteraction.captureRoboImage(
+          when (ruleCaptureRoot) {
+            is RuleCaptureRoot.Compose -> ruleCaptureRoot.semanticsNodeInteraction.captureRoboImage(
               file = outputFile,
               roborazziOptions = roborazziOptions
             )
 
-            is CaptureRoot.View -> captureRoot.viewInteraction.captureRoboImage(
+            is RuleCaptureRoot.View -> ruleCaptureRoot.viewInteraction.captureRoboImage(
               file = outputFile,
               roborazziOptions = roborazziOptions
             )
 
-            CaptureRoot.None -> {
+            RuleCaptureRoot.None -> {
               error("captureRoot is required for LastImage")
             }
           }
