@@ -53,7 +53,7 @@ fun ViewInteraction.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  perform(ImageCaptureViewAction(roborazziOptions) { canvas ->
+  perform(ImageCaptureViewAction(roborazziOptions) { _, canvas ->
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
@@ -149,7 +149,8 @@ fun captureScreenRoboImage(
   // Invoke rootOracle.listActiveRoots() via reflection
   val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
   listActiveRoots.isAccessible = true
-  @Suppress("UNCHECKED_CAST") val roots: List<Root> = listActiveRoots.invoke(rootsOracle) as List<Root>
+  @Suppress("UNCHECKED_CAST") val roots: List<Root> =
+    listActiveRoots.invoke(rootsOracle) as List<Root>
   debugLog {
     "captureScreenRoboImage roots: ${roots.joinToString("\n") { it.toString() }}"
   }
@@ -159,7 +160,7 @@ fun captureScreenRoboImage(
       roborazziOptions = roborazziOptions
     ),
     roborazziOptions = roborazziOptions,
-  ) { canvas ->
+  ) { _, canvas ->
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
@@ -284,7 +285,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
       roborazziOptions = roborazziOptions
     ),
     roborazziOptions = roborazziOptions,
-  ) { canvas ->
+  ) { _, canvas ->
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
@@ -356,7 +357,7 @@ fun ViewInteraction.captureAndroidView(
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
     handler.postAtFrontOfQueue {
       this@captureAndroidView.perform(
-        ImageCaptureViewAction(roborazziOptions) { canvas ->
+        ImageCaptureViewAction(roborazziOptions) { _, canvas ->
           if (canvases.addIfChanged(canvas, roborazziOptions)) {
             onEach()
           }
@@ -411,7 +412,7 @@ fun ViewInteraction.captureAndroidView(
   try {
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     perform(
-      ImageCaptureViewAction(roborazziOptions) { canvas ->
+      ImageCaptureViewAction(roborazziOptions) { _, canvas ->
         if (canvases.addIfChanged(canvas, roborazziOptions)) {
           onEach()
         }
@@ -505,8 +506,8 @@ fun SemanticsNodeInteraction.captureComposeNode(
         roborazziOptions
       ),
       roborazziOptions = roborazziOptions
-    ) {
-      if (canvases.addIfChanged(it, roborazziOptions)) {
+    ) { _, canvas ->
+      if (canvases.addIfChanged(canvas, roborazziOptions)) {
         onEach()
       }
     }
@@ -592,7 +593,7 @@ private fun saveAllImage(
 
 private class ImageCaptureViewAction(
   val roborazziOptions: RoborazziOptions,
-  val saveAction: (AwtRoboCanvas) -> Unit
+  val saveAction: (RoboComponent, AwtRoboCanvas) -> Unit
 ) :
   ViewAction {
   override fun getConstraints(): Matcher<View> {
@@ -618,7 +619,7 @@ private class ImageCaptureViewAction(
 internal fun capture(
   rootComponent: RoboComponent,
   roborazziOptions: RoborazziOptions,
-  onCanvas: (AwtRoboCanvas) -> Unit
+  onCanvas: (RoboComponent, AwtRoboCanvas) -> Unit
 ) {
   when (roborazziOptions.captureType) {
     is Dump -> captureDump(
@@ -632,6 +633,7 @@ internal fun capture(
       val image = rootComponent.image
         ?: throw IllegalStateException("Unable to find the image of the target root component. Does the rendering element exist?")
       onCanvas(
+        rootComponent,
         AwtRoboCanvas(
           width = image.width,
           height = image.height,
