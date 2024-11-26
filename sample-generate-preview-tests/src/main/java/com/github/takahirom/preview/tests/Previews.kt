@@ -3,7 +3,6 @@ package com.github.takahirom.preview.tests
 import android.content.res.Configuration
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
@@ -104,7 +103,6 @@ fun PreviewWithProperties2() {
 
 @Preview(
   name = "Preview width & height large",
-  group = "Preview Group",
   widthDp = 2000,
   heightDp = 1000,
 )
@@ -122,7 +120,6 @@ fun PreviewWithWidthAndHeight() {
 
 @Preview(
   name = "Preview width & height",
-  group = "Preview Group",
   widthDp = 30,
   heightDp = 30,
 )
@@ -140,7 +137,6 @@ fun PreviewWithWidthAndHeightSmall() {
 
 @Preview(
   name = "Preview width",
-  group = "Preview Group",
   widthDp = 500,
   // These properties are not supported by Roborazzi yet.
   apiLevel = 30
@@ -159,13 +155,47 @@ fun PreviewWithWidth() {
 
 @Preview(
   name = "Preview height",
-  group = "Preview Group",
   heightDp = 500,
 )
 @Composable
 fun PreviewWithHeight() {
   Card(
     Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview showBackground only",
+  showBackground = true,
+)
+@Composable
+fun PreviewShowBackgroundWithoutBackgroundColor() {
+  Card(
+    Modifier
+      .width(100.dp)
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview showBackground & backgroundColor",
+  showBackground = true,
+  backgroundColor = 0xFF0000FF,
+)
+@Composable
+fun PreviewShowBackgroundWithBackgroundColor() {
+  Card(
+    Modifier
+      .width(100.dp)
   ) {
     Text(
       modifier = Modifier.padding(8.dp),
