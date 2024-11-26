@@ -14,17 +14,25 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 ) {
   val composablePreview = this
   composablePreview.applyToRobolectricConfiguration()
-  captureSizedRoboImage(
+  captureRoboImage(
     filePath = filePath,
     roborazziOptions = roborazziOptions,
-    widthDp = composablePreview.previewInfo.widthDp,
-    heightDp = composablePreview.previewInfo.heightDp,
-    showBackground = composablePreview.previewInfo.showBackground,
-    backgroundColor = composablePreview.previewInfo.backgroundColor
-  ) {
-    composablePreview()
-  }
+    content = { activityScenario ->
+
+      activityScenario.setBackgroundColor(
+        showBackground = composablePreview.previewInfo.showBackground,
+        backgroundColor = composablePreview.previewInfo.backgroundColor
+      )
+
+      activityScenario.createSizedPreview(
+        widthDp = composablePreview.previewInfo.widthDp,
+        heightDp = composablePreview.previewInfo.heightDp,
+        preview = { composablePreview() }
+      )
+    },
+  )
 }
+
 /**
  * ComposePreviewTester is an interface that allows you to define a custom test for a Composable preview.
  * The class that implements this interface should have a parameterless constructor.

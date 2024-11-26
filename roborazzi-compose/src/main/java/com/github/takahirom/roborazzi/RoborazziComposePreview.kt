@@ -21,14 +21,10 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowDisplay.getDefaultDisplay
 import kotlin.math.roundToInt
 
-fun captureSizedRoboImage(
-  widthDp: Int,
-  heightDp: Int,
-  showBackground: Boolean,
-  backgroundColor: Long,
+fun captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  content: @Composable () -> Unit,
+  content: (ActivityScenario<out Activity>) -> @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   registerTransparentActivityToRobolectricIfNeeded()
@@ -36,19 +32,10 @@ fun captureSizedRoboImage(
   val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
 
   activityScenario.use {
-    val sizedPreview = activityScenario.createSizedPreview(
-        widthDp = widthDp,
-        heightDp = heightDp,
-        preview = { content() }
-      )
-
-    activityScenario.setBackgroundColor(
-      showBackground = showBackground,
-      backgroundColor = backgroundColor
-    )
+    val sizedPreview = content(activityScenario)
 
     activityScenario.onActivity { activity ->
-      activity.setContent(content = sizedPreview)
+      activity.setContent(content = { sizedPreview() })
 
       val composeView = activity.window.decorView
         .findViewById<ViewGroup>(android.R.id.content)
