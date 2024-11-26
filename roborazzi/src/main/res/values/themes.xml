@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
   <!-- Base application theme. -->
+  <!-- It seems that this theme isn't used because of test resource merger issue -->
   <style name="RoborazziTransparentTheme">
     <item name="android:colorBackground">@android:color/transparent</item>
     <item name="android:windowActionBar">false</item>
