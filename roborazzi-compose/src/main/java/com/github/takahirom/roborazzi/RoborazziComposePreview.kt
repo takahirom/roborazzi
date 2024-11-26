@@ -17,8 +17,8 @@ import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
-import org.robolectric.Shadows
-import org.robolectric.shadows.ShadowDisplay
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowDisplay.getDefaultDisplay
 import kotlin.math.roundToInt
 
 fun captureSizedRoboImage(
@@ -35,25 +35,20 @@ fun captureSizedRoboImage(
 
   val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
 
-  activityScenario.onActivity { activity ->
-
-    activity.setDisplaySize(
-      widthDp = widthDp,
-      heightDp = heightDp
-    )
-  }
-
   activityScenario.use {
-    activityScenario.onActivity { activity ->
+    val sizedPreview = activityScenario.createSizedPreview(
+        widthDp = widthDp,
+        heightDp = heightDp,
+        preview = { content() }
+      )
 
-      activity.setBackgroundColor(
-        showBackground = showBackground,
-        backgroundColor = backgroundColor
-      )
-      
-      activity.setContent(
-        content = content.withSize(widthDp = widthDp, heightDp = heightDp)
-      )
+    activityScenario.setBackgroundColor(
+      showBackground = showBackground,
+      backgroundColor = backgroundColor
+    )
+
+    activityScenario.onActivity { activity ->
+      activity.setContent(content = sizedPreview)
 
       val composeView = activity.window.decorView
         .findViewById<ViewGroup>(android.R.id.content)
@@ -69,47 +64,64 @@ fun captureSizedRoboImage(
   }
 }
 
-fun Activity.setBackgroundColor(
+fun ActivityScenario<out Activity>.setBackgroundColor(
   showBackground: Boolean,
   backgroundColor: Long,
 ) {
   when (showBackground) {
-    false -> window.decorView.setBackgroundColor(Color.TRANSPARENT)
+    false -> {
+      onActivity { activity ->
+        activity.window.decorView.setBackgroundColor(Color.TRANSPARENT)
+      }
+    }
+
     true -> if (backgroundColor != 0L) {
-      window.decorView.setBackgroundColor(backgroundColor.toInt())
+      onActivity { activity ->
+        activity.window.decorView.setBackgroundColor(backgroundColor.toInt())
+      }
     }
   }
 }
 
-fun Activity.setDisplaySize(
+fun ActivityScenario<out Activity>.createSizedPreview(
+  widthDp: Int,
+  heightDp: Int,
+  preview: @Composable () -> Unit
+): @Composable () -> Unit {
+  var result: (@Composable () -> Unit)? = null
+  onActivity { activity ->
+    activity.setDisplaySize(widthDp = widthDp, heightDp = heightDp)
+    result = preview.size(widthDp = widthDp, heightDp = heightDp)
+  }
+  return result ?: throw IllegalStateException("Result was not set within the activity lambda")
+}
+
+
+private fun Activity.setDisplaySize(
   widthDp: Int,
   heightDp: Int
 ) {
-  if (widthDp > 0 || heightDp > 0) {
-    val display = ShadowDisplay.getDefaultDisplay()
-    val density = resources.displayMetrics.density
-    if (widthDp > 0) {
-      widthDp.let {
-        val widthPx = (widthDp * density).roundToInt()
-        Shadows.shadowOf(display).setWidth(widthPx)
-      }
-    }
-    if (heightDp > 0) {
-      val effectiveHeightDp = heightDp + 56 // 56dp is the size of the ActionBar
-      effectiveHeightDp.let {
-        val heightPx = (effectiveHeightDp * density).roundToInt()
-        Shadows.shadowOf(display).setHeight(heightPx)
-      }
-    }
-    recreate()
+  if (widthDp <= 0 && heightDp <= 0) return
+
+  val display = shadowOf(getDefaultDisplay())
+  val density = resources.displayMetrics.density
+  if (widthDp > 0) {
+    val widthPx = (widthDp * density).roundToInt()
+    display.setWidth(widthPx)
   }
+  if (heightDp > 0) {
+    val heightPx = (heightDp * density).roundToInt()
+    display.setHeight(heightPx)
+  }
+  recreate()
 }
 
 /**
  * WARNING:
  * For this to work, it requires that the Display is within the widthDp and heightDp dimensions
+ * You can ensure that by calling [Activity.setDisplaySize] before
  */
-private fun (@Composable () -> Unit).withSize(
+private fun (@Composable () -> Unit).size(
   widthDp: Int,
   heightDp: Int,
 ): @Composable () -> Unit {
@@ -121,7 +133,7 @@ private fun (@Composable () -> Unit).withSize(
       else -> Modifier
     }
     Box(modifier = modifier) {
-      this@withSize()
+      this@size()
     }
   }
   return resizedPreview
@@ -130,7 +142,7 @@ private fun (@Composable () -> Unit).withSize(
 private fun registerTransparentActivityToRobolectricIfNeeded() {
   try {
     val appContext: Application = ApplicationProvider.getApplicationContext()
-    Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
+    shadowOf(appContext.packageManager).addActivityIfNotPresent(
       ComponentName(
         appContext.packageName,
         RoborazziTransparentActivity::class.java.name,
