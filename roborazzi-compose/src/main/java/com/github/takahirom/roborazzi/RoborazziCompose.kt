@@ -42,7 +42,7 @@ fun captureRoboImage(
   }
 }
 
-fun captureRoboImage(
+fun captureRoboImageWithActivityScenarioSetup(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   content: (ActivityScenario<out Activity>) -> @Composable () -> Unit,
@@ -68,23 +68,23 @@ fun captureRoboImage(
 private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  preview: @Composable () -> Unit,
+  content: @Composable () -> Unit,
 ) {
   captureRoboImage(
     file = fileWithRecordFilePathStrategy(filePath),
     roborazziOptions = roborazziOptions,
-    preview = preview
+    content = content
   )
 }
 
 private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  preview: @Composable () -> Unit,
+  content: @Composable () -> Unit,
 ) {
   
   onActivity { activity ->
-    activity.setContent(content = { preview() })
+    activity.setContent(content = { content() })
 
     val composeView = activity.window.decorView
       .findViewById<ViewGroup>(android.R.id.content)

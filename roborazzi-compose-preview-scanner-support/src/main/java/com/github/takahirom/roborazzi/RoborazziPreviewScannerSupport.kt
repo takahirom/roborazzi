@@ -14,7 +14,7 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 ) {
   val composablePreview = this
   composablePreview.applyToRobolectricConfiguration()
-  captureRoboImage(
+  captureRoboImageWithActivityScenarioSetup(
     filePath = filePath,
     roborazziOptions = roborazziOptions,
     content = { activityScenario ->
