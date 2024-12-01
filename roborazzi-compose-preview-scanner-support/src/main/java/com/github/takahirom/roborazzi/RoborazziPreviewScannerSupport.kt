@@ -11,16 +11,15 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  applierBuilder: RoborazziComposeApplierBuilder.() -> Unit = {
-    sized(
+  applierBuilder: RoborazziComposeApplierBuilder = RoborazziComposeApplierBuilder()
+    .sized(
       widthDp = previewInfo.widthDp,
       heightDp = previewInfo.heightDp
     )
-    colored(
+    .colored(
       showBackground = previewInfo.showBackground,
       backgroundColor = previewInfo.backgroundColor
     )
-  }
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   val composablePreview = this
