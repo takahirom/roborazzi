@@ -1,6 +1,5 @@
 package com.github.takahirom.roborazzi
 
-import android.app.Activity
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,6 +9,7 @@ import androidx.compose.ui.platform.ViewRootForTest
 import androidx.test.core.app.ActivityScenario
 import java.io.File
 
+
 fun captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
@@ -18,6 +18,7 @@ fun captureRoboImage(
   captureRoboImage(
     file = fileWithRecordFilePathStrategy(filePath),
     roborazziOptions = roborazziOptions,
+    decorationBuilder = {},
     content = content
   )
 }
@@ -27,41 +28,60 @@ fun captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   content: @Composable () -> Unit,
 ) {
-  if (!roborazziOptions.taskType.isEnabled()) return
-  registerActivityToRobolectricIfNeeded()
+  captureRoboImage(
+    file = file,
+    roborazziOptions = roborazziOptions,
+    decorationBuilder = {},
+    content = content
+  )
+}
 
-  val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
-  activityScenario.use {
-    activityScenario.captureRoboImage(file, roborazziOptions){
+@ExperimentalRoborazziApi
+fun captureRoboImage(
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  decorationBuilder: RoborazziComposeDecorationBuilder.() -> Unit = {
+  },
+  content: @Composable () -> Unit,
+) {
+  captureRoboImage(
+    file = fileWithRecordFilePathStrategy(filePath),
+    roborazziOptions = roborazziOptions,
+    decorationBuilder = decorationBuilder,
+    content = content
+  )
+}
+
+@ExperimentalRoborazziApi
+fun captureRoboImage(
+  file: File,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  decorationBuilder: RoborazziComposeDecorationBuilder.() -> Unit = {
+  },
+  content: @Composable () -> Unit,
+) {
+  if (!roborazziOptions.taskType.isEnabled()) return
+  launchRoborazziTransparentActivity { activityScenario ->
+    val screenshotBuilder = RoborazziComposeDecorationBuilder().apply(decorationBuilder)
+    val decoratedContent = screenshotBuilder.apply(activityScenario) {
       content()
     }
-
-    // Closing the activity is necessary to prevent memory leaks.
-    // If multiple captureRoboImage calls occur in a single test,
-    // they can lead to an activity leak.
+    activityScenario.captureRoboImage(file, roborazziOptions) {
+      decoratedContent()
+    }
   }
 }
 
-fun captureRoboImageWithActivityScenarioSetup(
-  filePath: String,
-  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  content: (ActivityScenario<out Activity>) -> @Composable () -> Unit,
-) {
-  if (!roborazziOptions.taskType.isEnabled()) return
+@InternalRoborazziApi
+fun launchRoborazziTransparentActivity(block: (ActivityScenario<RoborazziTransparentActivity>) -> Unit = {}) {
   registerActivityToRobolectricIfNeeded()
 
   val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
 
-  activityScenario.use {
-    val sizedPreview = content(activityScenario)
-    activityScenario.captureRoboImage(filePath, roborazziOptions){
-      sizedPreview()
-    }
-
-    // Closing the activity is necessary to prevent memory leaks.
-    // If multiple captureRoboImage calls occur in a single test,
-    // they can lead to an activity leak.
-  }
+  // Closing the activity is necessary to prevent memory leaks.
+  // If multiple captureRoboImage calls occur in a single test,
+  // they can lead to an activity leak.
+  return activityScenario.use { block(activityScenario) }
 }
 
 
@@ -82,7 +102,7 @@ private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   content: @Composable () -> Unit,
 ) {
-  
+
   onActivity { activity ->
     activity.setContent(content = { content() })
 

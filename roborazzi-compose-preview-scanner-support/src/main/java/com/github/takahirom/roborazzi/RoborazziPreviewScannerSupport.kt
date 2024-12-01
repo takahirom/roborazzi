@@ -9,28 +9,25 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath(),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  filePath: String,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  decorationBuilder: RoborazziComposeDecorationBuilder.() -> Unit = {
+    sized(
+      widthDp = previewInfo.widthDp,
+      heightDp = previewInfo.heightDp
+    )
+    colored(
+      showBackground = previewInfo.showBackground,
+      backgroundColor = previewInfo.backgroundColor
+    )
+  }
 ) {
+  if (!roborazziOptions.taskType.isEnabled()) return
   val composablePreview = this
   composablePreview.applyToRobolectricConfiguration()
-  captureRoboImageWithActivityScenarioSetup(
-    filePath = filePath,
-    roborazziOptions = roborazziOptions,
-    content = { activityScenario ->
-
-      activityScenario.setBackgroundColor(
-        showBackground = composablePreview.previewInfo.showBackground,
-        backgroundColor = composablePreview.previewInfo.backgroundColor
-      )
-
-      activityScenario.createSizedPreview(
-        widthDp = composablePreview.previewInfo.widthDp,
-        heightDp = composablePreview.previewInfo.heightDp,
-        preview = { composablePreview() }
-      )
-    },
-  )
+  captureRoboImage(filePath, roborazziOptions, decorationBuilder) {
+    composablePreview()
+  }
 }
 
 /**
