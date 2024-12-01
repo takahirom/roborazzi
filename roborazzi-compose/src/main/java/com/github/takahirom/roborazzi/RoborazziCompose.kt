@@ -72,8 +72,7 @@ fun captureRoboImage(
   }
 }
 
-@InternalRoborazziApi
-fun launchRoborazziTransparentActivity(block: (ActivityScenario<RoborazziTransparentActivity>) -> Unit = {}) {
+private fun launchRoborazziTransparentActivity(block: (ActivityScenario<RoborazziTransparentActivity>) -> Unit = {}) {
   registerActivityToRobolectricIfNeeded()
 
   val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
