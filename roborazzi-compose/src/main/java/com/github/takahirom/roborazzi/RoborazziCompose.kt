@@ -18,7 +18,7 @@ fun captureRoboImage(
   captureRoboImage(
     file = fileWithRecordFilePathStrategy(filePath),
     roborazziOptions = roborazziOptions,
-    decorationBuilder = {},
+    applierBuilder = {},
     content = content
   )
 }
@@ -31,7 +31,7 @@ fun captureRoboImage(
   captureRoboImage(
     file = file,
     roborazziOptions = roborazziOptions,
-    decorationBuilder = {},
+    applierBuilder = {},
     content = content
   )
 }
@@ -40,14 +40,14 @@ fun captureRoboImage(
 fun captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath(),
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  decorationBuilder: RoborazziComposeDecorationBuilder.() -> Unit = {
+  applierBuilder: RoborazziComposeApplierBuilder.() -> Unit = {
   },
   content: @Composable () -> Unit,
 ) {
   captureRoboImage(
     file = fileWithRecordFilePathStrategy(filePath),
     roborazziOptions = roborazziOptions,
-    decorationBuilder = decorationBuilder,
+    applierBuilder = applierBuilder,
     content = content
   )
 }
@@ -56,18 +56,18 @@ fun captureRoboImage(
 fun captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  decorationBuilder: RoborazziComposeDecorationBuilder.() -> Unit = {
+  applierBuilder: RoborazziComposeApplierBuilder.() -> Unit = {
   },
   content: @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   launchRoborazziTransparentActivity { activityScenario ->
-    val screenshotBuilder = RoborazziComposeDecorationBuilder().apply(decorationBuilder)
-    val decoratedContent = screenshotBuilder.apply(activityScenario) {
+    val applierBuilder = RoborazziComposeApplierBuilder().apply(applierBuilder)
+    val appliedContent = applierBuilder.apply(activityScenario) {
       content()
     }
     activityScenario.captureRoboImage(file, roborazziOptions) {
-      decoratedContent()
+      appliedContent()
     }
   }
 }

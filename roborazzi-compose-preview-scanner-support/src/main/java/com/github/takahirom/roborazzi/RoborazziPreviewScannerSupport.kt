@@ -11,7 +11,7 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  decorationBuilder: RoborazziComposeDecorationBuilder.() -> Unit = {
+  applierBuilder: RoborazziComposeApplierBuilder.() -> Unit = {
     sized(
       widthDp = previewInfo.widthDp,
       heightDp = previewInfo.heightDp
@@ -25,7 +25,7 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   if (!roborazziOptions.taskType.isEnabled()) return
   val composablePreview = this
   composablePreview.applyToRobolectricConfiguration()
-  captureRoboImage(filePath, roborazziOptions, decorationBuilder) {
+  captureRoboImage(filePath, roborazziOptions, applierBuilder) {
     composablePreview()
   }
 }
