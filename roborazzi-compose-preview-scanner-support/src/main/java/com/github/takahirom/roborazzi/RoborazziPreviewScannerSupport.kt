@@ -2,8 +2,10 @@ package com.github.takahirom.roborazzi
 
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
+import org.robolectric.RuntimeEnvironment.setQualifiers
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
+import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
 import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
@@ -20,12 +22,30 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
       showBackground = previewInfo.showBackground,
       backgroundColor = previewInfo.backgroundColor
     )
+    .locale(previewInfo.locale)
+    .uiMode(previewInfo.uiMode)
+    .device(previewInfo.device)
+    .fontScale(previewInfo.fontScale)
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   val composablePreview = this
-  composablePreview.applyToRobolectricConfiguration()
   captureRoboImage(filePath, roborazziOptions, applierBuilder) {
     composablePreview()
+  }
+}
+
+fun RoborazziComposeApplierBuilder.device(device: String) = with(DeviceApplier(device))
+
+@ExperimentalRoborazziApi
+data class DeviceApplier(val device: String) :
+  RoborazziComposeSetupApplier {
+  override fun apply() {
+    if (device.isNotBlank()) {
+      // Requires `io.github.sergio-sastre.ComposablePreviewScanner:android:0.4.0` or later
+      RobolectricDeviceQualifierBuilder.build(device)?.run {
+        setQualifiers(this)
+      }
+    }
   }
 }
 
