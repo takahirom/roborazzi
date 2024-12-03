@@ -46,14 +46,20 @@ allprojects {
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     compilerOptions {
       jvmTarget.set(jvmTargetVersion)
-
-      freeCompilerArgs.addAll(
-        "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi",
-        "-Xopt-in=com.github.takahirom.roborazzi.ExperimentalRoborazziApi",
-      )
+      allWarningsAsErrors = true
     }
   }
-
+  if(project.name.startsWith("roborazzi") &&
+          project.name != "roborazzi-idea-plugin") {
+      tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+          compilerOptions {
+              freeCompilerArgs.addAll(
+                      "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi",
+                      "-Xopt-in=com.github.takahirom.roborazzi.ExperimentalRoborazziApi",
+              )
+          }
+      }
+  }
   plugins.withId('com.vanniktech.maven.publish') {
     project.group = "io.github.takahirom.roborazzi"
     mavenPublishing {

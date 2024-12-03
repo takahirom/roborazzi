@@ -1,10 +1,12 @@
+@file:Suppress("PLUGIN_IS_NOT_ENABLED")
+
 package com.github.takahirom.roborazzi
 
-import kotlin.math.roundToInt
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import nl.adaptivity.xmlutil.serialization.XmlElement
 import nl.adaptivity.xmlutil.serialization.XmlSerialName
+import kotlin.math.roundToInt
 
 @Serializable
 @XmlSerialName("devices", namespace = "http://schemas.android.com/sdk/devices/1", prefix = "d")

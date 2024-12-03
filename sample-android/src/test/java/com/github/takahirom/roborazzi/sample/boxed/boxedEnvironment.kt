@@ -1,9 +1,12 @@
 package com.github.takahirom.roborazzi.sample.boxed
 
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziContext
 import com.github.takahirom.roborazzi.RoborazziContextImpl
 import com.github.takahirom.roborazzi.provideRoborazziContext
 
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 fun boxedEnvironment(block: () -> Unit) {
   val originalProperties = System.getProperties().filter { it.key.toString().startsWith("roborazzi") }.toList()
   originalProperties.forEach { System.clearProperty(it.first.toString()) }

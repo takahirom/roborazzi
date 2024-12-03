@@ -6,6 +6,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.AiAssertionOptions
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.OpenAiAiAssertionModel
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
@@ -22,6 +23,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
+@OptIn(ExperimentalRoborazziApi::class)
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(

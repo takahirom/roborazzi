@@ -6,6 +6,8 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.DefaultFileNameGenerator
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -21,6 +23,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(

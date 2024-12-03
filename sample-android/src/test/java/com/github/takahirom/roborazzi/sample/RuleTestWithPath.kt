@@ -4,8 +4,13 @@ import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.*
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.RoborazziOptions
+import com.github.takahirom.roborazzi.RoborazziRule
 import com.github.takahirom.roborazzi.RoborazziRule.Options
+import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.roboOutputName
+import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,6 +20,7 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RuleTestWithPath {
+  @OptIn(ExperimentalRoborazziApi::class)
   @get:Rule
   val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
@@ -41,12 +47,14 @@ class RuleTestWithPath {
     onView(isRoot()).captureRoboImage()
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureRoboImageWithPath() {
     launch(MainActivity::class.java)
     onView(isRoot()).captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/custom_file.png")
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun roboOutputNameTest() {
     // For last image

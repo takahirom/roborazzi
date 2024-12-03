@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
 import com.github.takahirom.roborazzi.Dump
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -92,6 +93,7 @@ class ManualTest {
       .captureRoboImage()
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
   fun captureScreenWithMetadata() {
@@ -112,6 +114,7 @@ class ManualTest {
       .captureRoboImage()
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureSmallComponentImage() {
     onView(withId(R.id.button_first))
@@ -130,12 +133,14 @@ class ManualTest {
       .captureRoboImage()
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureViewOnWindowImage() {
     composeTestRule.activity.findViewById<View>(R.id.button_first)
       .captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_view_on_window.png")
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureViewNotOnWindowImage() {
     TextView(composeTestRule.activity).apply {
@@ -144,6 +149,7 @@ class ManualTest {
     }.captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_view_without_window.png")
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureComposeLambdaImage() {
     captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_compose.png") {
@@ -151,17 +157,19 @@ class ManualTest {
     }
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureBitmapImage() {
     createBitmap(100, 100, Bitmap.Config.ARGB_8888)
       .apply {
         applyCanvas {
-          drawColor(android.graphics.Color.YELLOW)
+          drawColor(Color.YELLOW)
         }
       }
       .captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_bitmap.png")
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureRoboImageSampleWithQuery() {
     val filePath =
@@ -220,6 +228,7 @@ class ManualTest {
   }
 
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
@@ -256,6 +265,7 @@ class ManualTest {
       }
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   @Config(
     qualifiers = "w150dp-h200dp",
@@ -275,6 +285,7 @@ class ManualTest {
       }
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun roboOutputNameTest() {
     assert(roboOutputName() == "com.github.takahirom.roborazzi.sample.ManualTest.roboOutputNameTest")
