@@ -34,7 +34,6 @@ interface RoborazziComposeComposableConfig : RoborazziComposeConfig {
   fun configureWithComposable(content: @Composable () -> Unit): @Composable () -> Unit
 }
 
-
 @ExperimentalRoborazziApi
 class RoborazziComposeConfigBuilder {
   private val activityScenarioConfigs =
@@ -55,7 +54,7 @@ class RoborazziComposeConfigBuilder {
     return this
   }
 
-  @InternalRoborazziApi
+  @ExperimentalRoborazziApi
   fun configure(
     scenario: ActivityScenario<out Activity>,
     content: @Composable () -> Unit
