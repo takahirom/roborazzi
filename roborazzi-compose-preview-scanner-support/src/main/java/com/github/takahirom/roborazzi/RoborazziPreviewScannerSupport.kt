@@ -108,7 +108,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
       preview.declaringClass,
       createScreenshotIdFor(preview)
     )
-    val filePath = "$pathPrefix$name.png"
+    val filePath = "$pathPrefix$name.${provideRoborazziContext().imageExtension}"
     preview.captureRoboImage(filePath)
   }
 

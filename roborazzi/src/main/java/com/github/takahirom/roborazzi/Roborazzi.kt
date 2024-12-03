@@ -144,18 +144,22 @@ fun captureScreenRoboImage(
   // Views needs to be laid out before we can capture them
   Espresso.onIdle()
 
-  val rootsOracle = RootsOracle_Factory({ Looper.getMainLooper() })
-    .get()
-  // Invoke rootOracle.listActiveRoots() via reflection
-  val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
-  listActiveRoots.isAccessible = true
-  @Suppress("UNCHECKED_CAST") val roots: List<Root> = listActiveRoots.invoke(rootsOracle) as List<Root>
+  val roots: List<Root> = fetchRobolectricWindowRoots()
   debugLog {
     "captureScreenRoboImage roots: ${roots.joinToString("\n") { it.toString() }}"
   }
+  captureRootsInternal(roots, roborazziOptions, file)
+}
+
+@InternalRoborazziApi
+fun captureRootsInternal(
+  roots: List<Root>,
+  roborazziOptions: RoborazziOptions,
+  file: File
+) {
   capture(
     rootComponent = RoboComponent.Screen(
-      rootsOrderByDepth = roots.sortedBy { it.windowLayoutParams.get()?.type },
+      rootsOrderByDepth = roots,
       roborazziOptions = roborazziOptions
     ),
     roborazziOptions = roborazziOptions,
@@ -166,6 +170,24 @@ fun captureScreenRoboImage(
       roborazziOptions = roborazziOptions
     )
     canvas.release()
+  }
+}
+
+@InternalRoborazziApi
+fun fetchRobolectricWindowRoots(): List<Root> {
+  try {
+    @Suppress("INACCESSIBLE_TYPE") val rootsOracle = RootsOracle_Factory({ Looper.getMainLooper() })
+      .get()
+    // Invoke rootOracle.listActiveRoots() via reflection
+    val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
+    listActiveRoots.isAccessible = true
+    @Suppress("UNCHECKED_CAST") val roots: List<Root> =
+      (listActiveRoots.invoke(rootsOracle) as List<Root>
+        ).sortedBy { it.windowLayoutParams.get()?.type }
+    return roots
+  } catch(e: Throwable) {
+    e.printStackTrace()
+    return emptyList()
   }
 }
 
