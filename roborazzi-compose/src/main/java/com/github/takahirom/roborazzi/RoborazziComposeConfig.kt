@@ -20,6 +20,7 @@ import kotlin.math.roundToInt
 @ExperimentalRoborazziApi
 interface RoborazziComposeConfig
 
+@ExperimentalRoborazziApi
 interface RoborazziComposeSetupConfig : RoborazziComposeConfig {
   fun configure()
 }
@@ -163,16 +164,16 @@ data class RoborazziComposeBackgroundConfig(
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeConfigBuilder.configurationUiMode(configurationUiMode: Int): RoborazziComposeConfigBuilder {
-  return with(ConfigurationUiModeConfig(configurationUiMode))
+fun RoborazziComposeConfigBuilder.uiMode(uiMode: Int): RoborazziComposeConfigBuilder {
+  return with(RoborazziComposeUiModeConfig(uiMode))
 }
 
 @ExperimentalRoborazziApi
-data class ConfigurationUiModeConfig(private val configurationUiMode: Int) :
+data class RoborazziComposeUiModeConfig(private val uiMode: Int) :
   RoborazziComposeSetupConfig {
   override fun configure() {
     val nightMode =
-      when (configurationUiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
+      when (uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
         true -> "night"
         false -> "notnight"
       }
@@ -182,11 +183,11 @@ data class ConfigurationUiModeConfig(private val configurationUiMode: Int) :
 
 @ExperimentalRoborazziApi
 fun RoborazziComposeConfigBuilder.locale(locale: String): RoborazziComposeConfigBuilder {
-  return with(LocaleConfig(locale))
+  return with(RoborazziComposeLocaleConfig(locale))
 }
 
 @ExperimentalRoborazziApi
-data class LocaleConfig(private val locale: String) :
+data class RoborazziComposeLocaleConfig(private val locale: String) :
   RoborazziComposeSetupConfig {
   override fun configure() {
     val localeWithFallback = locale.ifBlank { "en" }
@@ -196,11 +197,11 @@ data class LocaleConfig(private val locale: String) :
 
 @ExperimentalRoborazziApi
 fun RoborazziComposeConfigBuilder.fontScale(fontScale: Float): RoborazziComposeConfigBuilder {
-  return with(FontScaleConfig(fontScale))
+  return with(RoborazziComposeFontScaleConfig(fontScale))
 }
 
 @ExperimentalRoborazziApi
-data class FontScaleConfig(private val fontScale: Float) :
+data class RoborazziComposeFontScaleConfig(private val fontScale: Float) :
   RoborazziComposeSetupConfig {
   init {
     require(fontScale > 0) { "fontScale must be greater than 0" }

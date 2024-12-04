@@ -34,7 +34,7 @@ fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeConfigBuilder() =
       backgroundColor = previewInfo.backgroundColor
     )
     .locale(previewInfo.locale)
-    .configurationUiMode(previewInfo.uiMode)
+    .uiMode(previewInfo.uiMode)
     .previewDevice(previewInfo.device)
     .fontScale(previewInfo.fontScale)
 
@@ -49,11 +49,12 @@ fun ComposablePreview<AndroidPreviewInfo>.applyToRobolectricConfiguration() {
   throw UnsupportedOperationException("Use previewInfo.toRoborazziComposeConfigBuilder().apply(scenario, composeContent) or ComposablePreview<AndroidPreviewInfo>.captureRoboImage() instead")
 }
 
+@ExperimentalRoborazziApi
 fun RoborazziComposeConfigBuilder.previewDevice(previewDevice: String) =
-  with(PreviewDeviceConfig(previewDevice))
+  with(RoborazziComposePreviewDeviceConfig(previewDevice))
 
 @ExperimentalRoborazziApi
-data class PreviewDeviceConfig(private val previewDevice: String) :
+data class RoborazziComposePreviewDeviceConfig(private val previewDevice: String) :
   RoborazziComposeSetupConfig {
   override fun configure() {
     if (previewDevice.isNotBlank()) {
