@@ -1,5 +1,7 @@
 package com.github.takahirom.roborazzi
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalInspectionMode
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
 import org.robolectric.RuntimeEnvironment.setQualifiers
@@ -18,7 +20,9 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   if (!roborazziOptions.taskType.isEnabled()) return
   val composablePreview = this
   captureRoboImage(filePath, roborazziOptions, configBuilder) {
-    composablePreview()
+    CompositionLocalProvider(LocalInspectionMode provides true) {
+      composablePreview()
+    }
   }
 }
 
