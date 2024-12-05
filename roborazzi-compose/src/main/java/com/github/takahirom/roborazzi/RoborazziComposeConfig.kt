@@ -203,6 +203,9 @@ fun RoborazziComposeConfigBuilder.fontScale(fontScale: Float): RoborazziComposeC
 @ExperimentalRoborazziApi
 data class FontScaleConfig(private val fontScale: Float) :
   RoborazziComposeSetupConfig {
+  init {
+    require(fontScale > 0) { "fontScale must be greater than 0" }
+  }
   override fun configure() {
     setFontScale(fontScale)
   }
