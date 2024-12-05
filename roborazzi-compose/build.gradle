@@ -17,6 +17,7 @@ dependencies {
 
   testImplementation libs.androidx.compose.runtime
   compileOnly libs.androidx.compose.ui
+  compileOnly libs.androidx.compose.foundation
   compileOnly libs.androidx.activity.compose
   compileOnly libs.robolectric
 }

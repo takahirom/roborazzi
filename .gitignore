@@ -11,6 +11,16 @@
 /.idea/gradle.xml
 /.idea/kotlinc.xml
 /.idea/misc.xml
+.idea/artifacts
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/modules.xml
+.idea/*.iml
+.idea/modules
+/.intellijPlatform/
+.idea/runConfigurations.xml
+*.iml
+*.ipr
 .DS_Store
 /build
 /captures
