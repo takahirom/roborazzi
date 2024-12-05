@@ -1013,7 +1013,7 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 ### The supported `@Preview` annotation options
 
 Currently, we don't support all the annotation options provided by the Compose Preview.
-You can check the supported annotations in the [source code](https://github.com/takahirom/roborazzi/blob/main/roborazzi-compose-preview-scanner-support/src/main/java/com/github/takahirom/roborazzi/RobolectricPreviewInfosApplier.kt).
+You can check the supported annotations in the [source code](https://github.com/takahirom/roborazzi/blob/0810ceb7133e6ec38472046cb741242a5ef6ab9e/roborazzi-compose-preview-scanner-support/src/main/java/com/github/takahirom/roborazzi/RoborazziPreviewScannerSupport.kt#L27).
 We are looking forward to your contributions to support more annotation options.
 
 </div>

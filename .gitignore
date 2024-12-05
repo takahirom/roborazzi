@@ -11,6 +11,7 @@
 /.idea/gradle.xml
 /.idea/kotlinc.xml
 /.idea/misc.xml
+/.idea/inspectionProfiles/Project_Default.xml
 .idea/artifacts
 .idea/compiler.xml
 .idea/jarRepositories.xml
