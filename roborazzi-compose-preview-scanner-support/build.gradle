@@ -24,4 +24,5 @@ dependencies {
   compileOnly libs.androidx.compose.runtime
   compileOnly libs.composable.preview.scanner
   compileOnly libs.robolectric
+  compileOnly libs.androidx.compose.ui
 }
