@@ -26,12 +26,12 @@ interface RoborazziComposeSetupConfig : RoborazziComposeConfig {
 
 @ExperimentalRoborazziApi
 interface RoborazziComposeActivityScenarioConfig : RoborazziComposeConfig {
-  fun configureToActivityScenario(scenario: ActivityScenario<out Activity>)
+  fun configureWithActivityScenario(scenario: ActivityScenario<out Activity>)
 }
 
 @ExperimentalRoborazziApi
 interface RoborazziComposeComposableConfig : RoborazziComposeConfig {
-  fun configureToComposable(content: @Composable () -> Unit): @Composable () -> Unit
+  fun configureWithComposable(content: @Composable () -> Unit): @Composable () -> Unit
 }
 
 
@@ -61,10 +61,10 @@ class RoborazziComposeConfigBuilder {
     content: @Composable () -> Unit
   ): @Composable () -> Unit {
     setupConfigs.forEach { it.configure() }
-    activityScenarioConfigs.forEach { it.configureToActivityScenario(scenario) }
+    activityScenarioConfigs.forEach { it.configureWithActivityScenario(scenario) }
     var appliedContent = content
     composableConfigs.forEach { config ->
-      appliedContent = config.configureToComposable(appliedContent)
+      appliedContent = config.configureWithComposable(appliedContent)
     }
     return {
       appliedContent()
@@ -73,7 +73,10 @@ class RoborazziComposeConfigBuilder {
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeConfigBuilder.sized(widthDp: Int = 0, heightDp: Int = 0): RoborazziComposeConfigBuilder {
+fun RoborazziComposeConfigBuilder.size(
+  widthDp: Int = 0,
+  heightDp: Int = 0
+): RoborazziComposeConfigBuilder {
   return with(RoborazziComposeSizeConfig(widthDp, heightDp))
 }
 
@@ -81,7 +84,7 @@ fun RoborazziComposeConfigBuilder.sized(widthDp: Int = 0, heightDp: Int = 0): Ro
 data class RoborazziComposeSizeConfig(val widthDp: Int, val heightDp: Int) :
   RoborazziComposeActivityScenarioConfig,
   RoborazziComposeComposableConfig {
-  override fun configureToActivityScenario(scenario: ActivityScenario<out Activity>) {
+  override fun configureWithActivityScenario(scenario: ActivityScenario<out Activity>) {
     scenario.onActivity { activity ->
       activity.setDisplaySize(widthDp = widthDp, heightDp = heightDp)
     }
@@ -106,7 +109,7 @@ data class RoborazziComposeSizeConfig(val widthDp: Int, val heightDp: Int) :
     recreate()
   }
 
-  override fun configureToComposable(content: @Composable () -> Unit): @Composable () -> Unit {
+  override fun configureWithComposable(content: @Composable () -> Unit): @Composable () -> Unit {
     /**
      * WARNING:
      * For this to work, it requires that the Display is within the widthDp and heightDp dimensions
@@ -127,7 +130,7 @@ data class RoborazziComposeSizeConfig(val widthDp: Int, val heightDp: Int) :
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeConfigBuilder.colored(
+fun RoborazziComposeConfigBuilder.background(
   showBackground: Boolean,
   backgroundColor: Long = 0L
 ): RoborazziComposeConfigBuilder {
@@ -136,10 +139,10 @@ fun RoborazziComposeConfigBuilder.colored(
 
 @ExperimentalRoborazziApi
 data class RoborazziComposeBackgroundConfig(
-  val showBackground: Boolean,
-  val backgroundColor: Long
+  private val showBackground: Boolean,
+  private val backgroundColor: Long
 ) : RoborazziComposeActivityScenarioConfig {
-  override fun configureToActivityScenario(scenario: ActivityScenario<out Activity>) {
+  override fun configureWithActivityScenario(scenario: ActivityScenario<out Activity>) {
     when (showBackground) {
       false -> {
         scenario.onActivity { activity ->
@@ -161,16 +164,16 @@ data class RoborazziComposeBackgroundConfig(
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeConfigBuilder.uiMode(configurationUiMode: Int): RoborazziComposeConfigBuilder {
-  return with(UiModeConfig(configurationUiMode))
+fun RoborazziComposeConfigBuilder.configurationUiMode(configurationUiMode: Int): RoborazziComposeConfigBuilder {
+  return with(ConfigurationUiModeConfig(configurationUiMode))
 }
 
 @ExperimentalRoborazziApi
-data class UiModeConfig(val uiMode: Int) :
+data class ConfigurationUiModeConfig(private val configurationUiMode: Int) :
   RoborazziComposeSetupConfig {
   override fun configure() {
     val nightMode =
-      when (uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
+      when (configurationUiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
         true -> "night"
         false -> "notnight"
       }
@@ -179,12 +182,12 @@ data class UiModeConfig(val uiMode: Int) :
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeConfigBuilder.locale(bcp47LanguageTag: String): RoborazziComposeConfigBuilder {
-  return with(LocaleConfig(bcp47LanguageTag))
+fun RoborazziComposeConfigBuilder.locale(locale: String): RoborazziComposeConfigBuilder {
+  return with(LocaleConfig(locale))
 }
 
 @ExperimentalRoborazziApi
-data class LocaleConfig(val locale: String) :
+data class LocaleConfig(private val locale: String) :
   RoborazziComposeSetupConfig {
   override fun configure() {
     val localeWithFallback = locale.ifBlank { "en" }
@@ -198,7 +201,7 @@ fun RoborazziComposeConfigBuilder.fontScale(fontScale: Float): RoborazziComposeC
 }
 
 @ExperimentalRoborazziApi
-data class FontScaleConfig(val fontScale: Float) :
+data class FontScaleConfig(private val fontScale: Float) :
   RoborazziComposeSetupConfig {
   override fun configure() {
     setFontScale(fontScale)

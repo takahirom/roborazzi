@@ -14,17 +14,17 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   configBuilder: RoborazziComposeConfigBuilder = RoborazziComposeConfigBuilder()
-    .sized(
+    .size(
       widthDp = previewInfo.widthDp,
       heightDp = previewInfo.heightDp
     )
-    .colored(
+    .background(
       showBackground = previewInfo.showBackground,
       backgroundColor = previewInfo.backgroundColor
     )
     .locale(previewInfo.locale)
-    .uiMode(previewInfo.uiMode)
-    .device(previewInfo.device)
+    .configurationUiMode(previewInfo.uiMode)
+    .previewDevice(previewInfo.device)
     .fontScale(previewInfo.fontScale)
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
@@ -34,15 +34,16 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   }
 }
 
-fun RoborazziComposeConfigBuilder.device(device: String) = with(DeviceConfig(device))
+fun RoborazziComposeConfigBuilder.previewDevice(previewDevice: String) =
+  with(PreviewDeviceConfig(previewDevice))
 
 @ExperimentalRoborazziApi
-data class DeviceConfig(val device: String) :
+data class PreviewDeviceConfig(private val previewDevice: String) :
   RoborazziComposeSetupConfig {
   override fun configure() {
-    if (device.isNotBlank()) {
+    if (previewDevice.isNotBlank()) {
       // Requires `io.github.sergio-sastre.ComposablePreviewScanner:android:0.4.0` or later
-      RobolectricDeviceQualifierBuilder.build(device)?.run {
+      RobolectricDeviceQualifierBuilder.build(previewDevice)?.run {
         setQualifiers(this)
       }
     }
