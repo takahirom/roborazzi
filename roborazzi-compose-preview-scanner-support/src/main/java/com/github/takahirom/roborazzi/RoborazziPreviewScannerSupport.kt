@@ -13,7 +13,18 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  configBuilder: RoborazziComposeConfigBuilder = RoborazziComposeConfigBuilder()
+  configBuilder: RoborazziComposeConfigBuilder = this.toRoborazziComposeConfigBuilder()
+) {
+  if (!roborazziOptions.taskType.isEnabled()) return
+  val composablePreview = this
+  captureRoboImage(filePath, roborazziOptions, configBuilder) {
+    composablePreview()
+  }
+}
+
+@ExperimentalRoborazziApi
+fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeConfigBuilder() =
+  RoborazziComposeConfigBuilder()
     .size(
       widthDp = previewInfo.widthDp,
       heightDp = previewInfo.heightDp
@@ -26,12 +37,16 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
     .configurationUiMode(previewInfo.uiMode)
     .previewDevice(previewInfo.device)
     .fontScale(previewInfo.fontScale)
-) {
-  if (!roborazziOptions.taskType.isEnabled()) return
-  val composablePreview = this
-  captureRoboImage(filePath, roborazziOptions, configBuilder) {
-    composablePreview()
-  }
+
+
+@Suppress("UnusedReceiverParameter")
+@Deprecated(
+  message = "Use previewInfo.toRoborazziComposeConfigBuilder().apply(scenario, composeContent) or ComposablePreview<AndroidPreviewInfo>.captureRoboImage() instead",
+  replaceWith = ReplaceWith("previewInfo.toRoborazziComposeConfigBuilder().apply(scenario, composeContent)"),
+  level = DeprecationLevel.ERROR
+)
+fun ComposablePreview<AndroidPreviewInfo>.applyToRobolectricConfiguration() {
+  throw UnsupportedOperationException("Use previewInfo.toRoborazziComposeConfigBuilder().apply(scenario, composeContent) or ComposablePreview<AndroidPreviewInfo>.captureRoboImage() instead")
 }
 
 fun RoborazziComposeConfigBuilder.previewDevice(previewDevice: String) =
