@@ -18,53 +18,53 @@ import org.robolectric.shadows.ShadowDisplay.getDefaultDisplay
 import kotlin.math.roundToInt
 
 @ExperimentalRoborazziApi
-interface RoborazziComposeApplier
+interface RoborazziComposeConfig
 
-interface RoborazziComposeSetupApplier : RoborazziComposeApplier {
-  fun apply()
+interface RoborazziComposeSetupConfig : RoborazziComposeConfig {
+  fun configure()
 }
 
 @ExperimentalRoborazziApi
-interface RoborazziComposeActivityScenarioApplier : RoborazziComposeApplier {
-  fun applyToActivityScenario(scenario: ActivityScenario<out Activity>)
+interface RoborazziComposeActivityScenarioConfig : RoborazziComposeConfig {
+  fun configureToActivityScenario(scenario: ActivityScenario<out Activity>)
 }
 
 @ExperimentalRoborazziApi
-interface RoborazziComposeComposableApplier : RoborazziComposeApplier {
-  fun applyToComposable(content: @Composable () -> Unit): @Composable () -> Unit
+interface RoborazziComposeComposableConfig : RoborazziComposeConfig {
+  fun configureToComposable(content: @Composable () -> Unit): @Composable () -> Unit
 }
 
 
 @ExperimentalRoborazziApi
-class RoborazziComposeApplierBuilder {
-  private val activityScenarioAppliers =
-    mutableListOf<RoborazziComposeActivityScenarioApplier>()
-  private val composableAppliers = mutableListOf<RoborazziComposeComposableApplier>()
-  private val setupAppliers = mutableListOf<RoborazziComposeSetupApplier>()
+class RoborazziComposeConfigBuilder {
+  private val activityScenarioConfigs =
+    mutableListOf<RoborazziComposeActivityScenarioConfig>()
+  private val composableConfigs = mutableListOf<RoborazziComposeComposableConfig>()
+  private val setupConfigs = mutableListOf<RoborazziComposeSetupConfig>()
 
-  fun with(applier: RoborazziComposeApplier): RoborazziComposeApplierBuilder {
-    if (applier is RoborazziComposeActivityScenarioApplier) {
-      activityScenarioAppliers.add(applier)
+  fun with(config: RoborazziComposeConfig): RoborazziComposeConfigBuilder {
+    if (config is RoborazziComposeActivityScenarioConfig) {
+      activityScenarioConfigs.add(config)
     }
-    if (applier is RoborazziComposeComposableApplier) {
-      composableAppliers.add(applier)
+    if (config is RoborazziComposeComposableConfig) {
+      composableConfigs.add(config)
     }
-    if (applier is RoborazziComposeSetupApplier) {
-      setupAppliers.add(applier)
+    if (config is RoborazziComposeSetupConfig) {
+      setupConfigs.add(config)
     }
     return this
   }
 
   @InternalRoborazziApi
-  fun apply(
+  fun configure(
     scenario: ActivityScenario<out Activity>,
     content: @Composable () -> Unit
   ): @Composable () -> Unit {
-    setupAppliers.forEach { it.apply() }
-    activityScenarioAppliers.forEach { it.applyToActivityScenario(scenario) }
+    setupConfigs.forEach { it.configure() }
+    activityScenarioConfigs.forEach { it.configureToActivityScenario(scenario) }
     var appliedContent = content
-    composableAppliers.forEach { applier ->
-      appliedContent = applier.applyToComposable(appliedContent)
+    composableConfigs.forEach { config ->
+      appliedContent = config.configureToComposable(appliedContent)
     }
     return {
       appliedContent()
@@ -73,15 +73,15 @@ class RoborazziComposeApplierBuilder {
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeApplierBuilder.sized(widthDp: Int = 0, heightDp: Int = 0): RoborazziComposeApplierBuilder {
-  return with(RoborazziComposeSizeApplier(widthDp, heightDp))
+fun RoborazziComposeConfigBuilder.sized(widthDp: Int = 0, heightDp: Int = 0): RoborazziComposeConfigBuilder {
+  return with(RoborazziComposeSizeConfig(widthDp, heightDp))
 }
 
 @ExperimentalRoborazziApi
-data class RoborazziComposeSizeApplier(val widthDp: Int, val heightDp: Int) :
-  RoborazziComposeActivityScenarioApplier,
-  RoborazziComposeComposableApplier {
-  override fun applyToActivityScenario(scenario: ActivityScenario<out Activity>) {
+data class RoborazziComposeSizeConfig(val widthDp: Int, val heightDp: Int) :
+  RoborazziComposeActivityScenarioConfig,
+  RoborazziComposeComposableConfig {
+  override fun configureToActivityScenario(scenario: ActivityScenario<out Activity>) {
     scenario.onActivity { activity ->
       activity.setDisplaySize(widthDp = widthDp, heightDp = heightDp)
     }
@@ -106,7 +106,7 @@ data class RoborazziComposeSizeApplier(val widthDp: Int, val heightDp: Int) :
     recreate()
   }
 
-  override fun applyToComposable(content: @Composable () -> Unit): @Composable () -> Unit {
+  override fun configureToComposable(content: @Composable () -> Unit): @Composable () -> Unit {
     /**
      * WARNING:
      * For this to work, it requires that the Display is within the widthDp and heightDp dimensions
@@ -127,19 +127,19 @@ data class RoborazziComposeSizeApplier(val widthDp: Int, val heightDp: Int) :
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeApplierBuilder.colored(
+fun RoborazziComposeConfigBuilder.colored(
   showBackground: Boolean,
   backgroundColor: Long = 0L
-): RoborazziComposeApplierBuilder {
-  return with(RoborazziComposeBackgroundApplier(showBackground, backgroundColor))
+): RoborazziComposeConfigBuilder {
+  return with(RoborazziComposeBackgroundConfig(showBackground, backgroundColor))
 }
 
 @ExperimentalRoborazziApi
-data class RoborazziComposeBackgroundApplier(
+data class RoborazziComposeBackgroundConfig(
   val showBackground: Boolean,
   val backgroundColor: Long
-) : RoborazziComposeActivityScenarioApplier {
-  override fun applyToActivityScenario(scenario: ActivityScenario<out Activity>) {
+) : RoborazziComposeActivityScenarioConfig {
+  override fun configureToActivityScenario(scenario: ActivityScenario<out Activity>) {
     when (showBackground) {
       false -> {
         scenario.onActivity { activity ->
@@ -161,14 +161,14 @@ data class RoborazziComposeBackgroundApplier(
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeApplierBuilder.uiMode(configurationUiMode: Int): RoborazziComposeApplierBuilder {
-  return with(UiModeApplier(configurationUiMode))
+fun RoborazziComposeConfigBuilder.uiMode(configurationUiMode: Int): RoborazziComposeConfigBuilder {
+  return with(UiModeConfig(configurationUiMode))
 }
 
 @ExperimentalRoborazziApi
-data class UiModeApplier(val uiMode: Int) :
-  RoborazziComposeSetupApplier {
-  override fun apply() {
+data class UiModeConfig(val uiMode: Int) :
+  RoborazziComposeSetupConfig {
+  override fun configure() {
     val nightMode =
       when (uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
         true -> "night"
@@ -179,28 +179,28 @@ data class UiModeApplier(val uiMode: Int) :
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeApplierBuilder.locale(bcp47LanguageTag: String): RoborazziComposeApplierBuilder {
-  return with(LocaleApplier(bcp47LanguageTag))
+fun RoborazziComposeConfigBuilder.locale(bcp47LanguageTag: String): RoborazziComposeConfigBuilder {
+  return with(LocaleConfig(bcp47LanguageTag))
 }
 
 @ExperimentalRoborazziApi
-data class LocaleApplier(val locale: String) :
-  RoborazziComposeSetupApplier {
-  override fun apply() {
+data class LocaleConfig(val locale: String) :
+  RoborazziComposeSetupConfig {
+  override fun configure() {
     val localeWithFallback = locale.ifBlank { "en" }
     setQualifiers("+$localeWithFallback")
   }
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeApplierBuilder.fontScale(fontScale: Float): RoborazziComposeApplierBuilder {
-  return with(FontScaleApplier(fontScale))
+fun RoborazziComposeConfigBuilder.fontScale(fontScale: Float): RoborazziComposeConfigBuilder {
+  return with(FontScaleConfig(fontScale))
 }
 
 @ExperimentalRoborazziApi
-data class FontScaleApplier(val fontScale: Float) :
-  RoborazziComposeSetupApplier {
-  override fun apply() {
+data class FontScaleConfig(val fontScale: Float) :
+  RoborazziComposeSetupConfig {
+  override fun configure() {
     setFontScale(fontScale)
   }
 }
