@@ -14,7 +14,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -50,6 +52,15 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
 
   @ExperimentalRoborazziApi
+  val compare: RoborazziCompareExtension =
+    objects.newInstance(RoborazziCompareExtension::class.java)
+
+  @ExperimentalRoborazziApi
+  fun compare(action: Action<RoborazziCompareExtension>) {
+    action.execute(compare)
+  }
+
+  @ExperimentalRoborazziApi
   val generateComposePreviewRobolectricTests: GenerateComposePreviewRobolectricTestsExtension =
     objects.newInstance(GenerateComposePreviewRobolectricTestsExtension::class.java)
 
@@ -57,6 +68,10 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   fun generateComposePreviewRobolectricTests(action: GenerateComposePreviewRobolectricTestsExtension.() -> Unit) {
     action(generateComposePreviewRobolectricTests)
   }
+}
+
+open class RoborazziCompareExtension @Inject constructor(objects: ObjectFactory) {
+  val outputDir: DirectoryProperty = objects.directoryProperty()
 }
 
 val KnownImageFileExtensions: Set<String> = setOf("png", "gif", "jpg", "jpeg", "webp")
@@ -93,6 +108,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
     // For fixing unexpected skip test
     val outputDir =
       extension.outputDir.convention(project.layout.buildDirectory.dir(DEFAULT_OUTPUT_DIR))
+    val compareOutputDirProvider =
+      extension.compare.outputDir.convention(project.layout.buildDirectory.dir(DEFAULT_OUTPUT_DIR))
     val testTaskOutputDir: DirectoryProperty = project.objects.directoryProperty()
     val intermediateDir =
       testTaskOutputDir.convention(project.layout.buildDirectory.dir(DEFAULT_TEMP_DIR))
@@ -234,7 +251,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           }
         }
       }
-      val isImageInputUsedProvider = isVerifyRun.flatMap { isVerifyTaskRun ->
+      val isCompareOrVerifyRunProvider = isVerifyRun.flatMap { isVerifyTaskRun ->
         isCompareRun.map { isCompareTaskRun ->
           isVerifyTaskRun || isCompareTaskRun
         }
@@ -248,6 +265,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         project.projectDir.absolutePath
       }
       val outputDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
+
       val resultDirFileProperty =
         project.layout.buildDirectory.dir(RoborazziReportConst.resultDirPathFromBuildDir)
       val resultDirFileTree =
@@ -270,11 +288,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
               finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.onlyIf doesRoborazziRun $doesRoborazziRun")
               doesRoborazziRun
             }
-            val taskPath = if (project.path == ":") {
-              ":"
-            } else {
-              project.path + ":"
-            }
             finalizeTestTask.doLast {
               val startCopy = System.currentTimeMillis()
               intermediateDir.get().asFile.mkdirs()
@@ -289,12 +302,12 @@ abstract class RoborazziPlugin : Plugin<Project> {
       testTaskProvider
         .configureEach { test: AbstractTestTask ->
           val resultsDir = resultDirFileProperty.get().asFile
-          test.inputs.files(
-            isImageInputUsedProvider.map { isImageInputUsed ->
+          val imageInputProvider: Provider<FileCollection> =
+            isCompareOrVerifyRunProvider.flatMap { isImageInputUsed ->
               if (!isImageInputUsed) {
                 // Note: this is not files in outputDir,
                 // but empty input when running in record mode.
-                outputDir.get().files()
+                outputDir.map { it.files(/* this means empty files*/) }
               } else if (restoreOutputDirRoborazziTaskProvider.isPresent) {
                 // Previous outputs are an input when running in compare or verify mode.
                 // However, during record runs the output dir might not exist yet, so we use
@@ -317,7 +330,38 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 }
               }
             }
+          test.inputs.files(
+            imageInputProvider
           )
+          test.outputs.dirs(
+            compareOutputDirProvider.flatMap { compareOutputDir: Directory ->
+              isCompareOrVerifyRunProvider.flatMap { isCompareOrVerifyRun ->
+                imageInputProvider
+                  .map { imageInput: FileCollection ->
+                    if (!isCompareOrVerifyRun) {
+                      // If it is not compare or verify, we don't need to output anything for comparison
+                      outputDir.files(/* empty files */)
+                    } else if (imageInput.files.any {
+                        // Check if the compare output directory is the same as the input directory
+                        if (it.isDirectory) {
+                          it.absolutePath == compareOutputDir.asFile.absolutePath
+                        } else {
+                          it.parentFile.absolutePath == compareOutputDir.asFile.absolutePath
+                        }
+                      }) {
+                      outputDir.files(/* empty files */)
+                    } else {
+                      if (!compareOutputDir.asFile.exists()) {
+                        compareOutputDir.asFile.mkdirs()
+                      }
+                      compareOutputDir
+                    }
+                  }
+              }
+            }.map {
+              test.infoln("Roborazzi: Set output dir ${it} to test task")
+              it
+            })
           test.outputs.dir(intermediateDirForEachVariant.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
@@ -374,6 +418,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
             // Other properties
             test.systemProperties["roborazzi.output.dir"] =
               outputDirRelativePathFromProjectProvider.get()
+            if (compareOutputDirProvider.isPresent) {
+              test.systemProperties["roborazzi.compare.output.dir"] =
+                compareOutputDirProvider.get()
+            }
             test.systemProperties["roborazzi.result.dir"] =
               resultDirRelativePathFromProjectProvider.get()
             test.systemProperties["roborazzi.project.path"] =
