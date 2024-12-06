@@ -9,6 +9,11 @@ fun roborazziSystemPropertyOutputDirectory(): String {
 }
 
 @ExperimentalRoborazziApi
+fun roborazziSystemPropertyCompareOutputDirectory(): String {
+  return getSystemProperty("roborazzi.compare.output.dir", DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH)
+}
+
+@ExperimentalRoborazziApi
 fun roborazziSystemPropertyImageExtension(): String {
   return getSystemProperty("roborazzi.record.image.extension", "png")
 }
