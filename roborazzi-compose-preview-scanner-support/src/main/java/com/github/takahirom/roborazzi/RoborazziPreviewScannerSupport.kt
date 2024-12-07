@@ -2,22 +2,70 @@ package com.github.takahirom.roborazzi
 
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
+import org.robolectric.RuntimeEnvironment.setQualifiers
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
+import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
 import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
-  filePath: String = DefaultFileNameGenerator.generateFilePath(),
-  roborazziOptions: RoborazziOptions = RoborazziOptions(),
+  filePath: String,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  configBuilder: RoborazziComposeConfigBuilder = this.toRoborazziComposeConfigBuilder()
 ) {
+  if (!roborazziOptions.taskType.isEnabled()) return
   val composablePreview = this
-  composablePreview.applyToRobolectricConfiguration()
-  captureRoboImage(filePath = filePath, roborazziOptions = roborazziOptions) {
+  captureRoboImage(filePath, roborazziOptions, configBuilder) {
     composablePreview()
   }
 }
+
+@ExperimentalRoborazziApi
+fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeConfigBuilder() =
+  RoborazziComposeConfigBuilder()
+    .size(
+      widthDp = previewInfo.widthDp,
+      heightDp = previewInfo.heightDp
+    )
+    .background(
+      showBackground = previewInfo.showBackground,
+      backgroundColor = previewInfo.backgroundColor
+    )
+    .locale(previewInfo.locale)
+    .uiMode(previewInfo.uiMode)
+    .previewDevice(previewInfo.device)
+    .fontScale(previewInfo.fontScale)
+
+
+@Suppress("UnusedReceiverParameter")
+@Deprecated(
+  message = "Use previewInfo.toRoborazziComposeConfigBuilder().apply(scenario, composeContent) or ComposablePreview<AndroidPreviewInfo>.captureRoboImage() instead",
+  replaceWith = ReplaceWith("previewInfo.toRoborazziComposeConfigBuilder().apply(scenario, composeContent)"),
+  level = DeprecationLevel.ERROR
+)
+fun ComposablePreview<AndroidPreviewInfo>.applyToRobolectricConfiguration() {
+  throw UnsupportedOperationException("Use previewInfo.toRoborazziComposeConfigBuilder().apply(scenario, composeContent) or ComposablePreview<AndroidPreviewInfo>.captureRoboImage() instead")
+}
+
+@ExperimentalRoborazziApi
+fun RoborazziComposeConfigBuilder.previewDevice(previewDevice: String) =
+  with(RoborazziComposePreviewDeviceConfig(previewDevice))
+
+@ExperimentalRoborazziApi
+data class RoborazziComposePreviewDeviceConfig(private val previewDevice: String) :
+  RoborazziComposeSetupConfig {
+  override fun configure() {
+    if (previewDevice.isNotBlank()) {
+      // Requires `io.github.sergio-sastre.ComposablePreviewScanner:android:0.4.0` or later
+      RobolectricDeviceQualifierBuilder.build(previewDevice)?.run {
+        setQualifiers(this)
+      }
+    }
+  }
+}
+
 /**
  * ComposePreviewTester is an interface that allows you to define a custom test for a Composable preview.
  * The class that implements this interface should have a parameterless constructor.
