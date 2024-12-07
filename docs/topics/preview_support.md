@@ -45,7 +45,7 @@ roborazzi {
 }
 ```
 
-> **Note**  
+> [!NOTE] 
 > If you are using build.gradle instead of build.gradle.kts, you need to use the set method for each assignment, like
 > ```kotlin
 > generateComposePreviewRobolectricTests.packages.set(["com.example"])
