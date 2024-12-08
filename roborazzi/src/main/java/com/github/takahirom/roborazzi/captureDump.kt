@@ -23,7 +23,7 @@ internal fun captureDump(
   rootComponent: RoboComponent,
   dumpOptions: Dump,
   recordOptions: RoborazziOptions.RecordOptions,
-  onCanvas: (AwtRoboCanvas) -> Unit
+  onCanvas: (RoboComponent, AwtRoboCanvas) -> Unit
 ) {
 //  val start = System.currentTimeMillis()
   val basicSize = dumpOptions.basicSize
@@ -155,7 +155,7 @@ internal fun captureDump(
     }
   }
   bfs()
-  onCanvas(canvas)
+  onCanvas(rootComponent, canvas)
 //  val end = System.currentTimeMillis()
 //  println("roborazzi takes " + (end - start) + "ms")
 }
