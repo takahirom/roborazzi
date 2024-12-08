@@ -206,6 +206,7 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     private val PATH = "app/build.gradle.kts"
     var removeOutputDirBeforeTestTypeTask = false
     var customOutputDirPath: String? = null
+    var customCompareOutputDirPath: String? = null
 
     init {
       addIncludeBuild()
@@ -312,6 +313,19 @@ dependencies {
             roborazzi {
               outputDir.set(file("$customOutputDirPath"))
             }
+            
+          """.trimIndent()
+        )
+      }
+      if (customCompareOutputDirPath != null) {
+        buildFile.appendText(
+          """
+            roborazzi {
+              compare {
+                outputDir.set(file("$customCompareOutputDirPath"))
+              }
+            }
+            
           """.trimIndent()
         )
       }
@@ -466,6 +480,13 @@ class MainActivity : ComponentActivity() {
   fun addRelativeFromContextRecordFilePathStrategyGradleProperty() {
     val file = testProjectDir.root.resolve("gradle.properties")
     file.appendText("\nroborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory")
+  }
+
+  fun removeCompareOutputDir() {
+    if(!testProjectDir.root.resolve("app/build/custom_compare_outputDirectoryPath")
+      .deleteRecursively()){
+      throw IllegalStateException("Failed to delete custom_compare_outputDirectoryPath")
+    }
   }
 
   fun addRuleTest() {
