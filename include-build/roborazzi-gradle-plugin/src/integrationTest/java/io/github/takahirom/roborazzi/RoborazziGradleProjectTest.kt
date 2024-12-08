@@ -228,6 +228,8 @@ class RoborazziGradleProjectTest {
       // We should be able to use the cache
       removeCompareOutputDir()
       compare()
+      removeCompareOutputDir()
+      compare()
 
       checkResultsSummaryFileExists()
       checkRecordedFileExists("app/build/custom_compare_outputDirectoryPath/$className.testCapture.png")
