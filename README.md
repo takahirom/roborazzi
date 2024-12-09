@@ -309,6 +309,29 @@ uses [JetNew from Compose Samples](https://github.com/android/compose-samples/tr
 You can check the pull request introducing Roborazzi to the
 compose-samples [here](https://github.com/takahirom/compose-samples/pull/1/files).
 
+## Gradle DSL Options (Optional)
+Roborazzi uses `module/build/outputs/roborazzi` as the default directory for reference images and comparison images. You can customize these paths in your `build.gradle` file:
+
+```kotlin
+roborazzi {
+  // Directory for reference images
+  outputDir.set(file("src/screenshots"))
+  // Directory for comparison images
+  compare {
+    outputDir.set(file("build/outputs/screenshots_comparison"))
+  }
+}
+```
+
+> [!NOTE]
+> By default, when you use `captureRoboImage("image.png")`, the image will be saved as `module/image.png`.
+> You can customize the file path strategy for the recorded image. The default strategy is `relativePathFromCurrentDirectory`. If you select `relativePathFromRoborazziContextOutputDirectory`, the file will be saved in the output directory specified by `RoborazziRule.Options.outputDirectoryPath`.
+> This can be configured in your `gradle.properties` file:
+
+```properties
+roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory
+```
+
 ### Add dependencies
 
 | Description     | Dependencies                                                                         |
