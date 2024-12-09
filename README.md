@@ -328,7 +328,7 @@ roborazzi {
 > You can customize the file path strategy for the recorded image. The default strategy is `relativePathFromCurrentDirectory`. If you select `relativePathFromRoborazziContextOutputDirectory`, the file will be saved in the output directory specified by `roborazzi.outputDir`.  
 > This can be configured in your `gradle.properties` file:  
 >
-> ```properties
+> ```
 > roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory
 > ```
 
