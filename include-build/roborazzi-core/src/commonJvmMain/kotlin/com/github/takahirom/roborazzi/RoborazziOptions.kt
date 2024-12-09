@@ -116,7 +116,7 @@ data class RoborazziOptions(
   }
 
   data class CompareOptions(
-    val outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
+    val outputDirectoryPath: String = roborazziSystemPropertyCompareOutputDirectory(),
     val imageComparator: ImageComparator = DefaultImageComparator,
     val comparisonStyle: ComparisonStyle = ComparisonStyle.Grid(),
     val aiAssertionOptions: AiAssertionOptions? = null,
@@ -127,7 +127,7 @@ data class RoborazziOptions(
       imageComparator: ImageComparator = DefaultImageComparator,
       resultValidator: (result: ImageComparator.ComparisonResult) -> Boolean = DefaultResultValidator,
     ): this(
-      outputDirectoryPath = roborazziSystemPropertyOutputDirectory(),
+      outputDirectoryPath = roborazziSystemPropertyCompareOutputDirectory(),
       imageComparator = imageComparator,
       resultValidator = resultValidator,
     )
@@ -145,7 +145,7 @@ data class RoborazziOptions(
     }
 
     constructor(
-      outputDirectoryPath: String = roborazziSystemPropertyOutputDirectory(),
+      outputDirectoryPath: String = roborazziSystemPropertyCompareOutputDirectory(),
       /**
        * This value determines the threshold of pixel change at which the diff image is output or not.
        * The value should be between 0 and 1
