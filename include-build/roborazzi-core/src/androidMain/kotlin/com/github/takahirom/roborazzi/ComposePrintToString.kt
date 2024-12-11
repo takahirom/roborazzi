@@ -133,6 +133,8 @@ private fun StringBuilder.appendConfigInfo(config: SemanticsConfiguration, inden
                 // Save space if we there is text only in the object
                 append(value)
             }
+        } else if (value is Iterable<*>) {
+            append(value.sortedBy { it.toString() })
         } else {
             append(value)
         }
@@ -144,7 +146,7 @@ private fun StringBuilder.appendConfigInfo(config: SemanticsConfiguration, inden
         appendLine()
         append(indent)
         append("[")
-        append(units.joinToString(separator = ", "))
+        append(units.sorted().joinToString(separator = ", "))
         append("]")
     }
 
@@ -152,7 +154,7 @@ private fun StringBuilder.appendConfigInfo(config: SemanticsConfiguration, inden
         appendLine()
         append(indent)
         append("Actions = [")
-        append(actions.joinToString(separator = ", "))
+        append(actions.sorted().joinToString(separator = ", "))
         append("]")
     }
 
