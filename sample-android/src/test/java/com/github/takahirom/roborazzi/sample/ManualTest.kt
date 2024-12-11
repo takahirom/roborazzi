@@ -40,6 +40,7 @@ import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureRoboLastImage
 import com.github.takahirom.roborazzi.fontScale
+import com.github.takahirom.roborazzi.localInspectionMode
 import com.github.takahirom.roborazzi.roboOutputName
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.withComposeTestTag
@@ -177,6 +178,9 @@ class ManualTest {
       roborazziComposeOptions = RoborazziComposeOptions {
         // We have several options to configure the test environment.
         fontScale(2f)
+        /* The default value is false, but we can set it to true,
+        if you want to use the logic for Preview in composable functions. */
+        localInspectionMode(false)
         // We can also configure the activity scenario and the composable content.
         addOption(
           object : RoborazziComposeComposableOption,
