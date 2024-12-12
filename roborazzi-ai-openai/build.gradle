@@ -49,11 +49,11 @@ kotlin {
 
 android {
   namespace 'com.github.takahirom.roborazzi.ai.openai'
-  compileSdk 34
+  compileSdk 35
 
   defaultConfig {
     minSdk 21
-    targetSdk 32
+    targetSdk 35
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
