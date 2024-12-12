@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import org.robolectric.RuntimeEnvironment.setFontScale
@@ -238,5 +240,24 @@ data class RoborazziComposeFontScaleOption(private val fontScale: Float) :
 
   override fun configure() {
     setFontScale(fontScale)
+  }
+}
+
+@ExperimentalRoborazziApi
+fun RoborazziComposeOptions.Builder.localInspectionMode(
+  localInspectionMode: Boolean
+): RoborazziComposeOptions.Builder =
+  addOption(RoborazziComposeLocalInspectionModeOption(localInspectionMode))
+
+
+@ExperimentalRoborazziApi
+data class RoborazziComposeLocalInspectionModeOption(private val localInspectionMode: Boolean) :
+  RoborazziComposeComposableOption {
+  override fun configureWithComposable(
+    content: @Composable () -> Unit
+  ): @Composable () -> Unit = {
+    CompositionLocalProvider(LocalInspectionMode provides localInspectionMode) {
+      content()
+    }
   }
 }
