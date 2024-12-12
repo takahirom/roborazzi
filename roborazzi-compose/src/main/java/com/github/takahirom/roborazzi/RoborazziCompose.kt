@@ -1,8 +1,8 @@
 package com.github.takahirom.roborazzi
 
-import android.app.Application
-import android.content.ComponentName
+import android.annotation.SuppressLint
 import android.view.ViewGroup
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
@@ -12,6 +12,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
 import org.robolectric.Shadows
 import java.io.File
+
 
 fun captureRoboImage(
   filePath: String = DefaultFileNameGenerator.generateFilePath(),
@@ -30,50 +31,94 @@ fun captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   content: @Composable () -> Unit,
 ) {
+  captureRoboImage(
+    file = file,
+    roborazziOptions = roborazziOptions,
+    roborazziComposeOptions = RoborazziComposeOptions(),
+    content = content
+  )
+}
+
+@ExperimentalRoborazziApi
+fun captureRoboImage(
+  filePath: String = DefaultFileNameGenerator.generateFilePath(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  roborazziComposeOptions: RoborazziComposeOptions = RoborazziComposeOptions(),
+  content: @Composable () -> Unit,
+) {
+  captureRoboImage(
+    file = fileWithRecordFilePathStrategy(filePath),
+    roborazziOptions = roborazziOptions,
+    roborazziComposeOptions = roborazziComposeOptions,
+    content = content
+  )
+}
+
+@ExperimentalRoborazziApi
+fun captureRoboImage(
+  file: File,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  roborazziComposeOptions: RoborazziComposeOptions = RoborazziComposeOptions(),
+  content: @Composable () -> Unit,
+) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  registerRoborazziActivityToRobolectricIfNeeded()
-  // Views needs to be laid out before we can capture them
-  Espresso.onIdle()
-
-  val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
-  activityScenario.use {
-    activityScenario.onActivity { activity ->
-      activity.setContent(content = content)
-      val windowRoots = fetchRobolectricWindowRoots()
-      if (windowRoots.size <= 1) {
-        val composeView = activity.window.decorView
-          .findViewById<ViewGroup>(android.R.id.content)
-          .getChildAt(0) as ComposeView
-        val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
-        viewRootForTest.view.captureRoboImage(file, roborazziOptions)
-      } else {
-        // For dialog
-//        windowRoots[1].decorView.rootView.captureRoboImage(file, roborazziOptions)
-//        captureScreenRoboImage()
-        captureRootsInternal(windowRoots.drop(1), roborazziOptions, file)
+  launchRoborazziTransparentActivity { activityScenario ->
+    val configuredContent = roborazziComposeOptions
+      .configured(activityScenario) {
+        content()
       }
+    activityScenario.captureRoboImage(file, roborazziOptions) {
+      configuredContent()
     }
-
-    // Closing the activity is necessary to prevent memory leaks.
-    // If multiple captureRoboImage calls occur in a single test,
-    // they can lead to an activity leak.
   }
 }
 
-/**
- * Workaround for https://github.com/takahirom/roborazzi/issues/100
- */
-private fun registerRoborazziActivityToRobolectricIfNeeded() {
-  try {
-    val appContext: Application = ApplicationProvider.getApplicationContext()
-    Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
-      ComponentName(
-        appContext.packageName,
-        RoborazziTransparentActivity::class.java.name,
-      )
-    )
-  } catch (e: ClassNotFoundException) {
-    // Configured to run even without Robolectric
-    e.printStackTrace()
+private fun launchRoborazziTransparentActivity(block: (ActivityScenario<RoborazziTransparentActivity>) -> Unit = {}) {
+  registerActivityToRobolectricIfNeeded()
+
+  val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
+
+  // Closing the activity is necessary to prevent memory leaks.
+  // If multiple captureRoboImage calls occur in a single test,
+  // they can lead to an activity leak.
+  return activityScenario.use { block(activityScenario) }
+}
+
+
+private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
+  filePath: String,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  content: @Composable () -> Unit,
+) {
+  captureRoboImage(
+    file = fileWithRecordFilePathStrategy(filePath),
+    roborazziOptions = roborazziOptions,
+    content = content
+  )
+}
+
+private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
+  file: File,
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  content: @Composable () -> Unit,
+) {
+
+  onActivity { activity ->
+    activity.setContent(content = { content() })
+
+    // Views needs to be laid out before we can capture them
+    Espresso.onIdle()
+    val windowRoots = fetchRobolectricWindowRoots()
+    if (windowRoots.size <= 1) {
+      val composeView = activity.window.decorView
+        .findViewById<ViewGroup>(android.R.id.content)
+        .getChildAt(0) as ComposeView
+      @SuppressLint("VisibleForTests")
+      val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
+      viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+    } else {
+      // For dialogs
+      captureRootsInternal(windowRoots.drop(1), roborazziOptions, file)
+    }
   }
 }

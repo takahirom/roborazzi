@@ -14,11 +14,11 @@ if (localPropertiesFile.exists()) {
 
 android {
   namespace 'com.github.takahirom.roborazzi.sample'
-  compileSdk 34
+  compileSdk 35
 
   defaultConfig {
     minSdk 21
-    targetSdk 32
+    targetSdk 35
     versionCode 1
     versionName "1.0"
 
@@ -64,6 +64,7 @@ dependencies {
   testImplementation(project(":roborazzi-ai-openai"))
   testImplementation project(":roborazzi-compose")
   testImplementation project(":roborazzi-junit-rule")
+  testImplementation project(":roborazzi-accessibility-check")
 
   implementation libs.androidx.compose.material3
   implementation libs.androidx.compose.ui

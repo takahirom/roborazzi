@@ -26,7 +26,7 @@ roborazzi.record.resizeScale=0.5
 
 ### roborazzi.record.filePathStrategy
 
-This setting allows you to specify the file path strategy for the recorded image. The default strategy is `relativePathFromCurrentDirectory`. If you choose `relativePathFromRoborazziContextOutputDirectory`, the file will be saved in the output directory specified by `RoborazziRule.Options.outputDirectoryPath`.
+This setting allows you to specify the file path strategy for the recorded image. The default strategy is `relativePathFromCurrentDirectory`. If you choose `relativePathFromRoborazziContextOutputDirectory`, the file will be saved in the output directory specified by `roborazzi.outputDir`.
 
 ```
 roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory

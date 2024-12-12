@@ -1,4 +1,5 @@
 [versions]
+accessibilityTestFramework = "4.1.1"
 javaToolchain = "17"
 javaTarget = "11"
 agp = "8.6.1"
@@ -7,7 +8,7 @@ kotlin = "1.9.22"
 mavenPublish = "0.25.3"
 composeCompiler = "1.5.10"
 composeMultiplatform = "1.6.2"
-robolectric = "4.12.2"
+robolectric = "4.14.1"
 generativeaiGoogle = "0.9.0-1.0.1"
 robolectric-android-all = "Q-robolectric-5415296"
 
@@ -17,8 +18,8 @@ androidx-activity = "1.7.2"
 androidx-appcompat = "1.7.0"
 androidx-compose-material = "1.7.5"
 androidx-compose-material3 = "1.3.1"
-androidx-compose-foundation = "1.6.8"
-androidx-compose-runtime = "1.6.8"
+androidx-compose-foundation = "1.7.5"
+androidx-compose-runtime = "1.7.5"
 androidx-compose-ui = "1.4.0"
 androidx-compose-ui-test = "1.6.8"
 androidx-compose-ui-test-junit4 = "1.7.5"
@@ -49,6 +50,7 @@ webpImageio = "0.3.3"
 composable-preview-scanner = "0.4.0"
 
 [libraries]
+accessibility-test-framework = { module = "com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework", version.ref = "accessibilityTestFramework" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi-for-replacing-by-include-build" }
 roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi-for-replacing-by-include-build" }
 roborazzi-rule = { module = "io.github.takahirom.roborazzi:roborazzi-rule", version.ref = "roborazzi-for-replacing-by-include-build" }

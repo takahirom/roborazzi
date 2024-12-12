@@ -179,9 +179,9 @@ fun fetchRobolectricWindowRoots(): List<Root> {
     @Suppress("INACCESSIBLE_TYPE") val rootsOracle = RootsOracle_Factory({ Looper.getMainLooper() })
       .get()
     // Invoke rootOracle.listActiveRoots() via reflection
-    val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
+    @Suppress("INACCESSIBLE_TYPE") val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
     listActiveRoots.isAccessible = true
-    @Suppress("UNCHECKED_CAST") val roots: List<Root> =
+    @Suppress("UNCHECKED_CAST", "INACCESSIBLE_TYPE") val roots: List<Root> =
       (listActiveRoots.invoke(rootsOracle) as List<Root>
         ).sortedBy { it.windowLayoutParams.get()?.type }
     return roots
@@ -489,7 +489,7 @@ private fun saveLastImage(
 ) {
   val roboCanvas = canvases.lastOrNull()
   if (roboCanvas == null) {
-    println("Roborazzi could not capture for this test")
+    roborazziErrorLog("Roborazzi could not capture for this test")
     return
   }
   processOutputImageAndReportWithDefaults(

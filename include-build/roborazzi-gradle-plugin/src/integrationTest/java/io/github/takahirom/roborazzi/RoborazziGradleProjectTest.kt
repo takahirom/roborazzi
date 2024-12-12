@@ -4,6 +4,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 
 /**
  * Run this test with `cd include-build` and `./gradlew roborazzi-gradle-plugin:check`
@@ -19,6 +20,11 @@ class RoborazziGradleProjectTest {
   val testNameOutputRule = object : TestWatcher() {
     override fun starting(description: org.junit.runner.Description?) {
       println("RoborazziGradleProjectTest.${description?.methodName} started")
+    }
+
+    override fun finished(description: Description?) {
+      super.finished(description)
+      println("RoborazziGradleProjectTest.${description?.methodName} finished")
     }
   }
 
@@ -146,6 +152,7 @@ class RoborazziGradleProjectTest {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
       val customDirFromGradle = "src/screenshots/roborazzi_customdir_from_gradle"
       buildGradle.customOutputDirPath = customDirFromGradle
+      removeRoborazziOutputDir()
       val output1 = record().output
       assertNotSkipped(output1)
       val output2 = record().output
@@ -153,8 +160,81 @@ class RoborazziGradleProjectTest {
 
       checkResultsSummaryFileExists()
       checkRecordedFileExists("app/$customDirFromGradle/$className.testCapture.png")
-      checkRecordedFileNotExists("$$screenshotAndName.testCapture_compare.png")
-      checkRecordedFileNotExists("$$screenshotAndName.testCapture_actual.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_actual.png")
+      checkRecordedFileNotExists("app/$customDirFromGradle/$className.testCapture_compare.png")
+
+      // We should be able to use the cache
+      changeScreen()
+      removeRoborazziOutputDir()
+      compare()
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      removeRoborazziOutputDir()
+      compare()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("app/$customDirFromGradle/$className.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+      checkRecordedFileNotExists("app/$customDirFromGradle/$className.testCapture_compare.png")
+    }
+  }
+
+  @Test
+  fun compareWithCompareOutputDirPathItShouldSavedInTheDirectory() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.customCompareOutputDirPath = "build/custom_compare_outputDirectoryPath"
+
+      record()
+      changeScreen()
+      compare()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("app/build/custom_compare_outputDirectoryPath/$className.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+
+      // We should be able to use the cache
+      removeRoborazziOutputDir()
+      compare()
+      removeRoborazziOutputDir()
+      val buildResult = compare()
+      assertSkipped(buildResult.output)
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("app/build/custom_compare_outputDirectoryPath/$className.testCapture_compare.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture_compare.png")
+    }
+  }
+
+  @Test
+  fun compareWithBothOutputDirPathItShouldSavedInTheDirectory() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.customCompareOutputDirPath = "build/custom_compare_outputDirectoryPath"
+      val customDirFromGradle = "build/custom_compare_outputDirectoryPath"
+      buildGradle.customOutputDirPath = customDirFromGradle
+
+      record()
+      changeScreen()
+      compare()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("app/build/custom_compare_outputDirectoryPath/$className.testCapture.png")
+      checkRecordedFileExists("app/build/custom_compare_outputDirectoryPath/$className.testCapture_compare.png")
+      checkRecordedFileNotExists("app/build/outputs/roborazzi/$className.testCapture_compare.png")
+
+      // We should be able to use the cache
+      removeCompareOutputDir()
+      compare()
+      removeCompareOutputDir()
+      compare()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("app/build/custom_compare_outputDirectoryPath/$className.testCapture.png")
+      checkRecordedFileExists("app/build/custom_compare_outputDirectoryPath/$className.testCapture_compare.png")
+      checkRecordedFileNotExists("app/build/outputs/roborazzi/$className.testCapture_compare.png")
     }
   }
 

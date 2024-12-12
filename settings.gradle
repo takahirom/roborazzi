@@ -15,6 +15,7 @@ dependencyResolutionManagement {
 rootProject.name = "roborazzi-root"
 include ':roborazzi'
 include ':roborazzi-junit-rule'
+include ':roborazzi-accessibility-check'
 include ':roborazzi-compose-desktop'
 include ':roborazzi-compose-ios'
 include ':roborazzi-compose'

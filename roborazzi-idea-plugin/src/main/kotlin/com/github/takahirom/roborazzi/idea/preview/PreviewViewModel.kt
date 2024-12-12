@@ -197,8 +197,8 @@ class PreviewViewModel {
     val searchPath = project.basePath
     statusText.value = "Searching images in $searchPath ..."
     val reports = loadReports(project)
-    val useReports = reports.isEmpty()
-    val allPreviewImageFiles = if (useReports) {
+    val isReportEmpty = reports.isEmpty()
+    val allPreviewImageFiles = if (isReportEmpty) {
       findImageFiles(project, classes, functions)
     } else {
       findImageFilesWithReports(classes, functions, reports)
@@ -207,7 +207,7 @@ class PreviewViewModel {
     if (allPreviewImageFiles.isEmpty()) {
       statusText.value = "No images found"
     } else {
-      val reportOrFiles = if (useReports) "reports" else "files"
+      val reportOrFiles = if (isReportEmpty) "files" else "reports"
       statusText.value =
         "${allPreviewImageFiles.size} images found by $reportOrFiles"
     }

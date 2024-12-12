@@ -604,6 +604,11 @@ If you are having trouble debugging your test, try Dump mode as follows.
 
 ![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
 
+### Accessibility Check
+
+Roborazzi Accessibility Checks is a library that integrates accessibility checks into Roborazzi.
+Please refer to [Accessibility Check](https://github.com/takahirom/roborazzi/blob/main/roborazzi-accessibility-check/README.md)
+
 ### Roborazzi options
 
 Please check out [RoborazziOptions](https://github.com/takahirom/roborazzi/blob/main/include-build/roborazzi-core/src/commonJvmMain/kotlin/com/github/takahirom/roborazzi/RoborazziOptions.kt) for available Roborazzi options.

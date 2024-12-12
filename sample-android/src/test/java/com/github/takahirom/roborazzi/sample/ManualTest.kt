@@ -1,16 +1,24 @@
 package com.github.takahirom.roborazzi.sample
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.view.View
 import android.widget.TextView
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onParent
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -20,13 +28,18 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dropbox.differ.ImageComparator
 import com.dropbox.differ.SimpleImageComparator
 import com.github.takahirom.roborazzi.Dump
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import com.github.takahirom.roborazzi.RoborazziComposeActivityScenarioOption
+import com.github.takahirom.roborazzi.RoborazziComposeComposableOption
+import com.github.takahirom.roborazzi.RoborazziComposeOptions
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.captureRoboAllImage
 import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureRoboLastImage
+import com.github.takahirom.roborazzi.fontScale
 import com.github.takahirom.roborazzi.roboOutputName
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.withComposeTestTag
@@ -92,6 +105,7 @@ class ManualTest {
       .captureRoboImage()
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
   fun captureScreenWithMetadata() {
@@ -112,6 +126,7 @@ class ManualTest {
       .captureRoboImage()
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureSmallComponentImage() {
     onView(withId(R.id.button_first))
@@ -130,12 +145,14 @@ class ManualTest {
       .captureRoboImage()
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureViewOnWindowImage() {
     composeTestRule.activity.findViewById<View>(R.id.button_first)
       .captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_view_on_window.png")
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureViewNotOnWindowImage() {
     TextView(composeTestRule.activity).apply {
@@ -144,6 +161,7 @@ class ManualTest {
     }.captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_view_without_window.png")
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureComposeLambdaImage() {
     captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_compose.png") {
@@ -151,17 +169,56 @@ class ManualTest {
     }
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
+  @Test
+  fun captureComposeLambdaImageWithRoborazziComposeOptions() {
+    captureRoboImage(
+      "${roborazziSystemPropertyOutputDirectory()}/manual_compose_with_compose_options.png",
+      roborazziComposeOptions = RoborazziComposeOptions {
+        // We have several options to configure the test environment.
+        fontScale(2f)
+        // We can also configure the activity scenario and the composable content.
+        addOption(
+          object : RoborazziComposeComposableOption,
+            RoborazziComposeActivityScenarioOption {
+            override fun configureWithActivityScenario(scenario: ActivityScenario<out Activity>) {
+              scenario.onActivity {
+                it.window.decorView.setBackgroundColor(Color.BLUE)
+              }
+            }
+
+            override fun configureWithComposable(content: @Composable () -> Unit): @Composable () -> Unit {
+              return {
+                Box(Modifier
+                  .padding(10.dp)
+                  .background(color = androidx.compose.ui.graphics.Color.Red)
+                  .padding(10.dp)
+                ) {
+                  content()
+                }
+              }
+            }
+          }
+        )
+      },
+    ) {
+      Text("Hello Compose!")
+    }
+  }
+
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureBitmapImage() {
     createBitmap(100, 100, Bitmap.Config.ARGB_8888)
       .apply {
         applyCanvas {
-          drawColor(android.graphics.Color.YELLOW)
+          drawColor(Color.YELLOW)
         }
       }
       .captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_bitmap.png")
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureRoboImageSampleWithQuery() {
     val filePath =
@@ -220,6 +277,7 @@ class ManualTest {
   }
 
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun captureRoboGifSample() {
     onView(ViewMatchers.isRoot())
@@ -256,6 +314,7 @@ class ManualTest {
       }
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   @Config(
     qualifiers = "w150dp-h200dp",
@@ -275,6 +334,7 @@ class ManualTest {
       }
   }
 
+  @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun roboOutputNameTest() {
     assert(roboOutputName() == "com.github.takahirom.roborazzi.sample.ManualTest.roboOutputNameTest")
