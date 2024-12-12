@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -82,10 +83,10 @@ class ComposeTest {
     composeTestRule.activity.setContent {
       Column(
         modifier = Modifier
-            .clip(shape = RoundedCornerShape(16.dp))
-            .background(Color.Gray)
-            .testTag("SettingsDialog")
-            .size(100.dp)
+          .clip(shape = RoundedCornerShape(16.dp))
+          .background(Color.Gray)
+          .testTag("Settings")
+          .size(100.dp)
       ) {
         Text("Settings")
         Text("Dark theme")
@@ -93,7 +94,7 @@ class ComposeTest {
     }
 
     composeTestRule
-      .onNodeWithTag("SettingsDialog")
+      .onNodeWithTag("Settings")
       .captureRoboImage(
         roborazziOptions = RoborazziOptions(
           recordOptions = RoborazziOptions.RecordOptions(
@@ -101,6 +102,27 @@ class ComposeTest {
           )
         )
       )
+  }
+
+  @Config(qualifiers = "+ar-rXB-ldrtl")
+  @Test
+  fun rtlCompose() {
+    composeTestRule.activity.setContent {
+      Column(
+        modifier = Modifier
+          .clip(shape = RoundedCornerShape(16.dp))
+          .background(Color.Gray)
+          .testTag("Settings")
+          .size(100.dp)
+      ) {
+        Text("Settings")
+        Text(LocalContext.current.getString(R.string.rtl_text))
+      }
+    }
+
+    composeTestRule
+      .onNodeWithTag("Settings")
+      .captureRoboImage()
   }
 
   @Test
