@@ -10,7 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziComposeActivityScenarioOption
 import com.github.takahirom.roborazzi.RoborazziComposeComposableOption
 import com.github.takahirom.roborazzi.RoborazziComposeOptions
@@ -18,7 +20,16 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.fontScale
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(
+  sdk = [30],
+  qualifiers = RobolectricDeviceQualifiers.NexusOne
+)
 class ComposeLambdaTest {
   @OptIn(ExperimentalRoborazziApi::class)
   @Test
