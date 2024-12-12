@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.InternalTestApi
 import androidx.compose.ui.window.DialogWindowProvider
+import androidx.concurrent.futures.ResolvableFuture
 import kotlin.math.roundToInt
 
 fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
@@ -56,7 +57,39 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
   val locationInWindow = IntArray(2)
   view.getLocationInWindow(locationInWindow)
   nodeBoundsRect.offset(locationInWindow[0], locationInWindow[1])
-  return windowToUse.decorView.fetchImage(recordOptions = recordOptions)?.crop(nodeBoundsRect, recordOptions)
+  if (dialogWindow != null) {
+    return windowToUse.decorView.fetchImage(recordOptions = recordOptions)
+      ?.crop(nodeBoundsRect, recordOptions)
+  }
+
+  // Experimental workaround to avoid content overlapping when capturing the bitmap.
+  val actionBarWorkaroundIsOn = getSystemProperty(
+    "roborazzi.compose.actionbar.overlap.fix",
+    "true"
+  ) == "true"
+
+  // For SDK 35 and above, if we have an ActionBar scenario
+  // we will draw the bitmap directly from the ComposeView to avoid content overlapping.
+  val shouldUseComposeCapture = Build.VERSION.SDK_INT >= 35 &&
+    windowToUse.hasFeature(Window.FEATURE_ACTION_BAR) &&
+    actionBarWorkaroundIsOn
+  if (shouldUseComposeCapture) {
+    roborazziReportLog(
+      "Using ComposeView.draw to capture the bitmap to avoid content overlap issues with the ActionBar.\n" +
+        "Window-based capture (which typically provides higher fidelity) can cause these overlap issues when an ActionBar is present.\n" +
+        "We recommend setting the theme using <application android:theme=\"@android:style/Theme.Material.NoActionBar\" /> in your test/AndroidManifest.xml to fix this.\n" +
+        "If you are intentionally using an ActionBar, you can disable this workaround by setting the gradle property 'roborazzi.compose.actionbar.overlap.fix' to false."
+    )
+    // Capture bitmap from ComposeView using generateBitmapFromDraw and then crop.
+    val destBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+    val bitmapFuture = ResolvableFuture.create<Bitmap>()
+    view.generateBitmapFromDraw(destBitmap, bitmapFuture)
+    val fullBitmap = bitmapFuture.get()
+    return fullBitmap?.crop(nodeBoundsRect, recordOptions)
+  }
+
+  return windowToUse.decorView.fetchImage(recordOptions = recordOptions)
+    ?.crop(nodeBoundsRect, recordOptions)
 }
 
 /**
