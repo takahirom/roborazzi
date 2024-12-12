@@ -40,6 +40,7 @@ import com.github.takahirom.roborazzi.captureRoboGif
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureRoboLastImage
 import com.github.takahirom.roborazzi.fontScale
+import com.github.takahirom.roborazzi.localInspectionMode
 import com.github.takahirom.roborazzi.roboOutputName
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.withComposeTestTag
@@ -177,6 +178,16 @@ class ManualTest {
       roborazziComposeOptions = RoborazziComposeOptions {
         // We have several options to configure the test environment.
         fontScale(2f)
+
+        /*
+        We don't specify `localInspectionMode` by default.
+        The default value for `localInspectionMode` in Compose is `false`.
+        This is to maintain higher fidelity in tests.
+        If you encounter issues integrating the library, you can set `localInspectionMode` to `true`.
+
+        localInspectionMode(true)
+         */
+
         // We can also configure the activity scenario and the composable content.
         addOption(
           object : RoborazziComposeComposableOption,
