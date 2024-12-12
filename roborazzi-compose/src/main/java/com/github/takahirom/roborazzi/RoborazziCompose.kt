@@ -1,5 +1,6 @@
 package com.github.takahirom.roborazzi
 
+import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -7,6 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.Espresso
+import org.robolectric.Shadows
 import java.io.File
 
 
@@ -102,11 +106,19 @@ private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
   onActivity { activity ->
     activity.setContent(content = { content() })
 
-    val composeView = activity.window.decorView
-      .findViewById<ViewGroup>(android.R.id.content)
-      .getChildAt(0) as ComposeView
-
-    val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
-    viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+    // Views needs to be laid out before we can capture them
+    Espresso.onIdle()
+    val windowRoots = fetchRobolectricWindowRoots()
+    if (windowRoots.size <= 1) {
+      val composeView = activity.window.decorView
+        .findViewById<ViewGroup>(android.R.id.content)
+        .getChildAt(0) as ComposeView
+      @SuppressLint("VisibleForTests")
+      val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
+      viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+    } else {
+      // For dialogs
+      captureRootsInternal(windowRoots.drop(1), roborazziOptions, file)
+    }
   }
 }
