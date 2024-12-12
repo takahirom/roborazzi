@@ -178,9 +178,16 @@ class ManualTest {
       roborazziComposeOptions = RoborazziComposeOptions {
         // We have several options to configure the test environment.
         fontScale(2f)
-        /* The default value is false, but we can set it to true,
-        if you want to use the logic for Preview in composable functions. */
-        localInspectionMode(false)
+
+        /*
+        We don't specify `localInspectionMode` by default.
+        The default value for `localInspectionMode` in Compose is `false`.
+        This is to maintain higher fidelity in tests.
+        If you encounter issues integrating the library, you can set `localInspectionMode` to `true`.
+
+        localInspectionMode(true)
+         */
+
         // We can also configure the activity scenario and the composable content.
         addOption(
           object : RoborazziComposeComposableOption,
