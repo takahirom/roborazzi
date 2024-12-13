@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -21,14 +24,21 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun PreviewNormal() {
   MaterialTheme {
-    Card(
-      Modifier
-        .width(180.dp)
+    Surface(
     ) {
-      Text(
-        modifier = Modifier.padding(8.dp),
-        text = "Generate Preview Test Sample"
-      )
+      ElevatedCard(
+        Modifier
+          .padding(8.dp)
+          .width(180.dp),
+        elevation = CardDefaults.elevatedCardElevation(
+          defaultElevation = 12.dp
+        )
+      ) {
+        Text(
+          modifier = Modifier.padding(8.dp),
+          text = "Generate Preview Test Sample"
+        )
+      }
     }
   }
 }
