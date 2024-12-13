@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,7 +29,10 @@ fun PreviewNormal() {
       ElevatedCard(
         Modifier
           .padding(8.dp)
-          .width(180.dp)
+          .width(180.dp),
+        elevation = CardDefaults.elevatedCardElevation(
+          defaultElevation = 12.dp
+        )
       ) {
         Text(
           modifier = Modifier.padding(8.dp),
