@@ -53,7 +53,7 @@ fun ViewInteraction.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  perform(ImageCaptureViewAction(roborazziOptions) { canvas ->
+  perform(ImageCaptureViewAction(roborazziOptions) { _, canvas ->
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
@@ -149,7 +149,8 @@ fun captureScreenRoboImage(
   // Invoke rootOracle.listActiveRoots() via reflection
   val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
   listActiveRoots.isAccessible = true
-  @Suppress("UNCHECKED_CAST") val roots: List<Root> = listActiveRoots.invoke(rootsOracle) as List<Root>
+  @Suppress("UNCHECKED_CAST") val roots: List<Root> =
+    listActiveRoots.invoke(rootsOracle) as List<Root>
   debugLog {
     "captureScreenRoboImage roots: ${roots.joinToString("\n") { it.toString() }}"
   }
@@ -159,7 +160,7 @@ fun captureScreenRoboImage(
       roborazziOptions = roborazziOptions
     ),
     roborazziOptions = roborazziOptions,
-  ) { canvas ->
+  ) { _, canvas ->
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
@@ -222,7 +223,7 @@ fun ViewInteraction.captureRoboGif(
 ) {
   // currently, gif compare is not supported
   if (!roborazziOptions.taskType.isRecording()) return
-  captureAndroidView(roborazziOptions, block).apply {
+  captureAndroidView(roborazziOptions = roborazziOptions, onEach = {}, block = block).apply {
     saveGif(file)
     clear()
     result.getOrThrow()
@@ -244,7 +245,7 @@ fun ViewInteraction.captureRoboLastImage(
   block: () -> Unit
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  captureAndroidView(roborazziOptions, block).apply {
+  captureAndroidView(roborazziOptions = roborazziOptions, onEach = {}, block = block).apply {
     saveLastImage(file)
     clear()
     result.getOrThrow()
@@ -257,7 +258,7 @@ fun ViewInteraction.captureRoboAllImage(
   block: () -> Unit
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  captureAndroidView(roborazziOptions, block).apply {
+  captureAndroidView(roborazziOptions = roborazziOptions, onEach = {}, block = block).apply {
     saveAllImage(fileNameCreator)
     clear()
     result.getOrThrow()
@@ -284,7 +285,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
       roborazziOptions = roborazziOptions
     ),
     roborazziOptions = roborazziOptions,
-  ) { canvas ->
+  ) { _, canvas ->
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
@@ -321,7 +322,12 @@ fun SemanticsNodeInteraction.captureRoboGif(
 ) {
   // currently, gif compare is not supported
   if (!roborazziOptions.taskType.isRecording()) return
-  captureComposeNode(composeRule, roborazziOptions, block).apply {
+  captureComposeNode(
+    composeRule = composeRule,
+    roborazziOptions = roborazziOptions,
+    onEach = {},
+    block = block
+  ).apply {
     saveGif(file)
     clear()
     result.getOrThrow()
@@ -340,6 +346,7 @@ class CaptureInternalResult(
 @InternalRoborazziApi
 fun ViewInteraction.captureAndroidView(
   roborazziOptions: RoborazziOptions,
+  onEach: () -> Unit = {},
   block: () -> Unit
 ): CaptureInternalResult {
   var removeListener = {}
@@ -350,8 +357,10 @@ fun ViewInteraction.captureAndroidView(
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
     handler.postAtFrontOfQueue {
       this@captureAndroidView.perform(
-        ImageCaptureViewAction(roborazziOptions) { canvas ->
-          canvases.addIfChanged(canvas, roborazziOptions)
+        ImageCaptureViewAction(roborazziOptions) { _, canvas ->
+          if (canvases.addIfChanged(canvas, roborazziOptions)) {
+            onEach()
+          }
         }
       )
     }
@@ -403,8 +412,10 @@ fun ViewInteraction.captureAndroidView(
   try {
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     perform(
-      ImageCaptureViewAction(roborazziOptions) { canvas ->
-        canvases.addIfChanged(canvas, roborazziOptions)
+      ImageCaptureViewAction(roborazziOptions) { _, canvas ->
+        if (canvases.addIfChanged(canvas, roborazziOptions)) {
+          onEach()
+        }
       }
     )
     perform(viewTreeListenerAction)
@@ -445,18 +456,20 @@ fun ViewInteraction.captureAndroidView(
 private fun MutableList<AwtRoboCanvas>.addIfChanged(
   next: AwtRoboCanvas,
   roborazziOptions: RoborazziOptions
-) {
+): Boolean {
   val prev = this.lastOrNull() ?: run {
     this.add(next)
-    return
+    return true
   }
   val differ: ImageComparator.ComparisonResult =
     prev.differ(next, 1.0, roborazziOptions.compareOptions.imageComparator)
   if (!roborazziOptions.compareOptions.resultValidator(differ)) {
     this.add(next)
+    return true
   } else {
     // If the image is not changed, we should release the image.
     next.release()
+    return false
   }
 }
 
@@ -481,6 +494,7 @@ private fun saveLastImage(
 fun SemanticsNodeInteraction.captureComposeNode(
   composeRule: ComposeTestRule,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  onEach: () -> Unit = {},
   block: () -> Unit
 ): CaptureInternalResult {
   val canvases = mutableListOf<AwtRoboCanvas>()
@@ -492,8 +506,10 @@ fun SemanticsNodeInteraction.captureComposeNode(
         roborazziOptions
       ),
       roborazziOptions = roborazziOptions
-    ) {
-      canvases.addIfChanged(it, roborazziOptions)
+    ) { _, canvas ->
+      if (canvases.addIfChanged(canvas, roborazziOptions)) {
+        onEach()
+      }
     }
   }
   val handler = Handler(Looper.getMainLooper())
@@ -577,7 +593,7 @@ private fun saveAllImage(
 
 private class ImageCaptureViewAction(
   val roborazziOptions: RoborazziOptions,
-  val saveAction: (AwtRoboCanvas) -> Unit
+  val saveAction: (RoboComponent, AwtRoboCanvas) -> Unit
 ) :
   ViewAction {
   override fun getConstraints(): Matcher<View> {
@@ -603,7 +619,7 @@ private class ImageCaptureViewAction(
 internal fun capture(
   rootComponent: RoboComponent,
   roborazziOptions: RoborazziOptions,
-  onCanvas: (AwtRoboCanvas) -> Unit
+  onCanvas: (RoboComponent, AwtRoboCanvas) -> Unit
 ) {
   when (roborazziOptions.captureType) {
     is Dump -> captureDump(
@@ -617,6 +633,7 @@ internal fun capture(
       val image = rootComponent.image
         ?: throw IllegalStateException("Unable to find the image of the target root component. Does the rendering element exist?")
       onCanvas(
+        rootComponent,
         AwtRoboCanvas(
           width = image.width,
           height = image.height,

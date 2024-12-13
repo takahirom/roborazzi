@@ -17,8 +17,11 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.RoborazziRule
+import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule.Options
+import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.checkRoboAccessibility
+import com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesElements
 import com.google.android.apps.common.testing.accessibility.framework.matcher.ElementMatchers.withTestTag
@@ -41,10 +44,13 @@ class ViewA11yTest {
   @get:Rule
   val activityScenarioRule = ActivityScenarioRule(ComponentActivity::class.java)
 
+  val taskType: RoborazziTaskType = roborazziSystemPropertyTaskType()
+
   @get:Rule
   val roborazziRule = RoborazziRule(
-    captureRoot = Espresso.onView(ViewMatchers.isRoot()),
+    captureRoot = onView(ViewMatchers.isRoot()),
     options = Options(
+      captureType = CaptureType.LastImage(),
       roborazziAccessibilityOptions = RoborazziATFAccessibilityCheckOptions(
         checker = RoborazziATFAccessibilityChecker(
           preset = AccessibilityCheckPreset.LATEST,
@@ -58,7 +64,9 @@ class ViewA11yTest {
 
   @Test
   fun clickableWithoutSemantics() {
-    thrown.expectMessage("SpeakableTextPresentCheck")
+    if (taskType.isEnabled()) {
+      thrown.expectMessage("SpeakableTextPresentCheck")
+    }
 
     activityScenarioRule.scenario.onActivity { activity ->
       activity.setContentView(
@@ -161,7 +169,9 @@ class ViewA11yTest {
 
   @Test
   fun faintText() {
-    thrown.expectMessage("TextContrastCheck")
+    if (taskType.isEnabled()) {
+      thrown.expectMessage("TextContrastCheck")
+    }
 
     activityScenarioRule.scenario.onActivity { activity ->
       activity.setContentView(

@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Button
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,8 +28,11 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityCheckOptions
 import com.github.takahirom.roborazzi.RoborazziATFAccessibilityChecker
 import com.github.takahirom.roborazzi.RoborazziRule
+import com.github.takahirom.roborazzi.RoborazziRule.CaptureType
 import com.github.takahirom.roborazzi.RoborazziRule.Options
+import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.checkRoboAccessibility
+import com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckResultUtils.matchesElements
 import com.google.android.apps.common.testing.accessibility.framework.matcher.ElementMatchers.withTestTag
@@ -52,11 +55,14 @@ class ComposeA11yTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
+  val taskType: RoborazziTaskType = roborazziSystemPropertyTaskType()
+
   @get:Rule
   val roborazziRule = RoborazziRule(
     composeRule = composeTestRule,
     captureRoot = composeTestRule.onRoot(),
     options = Options(
+      captureType = CaptureType.LastImage(),
       roborazziAccessibilityOptions = RoborazziATFAccessibilityCheckOptions(
         RoborazziATFAccessibilityChecker(
           preset = AccessibilityCheckPreset.LATEST,
@@ -70,7 +76,9 @@ class ComposeA11yTest {
 
   @Test
   fun clickableWithoutSemantics() {
-    thrown.expectMessage("SpeakableTextPresentCheck")
+    if (taskType.isEnabled()) {
+      thrown.expectMessage("SpeakableTextPresentCheck")
+    }
 
     composeTestRule.setContent {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -85,7 +93,9 @@ class ComposeA11yTest {
 
   @Test
   fun boxWithEmptyContentDescription() {
-    thrown.expectMessage("SpeakableTextPresentCheck")
+    if (taskType.isEnabled()) {
+      thrown.expectMessage("SpeakableTextPresentCheck")
+    }
 
     composeTestRule.setContent {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -151,7 +161,9 @@ class ComposeA11yTest {
 
   @Test
   fun faintText() {
-    thrown.expectMessage("TextContrastCheck")
+    if (taskType.isEnabled()) {
+      thrown.expectMessage("TextContrastCheck")
+    }
 
     composeTestRule.setContent {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
