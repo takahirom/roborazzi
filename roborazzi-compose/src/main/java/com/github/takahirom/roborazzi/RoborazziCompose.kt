@@ -8,9 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.test.core.app.ActivityScenario
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
-import org.robolectric.Shadows
 import java.io.File
 
 
@@ -117,8 +115,10 @@ private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
       val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
       viewRootForTest.view.captureRoboImage(file, roborazziOptions)
     } else {
-      // For dialogs
-      captureRootsInternal(windowRoots.drop(1), roborazziOptions, file)
+      // Dialog case
+      roborazziReportLog("It seems that there are multiple windows." +
+        "We merge all windows using captureScreenRoboImage().")
+      captureScreenRoboImage(file, roborazziOptions)
     }
   }
 }
