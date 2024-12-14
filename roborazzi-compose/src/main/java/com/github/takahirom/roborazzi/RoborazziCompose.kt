@@ -106,19 +106,17 @@ private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
 
     // Views needs to be laid out before we can capture them
     Espresso.onIdle()
-    val windowRoots = fetchRobolectricWindowRoots()
-    if (windowRoots.size <= 1) {
-      val composeView = activity.window.decorView
-        .findViewById<ViewGroup>(android.R.id.content)
-        .getChildAt(0) as ComposeView
-      @SuppressLint("VisibleForTests")
-      val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
-      viewRootForTest.view.captureRoboImage(file, roborazziOptions)
-    } else {
-      // Dialog case
-      roborazziReportLog("It seems that there are multiple windows." +
-        "We merge all windows using captureScreenRoboImage().")
-      captureScreenRoboImage(file, roborazziOptions)
-    }
+    captureScreenIfMultipleWindows(
+      file = file,
+      roborazziOptions = roborazziOptions,
+      captureSingleComponent = {
+        val composeView = activity.window.decorView
+          .findViewById<ViewGroup>(android.R.id.content)
+          .getChildAt(0) as ComposeView
+        @SuppressLint("VisibleForTests")
+        val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
+        viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+      }
+    )
   }
 }
