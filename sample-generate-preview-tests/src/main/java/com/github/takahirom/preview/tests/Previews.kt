@@ -2,7 +2,9 @@ package com.github.takahirom.preview.tests
 
 import android.content.res.Configuration
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
@@ -123,6 +125,24 @@ fun PreviewDialog() {
     )
   }
 }
+
+@Preview
+@Composable
+fun PreviewDialogSurface() {
+  MaterialTheme {
+    Surface {
+      Box(Modifier.height(300.dp)) {
+        Text("Hello, World!")
+      }
+      AlertDialog(
+        onDismissRequest = {},
+        confirmButton = @Composable { Text("Confirm") },
+        text = @Composable { Text("Generate Preview Test Sample!") }
+      )
+    }
+  }
+}
+
 
 @Preview(
   name = "Preview width & height large",
