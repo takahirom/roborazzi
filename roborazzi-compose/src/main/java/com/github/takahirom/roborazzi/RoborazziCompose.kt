@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso
 import java.io.File
 
 
@@ -103,9 +102,6 @@ private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
 
   onActivity { activity ->
     activity.setContent(content = { content() })
-
-    // Views needs to be laid out before we can capture them
-    Espresso.onIdle()
     captureScreenIfMultipleWindows(
       file = file,
       roborazziOptions = roborazziOptions,
