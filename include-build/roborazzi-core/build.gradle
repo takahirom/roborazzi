@@ -96,11 +96,11 @@ kotlin {
 
 android {
   namespace 'com.github.takahirom.roborazzi.core'
-  compileSdk 35
+  compileSdk 34
 
   defaultConfig {
     minSdk 21
-    targetSdk 35
+    targetSdk 32
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
