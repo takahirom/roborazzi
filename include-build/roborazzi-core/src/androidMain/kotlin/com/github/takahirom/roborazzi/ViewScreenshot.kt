@@ -162,7 +162,7 @@ internal fun View.generateBitmapFromDraw(
   bitmapFuture.set(destBitmap)
 }
 
-private fun View.getActivity(): Activity? {
+internal fun View.getActivity(): Activity? {
   fun Context.getActivity(): Activity? {
     return when (this) {
       is Activity -> this

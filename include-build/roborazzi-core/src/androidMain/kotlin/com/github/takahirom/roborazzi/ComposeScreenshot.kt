@@ -15,7 +15,6 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.InternalTestApi
 import androidx.compose.ui.window.DialogWindowProvider
-import androidx.concurrent.futures.ResolvableFuture
 import kotlin.math.roundToInt
 
 fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bitmap? {
@@ -70,23 +69,27 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
 
   // For SDK 35 and above, if we have an ActionBar scenario
   // we will draw the bitmap directly from the ComposeView to avoid content overlapping.
-  val shouldUseComposeCapture = Build.VERSION.SDK_INT >= 35 &&
+  val shouldUseComposeCapture = actionBarWorkaroundIsOn &&
+    Build.VERSION.SDK_INT >= 35 &&
     windowToUse.hasFeature(Window.FEATURE_ACTION_BAR) &&
-    actionBarWorkaroundIsOn
+    view.getActivity()?.actionBar != null &&
+    view.getActivity()?.actionBar?.isShowing == true
   if (shouldUseComposeCapture) {
     roborazziReportLog(
-      "Using ComposeView.draw to capture the bitmap to avoid content overlap issues with the ActionBar.\n" +
-        "Window-based capture (which typically provides higher fidelity) can cause these overlap issues when an ActionBar is present.\n" +
-        "We recommend setting the theme using <application android:theme=\"@android:style/Theme.Material.NoActionBar\" /> in your test/AndroidManifest.xml to fix this.\n" +
+      "Hiding the ActionBar to avoid content overlap issues during capture.\n" +
+        "This workaround is used when an ActionBar is present and the SDK version is 35 or higher.\n" +
+        "Hiding the ActionBar might cause slight performance overhead due to layout invalidation.\n" +
+        "We recommend setting the theme using <application android:theme=\"@android:style/Theme.Material.NoActionBar\" /> in your test/AndroidManifest.xml to avoid this workaround.\n" +
         "If you are intentionally using an ActionBar, you can disable this workaround by setting the gradle property 'roborazzi.compose.actionbar.overlap.fix' to false.\n" +
         "This problem is tracked in https://issuetracker.google.com/issues/383368165"
     )
-    // Capture bitmap from ComposeView using generateBitmapFromDraw and then crop.
-    val destBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-    val bitmapFuture = ResolvableFuture.create<Bitmap>()
-    view.generateBitmapFromDraw(destBitmap, bitmapFuture)
-    val fullBitmap = bitmapFuture.get()
-    return fullBitmap?.crop(nodeBoundsRect, recordOptions)
+    return try {
+      view.getActivity()?.actionBar?.hide()
+      windowToUse.decorView.fetchImage(recordOptions = recordOptions)
+        ?.crop(nodeBoundsRect, recordOptions)
+    } finally {
+      view.getActivity()?.actionBar?.show()
+    }
   }
 
   return windowToUse.decorView.fetchImage(recordOptions = recordOptions)
