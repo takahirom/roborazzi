@@ -56,7 +56,44 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
   val locationInWindow = IntArray(2)
   view.getLocationInWindow(locationInWindow)
   nodeBoundsRect.offset(locationInWindow[0], locationInWindow[1])
-  return windowToUse.decorView.fetchImage(recordOptions = recordOptions)?.crop(nodeBoundsRect, recordOptions)
+  if (dialogWindow != null) {
+    return windowToUse.decorView.fetchImage(recordOptions = recordOptions)
+      ?.crop(nodeBoundsRect, recordOptions)
+  }
+
+  // Experimental workaround to avoid content overlapping when capturing the bitmap.
+  val actionBarWorkaroundIsOn = getSystemProperty(
+    "roborazzi.compose.actionbar.overlap.fix",
+    "true"
+  ) == "true"
+
+  // For SDK 35 and above, if we have an ActionBar scenario
+  // we will draw the bitmap directly from the ComposeView to avoid content overlapping.
+  val shouldUseComposeCapture = actionBarWorkaroundIsOn &&
+    Build.VERSION.SDK_INT >= 35 &&
+    windowToUse.hasFeature(Window.FEATURE_ACTION_BAR) &&
+    view.getActivity()?.actionBar != null &&
+    view.getActivity()?.actionBar?.isShowing == true
+  if (shouldUseComposeCapture) {
+    roborazziReportLog(
+      "Hiding the ActionBar to avoid content overlap issues during capture.\n" +
+        "This workaround is used when an ActionBar is present and the SDK version is 35 or higher.\n" +
+        "Hiding the ActionBar might cause slight performance overhead due to layout invalidation.\n" +
+        "We recommend setting the theme using <application android:theme=\"@android:style/Theme.Material.NoActionBar\" /> in your test/AndroidManifest.xml to avoid this workaround.\n" +
+        "If you are intentionally using an ActionBar, you can disable this workaround by setting the gradle property 'roborazzi.compose.actionbar.overlap.fix' to false.\n" +
+        "This problem is tracked in https://issuetracker.google.com/issues/383368165"
+    )
+    return try {
+      view.getActivity()?.actionBar?.hide()
+      windowToUse.decorView.fetchImage(recordOptions = recordOptions)
+        ?.crop(nodeBoundsRect, recordOptions)
+    } finally {
+      view.getActivity()?.actionBar?.show()
+    }
+  }
+
+  return windowToUse.decorView.fetchImage(recordOptions = recordOptions)
+    ?.crop(nodeBoundsRect, recordOptions)
 }
 
 /**

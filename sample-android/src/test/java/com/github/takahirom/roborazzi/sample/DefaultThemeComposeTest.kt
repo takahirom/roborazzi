@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.RoborazziRule
-import com.github.takahirom.roborazzi.RoborazziTransparentActivity
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
 import org.junit.Test
@@ -45,8 +44,8 @@ class DefaultThemeComposeTest {
       val appContext: Application = ApplicationProvider.getApplicationContext()
       Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
         ComponentName(
-          appContext.packageName,
-          DefaultThemeActivity::class.java.name,
+          appContext,
+          DefaultThemeActivity::class.java,
         )
       )
     }
