@@ -1,5 +1,6 @@
 package com.github.takahirom.roborazzi
 
+import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -101,12 +102,17 @@ private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
 
   onActivity { activity ->
     activity.setContent(content = { content() })
-
-    val composeView = activity.window.decorView
-      .findViewById<ViewGroup>(android.R.id.content)
-      .getChildAt(0) as ComposeView
-
-    val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
-    viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+    captureScreenIfMultipleWindows(
+      file = file,
+      roborazziOptions = roborazziOptions,
+      captureSingleComponent = {
+        val composeView = activity.window.decorView
+          .findViewById<ViewGroup>(android.R.id.content)
+          .getChildAt(0) as ComposeView
+        @SuppressLint("VisibleForTests")
+        val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
+        viewRootForTest.view.captureRoboImage(file, roborazziOptions)
+      }
+    )
   }
 }
