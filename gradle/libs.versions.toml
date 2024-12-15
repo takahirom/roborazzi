@@ -10,7 +10,7 @@ composeCompiler = "1.5.10"
 composeMultiplatform = "1.6.2"
 robolectric = "4.14.1"
 generativeaiGoogle = "0.9.0-1.0.1"
-robolectric-android-all = "Q-robolectric-5415296"
+robolectric-android-all = "15-robolectric-12650502"
 
 roborazzi-for-replacing-by-include-build = "1.0.0"
 
@@ -32,6 +32,7 @@ androidx-lifecycle = "2.6.1"
 androidx-navigation = "2.7.7"
 androidx-test-espresso-core = "3.5.1"
 androidx-test-ext-junit = "1.2.1"
+androidx-test-core = "1.6.1"
 kim = "0.17.7"
 
 dropbox-differ = "0.3.0"
@@ -86,6 +87,7 @@ androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx",
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso-core" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
 androidx-test-ext-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidx-test-ext-junit" }
+androidx-test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "androidx-test-core" }
 kim = { module = "com.ashampoo:kim", version.ref = "kim" }
 
 android-tools-build-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
