@@ -144,18 +144,22 @@ fun captureScreenRoboImage(
   // Views needs to be laid out before we can capture them
   Espresso.onIdle()
 
-  val rootsOracle = RootsOracle_Factory({ Looper.getMainLooper() })
-    .get()
-  // Invoke rootOracle.listActiveRoots() via reflection
-  val listActiveRoots = rootsOracle.javaClass.getMethod("listActiveRoots")
-  listActiveRoots.isAccessible = true
-  @Suppress("UNCHECKED_CAST") val roots: List<Root> = listActiveRoots.invoke(rootsOracle) as List<Root>
+  val roots: List<Root> = fetchRobolectricWindowRoots()
   debugLog {
     "captureScreenRoboImage roots: ${roots.joinToString("\n") { it.toString() }}"
   }
+  captureRootsInternal(roots, roborazziOptions, file)
+}
+
+@InternalRoborazziApi
+fun captureRootsInternal(
+  roots: List<Root>,
+  roborazziOptions: RoborazziOptions,
+  file: File
+) {
   capture(
     rootComponent = RoboComponent.Screen(
-      rootsOrderByDepth = roots.sortedBy { it.windowLayoutParams.get()?.type },
+      rootsOrderByDepth = roots,
       roborazziOptions = roborazziOptions
     ),
     roborazziOptions = roborazziOptions,
@@ -166,6 +170,43 @@ fun captureScreenRoboImage(
       roborazziOptions = roborazziOptions
     )
     canvas.release()
+  }
+}
+
+@InternalRoborazziApi
+fun captureScreenIfMultipleWindows(
+  file: File,
+  roborazziOptions: RoborazziOptions,
+  captureSingleComponent: () -> Unit
+) {
+  if (fetchRobolectricWindowRoots().size > 1) {
+    roborazziReportLog(
+      "It seems that there are multiple windows." +
+        "We capture all windows using captureScreenRoboImage(). " +
+        "We can add a flag to disable this behavior so please let us know if you need it."
+    )
+    captureScreenRoboImage(file, roborazziOptions)
+  } else {
+    captureSingleComponent()
+  }
+}
+
+@InternalRoborazziApi
+fun fetchRobolectricWindowRoots(): List<Root> {
+  try {
+    @Suppress("INACCESSIBLE_TYPE") val rootsOracle = RootsOracle_Factory({ Looper.getMainLooper() })
+      .get()
+    // Invoke rootOracle.listActiveRoots() via reflection
+    @Suppress("INACCESSIBLE_TYPE") val listActiveRoots =
+      rootsOracle.javaClass.getMethod("listActiveRoots")
+    listActiveRoots.isAccessible = true
+    @Suppress("UNCHECKED_CAST", "INACCESSIBLE_TYPE") val roots: List<Root> =
+      (listActiveRoots.invoke(rootsOracle) as List<Root>
+        ).sortedBy { it.windowLayoutParams.get()?.type }
+    return roots
+  } catch (e: Throwable) {
+    e.printStackTrace()
+    return emptyList()
   }
 }
 
@@ -278,20 +319,26 @@ fun SemanticsNodeInteraction.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  capture(
-    rootComponent = RoboComponent.Compose(
-      node = this.fetchSemanticsNode("fail to captureRoboImage"),
-      roborazziOptions = roborazziOptions
-    ),
+  captureScreenIfMultipleWindows(
+    file = file,
     roborazziOptions = roborazziOptions,
-  ) { canvas ->
-    processOutputImageAndReportWithDefaults(
-      canvas = canvas,
-      goldenFile = file,
-      roborazziOptions = roborazziOptions
-    )
-    canvas.release()
-  }
+    captureSingleComponent = {
+      capture(
+        rootComponent = RoboComponent.Compose(
+          node = this.fetchSemanticsNode("fail to captureRoboImage"),
+          roborazziOptions = roborazziOptions
+        ),
+        roborazziOptions = roborazziOptions,
+      ) { canvas ->
+        processOutputImageAndReportWithDefaults(
+          canvas = canvas,
+          goldenFile = file,
+          roborazziOptions = roborazziOptions
+        )
+        canvas.release()
+      }
+    }
+  )
 }
 
 fun SemanticsNodeInteraction.captureRoboGif(

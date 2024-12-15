@@ -2,11 +2,17 @@ package com.github.takahirom.preview.tests
 
 import android.content.res.Configuration
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -21,14 +27,21 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun PreviewNormal() {
   MaterialTheme {
-    Card(
-      Modifier
-        .width(180.dp)
+    Surface(
     ) {
-      Text(
-        modifier = Modifier.padding(8.dp),
-        text = "Generate Preview Test Sample"
-      )
+      ElevatedCard(
+        Modifier
+          .padding(8.dp)
+          .width(180.dp),
+        elevation = CardDefaults.elevatedCardElevation(
+          defaultElevation = 12.dp
+        )
+      ) {
+        Text(
+          modifier = Modifier.padding(8.dp),
+          text = "Generate Preview Test Sample"
+        )
+      }
     }
   }
 }
@@ -100,6 +113,36 @@ fun PreviewWithProperties2() {
     )
   }
 }
+
+@Preview
+@Composable
+fun PreviewDialog() {
+  MaterialTheme {
+    AlertDialog(
+      onDismissRequest = {},
+      confirmButton = @Composable { Text("Confirm") },
+      text = @Composable { Text("Generate Preview Test Sample!") }
+    )
+  }
+}
+
+@Preview
+@Composable
+fun PreviewDialogSurface() {
+  MaterialTheme {
+    Surface {
+      Box(Modifier.height(300.dp)) {
+        Text("Hello, World!")
+      }
+      AlertDialog(
+        onDismissRequest = {},
+        confirmButton = @Composable { Text("Confirm") },
+        text = @Composable { Text("Generate Preview Test Sample!") }
+      )
+    }
+  }
+}
+
 
 @Preview(
   name = "Preview width & height large",
