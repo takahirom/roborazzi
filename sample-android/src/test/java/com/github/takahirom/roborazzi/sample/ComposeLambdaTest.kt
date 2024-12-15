@@ -49,12 +49,12 @@ class ComposeLambdaTest {
         fontScale(2f)
 
         /*
-        We don't specify `localInspectionMode` by default.
-        The default value for `localInspectionMode` in Compose is `false`.
+        We don't specify `inspectionMode` by default.
+        The default value for `inspectionMode` in Compose is `false`.
         This is to maintain higher fidelity in tests.
-        If you encounter issues integrating the library, you can set `localInspectionMode` to `true`.
+        If you encounter issues integrating the library, you can set `inspectionMode` to `true`.
 
-        localInspectionMode(true)
+        inspectionMode(true)
          */
 
         // We can also configure the activity scenario and the composable content.

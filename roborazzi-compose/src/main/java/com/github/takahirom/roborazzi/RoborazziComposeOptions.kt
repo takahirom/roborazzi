@@ -244,19 +244,19 @@ data class RoborazziComposeFontScaleOption(private val fontScale: Float) :
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeOptions.Builder.localInspectionMode(
-  localInspectionMode: Boolean
+fun RoborazziComposeOptions.Builder.inspectionMode(
+  inspectionMode: Boolean
 ): RoborazziComposeOptions.Builder =
-  addOption(RoborazziComposeLocalInspectionModeOption(localInspectionMode))
+  addOption(RoborazziComposeInspectionModeOption(inspectionMode))
 
 
 @ExperimentalRoborazziApi
-data class RoborazziComposeLocalInspectionModeOption(private val localInspectionMode: Boolean) :
+data class RoborazziComposeInspectionModeOption(private val inspectionMode: Boolean) :
   RoborazziComposeComposableOption {
   override fun configureWithComposable(
     content: @Composable () -> Unit
   ): @Composable () -> Unit = {
-    CompositionLocalProvider(LocalInspectionMode provides localInspectionMode) {
+    CompositionLocalProvider(LocalInspectionMode provides inspectionMode) {
       content()
     }
   }
