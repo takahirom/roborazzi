@@ -102,7 +102,7 @@ private fun rectToShortString(rect: Rect): String {
 private fun StringBuilder.appendConfigInfo(config: SemanticsConfiguration, indent: String = "") {
     val actions = mutableListOf<String>()
     val units = mutableListOf<String>()
-    for ((key, value) in config) {
+    for ((key, value) in config.sortedBy { it.key.name }) {
         if (key == SemanticsProperties.TestTag) {
             continue
         }
