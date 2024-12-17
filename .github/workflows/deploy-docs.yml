@@ -31,7 +31,7 @@ jobs:
           uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
 
         - name: Build Writerside docs using Docker
-          uses: JetBrains/writerside-github-action@5a6920dbce3ef3169acbeb7e45c6cbdaf7e76bfa # v4
+          uses: JetBrains/writerside-github-action@b96c8e6011351f5637326ac4d7ff5a2661de368e # v4
           with:
             instance: ${{ env.INSTANCE }}
             artifact: ${{ env.ARTIFACT }}
