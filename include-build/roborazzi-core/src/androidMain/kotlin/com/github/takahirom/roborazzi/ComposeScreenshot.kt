@@ -68,7 +68,7 @@ fun SemanticsNode.fetchImage(recordOptions: RoborazziOptions.RecordOptions): Bit
   ) == "true"
 
   // For SDK 35 and above, if we have an ActionBar scenario
-  // we will draw the bitmap directly from the ComposeView to avoid content overlapping.
+  // we will hide the ActionBar to avoid content overlapping.
   val shouldUseComposeCapture = actionBarWorkaroundIsOn &&
     Build.VERSION.SDK_INT >= 35 &&
     windowToUse.hasFeature(Window.FEATURE_ACTION_BAR) &&
