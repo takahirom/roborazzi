@@ -261,3 +261,18 @@ data class RoborazziComposeInspectionModeOption(private val inspectionMode: Bool
     }
   }
 }
+
+@ExperimentalRoborazziApi
+fun RoborazziComposeOptions.Builder.theme(themeResId: Int): RoborazziComposeOptions.Builder {
+  return addOption(RoborazziComposeActivityThemeOption(themeResId))
+}
+
+@ExperimentalRoborazziApi
+data class RoborazziComposeActivityThemeOption(private val themeResId: Int) :
+  RoborazziComposeActivityScenarioOption {
+  override fun configureWithActivityScenario(scenario: ActivityScenario<out Activity>) {
+    scenario.onActivity { activity ->
+      activity.setTheme(themeResId)
+    }
+  }
+}
