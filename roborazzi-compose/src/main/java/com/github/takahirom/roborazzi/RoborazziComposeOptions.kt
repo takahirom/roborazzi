@@ -87,6 +87,7 @@ class RoborazziComposeOptions private constructor(
   fun builder(): Builder {
     return Builder()
       .apply {
+        createActivityScenarioOptions.forEach { addOption(it) }
         activityScenarioOptions.forEach { addOption(it) }
         composableOptions.forEach { addOption(it) }
         setupOptions.forEach { addOption(it) }
