@@ -19,6 +19,7 @@ import com.github.takahirom.roborazzi.RoborazziComposeOptions
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.fontScale
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
+import com.github.takahirom.roborazzi.theme
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -41,21 +42,24 @@ class ComposeLambdaTest {
 
   @OptIn(ExperimentalRoborazziApi::class)
   @Test
+  fun whenNonTransparentThemeItShouldHaveNonTransparentBackground() {
+    captureRoboImage(
+      roborazziComposeOptions = RoborazziComposeOptions {
+        theme(android.R.style.Theme_Material_Light)
+      }
+    ) {
+      Text("This composable function should NOT have transparent background!")
+    }
+  }
+
+  @OptIn(ExperimentalRoborazziApi::class)
+  @Test
   fun captureComposeLambdaImageWithRoborazziComposeOptions() {
     captureRoboImage(
       "${roborazziSystemPropertyOutputDirectory()}/manual_compose_with_compose_options.png",
       roborazziComposeOptions = RoborazziComposeOptions {
         // We have several options to configure the test environment.
         fontScale(2f)
-
-        /*
-        We don't specify `inspectionMode` by default.
-        The default value for `inspectionMode` in Compose is `false`.
-        This is to maintain higher fidelity in tests.
-        If you encounter issues integrating the library, you can set `inspectionMode` to `true`.
-
-        inspectionMode(true)
-         */
 
         // We can also configure the activity scenario and the composable content.
         addOption(

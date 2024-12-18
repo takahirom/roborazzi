@@ -34,9 +34,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.Dump
+import com.github.takahirom.roborazzi.RoborazziActivity
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziRule
-import com.github.takahirom.roborazzi.RoborazziTransparentActivity
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
 import org.junit.Test
@@ -48,7 +48,7 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ComposeTest {
   @get:Rule
-  val composeTestRule = createAndroidComposeRule<RoborazziTransparentActivity>()
+  val composeTestRule = createAndroidComposeRule<RoborazziActivity>()
 
   @get:Rule
   val roborazziRule = RoborazziRule(

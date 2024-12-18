@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import java.io.File
 
 
@@ -59,7 +60,7 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  launchRoborazziTransparentActivity { activityScenario ->
+  launchRoborazziActivity(roborazziComposeOptions) { activityScenario ->
     val configuredContent = roborazziComposeOptions
       .configured(activityScenario) {
         content()
@@ -70,10 +71,10 @@ fun captureRoboImage(
   }
 }
 
-private fun launchRoborazziTransparentActivity(block: (ActivityScenario<RoborazziTransparentActivity>) -> Unit = {}) {
-  registerActivityToRobolectricIfNeeded()
-
-  val activityScenario = ActivityScenario.launch(RoborazziTransparentActivity::class.java)
+private fun launchRoborazziActivity(roborazziComposeOptions: RoborazziComposeOptions,block: (ActivityScenario<out ComponentActivity>) -> Unit = {}) {
+  val activityScenario = roborazziComposeOptions.createScenario {
+    createActivityScenario(theme = android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
+  }
 
   // Closing the activity is necessary to prevent memory leaks.
   // If multiple captureRoboImage calls occur in a single test,
@@ -81,8 +82,16 @@ private fun launchRoborazziTransparentActivity(block: (ActivityScenario<Roborazz
   return activityScenario.use { block(activityScenario) }
 }
 
+internal fun createActivityScenario(theme: Int): ActivityScenario<out ComponentActivity> {
+  registerActivityToRobolectricIfNeeded()
+  return ActivityScenario.launch(RoborazziActivity.createIntent(
+    context = ApplicationProvider.getApplicationContext(),
+    theme = theme
+  ))
+}
 
-private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
+
+private fun ActivityScenario<out androidx.activity.ComponentActivity>.captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   content: @Composable () -> Unit,
