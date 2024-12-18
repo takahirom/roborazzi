@@ -48,7 +48,7 @@ class ComposeLambdaTest {
         theme(android.R.style.Theme_Material_Light)
       }
     ) {
-      Text("This composable function should not have transparent background!")
+      Text("This composable function should NOT have transparent background!")
     }
   }
 
