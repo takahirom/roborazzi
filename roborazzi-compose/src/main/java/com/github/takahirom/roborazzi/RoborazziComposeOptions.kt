@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 import android.app.Activity
 import android.content.res.Configuration
 import android.graphics.Color
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -33,12 +34,19 @@ interface RoborazziComposeActivityScenarioOption : RoborazziComposeOption {
 }
 
 @ExperimentalRoborazziApi
+interface RoborazziComposeActivityScenarioCreatorOption : RoborazziComposeOption {
+  @Suppress("RemoveRedundantQualifierName")
+  fun createScenario(chain: () -> ActivityScenario<out androidx.activity.ComponentActivity>): ActivityScenario<out androidx.activity.ComponentActivity>
+}
+
+@ExperimentalRoborazziApi
 interface RoborazziComposeComposableOption : RoborazziComposeOption {
   fun configureWithComposable(content: @Composable () -> Unit): @Composable () -> Unit
 }
 
 @ExperimentalRoborazziApi
 class RoborazziComposeOptions private constructor(
+  private val activityScenarioCreatorOptions: List<RoborazziComposeActivityScenarioCreatorOption>,
   private val activityScenarioOptions: List<RoborazziComposeActivityScenarioOption>,
   private val composableOptions: List<RoborazziComposeComposableOption>,
   private val setupOptions: List<RoborazziComposeSetupOption>
@@ -46,10 +54,15 @@ class RoborazziComposeOptions private constructor(
   class Builder {
     private val activityScenarioOptions =
       mutableListOf<RoborazziComposeActivityScenarioOption>()
+    private val activityScenarioCreatorOptions =
+      mutableListOf<RoborazziComposeActivityScenarioCreatorOption>()
     private val composableOptions = mutableListOf<RoborazziComposeComposableOption>()
     private val setupOptions = mutableListOf<RoborazziComposeSetupOption>()
 
     fun addOption(option: RoborazziComposeOption): Builder {
+      if (option is RoborazziComposeActivityScenarioCreatorOption) {
+        activityScenarioCreatorOptions.add(option)
+      }
       if (option is RoborazziComposeActivityScenarioOption) {
         activityScenarioOptions.add(option)
       }
@@ -64,6 +77,7 @@ class RoborazziComposeOptions private constructor(
 
     fun build(): RoborazziComposeOptions {
       return RoborazziComposeOptions(
+        activityScenarioCreatorOptions = activityScenarioCreatorOptions,
         activityScenarioOptions = activityScenarioOptions,
         composableOptions = composableOptions,
         setupOptions = setupOptions
@@ -74,10 +88,18 @@ class RoborazziComposeOptions private constructor(
   fun builder(): Builder {
     return Builder()
       .apply {
+        activityScenarioCreatorOptions.forEach { addOption(it) }
         activityScenarioOptions.forEach { addOption(it) }
         composableOptions.forEach { addOption(it) }
         setupOptions.forEach { addOption(it) }
       }
+  }
+
+  @ExperimentalRoborazziApi
+  fun createScenario(chain: () -> ActivityScenario<out androidx.activity.ComponentActivity>): ActivityScenario<out androidx.activity.ComponentActivity> {
+    return activityScenarioCreatorOptions.fold(chain) { acc, option ->
+      { option.createScenario(acc) }
+    }()
   }
 
   @ExperimentalRoborazziApi
@@ -259,5 +281,18 @@ data class RoborazziComposeInspectionModeOption(private val inspectionMode: Bool
     CompositionLocalProvider(LocalInspectionMode provides inspectionMode) {
       content()
     }
+  }
+}
+
+@ExperimentalRoborazziApi
+fun RoborazziComposeOptions.Builder.theme(themeResId: Int): RoborazziComposeOptions.Builder {
+  return addOption(RoborazziComposeActivityThemeOption(themeResId))
+}
+
+@ExperimentalRoborazziApi
+data class RoborazziComposeActivityThemeOption(private val themeResId: Int) :
+  RoborazziComposeActivityScenarioCreatorOption {
+  override fun createScenario(chain: () -> ActivityScenario<out ComponentActivity>): ActivityScenario<out ComponentActivity> {
+    return createActivityScenario(themeResId)
   }
 }

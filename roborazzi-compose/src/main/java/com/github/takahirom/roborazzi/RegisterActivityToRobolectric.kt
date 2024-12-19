@@ -13,8 +13,8 @@ internal fun registerActivityToRobolectricIfNeeded() {
     val appContext: Application = ApplicationProvider.getApplicationContext()
     Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
       ComponentName(
-        appContext.packageName,
-        RoborazziTransparentActivity::class.java.name,
+        appContext,
+        RoborazziActivity::class.java,
       )
     )
   } catch (e: ClassNotFoundException) {

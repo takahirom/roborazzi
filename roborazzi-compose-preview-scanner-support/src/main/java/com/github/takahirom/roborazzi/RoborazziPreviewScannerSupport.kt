@@ -37,6 +37,15 @@ fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): Roborazzi
     uiMode(previewInfo.uiMode)
     previewDevice(previewInfo.device)
     fontScale(previewInfo.fontScale)
+
+    /*
+    We don't specify `inspectionMode` by default.
+    The default value for `inspectionMode` in Compose is `false`.
+    This is to maintain higher fidelity in tests.
+    If you encounter issues integrating the library, you can set `inspectionMode` to `true`.
+
+    inspectionMode(true)
+     */
   }
 }
 
