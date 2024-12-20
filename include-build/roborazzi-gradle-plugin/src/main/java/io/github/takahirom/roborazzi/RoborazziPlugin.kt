@@ -482,6 +482,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
               // outputDir.get().asFileTree.forEach {
               //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
               // }
+
+              // Delete all images from the intermediateDir
+              intermediateDir.get().asFile.walkTopDown().forEach { file ->
+                if (KnownImageFileExtensions.contains(file.extension)) {
+                  file.delete()
+                }
+              }
+
               outputDir.get().asFile.mkdirs()
               outputDir.get().asFile.copyRecursively(
                 target = intermediateDir.get().asFile,
@@ -616,13 +624,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
     roborazziResults: CaptureResults,
   ) {
     if (roborazziProperties["roborazzi.cleanupOldScreenshots"] == "true") {
-      // Delete all images from the intermediateDir
-      intermediateDir.get().asFile.walkTopDown().forEach { file ->
-        if (KnownImageFileExtensions.contains(file.extension)) {
-          file.delete()
-        }
-      }
-
       // Remove all files not in the results from the outputDir
       val removingFiles: MutableSet<String> = outputDir.get().asFile
         .listFiles()
