@@ -16,10 +16,10 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziComposeActivityScenarioOption
 import com.github.takahirom.roborazzi.RoborazziComposeComposableOption
 import com.github.takahirom.roborazzi.RoborazziComposeOptions
+import com.github.takahirom.roborazzi.activityTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.fontScale
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
-import com.github.takahirom.roborazzi.theme
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -45,7 +45,7 @@ class ComposeLambdaTest {
   fun whenNonTransparentThemeItShouldHaveNonTransparentBackground() {
     captureRoboImage(
       roborazziComposeOptions = RoborazziComposeOptions {
-        theme(android.R.style.Theme_Material_Light)
+        activityTheme(android.R.style.Theme_Material_Light)
       }
     ) {
       Text("This composable function should NOT have transparent background!")

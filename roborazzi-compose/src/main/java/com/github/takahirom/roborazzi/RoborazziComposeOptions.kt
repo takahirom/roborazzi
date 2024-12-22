@@ -285,7 +285,7 @@ data class RoborazziComposeInspectionModeOption(private val inspectionMode: Bool
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeOptions.Builder.theme(themeResId: Int): RoborazziComposeOptions.Builder {
+fun RoborazziComposeOptions.Builder.activityTheme(themeResId: Int): RoborazziComposeOptions.Builder {
   return addOption(RoborazziComposeActivityThemeOption(themeResId))
 }
 
