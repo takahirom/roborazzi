@@ -1,5 +1,6 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
@@ -92,15 +93,19 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   robolectricConfig: MapProperty<String, String>,
   testTaskProvider: TaskCollection<Test>
 ) {
-  check(extension.packages.get().orEmpty().isNotEmpty()) {
-    "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
-      "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
-  }
+  configureComposePreviewRobolectricTestPackagesIfNeeded(project, extension)
 
   val generateTestsTask = project.tasks.register(
     "generate${variant.name.capitalize(Locale.ROOT)}ComposePreviewRobolectricTests",
     GenerateComposePreviewRobolectricTestsTask::class.java
   ) {
+    it.doFirst {
+      check(extension.packages.get().orEmpty().isNotEmpty()) {
+        "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
+          "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
+      }
+    }
+
     // It seems that this directory path is overridden by addGeneratedSourceDirectory.
     // The generated tests will be located in build/JAVA/generate[VariantName]ComposePreviewRobolectricTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
@@ -118,6 +123,26 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   // It seems that the addGeneratedSourceDirectory does not affect the inputs.dir and does not invalidate the task.
   testTaskProvider.configureEach {
     it.inputs.dir(generateTestsTask.flatMap { it.outputDir })
+  }
+}
+
+private fun configureComposePreviewRobolectricTestPackagesIfNeeded(
+  project: Project,
+  extension: GenerateComposePreviewRobolectricTestsExtension,
+) {
+  project.afterEvaluate {
+    extension.packages.getOrElse(listOf())
+    if(extension.enable.get() && extension.packages.get().orEmpty().isNotEmpty()) {
+      val android = project.extensions.findByType(CommonExtension::class.java)
+      android?.namespace?.let{
+
+        project.logger.warn(
+          "You may have forgotten to set roborazzi.generateComposePreviewRobolectricTests.packages. " +
+            "Roborazzi automatically set `android.namespace` (\"$it\") as the default value."
+        )
+        extension.packages.set(listOf(it))
+      }
+    }
   }
 }
 
