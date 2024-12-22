@@ -615,14 +615,19 @@ abstract class RoborazziPlugin : Plugin<Project> {
     intermediateDir: DirectoryProperty,
     roborazziResults: CaptureResults,
   ) {
-    if (roborazziProperties["roborazzi.cleanupOldScreenshots"] == "true") {
+    val isCleanupRun = roborazziProperties["roborazzi.cleanupOldScreenshots"] == "true"
+    val isRecordRun = test.systemProperties["roborazzi.test.record"] == true
+
+    if (isCleanupRun || isRecordRun) {
       // Delete all images from the intermediateDir
       intermediateDir.get().asFile.walkTopDown().forEach { file ->
         if (KnownImageFileExtensions.contains(file.extension)) {
           file.delete()
         }
       }
+    }
 
+    if (isCleanupRun) {
       // Remove all files not in the results from the outputDir
       val removingFiles: MutableSet<String> = outputDir.get().asFile
         .listFiles()

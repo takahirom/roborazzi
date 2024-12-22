@@ -607,4 +607,39 @@ class RoborazziGradleProjectTest {
       checkResultCount(recorded = 1)
     }
   }
+
+  @Test
+  fun shouldNotRetainOutdatedImagesWhenRecording() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      record().output.run(::assertNotSkipped)
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture1.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture2.png")
+
+      removeTests()
+      addMultipleTest()
+      removeRoborazziOutputDir()
+
+      record().output.run(::assertNotSkipped)
+      checkRecordedFileNotExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture1.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture2.png")
+    }
+  }
+
+  @Test
+  fun shouldNotDeletePreviousImagesWhenFiltering() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      removeTests()
+      addMultipleTest()
+
+      recordWithFilter1().output.run(::assertNotSkipped)
+      checkRecordedFileExists("$screenshotAndName.testCapture1.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture2.png")
+
+      recordWithFilter2().output.run(::assertNotSkipped)
+      checkRecordedFileExists("$screenshotAndName.testCapture1.png")
+      checkRecordedFileExists("$screenshotAndName.testCapture2.png")
+    }
+  }
 }
