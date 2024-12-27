@@ -456,7 +456,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 } else {
                   null
                 }
-              }
+              }.sortedBy(CaptureResult::goldenFile)
               val resultsSummaryFile = resultSummaryFileProperty.get().asFile
 
               val roborazziResults = CaptureResults.from(results)
