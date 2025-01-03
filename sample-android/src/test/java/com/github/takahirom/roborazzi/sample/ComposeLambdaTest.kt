@@ -56,7 +56,7 @@ class ComposeLambdaTest {
   @OptIn(ExperimentalRoborazziApi::class)
   @Test
   fun added(){
-    captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_compose.png") {
+    captureRoboImage {
       Text("New image")
     }
   }
