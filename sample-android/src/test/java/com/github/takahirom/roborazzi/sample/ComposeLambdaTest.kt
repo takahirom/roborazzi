@@ -5,6 +5,7 @@ import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -36,7 +37,7 @@ class ComposeLambdaTest {
   @Test
   fun captureComposeLambdaImage() {
     captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_compose.png") {
-      Text("Hello Compose!")
+      Text(modifier = Modifier.size(300.dp), text = "Hello Compose!")
     }
   }
 
@@ -48,7 +49,15 @@ class ComposeLambdaTest {
         activityTheme(android.R.style.Theme_Material_Light)
       }
     ) {
-      Text("This composable function should NOT have transparent background!")
+      Text(modifier = Modifier.size(10.dp), text = "This composable function should NOT have transparent background!")
+    }
+  }
+
+  @OptIn(ExperimentalRoborazziApi::class)
+  @Test
+  fun added(){
+    captureRoboImage {
+      Text("New image")
     }
   }
 
