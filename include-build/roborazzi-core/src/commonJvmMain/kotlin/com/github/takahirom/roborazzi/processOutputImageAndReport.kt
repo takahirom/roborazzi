@@ -59,18 +59,7 @@ fun processOutputImageAndReport(
   }
   val recordOptions = roborazziOptions.recordOptions
   val resizeScale = recordOptions.resizeScale
-  val contextData = if (roborazziEnableContextData()) {
-    val className = provideRoborazziContext().description?.className
-    val classNameMap: Map<out String, Any> = className?.let {
-      mapOf(
-        RoborazziReportConst.DefaultContextData.DescriptionClass.key to className.toString()
-      )
-    } ?: mapOf()
-    roborazziOptions.contextData + classNameMap
-  } else {
-    // This will be removed when we found if this is safe.
-    mapOf()
-  }
+  val contextData = buildContextData(roborazziOptions)
   if (taskType.isVerifying() || taskType.isComparing()) {
     val width = (newRoboCanvas.croppedWidth * resizeScale).toInt()
     val height = (newRoboCanvas.croppedHeight * resizeScale).toInt()
@@ -219,3 +208,18 @@ fun processOutputImageAndReport(
     )
   }
 }
+
+@InternalRoborazziApi
+private fun buildContextData(roborazziOptions: RoborazziOptions): Map<String, Any> =
+  if (roborazziEnableContextData()) {
+    val className = provideRoborazziContext().description?.className
+    val classNameMap: Map<out String, Any> = className?.let {
+      mapOf(
+        RoborazziReportConst.DefaultContextData.DescriptionClass.key to className.toString()
+      )
+    } ?: mapOf()
+    roborazziOptions.contextData + classNameMap
+  } else {
+    // This will be removed when we found if this is safe.
+    mapOf()
+  }
