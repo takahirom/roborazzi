@@ -41,7 +41,7 @@ class OpenAiAiAssertionModel(
   private val loggingEnabled: Boolean = false,
   private val temperature: Float = DefaultTemperature,
   private val maxTokens: Int = DefaultMaxOutputTokens,
-  private val seed: Int = 1566,
+  private val seed: Int? = 1566,
   private val requestBuilderModifier: (HttpRequestBuilder.() -> Unit) = {
     header("Authorization", "Bearer $apiKey")
   },
@@ -231,7 +231,7 @@ private data class ChatCompletionRequest(
   val temperature: Float,
   @SerialName("max_tokens") val maxTokens: Int,
   @SerialName("response_format") val responseFormat: ResponseFormat?,
-  val seed: Int,
+  val seed: Int?,
 )
 
 @Serializable
@@ -260,7 +260,8 @@ private data class ImageUrl(
 
 @Serializable
 private data class ChatCompletionResponse(
-  val id: String,
+  // null on gemini
+  val id: String? = null,
   val `object`: String,
   val created: Long,
   val model: String,
@@ -283,9 +284,12 @@ private data class ChoiceMessage(
 
 @Serializable
 private data class Usage(
-  @SerialName("prompt_tokens") val promptTokens: Int,
+  // null on gemini
+  @SerialName("prompt_tokens") val promptTokens: Int? = null,
+  // null on gemini
   @SerialName("completion_tokens") val completionTokens: Int? = null,
-  @SerialName("total_tokens") val totalTokens: Int,
+  // null on gemini
+  @SerialName("total_tokens") val totalTokens: Int? = null,
 )
 
 
