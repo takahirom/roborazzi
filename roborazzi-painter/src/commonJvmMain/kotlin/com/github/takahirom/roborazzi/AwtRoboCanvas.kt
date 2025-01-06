@@ -513,11 +513,16 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       originalImage: BufferedImage,
       comparedImage: BufferedImage
     ): BufferedImage {
-      val width = minOf(originalImage.width, comparedImage.width)
-      val height = minOf(originalImage.height, comparedImage.height)
+      val width = maxOf(originalImage.width, comparedImage.width)
+      val height = maxOf(originalImage.height, comparedImage.height)
       val diffImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
       for (x in 0 until width) {
         for (y in 0 until height) {
+          if (x >= originalImage.width || y >= originalImage.height
+            || x >= comparedImage.width || y >= comparedImage.height) {
+            diffImage.setRGB(x, y, -0x10000)
+            continue
+          }
           val rgbOrig = originalImage.getRGB(x, y)
           val rgbComp = comparedImage.getRGB(x, y)
           if (rgbOrig != rgbComp) {
