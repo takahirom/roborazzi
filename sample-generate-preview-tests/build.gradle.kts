@@ -65,6 +65,7 @@ dependencies {
   testImplementation(libs.junit)
   testImplementation(libs.robolectric)
   testImplementation(libs.composable.preview.scanner)
+  testImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.espresso.core)
 }

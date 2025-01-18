@@ -1,5 +1,7 @@
 package com.github.takahirom.roborazzi
 
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.github.takahirom.roborazzi.annotations.DelayedPreview
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
 import org.robolectric.RuntimeEnvironment.setQualifiers
@@ -8,16 +10,18 @@ import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
 import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
+import sergio.sastre.composable.preview.scanner.core.preview.getAnnotation
 
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  roborazziComposeOptions: RoborazziComposeOptions = this.toRoborazziComposeOptions()
+  roborazziComposeOptions: RoborazziComposeOptions = this.toRoborazziComposeOptions(),
+  doBeforeCaptureRoboImage: () -> Unit = {},
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   val composablePreview = this
-  captureRoboImage(filePath, roborazziOptions, roborazziComposeOptions) {
+  captureRoboImage(filePath, roborazziOptions, roborazziComposeOptions, doBeforeCaptureRoboImage) {
     composablePreview()
   }
 }
@@ -26,12 +30,10 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): RoborazziComposeOptions {
   return RoborazziComposeOptions {
     size(
-      widthDp = previewInfo.widthDp,
-      heightDp = previewInfo.heightDp
+      widthDp = previewInfo.widthDp, heightDp = previewInfo.heightDp
     )
     background(
-      showBackground = previewInfo.showBackground,
-      backgroundColor = previewInfo.backgroundColor
+      showBackground = previewInfo.showBackground, backgroundColor = previewInfo.backgroundColor
     )
     locale(previewInfo.locale)
     uiMode(previewInfo.uiMode)
@@ -143,18 +145,18 @@ interface ComposePreviewTester<T : Any> {
 
 @ExperimentalRoborazziApi
 class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
+  private val composeTestRule by lazy { createAndroidComposeRule<RoborazziActivity>() }
+
   override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
     val options = options()
-    return AndroidComposablePreviewScanner()
-      .scanPackageTrees(*options.scanOptions.packages.toTypedArray())
-      .let {
+    return AndroidComposablePreviewScanner().scanPackageTrees(*options.scanOptions.packages.toTypedArray())
+      .includeAnnotationInfoForAllOf(DelayedPreview::class.java).let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
         } else {
           it
         }
-      }
-      .getPreviews()
+      }.getPreviews()
   }
 
   override fun test(preview: ComposablePreview<AndroidPreviewInfo>) {
@@ -165,17 +167,37 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
         ""
       }
     val name = roborazziDefaultNamingStrategy().generateOutputName(
-      preview.declaringClass,
-      createScreenshotIdFor(preview)
+      preview.declaringClass, createScreenshotIdFor(preview)
     )
     val filePath = "$pathPrefix$name.${provideRoborazziContext().imageExtension}"
-    preview.captureRoboImage(filePath)
+
+    preview.getAnnotation<DelayedPreview>()?.let { delayedPreview ->
+      val delay = delayedPreview.milliseconds
+      when (delay > 0L) {
+        true -> {
+          composeTestRule.mainClock.autoAdvance = false
+          preview.captureRoboImage(filePath = filePath, doBeforeCaptureRoboImage = {
+            composeTestRule.mainClock.advanceTimeBy(delay)
+          })
+          composeTestRule.mainClock.autoAdvance = true
+        }
+        false -> preview.captureRoboImage(filePath = filePath)
+      }
+    } ?: preview.captureRoboImage(filePath = filePath)
+
+  }
+
+  override fun options(): ComposePreviewTester.Options {
+    // TODO -> Add composeTestRule only if necessary to avoid extra execution time?
+    val testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
+      testRuleFactory = { composeTestRule })
+    return super.options().copy(
+      testLifecycleOptions = testLifecycleOptions
+    )
   }
 
   private fun createScreenshotIdFor(preview: ComposablePreview<AndroidPreviewInfo>) =
-    AndroidPreviewScreenshotIdBuilder(preview)
-      .ignoreClassName()
-      .build()
+    AndroidPreviewScreenshotIdBuilder(preview).ignoreClassName().build()
 }
 
 @InternalRoborazziApi
@@ -188,8 +210,7 @@ fun getComposePreviewTester(testerQualifiedClassName: String): ComposePreviewTes
   if (!ComposePreviewTester::class.java.isAssignableFrom(customTesterClass)) {
     throw IllegalArgumentException("The class $testerQualifiedClassName must implement RobolectricPreviewCapturer")
   }
-  @Suppress("UNCHECKED_CAST")
-  val composePreviewTester =
+  @Suppress("UNCHECKED_CAST") val composePreviewTester =
     customTesterClass.getDeclaredConstructor().newInstance() as ComposePreviewTester<Any>
   return composePreviewTester
 }

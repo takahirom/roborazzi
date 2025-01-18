@@ -52,6 +52,8 @@ class RoborazziComposeOptions private constructor(
   private val setupOptions: List<RoborazziComposeSetupOption>
 ) {
   class Builder {
+    private val composeTestRuleOptions =
+      mutableListOf<RoborazziComposeActivityScenarioOption>()
     private val activityScenarioOptions =
       mutableListOf<RoborazziComposeActivityScenarioOption>()
     private val activityScenarioCreatorOptions =
