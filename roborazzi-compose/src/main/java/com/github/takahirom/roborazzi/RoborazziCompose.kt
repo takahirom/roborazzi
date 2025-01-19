@@ -44,16 +44,12 @@ fun captureRoboImage(
   roborazziComposeOptions: RoborazziComposeOptions = RoborazziComposeOptions(),
   content: @Composable () -> Unit,
 ) {
-  if (!roborazziOptions.taskType.isEnabled()) return
-  launchRoborazziActivity(roborazziComposeOptions) { activityScenario ->
-    val configuredContent = roborazziComposeOptions
-      .configured(activityScenario) {
-        content()
-      }
-    activityScenario.captureRoboImage(fileWithRecordFilePathStrategy(filePath), roborazziOptions) {
-      configuredContent()
-    }
-  }
+  captureRoboImage(
+    file = fileWithRecordFilePathStrategy(filePath),
+    roborazziOptions = roborazziOptions,
+    roborazziComposeOptions = roborazziComposeOptions,
+    content = content
+  )
 }
 
 @ExperimentalRoborazziApi
@@ -69,10 +65,13 @@ fun captureRoboImage(
       .configured(activityScenario) {
         content()
       }
-    activityScenario.captureRoboImage(file, roborazziOptions) {
-      configuredContent()
+    try {
+      activityScenario.captureRoboImage(file, roborazziOptions) {
+        configuredContent()
+      }
+    } finally {
+      roborazziComposeOptions.afterCapture()
     }
-    roborazziComposeOptions.afterCapture()
   }
 }
 

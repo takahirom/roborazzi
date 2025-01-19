@@ -98,12 +98,12 @@ data class RoborazziComposeDelayedPreviewOption(
   override fun configure() {
     if (delay > 0L) {
       composeTestRule.mainClock.autoAdvance = false
+      composeTestRule.mainClock.advanceTimeBy(delay)
     }
   }
 
   override fun afterCapture() {
     if (delay > 0L) {
-      composeTestRule.mainClock.advanceTimeBy(delay)
       composeTestRule.mainClock.autoAdvance = true
     }
   }
