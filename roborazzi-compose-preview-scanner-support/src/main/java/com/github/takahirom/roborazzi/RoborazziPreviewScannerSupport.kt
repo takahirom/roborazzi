@@ -6,7 +6,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.github.takahirom.roborazzi.annotations.DelayedPreview
+import com.github.takahirom.roborazzi.annotations.DelayCaptureRoboImage
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
@@ -111,10 +111,15 @@ data class RoborazziComposeDelayedPreviewOption(
   private val composeTestRule: ComposeTestRule,
   private val delay: Long
 ) :
-  RoborazziComposeSetupOption, RoborazziComposeAfterCaptureOption {
+  RoborazziComposeSetupOption, RoborazziComposeCaptureOption {
   override fun configure() {
     if (delay > 0L) {
       composeTestRule.mainClock.autoAdvance = false
+    }
+  }
+
+  override fun beforeCapture() {
+    if (delay > 0L) {
       composeTestRule.mainClock.advanceTimeBy(delay)
     }
   }
@@ -207,7 +212,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
   override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
     val options = options()
     return AndroidComposablePreviewScanner().scanPackageTrees(*options.scanOptions.packages.toTypedArray())
-      .includeAnnotationInfoForAllOf(DelayedPreview::class.java).let {
+      .includeAnnotationInfoForAllOf(DelayCaptureRoboImage::class.java).let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
         } else {
@@ -230,13 +235,15 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
 
     preview.captureRoboImage(
       filePath = filePath,
-      roborazziComposeOptions = preview.toRoborazziComposeOptions().builder().apply {
-        @Suppress("UNCHECKED_CAST")
-        composeTestRule(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
-        preview.getAnnotation<DelayedPreview>()?.let {
-          delayedPreview(composeTestRule, it.milliseconds)
+      roborazziComposeOptions = preview.toRoborazziComposeOptions().builder()
+        .apply {
+          @Suppress("UNCHECKED_CAST")
+          composeTestRule(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
+          preview.getAnnotation<DelayCaptureRoboImage>()?.let {
+            delayedPreview(composeTestRule, it.delayInMillis)
+          }
         }
-      }.build()
+        .build()
     )
   }
 

@@ -66,16 +66,22 @@ fun captureRoboImage(
         content()
       }
     try {
-      activityScenario.captureRoboImage(file, roborazziOptions) {
-        configuredContent()
-      }
+      activityScenario.captureRoboImage(
+        file = file,
+        roborazziOptions = roborazziOptions,
+        doBeforeCapture = { roborazziComposeOptions.beforeCapture() },
+        content = { configuredContent() }
+      )
     } finally {
       roborazziComposeOptions.afterCapture()
     }
   }
 }
 
-private fun launchRoborazziActivity(roborazziComposeOptions: RoborazziComposeOptions,block: (ActivityScenario<out ComponentActivity>) -> Unit = {}) {
+private fun launchRoborazziActivity(
+  roborazziComposeOptions: RoborazziComposeOptions,
+  block: (ActivityScenario<out ComponentActivity>) -> Unit = {}
+) {
   val activityScenario = roborazziComposeOptions.createScenario {
     createActivityScenario(theme = android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
   }
@@ -88,10 +94,12 @@ private fun launchRoborazziActivity(roborazziComposeOptions: RoborazziComposeOpt
 
 internal fun createActivityScenario(theme: Int): ActivityScenario<out ComponentActivity> {
   registerActivityToRobolectricIfNeeded()
-  return ActivityScenario.launch(RoborazziActivity.createIntent(
-    context = ApplicationProvider.getApplicationContext(),
-    theme = theme
-  ))
+  return ActivityScenario.launch(
+    RoborazziActivity.createIntent(
+      context = ApplicationProvider.getApplicationContext(),
+      theme = theme
+    )
+  )
 }
 
 
@@ -110,6 +118,7 @@ private fun ActivityScenario<out androidx.activity.ComponentActivity>.captureRob
 private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  doBeforeCapture: () -> Unit = {},
   content: @Composable () -> Unit,
 ) {
 
@@ -122,8 +131,10 @@ private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
         val composeView = activity.window.decorView
           .findViewById<ViewGroup>(android.R.id.content)
           .getChildAt(0) as ComposeView
+
         @SuppressLint("VisibleForTests")
         val viewRootForTest = composeView.getChildAt(0) as ViewRootForTest
+        doBeforeCapture()
         viewRootForTest.view.captureRoboImage(file, roborazziOptions)
       }
     )

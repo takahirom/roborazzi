@@ -31,7 +31,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
-import com.github.takahirom.roborazzi.annotations.DelayedPreview
+import com.github.takahirom.roborazzi.annotations.DelayCaptureRoboImage
 import kotlinx.coroutines.delay
 
 @Preview
@@ -258,7 +258,7 @@ fun PreviewShowBackgroundWithBackgroundColor() {
   }
 }
 
-@DelayedPreview(milliseconds = 600L)
+@DelayCaptureRoboImage(delayInMillis = 516L) // 500 ms + 16ms frame
 @Preview
 @Composable
 fun PreviewDelayedVisibilityAnimation() {
@@ -266,7 +266,7 @@ fun PreviewDelayedVisibilityAnimation() {
 
   // Trigger visibility change with a delay
   LaunchedEffect(Unit) {
-    delay(500) // 500 ms delay
+    delay(500)
     isVisible = true
   }
 

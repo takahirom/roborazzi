@@ -45,7 +45,8 @@ interface RoborazziComposeComposableOption : RoborazziComposeOption {
 }
 
 @ExperimentalRoborazziApi
-interface RoborazziComposeAfterCaptureOption : RoborazziComposeOption {
+interface RoborazziComposeCaptureOption : RoborazziComposeOption {
+  fun beforeCapture()
   fun afterCapture()
 }
 
@@ -55,7 +56,7 @@ class RoborazziComposeOptions private constructor(
   private val activityScenarioOptions: List<RoborazziComposeActivityScenarioOption>,
   private val composableOptions: List<RoborazziComposeComposableOption>,
   private val setupOptions: List<RoborazziComposeSetupOption>,
-  private val afterCaptureOptions: List<RoborazziComposeAfterCaptureOption>,
+  private val captureOptions: List<RoborazziComposeCaptureOption>,
 ) {
   class Builder {
     private val activityScenarioOptions =
@@ -64,7 +65,7 @@ class RoborazziComposeOptions private constructor(
       mutableListOf<RoborazziComposeActivityScenarioCreatorOption>()
     private val composableOptions = mutableListOf<RoborazziComposeComposableOption>()
     private val setupOptions = mutableListOf<RoborazziComposeSetupOption>()
-    private val afterCaptureOptions = mutableListOf<RoborazziComposeAfterCaptureOption>()
+    private val captureOptions = mutableListOf<RoborazziComposeCaptureOption>()
 
     fun addOption(option: RoborazziComposeOption): Builder {
       if (option is RoborazziComposeActivityScenarioCreatorOption) {
@@ -79,8 +80,8 @@ class RoborazziComposeOptions private constructor(
       if (option is RoborazziComposeSetupOption) {
         setupOptions.add(option)
       }
-      if (option is RoborazziComposeAfterCaptureOption) {
-        afterCaptureOptions.add(option)
+      if (option is RoborazziComposeCaptureOption) {
+        captureOptions.add(option)
       }
       return this
     }
@@ -91,7 +92,7 @@ class RoborazziComposeOptions private constructor(
         activityScenarioOptions = activityScenarioOptions,
         composableOptions = composableOptions,
         setupOptions = setupOptions,
-        afterCaptureOptions = afterCaptureOptions
+        captureOptions = captureOptions
       )
     }
   }
@@ -129,8 +130,12 @@ class RoborazziComposeOptions private constructor(
     }
   }
 
+  fun beforeCapture() {
+    captureOptions.forEach { it.beforeCapture() }
+  }
+
   fun afterCapture() {
-    afterCaptureOptions.forEach { it.afterCapture() }
+    captureOptions.forEach { it.afterCapture() }
   }
 
   companion object {
