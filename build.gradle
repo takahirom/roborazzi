@@ -49,16 +49,17 @@ allprojects {
       allWarningsAsErrors = true
     }
   }
-  if(project.name.startsWith("roborazzi") &&
-          project.name != "roborazzi-idea-plugin") {
-      tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-          compilerOptions {
-              freeCompilerArgs.addAll(
-                      "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi",
-                      "-Xopt-in=com.github.takahirom.roborazzi.ExperimentalRoborazziApi",
-              )
-          }
+  if (project.name.startsWith("roborazzi") &&
+    project.name != "roborazzi-idea-plugin" &&
+    project.name != "roborazzi-annotations") {
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+      compilerOptions {
+        freeCompilerArgs.addAll(
+          "-Xopt-in=com.github.takahirom.roborazzi.InternalRoborazziApi",
+          "-Xopt-in=com.github.takahirom.roborazzi.ExperimentalRoborazziApi",
+        )
       }
+    }
   }
   plugins.withId('com.vanniktech.maven.publish') {
     project.group = "io.github.takahirom.roborazzi"
