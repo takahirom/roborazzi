@@ -1,7 +1,9 @@
 package com.github.takahirom.roborazzi
 
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import com.github.takahirom.roborazzi.annotations.DelayedPreview
+import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
 import org.robolectric.RuntimeEnvironment.setQualifiers
@@ -17,11 +19,10 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   roborazziComposeOptions: RoborazziComposeOptions = this.toRoborazziComposeOptions(),
-  doBeforeCaptureRoboImage: () -> Unit = {},
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   val composablePreview = this
-  captureRoboImage(filePath, roborazziOptions, roborazziComposeOptions, doBeforeCaptureRoboImage) {
+  captureRoboImage(filePath, roborazziOptions, roborazziComposeOptions) {
     composablePreview()
   }
 }
@@ -79,6 +80,35 @@ data class RoborazziComposePreviewDeviceOption(private val previewDevice: String
     }
   }
 }
+
+@ExperimentalRoborazziApi
+fun RoborazziComposeOptions.Builder.delayedPreview(
+  composeTestRule: ComposeTestRule,
+  delay: Long
+): RoborazziComposeOptions.Builder {
+  return addOption(RoborazziComposeDelayedPreviewOption(composeTestRule, delay))
+}
+
+@ExperimentalRoborazziApi
+data class RoborazziComposeDelayedPreviewOption(
+  private val composeTestRule: ComposeTestRule,
+  private val delay: Long
+) :
+  RoborazziComposeSetupOption, RoborazziComposeAfterCaptureOption {
+  override fun configure() {
+    if (delay > 0L) {
+      composeTestRule.mainClock.autoAdvance = false
+    }
+  }
+
+  override fun afterCapture() {
+    if (delay > 0L) {
+      composeTestRule.mainClock.advanceTimeBy(delay)
+      composeTestRule.mainClock.autoAdvance = true
+    }
+  }
+}
+
 
 /**
  * ComposePreviewTester is an interface that allows you to define a custom test for a Composable preview.
@@ -146,6 +176,16 @@ interface ComposePreviewTester<T : Any> {
 @ExperimentalRoborazziApi
 class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
   private val composeTestRule by lazy { createAndroidComposeRule<RoborazziActivity>() }
+  private val defaultRule: TestRule by lazy {
+    RuleChain
+      .outerRule(object : TestWatcher() {
+        override fun starting(description: org.junit.runner.Description?) {
+          super.starting(description)
+          registerActivityToRobolectricIfNeeded()
+        }
+      })
+      .around(composeTestRule)
+  }
 
   override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
     val options = options()
@@ -171,26 +211,20 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
     )
     val filePath = "$pathPrefix$name.${provideRoborazziContext().imageExtension}"
 
-    preview.getAnnotation<DelayedPreview>()?.let { delayedPreview ->
-      val delay = delayedPreview.milliseconds
-      when (delay > 0L) {
-        true -> {
-          composeTestRule.mainClock.autoAdvance = false
-          preview.captureRoboImage(filePath = filePath, doBeforeCaptureRoboImage = {
-            composeTestRule.mainClock.advanceTimeBy(delay)
-          })
-          composeTestRule.mainClock.autoAdvance = true
+    preview.captureRoboImage(
+      filePath = filePath,
+      roborazziComposeOptions = preview.toRoborazziComposeOptions().builder().apply {
+        preview.getAnnotation<DelayedPreview>()?.let {
+          delayedPreview(composeTestRule, it.milliseconds)
         }
-        false -> preview.captureRoboImage(filePath = filePath)
-      }
-    } ?: preview.captureRoboImage(filePath = filePath)
-
+      }.build()
+    )
   }
 
   override fun options(): ComposePreviewTester.Options {
     // TODO -> Add composeTestRule only if necessary to avoid extra execution time?
     val testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
-      testRuleFactory = { composeTestRule })
+      testRuleFactory = { defaultRule })
     return super.options().copy(
       testLifecycleOptions = testLifecycleOptions
     )

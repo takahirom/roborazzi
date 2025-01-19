@@ -8,7 +8,8 @@ import org.robolectric.Shadows
 /**
  * Workaround for https://github.com/takahirom/roborazzi/issues/100
  */
-internal fun registerActivityToRobolectricIfNeeded() {
+@InternalRoborazziApi
+fun registerActivityToRobolectricIfNeeded() {
   try {
     val appContext: Application = ApplicationProvider.getApplicationContext()
     Shadows.shadowOf(appContext.packageManager).addActivityIfNotPresent(
