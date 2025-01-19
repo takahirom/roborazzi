@@ -1,7 +1,11 @@
 package com.github.takahirom.roborazzi
 
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.takahirom.roborazzi.annotations.DelayedPreview
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -78,6 +82,19 @@ data class RoborazziComposePreviewDeviceOption(private val previewDevice: String
         setQualifiers(this)
       }
     }
+  }
+}
+
+@ExperimentalRoborazziApi
+fun RoborazziComposeOptions.Builder.composeTestRule(composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>): RoborazziComposeOptions.Builder {
+  return addOption(RoborazziComposeTestRuleOption(composeTestRule))
+}
+
+@ExperimentalRoborazziApi
+data class RoborazziComposeTestRuleOption(private val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) :
+  RoborazziComposeActivityScenarioCreatorOption {
+  override fun createScenario(chain: () -> ActivityScenario<out ComponentActivity>): ActivityScenario<out ComponentActivity> {
+    return composeTestRule.activityRule.scenario
   }
 }
 
@@ -214,6 +231,8 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
     preview.captureRoboImage(
       filePath = filePath,
       roborazziComposeOptions = preview.toRoborazziComposeOptions().builder().apply {
+        @Suppress("UNCHECKED_CAST")
+        composeTestRule(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
         preview.getAnnotation<DelayedPreview>()?.let {
           delayedPreview(composeTestRule, it.milliseconds)
         }
