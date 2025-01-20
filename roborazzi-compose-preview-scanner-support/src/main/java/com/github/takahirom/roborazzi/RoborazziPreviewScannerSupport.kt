@@ -6,7 +6,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.github.takahirom.roborazzi.annotations.DelayCaptureRoboImage
+import com.github.takahirom.roborazzi.annotations.RoboManualAdvance
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
@@ -99,33 +99,33 @@ data class RoborazziComposeTestRuleOption(private val composeTestRule: AndroidCo
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeOptions.Builder.delayedPreview(
+fun RoborazziComposeOptions.Builder.manualAdvance(
   composeTestRule: ComposeTestRule,
-  delay: Long
+  advanceTimeMillis: Long
 ): RoborazziComposeOptions.Builder {
-  return addOption(RoborazziComposeDelayedPreviewOption(composeTestRule, delay))
+  return addOption(RoborazziComposeManualAdvancePreviewOption(composeTestRule, advanceTimeMillis))
 }
 
 @ExperimentalRoborazziApi
-data class RoborazziComposeDelayedPreviewOption(
+data class RoborazziComposeManualAdvancePreviewOption(
   private val composeTestRule: ComposeTestRule,
-  private val delay: Long
+  private val advanceTimeMillis: Long
 ) :
   RoborazziComposeSetupOption, RoborazziComposeCaptureOption {
   override fun configure() {
-    if (delay > 0L) {
+    if (advanceTimeMillis > 0L) {
       composeTestRule.mainClock.autoAdvance = false
     }
   }
 
   override fun beforeCapture() {
-    if (delay > 0L) {
-      composeTestRule.mainClock.advanceTimeBy(delay)
+    if (advanceTimeMillis > 0L) {
+      composeTestRule.mainClock.advanceTimeBy(advanceTimeMillis)
     }
   }
 
   override fun afterCapture() {
-    if (delay > 0L) {
+    if (advanceTimeMillis > 0L) {
       composeTestRule.mainClock.autoAdvance = true
     }
   }
@@ -212,7 +212,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
   override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
     val options = options()
     return AndroidComposablePreviewScanner().scanPackageTrees(*options.scanOptions.packages.toTypedArray())
-      .includeAnnotationInfoForAllOf(DelayCaptureRoboImage::class.java).let {
+      .includeAnnotationInfoForAllOf(RoboManualAdvance::class.java).let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
         } else {
@@ -239,8 +239,8 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
         .apply {
           @Suppress("UNCHECKED_CAST")
           composeTestRule(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
-          preview.getAnnotation<DelayCaptureRoboImage>()?.let {
-            delayedPreview(composeTestRule, it.delayInMillis)
+          preview.getAnnotation<RoboManualAdvance>()?.let {
+            manualAdvance(composeTestRule, it.advanceTimeMillis)
           }
         }
         .build()
