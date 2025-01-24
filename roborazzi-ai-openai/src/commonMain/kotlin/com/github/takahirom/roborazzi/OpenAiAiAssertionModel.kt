@@ -70,8 +70,8 @@ class OpenAiAiAssertionModel(
     val template = aiAssertionOptions.promptTemplate
     val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
     val imageFilePath = when (aiAssertionOptions.assertionImageType) {
-      AiAssertionOptions.AssertionImageType.Comparison -> comparisonImageFilePath
-      AiAssertionOptions.AssertionImageType.Reference -> referenceImageFilePath
+      is AiAssertionOptions.AssertionImageType.Comparison -> comparisonImageFilePath
+      is AiAssertionOptions.AssertionImageType.Reference -> referenceImageFilePath
     }
     val imageBytes = readByteArrayFromFile(imageFilePath)
     val imageBase64 = imageBytes.encodeBase64()

@@ -7,9 +7,9 @@ package com.github.takahirom.roborazzi
 data class AiAssertionOptions(
   val aiAssertionModel: AiAssertionModel,
   val aiAssertions: List<AiAssertion> = emptyList(),
-  val assertionImageType: AssertionImageType = AssertionImageType.Comparison,
+  val assertionImageType: AssertionImageType = AssertionImageType.Comparison(),
   val systemPrompt: String = when (assertionImageType) {
-    AssertionImageType.Reference -> """Evaluate the new image's fulfillment of the user's requirements.
+    is AssertionImageType.Reference -> """Evaluate the new image's fulfillment of the user's requirements.
 The assessment should be based solely on the provided reference image 
 and the user's input specifications. Focus on whether the new image 
 meets all functional and design requirements.
@@ -20,7 +20,7 @@ For each assertion:
 - A justification based on requirement adherence rather than visual differences
 """
 
-    AssertionImageType.Comparison -> """Evaluate the following assertion for fulfillment in the new image.
+    is AssertionImageType.Comparison -> """Evaluate the following assertion for fulfillment in the new image.
 The evaluation should be based on the comparison between the original image 
 on the left and the new image on the right, with differences highlighted in red 
 in the center. Focus on whether the new image fulfills the requirement specified 
@@ -59,8 +59,8 @@ INPUT_PROMPT
   }
 
   sealed interface AssertionImageType {
-    data object Comparison : AssertionImageType
-    data object Reference : AssertionImageType
+    class Comparison : AssertionImageType
+    class Reference : AssertionImageType
   }
 
   data class AiAssertion(
