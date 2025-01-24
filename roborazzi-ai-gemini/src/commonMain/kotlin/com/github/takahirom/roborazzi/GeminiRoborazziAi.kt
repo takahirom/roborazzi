@@ -65,7 +65,7 @@ class GeminiAiAssertionModel(
     val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
     val imageFilePath = when (aiAssertionOptions.assertionImageType) {
       is AiAssertionOptions.AssertionImageType.Comparison -> comparisonImageFilePath
-      is AiAssertionOptions.AssertionImageType.Reference -> referenceImageFilePath
+      is AiAssertionOptions.AssertionImageType.Actual -> actualImageFilePath
     }
     val inputContent = content {
       image(readByteArrayFromFile(imageFilePath))

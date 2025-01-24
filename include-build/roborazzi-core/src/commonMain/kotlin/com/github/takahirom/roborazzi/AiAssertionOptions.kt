@@ -9,7 +9,7 @@ data class AiAssertionOptions(
   val aiAssertions: List<AiAssertion> = emptyList(),
   val assertionImageType: AssertionImageType = AssertionImageType.Comparison(),
   val systemPrompt: String = when (assertionImageType) {
-    is AssertionImageType.Reference -> """Evaluate the new image's fulfillment of the user's requirements.
+    is AssertionImageType.Actual -> """Evaluate the new image's fulfillment of the user's requirements.
 The assessment should be based solely on the provided reference image 
 and the user's input specifications. Focus on whether the new image 
 meets all functional and design requirements.
@@ -60,7 +60,7 @@ INPUT_PROMPT
 
   sealed interface AssertionImageType {
     class Comparison : AssertionImageType
-    class Reference : AssertionImageType
+    class Actual : AssertionImageType
   }
 
   data class AiAssertion(
