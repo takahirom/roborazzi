@@ -72,3 +72,5 @@ INPUT_PROMPT
     val requiredFulfillmentPercent: Int? = 80
   )
 }
+
+class AiAssertionApiException(val statusCode: Int, message: String) : Exception(message)
