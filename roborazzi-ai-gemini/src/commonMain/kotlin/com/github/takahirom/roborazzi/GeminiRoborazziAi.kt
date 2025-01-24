@@ -4,12 +4,7 @@ import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultMaxOutputTokens
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
-import dev.shreyaspatil.ai.client.generativeai.type.FunctionType
-import dev.shreyaspatil.ai.client.generativeai.type.GenerationConfig
-import dev.shreyaspatil.ai.client.generativeai.type.PlatformImage
-import dev.shreyaspatil.ai.client.generativeai.type.Schema
-import dev.shreyaspatil.ai.client.generativeai.type.content
-import dev.shreyaspatil.ai.client.generativeai.type.generationConfig
+import dev.shreyaspatil.ai.client.generativeai.type.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -68,8 +63,12 @@ class GeminiAiAssertionModel(
     val template = aiAssertionOptions.promptTemplate
 
     val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
+    val imageFilePath = when (aiAssertionOptions.assertionImageType) {
+      AiAssertionOptions.AssertionImageType.Comparison -> comparisonImageFilePath
+      AiAssertionOptions.AssertionImageType.Reference -> referenceImageFilePath
+    }
     val inputContent = content {
-      image(readByteArrayFromFile(comparisonImageFilePath))
+      image(readByteArrayFromFile(imageFilePath))
       val prompt = template.replace("INPUT_PROMPT", inputPrompt)
       text(prompt)
 
