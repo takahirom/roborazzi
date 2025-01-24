@@ -51,7 +51,7 @@ class OpenAiAiAssertionModel(
       install(Logging) {
         logger = object : Logger {
           override fun log(message: String) {
-            Logger.SIMPLE.log(message.replace(apiKey, "****"))
+            Logger.SIMPLE.log(message.hideApiKey(apiKey))
           }
         }
         level = LogLevel.ALL
@@ -137,7 +137,13 @@ class OpenAiAiAssertionModel(
       setBody(requestBody)
     }
     val bodyText = response.bodyAsText()
-    debugLog { "OpenAiAiModel: response: $bodyText" }
+    debugLog { "OpenAiAiModel: response: ${bodyText.hideApiKey(apiKey)}" }
+    if (response.status.value >= 400) {
+      throw AiAssertionApiException(
+        response.status.value, bodyText
+          .hideApiKey(apiKey)
+      )
+    }
     val responseBody: ChatCompletionResponse = json.decodeFromString(bodyText)
     return responseBody.choices.firstOrNull()?.message?.content ?: ""
   }
@@ -302,3 +308,7 @@ private data class OpenAiConditionResult(
   val fulfillmentPercent: Int,
   val explanation: String?,
 )
+
+private fun String.hideApiKey(key: String): String {
+  return this.replace(key.ifBlank { "****" }, "****")
+}
