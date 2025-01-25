@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,11 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.Dump
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziComposeActivityScenarioOption
 import com.github.takahirom.roborazzi.RoborazziComposeComposableOption
 import com.github.takahirom.roborazzi.RoborazziComposeOptions
+import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.activityTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.fontScale
@@ -37,6 +40,19 @@ class ComposeLambdaTest {
   fun captureComposeLambdaImage() {
     captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/manual_compose.png") {
       Text("Hello Compose!")
+    }
+  }
+
+  @OptIn(ExperimentalRoborazziApi::class)
+  @Test
+  fun captureComposeCollection() {
+    captureRoboImage(
+      filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_compose_collection.png",
+      roborazziOptions = RoborazziOptions(captureType = RoborazziOptions.CaptureType.Dump())
+    ) {
+      Row {
+        listOf("Hello", "Compose!").forEach { Text(it) }
+      }
     }
   }
 

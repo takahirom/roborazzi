@@ -2,6 +2,7 @@ package com.github.takahirom.roborazzi
 
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.AccessibilityAction
+import androidx.compose.ui.semantics.CollectionInfo
 import androidx.compose.ui.semantics.SemanticsConfiguration
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -135,6 +136,8 @@ private fun StringBuilder.appendConfigInfo(config: SemanticsConfiguration, inden
             }
         } else if (value is Iterable<*>) {
             append(value.sortedBy { it.toString() })
+        } else if (value is CollectionInfo) {
+          append("(rowCount=${value.rowCount}, columnCount=${value.columnCount})")
         } else {
             append(value)
         }
