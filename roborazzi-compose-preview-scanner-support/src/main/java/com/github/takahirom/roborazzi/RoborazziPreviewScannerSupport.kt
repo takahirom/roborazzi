@@ -6,7 +6,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.github.takahirom.roborazzi.annotations.RoboManualAdvance
+import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
@@ -212,7 +212,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
   override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
     val options = options()
     return AndroidComposablePreviewScanner().scanPackageTrees(*options.scanOptions.packages.toTypedArray())
-      .includeAnnotationInfoForAllOf(RoboManualAdvance::class.java).let {
+      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java).let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
         } else {
@@ -239,7 +239,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
         .apply {
           @Suppress("UNCHECKED_CAST")
           composeTestRule(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
-          preview.getAnnotation<RoboManualAdvance>()?.let {
+          preview.getAnnotation<RoboComposePreviewOptions>()?.let {
             manualAdvance(composeTestRule, it.advanceTimeMillis)
           }
         }
