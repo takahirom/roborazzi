@@ -1,6 +1,7 @@
 package com.github.takahirom.roborazzi
 
 import kotlinx.io.files.Path
+import kotlinx.io.files.SystemPathSeparator
 import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -103,23 +104,24 @@ data class CaptureResults(
     }
   }
 
+  private fun String.pathFrom(reportDirectoryPath: String): String {
+    val reportDirectory = Path(reportDirectoryPath)
+    val relativePath = Path(this).relativeTo(reportDirectory)
+    return relativePath.toString()
+  }
+
   private fun buildTable(
     title: String,
     anchor: String,
     images: List<CaptureResult>,
     reportDirectoryPath: String
   ): String {
-    fun String.pathFrom(reportDirectoryPath: String): String {
-      val reportDirectory = Path(reportDirectoryPath)
-      val relativePath = Path(this).relativeTo(reportDirectory)
-      return relativePath.toString()
-    }
     if (images.isEmpty()) return ""
     return buildString {
       append("<h3>$title (${images.size})</h3>")
-      val fileNameClass = "flow-text col s3"
+      val fileNameClass = "flow-text col s4"
       val fileNameStyle = "word-wrap: break-word; word-break: break-all;"
-      val imgClass = "col s7"
+      val imgClass = "col s6"
       val imgAttributes =
         "style=\"max-width: 100%; height: 100%; object-fit: cover;\" class=\"modal-trigger\""
       append("<table class=\"highlight\" id=\"$anchor\">")
@@ -132,7 +134,9 @@ data class CaptureResults(
       append("<tbody>")
       images.forEach { image ->
         append("<tr class=\"row\">")
-        append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">${image.reportText().lines().joinToString("<br>")}</td>")
+        append("<td class=\"$fileNameClass\" style=\"$fileNameStyle\">")
+        append(buildImageHeader(image, reportDirectoryPath))
+        append("</td>")
         append(
           "<td class=\"$imgClass\"><img $imgAttributes src=\"${
             image.reportFile.pathFrom(
@@ -145,7 +149,51 @@ data class CaptureResults(
       }
       append("</tbody>")
       append("</table>")
+    }
+  }
 
+  private fun buildImageHeader(
+    image: CaptureResult,
+    reportDirectoryPath: String
+  ): String {
+    return buildString {
+      // Split full file path into two parts (to highlight custom output directory paths)
+      val filePath = image.reportFile
+        .pathFrom(reportDirectoryPath)
+        .substringAfterLast("..$SystemPathSeparator")
+      val fileDirs = filePath.dropLastWhile { it != SystemPathSeparator }
+      val fileName = filePath.substringAfterLast(SystemPathSeparator)
+      append("<div><h6 class=\"grey-text darken-3\">$fileDirs</h6>$fileName</div>")
+
+      // Attach optional data as necessary
+      image.contextDataOrNull?.let {
+        append("<table>")
+        append("<thead><tr><th>")
+        append("<span class=\"new badge blue\" data-badge-caption=\"\">contextData</span>")
+        append("</th></tr></thead>")
+        append("<tbody>")
+        it.forEach { (key, value) ->
+          append("<tr><td><h6>$key</h6></td><td><h6>$value</h6></td></tr>")
+        }
+        append("</tbody>")
+        append("</table>")
+      }
+
+      image.aiAssertionResultsOrNull?.let {
+        append("<div><span class=\"new badge red\" data-badge-caption=\"\">aiAssertionResults</span></div>")
+
+        it.aiAssertionResults.forEach { assertionResult ->
+          append("<h6 class=\"grey-text darken-3\">")
+          append("* Condition:<br>")
+          append("  - assertionPrompt: ${assertionResult.assertionPrompt}<br>")
+          append("  - failIfNotFulfilled: ${assertionResult.failIfNotFulfilled}<br>")
+          append("  - requiredFulfillmentPercent: ${assertionResult.requiredFulfillmentPercent}<br>")
+          append("* Result:<br>")
+          append("  - fulfillmentPercent: ${assertionResult.fulfillmentPercent}<br>")
+          append("  - explanation: ${assertionResult.explanation}")
+          append("</h6>")
+        }
+      }
     }
   }
 
