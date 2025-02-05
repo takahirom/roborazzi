@@ -46,14 +46,6 @@ jobs:
                 artifacts/report.json
             retention-days: 7
 
-# Add the step below to upload Algolia indexes
-#        - name: Upload algolia-indexes
-#          uses: actions/upload-artifact@v3
-#          with:
-#            name: algolia-indexes
-#            path: artifacts/${{ env.ALGOLIA_ARTIFACT }}
-#            retention-days: 7
-
 # Add the job below and artifacts/report.json on Upload documentation step above if you want to fail the build when documentation contains errors
     test:
     # Requires build job results
