@@ -69,6 +69,22 @@ class AiManualTest {
       aiAssertionOptions = AiAssertionOptions(
         aiAssertionModel = object : AiAssertionOptions.AiAssertionModel {
           override fun assert(
+            assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+            aiAssertionOptions: AiAssertionOptions
+          ): AiAssertionResults {
+            return AiAssertionResults(
+              aiAssertionResults = aiAssertionOptions.aiAssertions.map { assertion ->
+                AiAssertionResult(
+                  assertionPrompt = assertion.assertionPrompt,
+                  fulfillmentPercent = fulfillmentPercent,
+                  requiredFulfillmentPercent = assertion.requiredFulfillmentPercent,
+                  failIfNotFulfilled = assertion.failIfNotFulfilled,
+                  explanation = "This is a manual test.",
+                )
+              }
+            )
+          }
+          override fun assert(
             referenceImageFilePath: String,
             comparisonImageFilePath: String,
             actualImageFilePath: String,
