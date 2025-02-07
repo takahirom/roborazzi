@@ -55,6 +55,7 @@ android {
 }
 
 dependencies {
+  implementation(project(":roborazzi-annotations"))
   implementation(libs.androidx.compose.material3)
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling)
@@ -65,6 +66,7 @@ dependencies {
   testImplementation(libs.junit)
   testImplementation(libs.robolectric)
   testImplementation(libs.composable.preview.scanner)
+  testImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.espresso.core)
 }
