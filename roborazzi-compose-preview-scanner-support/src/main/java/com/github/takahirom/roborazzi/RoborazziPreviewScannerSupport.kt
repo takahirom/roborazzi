@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -231,20 +232,23 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
     val name = roborazziDefaultNamingStrategy().generateOutputName(
       preview.declaringClass, createScreenshotIdFor(preview)
     )
-    val filePath = "$pathPrefix$name.${provideRoborazziContext().imageExtension}"
 
-    preview.captureRoboImage(
-      filePath = filePath,
-      roborazziComposeOptions = preview.toRoborazziComposeOptions().builder()
-        .apply {
-          @Suppress("UNCHECKED_CAST")
-          composeTestRule(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
-          preview.getAnnotation<RoboComposePreviewOptions>()?.let {
-            manualAdvance(composeTestRule, it.advanceTimeMillis)
-          }
-        }
-        .build()
-    )
+    val options: RoboComposePreviewOptions =
+      (preview.getAnnotation<RoboComposePreviewOptions>() ?: RoboComposePreviewOptions())
+    options.variations()
+      .forEach { optionVariation: RoboComposePreviewOptionVariation ->
+        val filePath = "$pathPrefix$name${optionVariation.nameWithPrefix()}.${provideRoborazziContext().imageExtension}"
+        preview.captureRoboImage(
+          filePath = filePath,
+          roborazziComposeOptions = preview.toRoborazziComposeOptions().builder()
+            .apply {
+              @Suppress("UNCHECKED_CAST")
+              composeTestRule(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
+              manualAdvance(composeTestRule, optionVariation.manualClockOptions.advanceTimeMillis)
+            }
+            .build()
+        )
+      }
   }
 
   override fun options(): ComposePreviewTester.Options {
@@ -258,6 +262,25 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
 
   private fun createScreenshotIdFor(preview: ComposablePreview<AndroidPreviewInfo>) =
     AndroidPreviewScreenshotIdBuilder(preview).ignoreClassName().build()
+}
+
+@InternalRoborazziApi
+internal class RoboComposePreviewOptionVariation(
+  val manualClockOptions: ManualClockOptions = ManualClockOptions()
+) {
+  fun nameWithPrefix(): String {
+    return buildString {
+      if (manualClockOptions.advanceTimeMillis > 0) {
+        append("_TIME_${manualClockOptions.advanceTimeMillis}ms")
+      }
+    }
+  }
+}
+
+
+internal fun RoboComposePreviewOptions.variations(): List<RoboComposePreviewOptionVariation> {
+  return manualClockOptions.map { RoboComposePreviewOptionVariation(it) }
+    .ifEmpty { listOf(RoboComposePreviewOptionVariation()) }
 }
 
 @InternalRoborazziApi
