@@ -52,11 +52,25 @@ INPUT_PROMPT
       aiAssertionOptions: AiAssertionOptions
     ): AiAssertionResults
 
+    fun assert(
+      assertionTargetImages: AssertionTargetImages,
+      aiAssertionOptions: AiAssertionOptions
+    ): AiAssertionResults
+
     companion object {
       const val DefaultMaxOutputTokens = 300
       const val DefaultTemperature = 0.4F
     }
   }
+
+  class AssertionTargetImages(
+    val images: List<AssertionTargetImage>,
+  )
+
+  class AssertionTargetImage(
+    val filePath: String,
+  )
+
 
   sealed interface AssertionImageType {
     class Comparison : AssertionImageType

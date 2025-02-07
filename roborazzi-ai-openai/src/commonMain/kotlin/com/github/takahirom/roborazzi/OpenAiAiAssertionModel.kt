@@ -2,16 +2,25 @@ package com.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultMaxOutputTokens
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
+import com.github.takahirom.roborazzi.AiAssertionOptions.AssertionTargetImage
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
-import io.ktor.client.*
-import io.ktor.client.plugins.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.HttpTimeout.Plugin.INFINITE_TIMEOUT_MS
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.logging.SIMPLE
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
@@ -73,8 +82,48 @@ class OpenAiAiAssertionModel(
       is AiAssertionOptions.AssertionImageType.Comparison -> comparisonImageFilePath
       is AiAssertionOptions.AssertionImageType.Actual -> actualImageFilePath
     }
-    val imageBytes = readByteArrayFromFile(imageFilePath)
-    val imageBase64 = imageBytes.encodeBase64()
+    return assert(
+      assertionTargetImages = AiAssertionOptions.AssertionTargetImages(
+        listOf(
+          AssertionTargetImage(
+            imageFilePath
+          )
+        )
+      ),
+      systemPrompt = systemPrompt,
+      template = template,
+      inputPrompt = inputPrompt,
+      aiAssertionOptions = aiAssertionOptions
+    )
+  }
+
+  override fun assert(
+    assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+    aiAssertionOptions: AiAssertionOptions
+  ): AiAssertionResults {
+    val systemPrompt = aiAssertionOptions.systemPrompt
+    val template = aiAssertionOptions.promptTemplate
+    val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
+    return assert(
+      assertionTargetImages = assertionTargetImages,
+      systemPrompt = systemPrompt,
+      template = template,
+      inputPrompt = inputPrompt,
+      aiAssertionOptions = aiAssertionOptions
+    )
+  }
+
+  private fun assert(
+    assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+    systemPrompt: String,
+    template: String,
+    inputPrompt: String,
+    aiAssertionOptions: AiAssertionOptions
+  ): AiAssertionResults {
+    val imageBase64s = assertionTargetImages.images.map { image ->
+      val imageBytes = readByteArrayFromFile(image.filePath)
+      imageBytes.encodeBase64()
+    }
     val messages = listOf(
       Message(
         role = "system",
@@ -92,13 +141,12 @@ class OpenAiAiAssertionModel(
             type = "text",
             text = template.replace("INPUT_PROMPT", inputPrompt)
           ),
+        ) + imageBase64s.map { imageBase64 ->
           Content(
             type = "image_url",
-            imageUrl = ImageUrl(
-              url = "data:image/png;base64,$imageBase64"
-            )
+            imageUrl = ImageUrl(url = "data:image/png;base64,$imageBase64")
           )
-        )
+        }
       )
     )
     val responseText = runBlocking {

@@ -4,7 +4,12 @@ import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultMaxOutputTokens
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
-import dev.shreyaspatil.ai.client.generativeai.type.*
+import dev.shreyaspatil.ai.client.generativeai.type.FunctionType
+import dev.shreyaspatil.ai.client.generativeai.type.GenerationConfig
+import dev.shreyaspatil.ai.client.generativeai.type.PlatformImage
+import dev.shreyaspatil.ai.client.generativeai.type.Schema
+import dev.shreyaspatil.ai.client.generativeai.type.content
+import dev.shreyaspatil.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -25,6 +30,45 @@ class GeminiAiAssertionModel(
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults {
     val systemPrompt = aiAssertionOptions.systemPrompt
+
+    val template = aiAssertionOptions.promptTemplate
+
+    val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
+    val imageFilePath = when (aiAssertionOptions.assertionImageType) {
+      is AiAssertionOptions.AssertionImageType.Comparison -> comparisonImageFilePath
+      is AiAssertionOptions.AssertionImageType.Actual -> actualImageFilePath
+    }
+    return assert(
+      AiAssertionOptions.AssertionTargetImages(listOf(AiAssertionOptions.AssertionTargetImage(imageFilePath))),
+      template,
+      inputPrompt,
+      systemPrompt,
+      aiAssertionOptions
+    )
+  }
+
+  private fun assert(
+    assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+    template: String,
+    inputPrompt: String,
+    systemPrompt: String,
+    aiAssertionOptions: AiAssertionOptions
+  ): AiAssertionResults {
+    val imageByteArrays =
+      assertionTargetImages.images.map { image -> readByteArrayFromFile(image.filePath) }
+
+    val inputContent = content {
+      imageByteArrays.forEach { imageByteArray ->
+        image(imageByteArray)
+      }
+      val prompt = template.replace("INPUT_PROMPT", inputPrompt)
+      text(prompt)
+
+      debugLog {
+        "RoborazziAi: prompt:$prompt"
+      }
+    }
+
     val generativeModel = GenerativeModel(
       modelName = modelName,
       apiKey = apiKey,
@@ -59,24 +103,6 @@ class GeminiAiAssertionModel(
         generationConfigBuilder()
       },
     )
-
-    val template = aiAssertionOptions.promptTemplate
-
-    val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
-    val imageFilePath = when (aiAssertionOptions.assertionImageType) {
-      is AiAssertionOptions.AssertionImageType.Comparison -> comparisonImageFilePath
-      is AiAssertionOptions.AssertionImageType.Actual -> actualImageFilePath
-    }
-    val inputContent = content {
-      image(readByteArrayFromFile(imageFilePath))
-      val prompt = template.replace("INPUT_PROMPT", inputPrompt)
-      text(prompt)
-
-      debugLog {
-        "RoborazziAi: prompt:$prompt"
-      }
-    }
-
     val response = runBlocking { generativeModel.generateContent(inputContent) }
     debugLog {
       "RoborazziAi: response: ${response.text}"
@@ -101,6 +127,12 @@ class GeminiAiAssertionModel(
         )
       }
     )
+  }
+
+  override fun assert(
+    assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+    aiAssertionOptions: AiAssertionOptions
+  ): AiAssertionResults {
   }
 }
 
