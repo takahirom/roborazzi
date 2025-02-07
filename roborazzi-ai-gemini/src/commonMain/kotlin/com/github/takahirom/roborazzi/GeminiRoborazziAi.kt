@@ -133,6 +133,16 @@ class GeminiAiAssertionModel(
     assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults {
+    val systemPrompt = aiAssertionOptions.systemPrompt
+    val template = aiAssertionOptions.promptTemplate
+    val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
+    return assert(
+      assertionTargetImages,
+      template,
+      inputPrompt,
+      systemPrompt,
+      aiAssertionOptions
+    )
   }
 }
 
