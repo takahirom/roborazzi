@@ -5,6 +5,7 @@ import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Compan
 import com.github.takahirom.roborazzi.AiAssertionOptions.TargetImage
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.HttpTimeout.Plugin.INFINITE_TIMEOUT_MS
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -21,6 +22,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
@@ -179,19 +181,23 @@ class OpenAiAiAssertionModel(
       ),
       seed = seed
     )
-    val response: HttpResponse = httpClient.post(baseUrl + "chat/completions") {
-      requestBuilderModifier()
-      contentType(ContentType.Application.Json)
-      setBody(requestBody)
+    val bodyText = retry(6) {
+      val response = httpClient.post(baseUrl + "chat/completions") {
+        requestBuilderModifier()
+        contentType(ContentType.Application.Json)
+        setBody(requestBody)
+      }
+      val bodyText = response.bodyAsText()
+      if (response.status.value >= 400) {
+        throw AiAssertionApiException(
+          response.status.value, bodyText
+            .hideApiKey(apiKey)
+        )
+      }
+      bodyText
     }
-    val bodyText = response.bodyAsText()
     debugLog { "OpenAiAiModel: response: ${bodyText.hideApiKey(apiKey)}" }
-    if (response.status.value >= 400) {
-      throw AiAssertionApiException(
-        response.status.value, bodyText
-          .hideApiKey(apiKey)
-      )
-    }
+
     val responseBody: ChatCompletionResponse = json.decodeFromString(bodyText)
     return responseBody.choices.firstOrNull()?.message?.content ?: ""
   }
@@ -231,6 +237,30 @@ class OpenAiAiAssertionModel(
   }
 }
 
+private suspend fun <T> retry(
+  times: Int,
+  initialDelay: Long = 1000,
+  maxDelay: Long = 32000,
+  factor: Double = 2.0,
+  block: suspend () -> T
+): T {
+  var currentDelay = initialDelay
+  repeat(times) { i ->
+    try {
+      return block()
+    } catch (e: AiAssertionApiException) {
+      if (e.statusCode == 429) {
+        // 429 Too Many Requests
+        roborazziReportLog("Retrying in ${currentDelay}ms due to 429 response")
+        delay(currentDelay)
+        currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
+      } else {
+        throw e
+      }
+    }
+  }
+  return block() // last attempt
+}
 
 private fun parseOpenAiResponse(
   responseText: String,
