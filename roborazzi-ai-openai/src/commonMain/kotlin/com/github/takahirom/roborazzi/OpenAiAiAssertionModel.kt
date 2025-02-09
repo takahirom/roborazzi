@@ -2,7 +2,7 @@ package com.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultMaxOutputTokens
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
-import com.github.takahirom.roborazzi.AiAssertionOptions.AssertionTargetImage
+import com.github.takahirom.roborazzi.AiAssertionOptions.TargetImage
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -83,9 +83,9 @@ class OpenAiAiAssertionModel(
       is AiAssertionOptions.AssertionImageType.Actual -> actualImageFilePath
     }
     return assert(
-      assertionTargetImages = AiAssertionOptions.AssertionTargetImages(
+      targetImages = AiAssertionOptions.TargetImages(
         listOf(
-          AssertionTargetImage(
+          TargetImage(
             imageFilePath
           )
         )
@@ -98,14 +98,14 @@ class OpenAiAiAssertionModel(
   }
 
   override fun assert(
-    assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+    targetImages: AiAssertionOptions.TargetImages,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults {
     val systemPrompt = aiAssertionOptions.systemPrompt
     val template = aiAssertionOptions.promptTemplate
     val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
     return assert(
-      assertionTargetImages = assertionTargetImages,
+      targetImages = targetImages,
       systemPrompt = systemPrompt,
       template = template,
       inputPrompt = inputPrompt,
@@ -114,13 +114,13 @@ class OpenAiAiAssertionModel(
   }
 
   private fun assert(
-    assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+    targetImages: AiAssertionOptions.TargetImages,
     systemPrompt: String,
     template: String,
     inputPrompt: String,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults {
-    val imageBase64s = assertionTargetImages.images.map { image ->
+    val imageBase64s = targetImages.images.map { image ->
       val imageBytes = readByteArrayFromFile(image.filePath)
       imageBytes.encodeBase64()
     }

@@ -39,7 +39,7 @@ class GeminiAiAssertionModel(
       is AiAssertionOptions.AssertionImageType.Actual -> actualImageFilePath
     }
     return assert(
-      AiAssertionOptions.AssertionTargetImages(listOf(AiAssertionOptions.AssertionTargetImage(imageFilePath))),
+      AiAssertionOptions.TargetImages(listOf(AiAssertionOptions.TargetImage(imageFilePath))),
       template,
       inputPrompt,
       systemPrompt,
@@ -48,14 +48,14 @@ class GeminiAiAssertionModel(
   }
 
   private fun assert(
-    assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+    targetImages: AiAssertionOptions.TargetImages,
     template: String,
     inputPrompt: String,
     systemPrompt: String,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults {
     val imageByteArrays =
-      assertionTargetImages.images.map { image -> readByteArrayFromFile(image.filePath) }
+      targetImages.images.map { image -> readByteArrayFromFile(image.filePath) }
 
     val inputContent = content {
       imageByteArrays.forEach { imageByteArray ->
@@ -130,14 +130,14 @@ class GeminiAiAssertionModel(
   }
 
   override fun assert(
-    assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+    targetImages: AiAssertionOptions.TargetImages,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults {
     val systemPrompt = aiAssertionOptions.systemPrompt
     val template = aiAssertionOptions.promptTemplate
     val inputPrompt = aiAssertionOptions.inputPrompt(aiAssertionOptions)
     return assert(
-      assertionTargetImages,
+      targetImages,
       template,
       inputPrompt,
       systemPrompt,

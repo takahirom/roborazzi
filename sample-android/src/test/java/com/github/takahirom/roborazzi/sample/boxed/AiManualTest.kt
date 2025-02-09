@@ -69,7 +69,7 @@ class AiManualTest {
       aiAssertionOptions = AiAssertionOptions(
         aiAssertionModel = object : AiAssertionOptions.AiAssertionModel {
           override fun assert(
-            assertionTargetImages: AiAssertionOptions.AssertionTargetImages,
+            targetImages: AiAssertionOptions.TargetImages,
             aiAssertionOptions: AiAssertionOptions
           ): AiAssertionResults {
             return AiAssertionResults(

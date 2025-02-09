@@ -53,7 +53,7 @@ INPUT_PROMPT
     ): AiAssertionResults
 
     fun assert(
-      assertionTargetImages: AssertionTargetImages,
+      targetImages: TargetImages,
       aiAssertionOptions: AiAssertionOptions
     ): AiAssertionResults
 
@@ -63,11 +63,11 @@ INPUT_PROMPT
     }
   }
 
-  class AssertionTargetImages(
-    val images: List<AssertionTargetImage>,
+  class TargetImages(
+    val images: List<TargetImage>,
   )
 
-  class AssertionTargetImage(
+  class TargetImage(
     val filePath: String,
   )
 
