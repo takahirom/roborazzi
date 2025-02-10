@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.AiAssertionOptions
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.TargetImages
 import com.github.takahirom.roborazzi.AiAssertionResult
 import com.github.takahirom.roborazzi.AiAssertionResults
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
@@ -68,6 +69,22 @@ class AiManualTest {
     compareOptions = RoborazziOptions.CompareOptions(
       aiAssertionOptions = AiAssertionOptions(
         aiAssertionModel = object : AiAssertionOptions.AiAssertionModel {
+          override fun assert(
+            targetImages: TargetImages,
+            aiAssertionOptions: AiAssertionOptions
+          ): AiAssertionResults {
+            return AiAssertionResults(
+              aiAssertionResults = aiAssertionOptions.aiAssertions.map { assertion ->
+                AiAssertionResult(
+                  assertionPrompt = assertion.assertionPrompt,
+                  fulfillmentPercent = fulfillmentPercent,
+                  requiredFulfillmentPercent = assertion.requiredFulfillmentPercent,
+                  failIfNotFulfilled = assertion.failIfNotFulfilled,
+                  explanation = "This is a manual test.",
+                )
+              }
+            )
+          }
           override fun assert(
             referenceImageFilePath: String,
             comparisonImageFilePath: String,
