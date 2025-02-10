@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.AiAssertionOptions
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.TargetImages
 import com.github.takahirom.roborazzi.AiAssertionResult
 import com.github.takahirom.roborazzi.AiAssertionResults
 import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
@@ -69,7 +70,7 @@ class AiManualTest {
       aiAssertionOptions = AiAssertionOptions(
         aiAssertionModel = object : AiAssertionOptions.AiAssertionModel {
           override fun assert(
-            targetImages: AiAssertionOptions.TargetImages,
+            targetImages: TargetImages,
             aiAssertionOptions: AiAssertionOptions
           ): AiAssertionResults {
             return AiAssertionResults(

@@ -57,19 +57,19 @@ INPUT_PROMPT
       aiAssertionOptions: AiAssertionOptions
     ): AiAssertionResults
 
+    class TargetImages(
+      val images: List<TargetImage>,
+    )
+
+    class TargetImage(
+      val filePath: String,
+    )
+
     companion object {
       const val DefaultMaxOutputTokens = 300
       const val DefaultTemperature = 0.4F
     }
   }
-
-  class TargetImages(
-    val images: List<TargetImage>,
-  )
-
-  class TargetImage(
-    val filePath: String,
-  )
 
 
   sealed interface AssertionImageType {

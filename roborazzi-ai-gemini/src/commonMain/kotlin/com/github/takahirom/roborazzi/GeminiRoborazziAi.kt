@@ -3,6 +3,8 @@ package com.github.takahirom.roborazzi
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultMaxOutputTokens
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.TargetImage
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.TargetImages
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
 import dev.shreyaspatil.ai.client.generativeai.type.FunctionType
 import dev.shreyaspatil.ai.client.generativeai.type.GenerationConfig
@@ -39,16 +41,16 @@ class GeminiAiAssertionModel(
       is AiAssertionOptions.AssertionImageType.Actual -> actualImageFilePath
     }
     return assert(
-      AiAssertionOptions.TargetImages(listOf(AiAssertionOptions.TargetImage(imageFilePath))),
-      template,
-      inputPrompt,
-      systemPrompt,
-      aiAssertionOptions
+      targetImages = TargetImages(listOf(TargetImage(imageFilePath))),
+      template = template,
+      inputPrompt = inputPrompt,
+      systemPrompt = systemPrompt,
+      aiAssertionOptions = aiAssertionOptions
     )
   }
 
   private fun assert(
-    targetImages: AiAssertionOptions.TargetImages,
+    targetImages: TargetImages,
     template: String,
     inputPrompt: String,
     systemPrompt: String,
@@ -130,7 +132,7 @@ class GeminiAiAssertionModel(
   }
 
   override fun assert(
-    targetImages: AiAssertionOptions.TargetImages,
+    targetImages: TargetImages,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults {
     val systemPrompt = aiAssertionOptions.systemPrompt

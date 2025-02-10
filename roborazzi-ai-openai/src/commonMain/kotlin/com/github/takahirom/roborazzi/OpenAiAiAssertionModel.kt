@@ -2,7 +2,8 @@ package com.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultMaxOutputTokens
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Companion.DefaultTemperature
-import com.github.takahirom.roborazzi.AiAssertionOptions.TargetImage
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.TargetImage
+import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.TargetImages
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -83,7 +84,7 @@ class OpenAiAiAssertionModel(
       is AiAssertionOptions.AssertionImageType.Actual -> actualImageFilePath
     }
     return assert(
-      targetImages = AiAssertionOptions.TargetImages(
+      targetImages = TargetImages(
         listOf(
           TargetImage(
             imageFilePath
@@ -98,7 +99,7 @@ class OpenAiAiAssertionModel(
   }
 
   override fun assert(
-    targetImages: AiAssertionOptions.TargetImages,
+    targetImages: TargetImages,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults {
     val systemPrompt = aiAssertionOptions.systemPrompt
@@ -114,7 +115,7 @@ class OpenAiAiAssertionModel(
   }
 
   private fun assert(
-    targetImages: AiAssertionOptions.TargetImages,
+    targetImages: TargetImages,
     systemPrompt: String,
     template: String,
     inputPrompt: String,
