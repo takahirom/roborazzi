@@ -245,7 +245,7 @@ private suspend fun <T> retry(
   block: suspend () -> T
 ): T {
   var currentDelay = initialDelay
-  repeat(times) { i ->
+  repeat(times) {
     try {
       return block()
     } catch (e: AiAssertionApiException) {
