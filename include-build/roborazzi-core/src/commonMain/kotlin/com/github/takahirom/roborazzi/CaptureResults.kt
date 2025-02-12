@@ -92,16 +92,27 @@ data class CaptureResults(
           "<ul class=\"tabs\">"
       )
       tabs.forEachIndexed { tabIndex, tab ->
+        val updatedKey = cleanId(tab.id)
         // <li class="tab col s3"><a href="#test1">Test 1</a></li>
         val activeClass = if (tabIndex == 0) """class="active" """ else ""
-        append("""<li class="tab"><a $activeClass href="#${tab.id}">${tab.title}</a></li>""")
+        append("""<li class="tab"><a $activeClass href="#${updatedKey}">${tab.title}</a></li>""")
       }
       append("</ul>\n</div>")
       tabs.forEach { tab ->
-        append("""<div id="${tab.id}" class="col s12" style="display: none;">${tab.contents}</div>""")
+        val updatedKey = cleanId(tab.id)
+        append("""<div id="$updatedKey" class="col s12" style="display: none;">${tab.contents}</div>""")
       }
       append("</div>")
     }
+  }
+
+  /**
+   * Function which remove all potential special characters from id
+   * which will break HTML result
+   */
+  private fun cleanId(dynamicString: String): String {
+    val stringWithoutSpace = Regex("\\s+").replace(dynamicString, "-")
+    return Regex("[^\\w.:-]").replace(stringWithoutSpace, "")
   }
 
   private fun String.pathFrom(reportDirectoryPath: String): String {
