@@ -556,11 +556,11 @@ private fun BufferedImage.scale(scale: Double): BufferedImage {
 }
 
 internal fun getFont(style: Int, size: Int): Font {
-  return if (hasCourierNewFont) {
-    Font("Courier New", style, size)
-  } else {
-    Font(Font.MONOSPACED, style, size)
-  }
+//  return if (hasCourierNewFont) {
+//    Font("Courier New", style, size)
+//  } else {
+    return Font(Font.MONOSPACED, style, size)
+//  }
 }
 
 internal val hasCourierNewFont: Boolean by lazy {
