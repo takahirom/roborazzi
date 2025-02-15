@@ -559,12 +559,13 @@ internal fun getFont(style: Int, size: Int): Font {
   return if (hasCourierNewFont) {
     Font("Courier New", style, size)
   } else {
-    Font(null, style, size)
+    Font(Font.MONOSPACED, style, size)
   }
 }
 
 internal val hasCourierNewFont: Boolean by lazy {
-  GraphicsEnvironment.getLocalGraphicsEnvironment().availableFontFamilyNames.contains("Courier New")
+  GraphicsEnvironment.getLocalGraphicsEnvironment()
+    .availableFontFamilyNames.any { it.equals("Courier New", ignoreCase = true) }
 }
 
 private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {
