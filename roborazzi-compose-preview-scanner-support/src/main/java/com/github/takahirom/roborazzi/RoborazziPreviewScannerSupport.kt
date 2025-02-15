@@ -6,7 +6,6 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -234,7 +233,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
     )
 
     val options: RoboComposePreviewOptions =
-      (preview.getAnnotation<RoboComposePreviewOptions>() ?: RoboComposePreviewOptions())
+      (preview.getAnnotation<RoboComposePreviewOptions>() ?: RoboComposePreviewOptions(0))
     options.variations()
       .forEach { optionVariation: RoboComposePreviewOptionVariation ->
         val filePath = "$pathPrefix$name${optionVariation.nameWithPrefix()}.${provideRoborazziContext().imageExtension}"
@@ -244,7 +243,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
             .apply {
               @Suppress("UNCHECKED_CAST")
               composeTestRule(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
-              manualAdvance(composeTestRule, optionVariation.manualClockOptions.advanceTimeMillis)
+              manualAdvance(composeTestRule, optionVariation.time)
             }
             .build()
         )
@@ -266,12 +265,12 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
 
 @InternalRoborazziApi
 internal class RoboComposePreviewOptionVariation(
-  val manualClockOptions: ManualClockOptions = ManualClockOptions()
+  val time: Long,
 ) {
   fun nameWithPrefix(): String {
     return buildString {
-      if (manualClockOptions.advanceTimeMillis > 0) {
-        append("_TIME_${manualClockOptions.advanceTimeMillis}ms")
+      if (time > 0) {
+        append("_TIME_${time}ms")
       }
     }
   }
@@ -279,8 +278,7 @@ internal class RoboComposePreviewOptionVariation(
 
 
 internal fun RoboComposePreviewOptions.variations(): List<RoboComposePreviewOptionVariation> {
-  return manualClockOptions.map { RoboComposePreviewOptionVariation(it) }
-    .ifEmpty { listOf(RoboComposePreviewOptionVariation()) }
+  return listOf(RoboComposePreviewOptionVariation(manualClockOptions))
 }
 
 @InternalRoborazziApi
