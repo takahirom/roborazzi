@@ -11,6 +11,7 @@ import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics2D
+import java.awt.GraphicsEnvironment
 import java.awt.Rectangle
 import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
@@ -237,9 +238,9 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
   }
 
   override fun differ(
-      other: RoboCanvas,
-      resizeScale: Double,
-      imageComparator: ImageComparator
+    other: RoboCanvas,
+    resizeScale: Double,
+    imageComparator: ImageComparator
   ): ImageComparator.ComparisonResult {
     other as AwtRoboCanvas
     val otherImage = other.bufferedImage
@@ -443,7 +444,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
               // fill with 4dp margin
               val textMargin = (4 * oneDpPx).toInt()
               // Set size to 12dp
-              val font = Font("Courier New", Font.BOLD, fontSize)
+              val font = getFont(Font.BOLD, fontSize)
               val textLayout = TextLayout(text, font, comparisonImageGraphics.fontRenderContext)
               val bounds = textLayout.bounds
               val rect = Rectangle(
@@ -519,7 +520,8 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       for (x in 0 until width) {
         for (y in 0 until height) {
           if (x >= originalImage.width || y >= originalImage.height
-            || x >= comparedImage.width || y >= comparedImage.height) {
+            || x >= comparedImage.width || y >= comparedImage.height
+          ) {
             diffImage.setRGB(x, y, -0x10000)
             continue
           }
@@ -553,9 +555,21 @@ private fun BufferedImage.scale(scale: Double): BufferedImage {
   return after
 }
 
+internal fun getFont(style: Int, size: Int): Font {
+  return if (hasCourierNewFont) {
+    Font("Courier New", style, size)
+  } else {
+    Font(null, style, size)
+  }
+}
+
+internal val hasCourierNewFont: Boolean by lazy {
+  GraphicsEnvironment.getLocalGraphicsEnvironment().availableFontFamilyNames.contains("Courier New")
+}
+
 private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {
   val graphics = createGraphics()
-  graphics.font = Font("Courier New", Font.BOLD, 12)
+  graphics.font = getFont(Font.BOLD, 12)
   val result = block(graphics)
   graphics.dispose()
   return result
