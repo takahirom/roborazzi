@@ -213,7 +213,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
   override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
     val options = options()
     return AndroidComposablePreviewScanner().scanPackageTrees(*options.scanOptions.packages.toTypedArray())
-      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java).let {
+      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java, ManualClockOptions::class.java).let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
         } else {
