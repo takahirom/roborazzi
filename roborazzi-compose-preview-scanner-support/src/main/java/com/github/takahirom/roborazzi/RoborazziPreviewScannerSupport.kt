@@ -17,7 +17,6 @@ import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
 import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
-import sergio.sastre.composable.preview.scanner.core.preview.getAnnotation
 
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
@@ -233,8 +232,14 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
       preview.declaringClass, createScreenshotIdFor(preview)
     )
 
-    val options: RoboComposePreviewOptions =
-      (preview.getAnnotation<RoboComposePreviewOptions>() ?: RoboComposePreviewOptions())
+    // FIXME
+    // This cause IllegalArgumentException
+    // Please refer to https://github.com/takahirom/roborazzi/pull/633#discussion_r1946472486
+//    val options: RoboComposePreviewOptions =
+//      (preview.getAnnotation<RoboComposePreviewOptions>() ?: RoboComposePreviewOptions())
+    val options = Class.forName(preview.declaringClass).declaredMethods
+      .firstOrNull { it.name == preview.methodName }
+      ?.getAnnotation<RoboComposePreviewOptions>(RoboComposePreviewOptions::class.java) ?: RoboComposePreviewOptions()
     options.variations()
       .forEach { optionVariation: RoboComposePreviewOptionVariation ->
         val filePath = "$pathPrefix$name${optionVariation.nameWithPrefix()}.${provideRoborazziContext().imageExtension}"
