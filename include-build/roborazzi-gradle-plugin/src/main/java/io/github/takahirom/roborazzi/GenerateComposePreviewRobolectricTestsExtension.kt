@@ -158,6 +158,11 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     File(directory, "$className.kt").writeText(
       """
             package $packageName
+            import androidx.activity.ComponentActivity
+            import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+            import androidx.compose.ui.test.junit4.ComposeContentTestRule
+            import androidx.compose.ui.test.junit4.createComposeRule
+            import androidx.test.ext.junit.rules.ActivityScenarioRule
             import org.junit.Rule
             import org.junit.Test
             import org.junit.runner.RunWith
@@ -166,11 +171,8 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
             import org.robolectric.ParameterizedRobolectricTestRunner
             import org.robolectric.annotation.Config
             import org.robolectric.annotation.GraphicsMode
-            import com.github.takahirom.roborazzi.*
             import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
-            import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
-            import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
-            import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
+            import com.github.takahirom.roborazzi.*
 
 
             @RunWith(ParameterizedRobolectricTestRunner::class)
@@ -181,10 +183,18 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
             ) {
                 private val tester = getComposePreviewTester("$testerQualifiedClassNameString")
                 private val testLifecycleOptions = tester.options().testLifecycleOptions
+                val composeTestRule: ComposeContentTestRule by lazy {
+                  if (testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
+                    testLifecycleOptions.composeRuleFactory()
+                  } else {
+                    createComposeRule()
+                  }
+                }
+                @Suppress("UNCHECKED_CAST")
                 @get:Rule
                 val rule = RuleChain.outerRule(
-                  if(testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
-                    testLifecycleOptions.testRuleFactory()
+                  if (testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
+                    testLifecycleOptions.testRuleFactory(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
                   } else {
                     object : TestWatcher() {}
                   }
@@ -194,7 +204,15 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 $robolectricConfigString
                 @Test
                 fun test() {
-                    tester.test(preview)
+                  tester.test(
+                    testParameter = if (testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
+                      @Suppress("UNCHECKED_CAST")
+                      ComposePreviewTester.TestParameter.JUnit4TestParameter(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
+                    } else {
+                      ComposePreviewTester.TestParameter.DefaultTestParameter(composeTestRule)
+                    },
+                    preview = preview
+                  )
                 }
                 
                 companion object {
