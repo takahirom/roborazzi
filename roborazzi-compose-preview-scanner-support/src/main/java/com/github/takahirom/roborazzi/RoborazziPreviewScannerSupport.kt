@@ -1,5 +1,14 @@
 package com.github.takahirom.roborazzi
 
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.github.takahirom.roborazzi.annotations.ManualClockOptions
+import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
+import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
 import org.robolectric.RuntimeEnvironment.setQualifiers
@@ -13,7 +22,7 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   filePath: String,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  roborazziComposeOptions: RoborazziComposeOptions = this.toRoborazziComposeOptions()
+  roborazziComposeOptions: RoborazziComposeOptions = this.toRoborazziComposeOptions(),
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   val composablePreview = this
@@ -26,12 +35,10 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): RoborazziComposeOptions {
   return RoborazziComposeOptions {
     size(
-      widthDp = previewInfo.widthDp,
-      heightDp = previewInfo.heightDp
+      widthDp = previewInfo.widthDp, heightDp = previewInfo.heightDp
     )
     background(
-      showBackground = previewInfo.showBackground,
-      backgroundColor = previewInfo.backgroundColor
+      showBackground = previewInfo.showBackground, backgroundColor = previewInfo.backgroundColor
     )
     locale(previewInfo.locale)
     uiMode(previewInfo.uiMode)
@@ -78,6 +85,53 @@ data class RoborazziComposePreviewDeviceOption(private val previewDevice: String
   }
 }
 
+@ExperimentalRoborazziApi
+fun RoborazziComposeOptions.Builder.composeTestRule(composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>): RoborazziComposeOptions.Builder {
+  return addOption(RoborazziComposeTestRuleOption(composeTestRule))
+}
+
+@ExperimentalRoborazziApi
+data class RoborazziComposeTestRuleOption(private val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) :
+  RoborazziComposeActivityScenarioCreatorOption {
+  override fun createScenario(chain: () -> ActivityScenario<out ComponentActivity>): ActivityScenario<out ComponentActivity> {
+    return composeTestRule.activityRule.scenario
+  }
+}
+
+@ExperimentalRoborazziApi
+fun RoborazziComposeOptions.Builder.manualAdvance(
+  composeTestRule: ComposeTestRule,
+  advanceTimeMillis: Long
+): RoborazziComposeOptions.Builder {
+  return addOption(RoborazziComposeManualAdvancePreviewOption(composeTestRule, advanceTimeMillis))
+}
+
+@ExperimentalRoborazziApi
+data class RoborazziComposeManualAdvancePreviewOption(
+  private val composeTestRule: ComposeTestRule,
+  private val advanceTimeMillis: Long
+) :
+  RoborazziComposeSetupOption, RoborazziComposeCaptureOption {
+  override fun configure() {
+    if (advanceTimeMillis > 0L) {
+      composeTestRule.mainClock.autoAdvance = false
+    }
+  }
+
+  override fun beforeCapture() {
+    if (advanceTimeMillis > 0L) {
+      composeTestRule.mainClock.advanceTimeBy(advanceTimeMillis)
+    }
+  }
+
+  override fun afterCapture() {
+    if (advanceTimeMillis > 0L) {
+      composeTestRule.mainClock.autoAdvance = true
+    }
+  }
+}
+
+
 /**
  * ComposePreviewTester is an interface that allows you to define a custom test for a Composable preview.
  * The class that implements this interface should have a parameterless constructor.
@@ -91,13 +145,29 @@ interface ComposePreviewTester<T : Any> {
     val scanOptions: ScanOptions = ScanOptions(emptyList()),
   ) {
     interface TestLifecycleOptions
+    @Suppress("UNCHECKED_CAST")
     data class JUnit4TestLifecycleOptions(
+      val composeRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> = { createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> },
       /**
        * The TestRule factory to be used for the generated tests.
        * You can use this to add custom behavior to the generated tests.
        */
       // Used from generated tests
-      @Suppress("unused") val testRuleFactory: () -> TestRule = { object : TestWatcher() {} },
+      @Suppress("unused") val testRuleFactory: (AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) -> TestRule = object :
+          (AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) -> TestRule {
+        override fun invoke(composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>): TestRule {
+          return RuleChain.outerRule(
+            RuleChain
+              .outerRule(object : TestWatcher() {
+                override fun starting(description: org.junit.runner.Description?) {
+                  super.starting(description)
+                  registerActivityToRobolectricIfNeeded()
+                }
+              })
+              .around(composeTestRule)
+          )
+        }
+      }
     ) : TestLifecycleOptions
 
     data class ScanOptions(
@@ -126,13 +196,24 @@ interface ComposePreviewTester<T : Any> {
    */
   fun previews(): List<ComposablePreview<T>>
 
+  sealed class TestParameter {
+    internal val composeRule: ComposeTestRule
+      get() = when (this) {
+        is JUnit4TestParameter -> composeTestRule
+        is DefaultTestParameter -> composeTestRule
+      }
+    data class JUnit4TestParameter(val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) :
+      TestParameter()
+    data class DefaultTestParameter(val composeTestRule: ComposeTestRule) : TestParameter()
+  }
+
   /**
    * Performs a test on a single composable preview.
    * Note: This method will not be called as the same instance of previews() method.
    *
    * @param preview The ComposablePreview object to be tested.
    */
-  fun test(preview: ComposablePreview<T>)
+  fun test(testParameter: TestParameter, preview: ComposablePreview<T>)
 
   companion object {
     // Should be replaced with the actual default options from the plugin.
@@ -145,19 +226,17 @@ interface ComposePreviewTester<T : Any> {
 class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
   override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
     val options = options()
-    return AndroidComposablePreviewScanner()
-      .scanPackageTrees(*options.scanOptions.packages.toTypedArray())
-      .let {
+    return AndroidComposablePreviewScanner().scanPackageTrees(*options.scanOptions.packages.toTypedArray())
+      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java).let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
         } else {
           it
         }
-      }
-      .getPreviews()
+      }.getPreviews()
   }
 
-  override fun test(preview: ComposablePreview<AndroidPreviewInfo>) {
+  override fun test(testParameter: ComposePreviewTester.TestParameter, preview: ComposablePreview<AndroidPreviewInfo>) {
     val pathPrefix =
       if (roborazziRecordFilePathStrategy() == RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory) {
         roborazziSystemPropertyOutputDirectory() + java.io.File.separator
@@ -165,17 +244,56 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
         ""
       }
     val name = roborazziDefaultNamingStrategy().generateOutputName(
-      preview.declaringClass,
-      createScreenshotIdFor(preview)
+      preview.declaringClass, createScreenshotIdFor(preview)
     )
-    val filePath = "$pathPrefix$name.${provideRoborazziContext().imageExtension}"
-    preview.captureRoboImage(filePath)
+
+    // FIXME
+    // This cause IllegalArgumentException
+    // Please refer to https://github.com/takahirom/roborazzi/pull/633#discussion_r1946472486
+//    val options: RoboComposePreviewOptions =
+//      (preview.getAnnotation<RoboComposePreviewOptions>() ?: RoboComposePreviewOptions())
+    val options = Class.forName(preview.declaringClass).declaredMethods
+      .firstOrNull { it.name == preview.methodName }
+      ?.getAnnotation<RoboComposePreviewOptions>(RoboComposePreviewOptions::class.java)
+      ?: RoboComposePreviewOptions()
+    options.variations()
+      .forEach { optionVariation: RoboComposePreviewOptionVariation ->
+        val filePath =
+          "$pathPrefix$name${optionVariation.nameWithPrefix()}.${provideRoborazziContext().imageExtension}"
+        preview.captureRoboImage(
+          filePath = filePath,
+          roborazziComposeOptions = preview.toRoborazziComposeOptions().builder()
+            .apply {
+              @Suppress("UNCHECKED_CAST")
+              composeTestRule(testParameter.composeRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
+              manualAdvance(testParameter.composeRule, optionVariation.manualClockOptions.advanceTimeMillis)
+            }
+            .build()
+        )
+      }
   }
 
   private fun createScreenshotIdFor(preview: ComposablePreview<AndroidPreviewInfo>) =
-    AndroidPreviewScreenshotIdBuilder(preview)
-      .ignoreClassName()
-      .build()
+    AndroidPreviewScreenshotIdBuilder(preview).ignoreClassName().build()
+}
+
+@InternalRoborazziApi
+internal class RoboComposePreviewOptionVariation(
+  val manualClockOptions: ManualClockOptions = ManualClockOptions()
+) {
+  fun nameWithPrefix(): String {
+    return buildString {
+      if (manualClockOptions.advanceTimeMillis > 0) {
+        append("_TIME_${manualClockOptions.advanceTimeMillis}ms")
+      }
+    }
+  }
+}
+
+
+internal fun RoboComposePreviewOptions.variations(): List<RoboComposePreviewOptionVariation> {
+  return manualClockOptions.map { RoboComposePreviewOptionVariation(it) }
+    .ifEmpty { listOf(RoboComposePreviewOptionVariation()) }
 }
 
 @InternalRoborazziApi
@@ -188,8 +306,7 @@ fun getComposePreviewTester(testerQualifiedClassName: String): ComposePreviewTes
   if (!ComposePreviewTester::class.java.isAssignableFrom(customTesterClass)) {
     throw IllegalArgumentException("The class $testerQualifiedClassName must implement RobolectricPreviewCapturer")
   }
-  @Suppress("UNCHECKED_CAST")
-  val composePreviewTester =
+  @Suppress("UNCHECKED_CAST") val composePreviewTester =
     customTesterClass.getDeclaredConstructor().newInstance() as ComposePreviewTester<Any>
   return composePreviewTester
 }
