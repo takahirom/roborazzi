@@ -6,14 +6,18 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestWatcher
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.github.takahirom.roborazzi.*
 import androidx.compose.ui.test.onRoot
 
 class CustomPreviewTester : ComposePreviewTester<AndroidPreviewInfo> by AndroidComposePreviewTester() {
-  val composeTestRule = createComposeRule()
+  val composeTestRule = createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
-      testRuleFactory = {
+      composeRuleFactory = { composeTestRule },
+      testRuleFactory = { composeTestRule ->
         RuleChain.outerRule(
           object : TestWatcher() {
             override fun starting(description: org.junit.runner.Description?) {
@@ -25,12 +29,18 @@ class CustomPreviewTester : ComposePreviewTester<AndroidPreviewInfo> by AndroidC
             }
           }
         )
+          .around(object : TestWatcher() {
+            override fun starting(description: org.junit.runner.Description?) {
+              super.starting(description)
+              registerActivityToRobolectricIfNeeded()
+            }
+          })
           .around(composeTestRule)
       }
     )
   )
 
-  override fun test(preview: ComposablePreview<AndroidPreviewInfo>) {
+  override fun test(testParameter: ComposePreviewTester.TestParameter, preview: ComposablePreview<AndroidPreviewInfo>) {
     composeTestRule.setContent {
       preview()
     }
