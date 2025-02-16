@@ -555,9 +555,13 @@ private fun BufferedImage.scale(scale: Double): BufferedImage {
   return after
 }
 
+internal val fontName by lazy {
+  getSystemProperty("roborazzi.theme.typography.font.name", "Courier New")
+}
+
 internal fun getFont(style: Int, size: Int): Font {
   return if (hasCourierNewFont) {
-    Font("Courier New", style, size)
+    Font(fontName, style, size)
   } else {
     Font(Font.MONOSPACED, style, size)
   }
@@ -565,7 +569,7 @@ internal fun getFont(style: Int, size: Int): Font {
 
 internal val hasCourierNewFont: Boolean by lazy {
   GraphicsEnvironment.getLocalGraphicsEnvironment()
-    .availableFontFamilyNames.any { it.equals("Courier New", ignoreCase = true) }
+    .availableFontFamilyNames.any { it.equals(fontName, ignoreCase = true) }
 }
 
 private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {
