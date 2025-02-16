@@ -12,6 +12,7 @@
 /.idea/kotlinc.xml
 /.idea/misc.xml
 /.idea/inspectionProfiles/Project_Default.xml
+/.idea/AndroidProjectSystem.xml
 .idea/artifacts
 .idea/compiler.xml
 .idea/jarRepositories.xml
