@@ -304,6 +304,11 @@ data class RoborazziComposeInspectionModeOption(private val inspectionMode: Bool
   }
 }
 
+/**
+ * Caution: This does not work when using this with [RoborazziComposeOptions.Builder.composeTestRule].
+ * Because Activity Scenario is created by the ComposeTestRule and
+ * we cannot change the theme after the activity scenario is created.
+ */
 @ExperimentalRoborazziApi
 fun RoborazziComposeOptions.Builder.activityTheme(themeResId: Int): RoborazziComposeOptions.Builder {
   return addOption(RoborazziComposeActivityThemeOption(themeResId))
