@@ -197,14 +197,10 @@ interface ComposePreviewTester<T : Any> {
   fun previews(): List<ComposablePreview<T>>
 
   sealed class TestParameter {
-    internal val composeRule: ComposeTestRule
-      get() = when (this) {
-        is JUnit4TestParameter -> composeTestRule
-        is DefaultTestParameter -> composeTestRule
-      }
-    data class JUnit4TestParameter(val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) :
-      TestParameter()
-    data class DefaultTestParameter(val composeTestRule: ComposeTestRule) : TestParameter()
+    data class JUnit4TestParameter<T>(
+      val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
+      val preview: ComposablePreview<T>
+    ) : TestParameter()
   }
 
   /**
@@ -213,7 +209,7 @@ interface ComposePreviewTester<T : Any> {
    *
    * @param preview The ComposablePreview object to be tested.
    */
-  fun test(testParameter: TestParameter, preview: ComposablePreview<T>)
+  fun test(testParameter: TestParameter)
 
   companion object {
     // Should be replaced with the actual default options from the plugin.
@@ -236,15 +232,21 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
       }.getPreviews()
   }
 
-  override fun test(testParameter: ComposePreviewTester.TestParameter, preview: ComposablePreview<AndroidPreviewInfo>) {
+  override fun test(testParameter: ComposePreviewTester.TestParameter) {
+    if (testParameter !is ComposePreviewTester.TestParameter.JUnit4TestParameter<*>) {
+      throw IllegalArgumentException("Currently only JUnit4TestParameter is supported")
+    }
+    val junit4TestParameter: ComposePreviewTester.TestParameter.JUnit4TestParameter<*> = testParameter
+    val preview = junit4TestParameter.preview
     val pathPrefix =
       if (roborazziRecordFilePathStrategy() == RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory) {
         roborazziSystemPropertyOutputDirectory() + java.io.File.separator
       } else {
         ""
       }
-    val name = roborazziDefaultNamingStrategy().generateOutputName(
-      preview.declaringClass, createScreenshotIdFor(preview)
+    // In AndroidComposePreviewTester, the preview is ComposablePreview<AndroidPreviewInfo>
+    @Suppress("UNCHECKED_CAST") val name = roborazziDefaultNamingStrategy().generateOutputName(
+      preview.declaringClass, createScreenshotIdFor(preview as ComposablePreview<AndroidPreviewInfo>)
     )
 
     // FIXME
@@ -265,8 +267,8 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
           roborazziComposeOptions = preview.toRoborazziComposeOptions().builder()
             .apply {
               @Suppress("UNCHECKED_CAST")
-              composeTestRule(testParameter.composeRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
-              manualAdvance(testParameter.composeRule, optionVariation.manualClockOptions.advanceTimeMillis)
+              composeTestRule(junit4TestParameter.composeTestRule)
+              manualAdvance(junit4TestParameter.composeTestRule, optionVariation.manualClockOptions.advanceTimeMillis)
             }
             .build()
         )

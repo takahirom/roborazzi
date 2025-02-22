@@ -182,22 +182,14 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 private val preview: ComposablePreview<Any>,
             ) {
                 private val tester = getComposePreviewTester("$testerQualifiedClassNameString")
-                private val testLifecycleOptions = tester.options().testLifecycleOptions
-                val composeTestRule: ComposeContentTestRule by lazy {
-                  if (testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
-                    testLifecycleOptions.composeRuleFactory()
-                  } else {
-                    createComposeRule()
-                  }
+                private val testLifecycleOptions = tester.options().testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions
+                val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> by lazy {
+                  testLifecycleOptions.composeRuleFactory()
                 }
                 @Suppress("UNCHECKED_CAST")
                 @get:Rule
                 val rule = RuleChain.outerRule(
-                  if (testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
-                    testLifecycleOptions.testRuleFactory(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
-                  } else {
-                    object : TestWatcher() {}
-                  }
+                  testLifecycleOptions.testRuleFactory(composeTestRule)
                 )
                 
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -205,13 +197,10 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 @Test
                 fun test() {
                   tester.test(
-                    testParameter = if (testLifecycleOptions is ComposePreviewTester.Options.JUnit4TestLifecycleOptions) {
-                      @Suppress("UNCHECKED_CAST")
-                      ComposePreviewTester.TestParameter.JUnit4TestParameter(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
-                    } else {
-                      ComposePreviewTester.TestParameter.DefaultTestParameter(composeTestRule)
-                    },
-                    preview = preview
+                    testParameter = ComposePreviewTester.TestParameter.JUnit4TestParameter(
+                      composeTestRule = composeTestRule,
+                      preview = preview
+                    ),
                   )
                 }
                 

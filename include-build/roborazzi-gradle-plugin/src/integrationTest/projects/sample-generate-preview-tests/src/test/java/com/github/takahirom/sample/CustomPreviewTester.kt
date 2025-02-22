@@ -40,9 +40,12 @@ class CustomPreviewTester : ComposePreviewTester<AndroidPreviewInfo> by AndroidC
     )
   )
 
-  override fun test(testParameter: ComposePreviewTester.TestParameter, preview: ComposablePreview<AndroidPreviewInfo>) {
+  override fun test(testParameter: ComposePreviewTester.TestParameter) {
+    if (testParameter !is ComposePreviewTester.TestParameter.JUnit4TestParameter<*>) {
+      throw IllegalArgumentException("Currently only JUnit4TestParameter is supported")
+    }
     composeTestRule.setContent {
-      preview()
+      testParameter.preview()
     }
     composeTestRule.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/${preview.methodName}.${provideRoborazziContext().imageExtension}")
   }
