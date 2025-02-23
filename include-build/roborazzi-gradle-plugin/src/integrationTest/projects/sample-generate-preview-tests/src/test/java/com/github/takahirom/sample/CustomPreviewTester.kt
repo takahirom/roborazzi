@@ -44,6 +44,7 @@ class CustomPreviewTester : ComposePreviewTester<AndroidPreviewInfo> by AndroidC
     if (testParameter !is ComposePreviewTester.TestParameter.JUnit4TestParameter<*>) {
       throw IllegalArgumentException("Currently only JUnit4TestParameter is supported")
     }
+    val preview = testParameter.preview as ComposablePreview
     composeTestRule.setContent {
       testParameter.preview()
     }
