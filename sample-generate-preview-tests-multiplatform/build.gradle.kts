@@ -10,7 +10,7 @@ roborazzi {
   generateComposePreviewRobolectricTests {
     enable = true
     packages = listOf("com.github.takahirom.preview.tests")
-    testerQualifiedClassName = "com.github.takahirom.preview.tests.MultiplePreviewTester"
+    testerQualifiedClassName = "com.github.takahirom.preview.tests.MultiplatformPreviewTester"
   }
 }
 

@@ -11,14 +11,15 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.registerRoborazziActivityToRobolectricIfNeeded
 import org.junit.rules.RuleChain
 import org.junit.rules.TestWatcher
-import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 import sergio.sastre.composable.preview.scanner.jvm.JvmAnnotationInfo
 import sergio.sastre.composable.preview.scanner.jvm.JvmAnnotationScanner
 
 @OptIn(com.github.takahirom.roborazzi.ExperimentalRoborazziApi::class)
-class MultiplePreviewTester: ComposePreviewTester<JvmAnnotationInfo>  {
+class MultiplatformPreviewTester : ComposePreviewTester<JvmAnnotationInfo> {
   @Suppress("UNCHECKED_CAST")
-  val composeTestRule = createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>
+  val composeTestRule =
+    createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>
+
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
       composeRuleFactory = { composeTestRule },
@@ -34,20 +35,28 @@ class MultiplePreviewTester: ComposePreviewTester<JvmAnnotationInfo>  {
       }
     )
   )
-  override fun previews(): List<ComposablePreview<JvmAnnotationInfo>> {
+
+  override fun testParameters(): List<ComposePreviewTester.TestParameter<JvmAnnotationInfo>> {
     return JvmAnnotationScanner("org.jetbrains.compose.ui.tooling.preview.Preview")
       .scanPackageTrees(*options().scanOptions.packages.toTypedArray())
       .getPreviews()
+      .map {
+        ComposePreviewTester.TestParameter.JUnit4TestParameter(
+          composeTestRule,
+          it
+        )
+      }
   }
 
-  override fun test(testParameter: ComposePreviewTester.TestParameter) {
-    if(testParameter !is ComposePreviewTester.TestParameter.JUnit4TestParameter<*>) {
+  override fun test(testParameter: ComposePreviewTester.TestParameter<JvmAnnotationInfo>) {
+    if (testParameter !is ComposePreviewTester.TestParameter.JUnit4TestParameter<*>) {
       throw IllegalArgumentException()
     }
     val preview = testParameter.preview
-    composeTestRule.setContent {
+    testParameter.composeTestRule.setContent {
       preview()
     }
-    composeTestRule.onRoot().captureRoboImage(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + "/" + preview.methodName + ".png")
+    testParameter.composeTestRule.onRoot()
+      .captureRoboImage(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + "/" + preview.methodName + ".png")
   }
 }
