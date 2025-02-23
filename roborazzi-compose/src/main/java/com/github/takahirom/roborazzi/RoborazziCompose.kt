@@ -93,7 +93,7 @@ private fun launchRoborazziActivity(
 }
 
 internal fun createActivityScenario(theme: Int): ActivityScenario<out ComponentActivity> {
-  registerActivityToRobolectricIfNeeded()
+  registerRoborazziActivityToRobolectricIfNeeded()
   return ActivityScenario.launch(
     RoborazziActivity.createIntent(
       context = ApplicationProvider.getApplicationContext(),

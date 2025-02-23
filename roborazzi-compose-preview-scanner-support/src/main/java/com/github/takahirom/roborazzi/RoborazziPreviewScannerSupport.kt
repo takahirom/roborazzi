@@ -161,7 +161,7 @@ interface ComposePreviewTester<T : Any> {
               .outerRule(object : TestWatcher() {
                 override fun starting(description: org.junit.runner.Description?) {
                   super.starting(description)
-                  registerActivityToRobolectricIfNeeded()
+                  registerRoborazziActivityToRobolectricIfNeeded()
                 }
               })
               .around(composeTestRule)

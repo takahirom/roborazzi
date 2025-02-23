@@ -1,6 +1,7 @@
-*.iml
 .gradle
 /local.properties
+
+*.iml
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -22,6 +23,10 @@
 /.intellijPlatform/
 .idea/runConfigurations.xml
 .idea/shelf
+.idea/vcs.xml
+.idea/deploymentTargetSelector.xml
+.idea/jupyter-settings.xml
+
 *.iml
 *.ipr
 .DS_Store
@@ -30,5 +35,4 @@
 .externalNativeBuild
 .cxx
 local.properties
-.idea/vcs.xml
 /tmp
