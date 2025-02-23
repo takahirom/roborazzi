@@ -264,8 +264,14 @@ fun PreviewShowBackgroundWithBackgroundColor() {
 @RoboComposePreviewOptions(
   manualClockOptions = [
     ManualClockOptions(
+      advanceTimeMillis = 0L,
+    ),
+    ManualClockOptions(
       advanceTimeMillis = 516L,
-    )
+    ),
+    ManualClockOptions(
+      advanceTimeMillis = 1032L,
+    ),
   ]
 ) // 500 ms + 16ms frame
 @Preview
