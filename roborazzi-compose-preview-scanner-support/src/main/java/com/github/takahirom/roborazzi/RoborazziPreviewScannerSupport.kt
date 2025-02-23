@@ -113,21 +113,15 @@ data class RoborazziComposeManualAdvancePreviewOption(
 ) :
   RoborazziComposeSetupOption, RoborazziComposeCaptureOption {
   override fun configure() {
-    if (advanceTimeMillis > 0L) {
-      composeTestRule.mainClock.autoAdvance = false
-    }
+    composeTestRule.mainClock.autoAdvance = false
   }
 
   override fun beforeCapture() {
-    if (advanceTimeMillis > 0L) {
-      composeTestRule.mainClock.advanceTimeBy(advanceTimeMillis)
-    }
+    composeTestRule.mainClock.advanceTimeBy(advanceTimeMillis)
   }
 
   override fun afterCapture() {
-    if (advanceTimeMillis > 0L) {
-      composeTestRule.mainClock.autoAdvance = true
-    }
+    composeTestRule.mainClock.autoAdvance = true
   }
 }
 
@@ -293,10 +287,12 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
         .apply {
           @Suppress("UNCHECKED_CAST")
           composeTestRule(junit4TestParameter.composeTestRule)
-          manualAdvance(
-            junit4TestParameter.composeTestRule,
-            optionVariation.manualClockOptions.advanceTimeMillis
-          )
+          optionVariation.manualClockOptions?.let {
+            manualAdvance(
+              junit4TestParameter.composeTestRule,
+              optionVariation.manualClockOptions.advanceTimeMillis
+            )
+          }
         }
         .build()
     )
@@ -308,11 +304,11 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
 
 @ExperimentalRoborazziApi
 class RoboComposePreviewOptionVariation(
-  val manualClockOptions: ManualClockOptions = ManualClockOptions()
+  val manualClockOptions: ManualClockOptions? = null
 ) {
   fun nameWithPrefix(): String {
     return buildString {
-      if (manualClockOptions.advanceTimeMillis > 0) {
+      if (manualClockOptions != null) {
         append("_TIME_${manualClockOptions.advanceTimeMillis}ms")
       }
     }
