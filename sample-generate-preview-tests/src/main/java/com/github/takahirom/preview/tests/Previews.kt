@@ -276,15 +276,15 @@ fun PreviewShowBackgroundWithBackgroundColor() {
 @Preview
 @Composable
 fun PreviewDelayed() {
-  var isVisible by remember { mutableStateOf(false) }
+  var isBlue by remember { mutableStateOf(false) }
   var counter by remember { mutableStateOf(0) }
 
   // Trigger visibility change with a delay
   LaunchedEffect(Unit) {
     delay(500)
-    isVisible = true
+    isBlue = true
   }
-  LaunchedEffect(isVisible) {
+  LaunchedEffect(Unit) {
     while (true) {
       delay(100)
       counter++
@@ -294,7 +294,7 @@ fun PreviewDelayed() {
   Column(
     modifier = Modifier
       .size(300.dp)
-      .background(if (isVisible) Color.Gray else Color.Blue)
+      .background(if (isBlue) Color.Blue else Color.Gray)
   ) {
     Text("Counter: ${counter}00ms ")
     CircularProgressIndicator()
