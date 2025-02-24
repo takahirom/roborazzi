@@ -32,7 +32,7 @@ class CustomPreviewTester : ComposePreviewTester<AndroidPreviewInfo> by AndroidC
           .around(object : TestWatcher() {
             override fun starting(description: org.junit.runner.Description?) {
               super.starting(description)
-              registerActivityToRobolectricIfNeeded()
+              registerRoborazziActivityToRobolectricIfNeeded()
             }
           })
           .around(composeTestRule)
@@ -40,14 +40,14 @@ class CustomPreviewTester : ComposePreviewTester<AndroidPreviewInfo> by AndroidC
     )
   )
 
-  override fun test(testParameter: ComposePreviewTester.TestParameter) {
+  override fun test(testParameter: ComposePreviewTester.TestParameter<AndroidPreviewInfo>) {
     if (testParameter !is ComposePreviewTester.TestParameter.JUnit4TestParameter<*>) {
       throw IllegalArgumentException("Currently only JUnit4TestParameter is supported")
     }
     val preview = testParameter.preview as ComposablePreview
-    composeTestRule.setContent {
+    testParameter.composeTestRule.setContent {
       testParameter.preview()
     }
-    composeTestRule.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/${preview.methodName}.${provideRoborazziContext().imageExtension}")
+    testParameter.composeTestRule.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/${preview.methodName}.${provideRoborazziContext().imageExtension}")
   }
 }
