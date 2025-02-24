@@ -260,6 +260,20 @@ fun PreviewShowBackgroundWithBackgroundColor() {
   }
 }
 
+@RoboComposePreviewOptions
+@Preview
+@Composable
+fun PreviewWithEmptyOptions() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World! Empty Options"
+    )
+  }
+}
+
 @RoboComposePreviewOptions(
   manualClockOptions = [
     ManualClockOptions(
