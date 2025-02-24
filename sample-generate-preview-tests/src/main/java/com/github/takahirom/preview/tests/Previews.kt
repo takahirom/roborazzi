@@ -27,7 +27,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -294,9 +293,8 @@ fun PreviewDelayed() {
 
   Column(
     modifier = Modifier
-      .alpha(if (isVisible) 1f else 0f)
       .size(300.dp)
-      .background(Color.Blue)
+      .background(if (isVisible) Color.Gray else Color.Blue)
   ) {
     Text("Counter: ${counter}00ms ")
     CircularProgressIndicator()

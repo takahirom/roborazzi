@@ -74,7 +74,8 @@ kotlin {
 
     val androidUnitTest by getting {
       dependencies {
-        implementation(project(":roborazzi-compose-preview-scanner-support"))
+        // replaced by dependency substitution
+        implementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
         implementation(project(":roborazzi-compose"))
         implementation(project(":roborazzi-annotations"))
         implementation(libs.junit)
