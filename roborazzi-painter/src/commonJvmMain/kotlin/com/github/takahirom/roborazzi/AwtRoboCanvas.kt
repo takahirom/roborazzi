@@ -6,14 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
-import java.awt.AlphaComposite
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Font
-import java.awt.Graphics2D
-import java.awt.GraphicsEnvironment
-import java.awt.Rectangle
-import java.awt.RenderingHints
+import java.awt.*
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.geom.AffineTransform
@@ -567,9 +560,25 @@ internal fun getFont(style: Int, size: Int): Font {
   }
 }
 
+/**
+ * Checks if the preferred font is available in the system.
+ * In headless environments or when font configuration is missing, this will return false
+ * and the system will fall back to using Font.MONOSPACED.
+ *
+ * The preferred font can be configured using the system property "roborazzi.theme.typography.font.name"
+ * (defaults to "Courier New").
+ */
 internal val hasPreferredFont: Boolean by lazy {
-  GraphicsEnvironment.getLocalGraphicsEnvironment()
-    .availableFontFamilyNames.any { it.equals(preferredFontName, ignoreCase = true) }
+  try {
+    GraphicsEnvironment.getLocalGraphicsEnvironment()
+      .availableFontFamilyNames.any { it.equals(preferredFontName, ignoreCase = true) }
+  } catch (e: Exception) {
+    // In headless environments where font configuration is missing, default to false
+    debugLog {
+      "Font configuration is missing or not available in headless environment. Using Font.MONOSPACED as fallback. Error: ${e.message}"
+    }
+    false
+  }
 }
 
 private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {
@@ -579,4 +588,3 @@ private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {
   graphics.dispose()
   return result
 }
-
