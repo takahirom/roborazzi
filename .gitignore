@@ -1,6 +1,7 @@
-*.iml
 .gradle
 /local.properties
+
+*.iml
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -12,6 +13,7 @@
 /.idea/kotlinc.xml
 /.idea/misc.xml
 /.idea/inspectionProfiles/Project_Default.xml
+/.idea/AndroidProjectSystem.xml
 .idea/artifacts
 .idea/compiler.xml
 .idea/jarRepositories.xml
@@ -21,6 +23,10 @@
 /.intellijPlatform/
 .idea/runConfigurations.xml
 .idea/shelf
+.idea/vcs.xml
+.idea/deploymentTargetSelector.xml
+.idea/jupyter-settings.xml
+
 *.iml
 *.ipr
 .DS_Store
@@ -29,5 +35,4 @@
 .externalNativeBuild
 .cxx
 local.properties
-.idea/vcs.xml
 /tmp

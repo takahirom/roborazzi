@@ -20,8 +20,10 @@ android.namespace 'com.github.takahirom.roborazzi.preview.support'
 dependencies {
   api project(":roborazzi")
   api project(":roborazzi-compose")
+  api project(":roborazzi-annotations")
 
   compileOnly libs.androidx.compose.runtime
   compileOnly libs.composable.preview.scanner
   compileOnly libs.robolectric
+  compileOnly libs.androidx.compose.ui.test.junit4
 }
