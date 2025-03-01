@@ -6,17 +6,17 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestWatcher
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
+import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.takahirom.roborazzi.*
 import androidx.compose.ui.test.onRoot
 
-class CustomPreviewTester : ComposePreviewTester<AndroidPreviewInfo> by AndroidComposePreviewTester() {
-  val composeTestRule = createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>
+class CustomPreviewTester : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> by AndroidComposePreviewTester() {
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
-      composeRuleFactory = { composeTestRule },
+      composeRuleFactory = { createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *> },
       testRuleFactory = { composeTestRule ->
         RuleChain.outerRule(
           object : TestWatcher() {
@@ -40,10 +40,7 @@ class CustomPreviewTester : ComposePreviewTester<AndroidPreviewInfo> by AndroidC
     )
   )
 
-  override fun test(testParameter: ComposePreviewTester.TestParameter<AndroidPreviewInfo>) {
-    if (testParameter !is ComposePreviewTester.TestParameter.JUnit4TestParameter<*>) {
-      throw IllegalArgumentException("Currently only JUnit4TestParameter is supported")
-    }
+  override fun test(testParameter: AndroidPreviewJUnit4TestParameter) {
     val preview = testParameter.preview as ComposablePreview
     testParameter.composeTestRule.setContent {
       testParameter.preview()

@@ -17,7 +17,7 @@ import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.testing.Test
 import java.io.File
 import java.net.URLEncoder
-import java.util.Locale
+import java.util.*
 import javax.inject.Inject
 
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
@@ -205,14 +205,14 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 
                 companion object {
                     // lazy for performance
-                    val testParameters: List<ComposePreviewTester.TestParameter<Any>> by lazy {
+                    val testParameters: List<ComposePreviewTester.TestParameter<*>> by lazy {
                         setupDefaultOptions()
                         val tester = getComposePreviewTester("$testerQualifiedClassNameString")
                         tester.testParameters()
                     }
                     @JvmStatic
                     @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-                    fun values(): List<ComposePreviewTester.TestParameter<Any>> = testParameters 
+                    fun values(): List<ComposePreviewTester.TestParameter<*>> = testParameters 
                     
                     fun setupDefaultOptions() {
                         ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options(

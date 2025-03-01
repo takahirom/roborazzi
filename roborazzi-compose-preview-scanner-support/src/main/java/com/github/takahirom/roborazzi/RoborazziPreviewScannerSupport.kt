@@ -6,6 +6,8 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter
+import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import org.junit.rules.RuleChain
@@ -133,7 +135,7 @@ data class RoborazziComposeManualAdvancePreviewOption(
  * A new instance of the tester class is created for each test execution and preview generation.
  */
 @ExperimentalRoborazziApi
-interface ComposePreviewTester<T : Any> {
+interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
   data class Options(
     val testLifecycleOptions: TestLifecycleOptions = JUnit4TestLifecycleOptions(),
     val scanOptions: ScanOptions = ScanOptions(emptyList()),
@@ -189,7 +191,7 @@ interface ComposePreviewTester<T : Any> {
    *
    * @return A list of ComposablePreview objects of type T.
    */
-  fun testParameters(): List<TestParameter<T>>
+  fun testParameters(): List<TESTPARAMETER>
 
   sealed class TestParameter<T> {
     open class JUnit4TestParameter<T>(
@@ -212,9 +214,9 @@ interface ComposePreviewTester<T : Any> {
    * Performs a test on a single composable preview.
    * Note: This method will not be called as the same instance of previews() method.
    *
-   * @param preview The ComposablePreview object to be tested.
+   * @param testParameter The TestParameter object.
    */
-  fun test(testParameter: TestParameter<T>)
+  fun test(testParameter: TESTPARAMETER)
 
   companion object {
     // Should be replaced with the actual default options from the plugin.
@@ -224,8 +226,8 @@ interface ComposePreviewTester<T : Any> {
 }
 
 @ExperimentalRoborazziApi
-class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
-  override fun testParameters(): List<ComposePreviewTester.TestParameter<AndroidPreviewInfo>> {
+class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
+  override fun testParameters(): List<AndroidPreviewJUnit4TestParameter> {
     val options = options()
     val junit4TestLifecycleOptions =
       options.testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions
@@ -249,7 +251,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
           ?: RoboComposePreviewOptions()
         annotationOptions.variations()
           .map { optionVariation ->
-            ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter(
+            AndroidPreviewJUnit4TestParameter(
               composeTestRule = junit4TestLifecycleOptions.composeRuleFactory(),
               preview = preview,
               composeRoboComposePreviewOptionVariation = optionVariation
@@ -258,10 +260,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
       }
   }
 
-  override fun test(testParameter: ComposePreviewTester.TestParameter<AndroidPreviewInfo>) {
-    if (testParameter !is ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter) {
-      throw IllegalArgumentException("Currently only JUnit4TestParameter is supported")
-    }
+  override fun test(testParameter: AndroidPreviewJUnit4TestParameter) {
     val junit4TestParameter: ComposePreviewTester.TestParameter.JUnit4TestParameter<*> =
       testParameter
     val preview = junit4TestParameter.preview
@@ -322,7 +321,7 @@ internal fun RoboComposePreviewOptions.variations(): List<RoboComposePreviewOpti
 }
 
 @InternalRoborazziApi
-fun getComposePreviewTester(testerQualifiedClassName: String): ComposePreviewTester<Any> {
+fun getComposePreviewTester(testerQualifiedClassName: String): ComposePreviewTester<TestParameter<*>> {
   val customTesterClass = try {
     Class.forName(testerQualifiedClassName)
   } catch (e: ClassNotFoundException) {
@@ -332,6 +331,6 @@ fun getComposePreviewTester(testerQualifiedClassName: String): ComposePreviewTes
     throw IllegalArgumentException("The class $testerQualifiedClassName must implement RobolectricPreviewCapturer")
   }
   @Suppress("UNCHECKED_CAST") val composePreviewTester =
-    customTesterClass.getDeclaredConstructor().newInstance() as ComposePreviewTester<Any>
+    customTesterClass.getDeclaredConstructor().newInstance() as ComposePreviewTester<TestParameter<*>>
   return composePreviewTester
 }
