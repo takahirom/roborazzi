@@ -195,14 +195,17 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
 
   sealed class TestParameter<T> {
     open class JUnit4TestParameter<T>(
-      open val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
+      open val composeTestRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
       open val preview: ComposablePreview<T>
     ) : TestParameter<T>() {
+      val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> by lazy {
+        composeTestRuleFactory()
+      }
       data class AndroidPreviewJUnit4TestParameter(
-        override val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
+        override val composeTestRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
         override val preview: ComposablePreview<AndroidPreviewInfo>,
         val composeRoboComposePreviewOptionVariation: RoboComposePreviewOptionVariation = RoboComposePreviewOptionVariation()
-      ) : JUnit4TestParameter<AndroidPreviewInfo>(composeTestRule, preview) {
+      ) : JUnit4TestParameter<AndroidPreviewInfo>(composeTestRuleFactory, preview) {
         override fun toString(): String {
           return "JUnit4TestParameter(preview=$preview)"
         }
@@ -247,12 +250,12 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewJUnit4Tes
 //      (preview.getAnnotation<RoboComposePreviewOptions>() ?: RoboComposePreviewOptions())
         val annotationOptions = Class.forName(preview.declaringClass).declaredMethods
           .firstOrNull { it.name == preview.methodName }
-          ?.getAnnotation<RoboComposePreviewOptions>(RoboComposePreviewOptions::class.java)
+          ?.getAnnotation(RoboComposePreviewOptions::class.java)
           ?: RoboComposePreviewOptions()
         annotationOptions.variations()
           .map { optionVariation ->
             AndroidPreviewJUnit4TestParameter(
-              composeTestRule = junit4TestLifecycleOptions.composeRuleFactory(),
+              composeTestRuleFactory = junit4TestLifecycleOptions.composeRuleFactory,
               preview = preview,
               composeRoboComposePreviewOptionVariation = optionVariation
             )
@@ -328,7 +331,7 @@ fun getComposePreviewTester(testerQualifiedClassName: String): ComposePreviewTes
     throw IllegalArgumentException("The class $testerQualifiedClassName not found")
   }
   if (!ComposePreviewTester::class.java.isAssignableFrom(customTesterClass)) {
-    throw IllegalArgumentException("The class $testerQualifiedClassName must implement RobolectricPreviewCapturer")
+    throw IllegalArgumentException("The class $testerQualifiedClassName must implement ComposePreviewTester")
   }
   @Suppress("UNCHECKED_CAST") val composePreviewTester =
     customTesterClass.getDeclaredConstructor().newInstance() as ComposePreviewTester<TestParameter<*>>
