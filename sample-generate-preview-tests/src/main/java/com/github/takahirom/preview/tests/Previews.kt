@@ -3,31 +3,12 @@ package com.github.takahirom.preview.tests
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
@@ -312,5 +293,24 @@ fun PreviewDelayed() {
   ) {
     Text("Counter: ${counter}00ms ")
     CircularProgressIndicator()
+  }
+}
+
+@RoboComposePreviewOptions(
+  localInspectionModes = [true, false]
+)
+@Preview(
+  name = "Preview with multiple inspection modes"
+)
+@Composable
+fun PreviewWithMultipleInspectionModes() {
+  Column {
+    Text("LocalInspectionMode: ${LocalInspectionMode.current}")
+    AlertDialog(
+      onDismissRequest = { },
+      title = { Text("Dialog Title") },
+      text = { Text("This dialog preview will be captured with both inspection modes") },
+      confirmButton = { Text("OK") }
+    )
   }
 }

@@ -293,6 +293,9 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
               optionVariation.manualClockOptions.advanceTimeMillis
             )
           }
+          optionVariation.localInspectionMode?.let { mode ->
+            inspectionMode(mode)
+          }
         }
         .build()
     )
@@ -304,12 +307,16 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewInfo> {
 
 @ExperimentalRoborazziApi
 class RoboComposePreviewOptionVariation(
-  val manualClockOptions: ManualClockOptions? = null
+  val manualClockOptions: ManualClockOptions? = null,
+  val localInspectionMode: Boolean? = null
 ) {
   fun nameWithPrefix(): String {
     return buildString {
       if (manualClockOptions != null) {
         append("_TIME_${manualClockOptions.advanceTimeMillis}ms")
+      }
+      if (localInspectionMode != null) {
+        append("_INSPECTION_MODE")
       }
     }
   }
@@ -317,8 +324,26 @@ class RoboComposePreviewOptionVariation(
 
 
 internal fun RoboComposePreviewOptions.variations(): List<RoboComposePreviewOptionVariation> {
-  return manualClockOptions.map { RoboComposePreviewOptionVariation(it) }
-    .ifEmpty { listOf(RoboComposePreviewOptionVariation()) }
+  val clockVariations = if (manualClockOptions.isEmpty()) {
+    listOf(null)
+  } else {
+    manualClockOptions.toList()
+  }
+
+  val inspectionModes = if (localInspectionModes.isEmpty()) {
+    listOf(null)
+  } else {
+    localInspectionModes.toList()
+  }
+
+  return clockVariations.flatMap { clockOption ->
+    inspectionModes.map { inspectionMode ->
+      RoboComposePreviewOptionVariation(
+        manualClockOptions = clockOption,
+        localInspectionMode = inspectionMode
+      )
+    }
+  }
 }
 
 @InternalRoborazziApi

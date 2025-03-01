@@ -5,7 +5,8 @@ package com.github.takahirom.roborazzi.annotations
 
 @Target(AnnotationTarget.FUNCTION)
 annotation class RoboComposePreviewOptions(
-  val manualClockOptions: Array<ManualClockOptions> = arrayOf()
+  val manualClockOptions: Array<ManualClockOptions> = arrayOf(),
+  val localInspectionModes: BooleanArray = booleanArrayOf()
 ) {
 
 }
