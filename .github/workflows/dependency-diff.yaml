@@ -29,6 +29,7 @@ jobs:
             roborazzi-painter|commonMainImplementationDependenciesMetadata
             roborazzi-painter|jvmRuntimeClasspath
             roborazzi
+            roborazzi-annotations
             roborazzi-junit-rule
             roborazzi-compose
             roborazzi-compose-preview-scanner-support

@@ -45,11 +45,18 @@ interface RoborazziComposeComposableOption : RoborazziComposeOption {
 }
 
 @ExperimentalRoborazziApi
+interface RoborazziComposeCaptureOption : RoborazziComposeOption {
+  fun beforeCapture()
+  fun afterCapture()
+}
+
+@ExperimentalRoborazziApi
 class RoborazziComposeOptions private constructor(
   private val activityScenarioCreatorOptions: List<RoborazziComposeActivityScenarioCreatorOption>,
   private val activityScenarioOptions: List<RoborazziComposeActivityScenarioOption>,
   private val composableOptions: List<RoborazziComposeComposableOption>,
-  private val setupOptions: List<RoborazziComposeSetupOption>
+  private val setupOptions: List<RoborazziComposeSetupOption>,
+  private val captureOptions: List<RoborazziComposeCaptureOption>,
 ) {
   class Builder {
     private val activityScenarioOptions =
@@ -58,6 +65,7 @@ class RoborazziComposeOptions private constructor(
       mutableListOf<RoborazziComposeActivityScenarioCreatorOption>()
     private val composableOptions = mutableListOf<RoborazziComposeComposableOption>()
     private val setupOptions = mutableListOf<RoborazziComposeSetupOption>()
+    private val captureOptions = mutableListOf<RoborazziComposeCaptureOption>()
 
     fun addOption(option: RoborazziComposeOption): Builder {
       if (option is RoborazziComposeActivityScenarioCreatorOption) {
@@ -72,6 +80,9 @@ class RoborazziComposeOptions private constructor(
       if (option is RoborazziComposeSetupOption) {
         setupOptions.add(option)
       }
+      if (option is RoborazziComposeCaptureOption) {
+        captureOptions.add(option)
+      }
       return this
     }
 
@@ -80,7 +91,8 @@ class RoborazziComposeOptions private constructor(
         activityScenarioCreatorOptions = activityScenarioCreatorOptions,
         activityScenarioOptions = activityScenarioOptions,
         composableOptions = composableOptions,
-        setupOptions = setupOptions
+        setupOptions = setupOptions,
+        captureOptions = captureOptions
       )
     }
   }
@@ -116,6 +128,14 @@ class RoborazziComposeOptions private constructor(
     return {
       appliedContent()
     }
+  }
+
+  fun beforeCapture() {
+    captureOptions.forEach { it.beforeCapture() }
+  }
+
+  fun afterCapture() {
+    captureOptions.forEach { it.afterCapture() }
   }
 
   companion object {
@@ -284,6 +304,11 @@ data class RoborazziComposeInspectionModeOption(private val inspectionMode: Bool
   }
 }
 
+/**
+ * Caution: This does not work when using this with [RoborazziComposeOptions.Builder.composeTestRule].
+ * Because Activity Scenario is created by the ComposeTestRule and
+ * we cannot change the theme after the activity scenario is created.
+ */
 @ExperimentalRoborazziApi
 fun RoborazziComposeOptions.Builder.activityTheme(themeResId: Int): RoborazziComposeOptions.Builder {
   return addOption(RoborazziComposeActivityThemeOption(themeResId))

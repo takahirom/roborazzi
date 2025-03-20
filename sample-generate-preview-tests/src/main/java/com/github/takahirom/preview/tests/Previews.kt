@@ -1,15 +1,19 @@
 package com.github.takahirom.preview.tests
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,11 +21,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
+import com.github.takahirom.roborazzi.annotations.ManualClockOptions
+import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
+import kotlinx.coroutines.delay
 
 @Preview
 @Composable
@@ -244,5 +257,60 @@ fun PreviewShowBackgroundWithBackgroundColor() {
       modifier = Modifier.padding(8.dp),
       text = "Hello, World!"
     )
+  }
+}
+
+@RoboComposePreviewOptions
+@Preview
+@Composable
+fun PreviewWithEmptyOptions() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World! Empty Options"
+    )
+  }
+}
+
+@RoboComposePreviewOptions(
+  manualClockOptions = [
+    ManualClockOptions(
+      advanceTimeMillis = 0L,
+    ),
+    ManualClockOptions(
+      advanceTimeMillis = 516L,
+    ),
+    ManualClockOptions(
+      advanceTimeMillis = 1032L,
+    ),
+  ]
+) // 500 ms + 16ms frame
+@Preview
+@Composable
+fun PreviewDelayed() {
+  var isBlue by remember { mutableStateOf(false) }
+  var counter by remember { mutableStateOf(0) }
+
+  // Trigger visibility change with a delay
+  LaunchedEffect(Unit) {
+    delay(500)
+    isBlue = true
+  }
+  LaunchedEffect(Unit) {
+    while (true) {
+      delay(100)
+      counter++
+    }
+  }
+
+  Column(
+    modifier = Modifier
+      .size(300.dp)
+      .background(if (isBlue) Color.Blue else Color.Gray)
+  ) {
+    Text("Counter: ${counter}00ms ")
+    CircularProgressIndicator()
   }
 }

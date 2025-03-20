@@ -1,7 +1,7 @@
 [versions]
 accessibilityTestFramework = "4.1.1"
 javaToolchain = "17"
-javaTarget = "11"
+javaTarget = "17"
 agp = "8.6.1"
 commons-compress = "1.23.0"
 kotlin = "1.9.22"
@@ -65,6 +65,7 @@ generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-goo
 
 # for sample
 composable-preview-scanner = { module = "io.github.sergio-sastre.ComposablePreviewScanner:android", version.ref = "composable-preview-scanner" }
+composable-preview-scanner-jvm = { module = "io.github.sergio-sastre.ComposablePreviewScanner:jvm", version.ref = "composable-preview-scanner" }
 
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
