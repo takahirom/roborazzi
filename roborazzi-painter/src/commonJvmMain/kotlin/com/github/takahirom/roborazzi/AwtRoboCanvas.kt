@@ -6,7 +6,14 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import com.dropbox.differ.ImageComparator
-import java.awt.*
+import java.awt.AlphaComposite
+import java.awt.BasicStroke
+import java.awt.Color
+import java.awt.Font
+import java.awt.Graphics2D
+import java.awt.GraphicsEnvironment
+import java.awt.Rectangle
+import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
 import java.awt.geom.AffineTransform
@@ -572,7 +579,9 @@ internal val hasPreferredFont: Boolean by lazy {
   try {
     GraphicsEnvironment.getLocalGraphicsEnvironment()
       .availableFontFamilyNames.any { it.equals(preferredFontName, ignoreCase = true) }
-  } catch (e: Exception) {
+  } catch (e: Throwable) {
+    // It seems that font error becomes InternalError in some environments so we catch Throwable here
+    // https://github.com/takahirom/roborazzi/issues/656#issuecomment-2734506322
     // In headless environments where font configuration is missing, default to false
     debugLog {
       "Font configuration is missing or not available in headless environment. Using Font.MONOSPACED as fallback. Error: ${e.message}"
