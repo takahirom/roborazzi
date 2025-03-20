@@ -1016,6 +1016,36 @@ roborazzi {
 > generateComposePreviewRobolectricTests.packages.set(["com.example"])
 > ```
 
+## Annotation-based Capture Control
+
+To enable fine-grained control over screenshot timing in Compose Previews, add the new annotations dependency:
+
+```gradle
+testImplementation("io.github.takahirom.roborazzi:roborazzi-annotations:[version]")
+```
+
+Use `@RoboComposePreviewOptions` to configure time-based captures:
+
+```kotlin
+@RoboComposePreviewOptions(
+  manualClockOptions = [ManualClockOptions(advanceTimeMillis = 516L)]
+)
+@Preview
+@Composable
+fun DelayedPreview() {
+  var visible by remember { mutableStateOf(false) }
+  LaunchedEffect(Unit) {
+    delay(500)
+    visible = true
+  }
+  if (visible) {
+    Text("Content appears after 500ms")
+  }
+}
+```
+
+This annotation enables capturing screenshots at specific time intervals, particularly useful for testing animated components or delayed state changes.
+
 ## Manually adding Compose Preview screenshot tests
 
 Roborazzi provides a helper function for ComposablePreviewScanner.
