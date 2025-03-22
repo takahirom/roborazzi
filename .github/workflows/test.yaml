@@ -26,6 +26,7 @@ jobs:
       - name: tests
         id: test
         run: |
+          ./gradlew javaDocReleaseGeneration
           ./gradlew test --stacktrace -x testReleaseUnitTest
 
       - name: include build tests
