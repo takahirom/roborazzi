@@ -137,7 +137,7 @@ class RoborazziComposeOptions private constructor(
     setupOptions.forEach { it.configure(configBuilder) }
     configBuilder.applyToRobolectric()
     roborazziReportLog(
-      "Robolectric RuntimeEnvironment.getQualifiers(): ${RuntimeEnvironment.getQualifiers()}"
+      "Robolectric RuntimeEnvironment.getQualifiers() ${roboOutputName()}: ${RuntimeEnvironment.getQualifiers()}"
     )
 
     activityScenarioOptions.forEach { it.configureWithActivityScenario(activityScenario) }
