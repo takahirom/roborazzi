@@ -121,9 +121,9 @@ class RoborazziComposeOptions private constructor(
     content: @Composable () -> Unit
   ): @Composable () -> Unit {
     setupOptions.forEach { it.configure() }
-    roborazziDebugLog {
+    roborazziReportLog(
       "Robolectric RuntimeEnvironment.getQualifiers(): ${RuntimeEnvironment.getQualifiers()}"
-    }
+    )
     activityScenarioOptions.forEach { it.configureWithActivityScenario(activityScenario) }
     var appliedContent = content
     composableOptions.forEach { config ->
