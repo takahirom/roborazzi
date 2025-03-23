@@ -104,7 +104,7 @@ private fun View.generateBitmap(
               nullableWindow = get(this@generateBitmap.rootView) as Window
             }
         } catch (e: Exception) {
-          debugLog {
+          roborazziDebugLog {
             e.stackTraceToString()
           }
           // Material3 ModalBottomSheetWindow doesn't have mWindow field.
