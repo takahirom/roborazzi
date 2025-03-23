@@ -28,15 +28,21 @@ interface RoborazziComposeOption
 interface RoborazziComposeSetupOption : RoborazziComposeOption {
   class ConfigBuilder {
     private val qualifiers = mutableListOf<String>()
+    private val setupsAfterQualifiers = mutableListOf<() -> Unit>()
 
     fun addRobolectricQualifier(qualifier: String) {
       qualifiers.add(qualifier)
     }
 
+    fun addSetupAfterQualifiers(setup: () -> Unit) {
+      setupsAfterQualifiers.add(setup)
+    }
+
     internal fun applyToRobolectric() {
       // setQualifiers() has a little performance overhead.
       // That's why we use a single call to setQualifiers() instead of multiple calls.
-      setQualifiers(qualifiers.joinToString(separator = " ") { "+$it" })
+      setQualifiers(qualifiers.joinToString(separator = " ") { "+$it" }.drop(1))
+      setupsAfterQualifiers.forEach { it() }
     }
   }
   fun configure(configBuilder: ConfigBuilder)
@@ -301,7 +307,9 @@ data class RoborazziComposeFontScaleOption(private val fontScale: Float) :
   }
 
   override fun configure(configBuilder: RoborazziComposeSetupOption.ConfigBuilder) {
-    setFontScale(fontScale)
+    configBuilder.addSetupAfterQualifiers {
+      setFontScale(fontScale)
+    }
   }
 }
 
