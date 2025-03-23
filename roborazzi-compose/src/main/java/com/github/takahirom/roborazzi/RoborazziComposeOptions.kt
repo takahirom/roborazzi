@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.RuntimeEnvironment.setFontScale
 import org.robolectric.RuntimeEnvironment.setQualifiers
 import org.robolectric.Shadows.shadowOf
@@ -135,6 +136,9 @@ class RoborazziComposeOptions private constructor(
     val configBuilder = RoborazziComposeSetupOption.ConfigBuilder()
     setupOptions.forEach { it.configure(configBuilder) }
     configBuilder.applyToRobolectric()
+    roborazziReportLog(
+      "Robolectric RuntimeEnvironment.getQualifiers(): ${RuntimeEnvironment.getQualifiers()}"
+    )
 
     activityScenarioOptions.forEach { it.configureWithActivityScenario(activityScenario) }
     var appliedContent = content
