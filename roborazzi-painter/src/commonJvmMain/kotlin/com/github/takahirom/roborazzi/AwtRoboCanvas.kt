@@ -188,7 +188,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     val w = minOf(bufferedImage.width, rightBottomPoint.first)
     val h = minOf(bufferedImage.height, rightBottomPoint.second)
     if (w == bufferedImage.width && h == bufferedImage.height) {
-      debugLog {
+      roborazziDebugLog {
         "AwtRoboCanvas.croppedImage croppedImage is same size as original image, so return original image without cropping."
       }
       return@lazy bufferedImage
@@ -366,7 +366,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
             )
           } else {
             if (comparisonComparisonStyle is RoborazziOptions.CompareOptions.ComparisonStyle.Grid) {
-              debugLog { "Roborazzi can't find the oneDpPx, so fall back to CompareOptions.Format.Simple comparison format" }
+              roborazziDebugLog { "Roborazzi can't find the oneDpPx, so fall back to CompareOptions.Format.Simple comparison format" }
             }
             Simple(
               goldenCanvas = goldenCanvas,
@@ -539,7 +539,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
 
 private fun BufferedImage.scale(scale: Double): BufferedImage {
   if (scale == 1.0) {
-    debugLog {
+    roborazziDebugLog {
       "AwtRoboCanvas.scale scale is 1.0, so return original image without scaling."
     }
     return this
@@ -583,7 +583,7 @@ internal val hasPreferredFont: Boolean by lazy {
     // It seems that font error becomes InternalError in some environments so we catch Throwable here
     // https://github.com/takahirom/roborazzi/issues/656#issuecomment-2734506322
     // In headless environments where font configuration is missing, default to false
-    debugLog {
+    roborazziDebugLog {
       "Font configuration is missing or not available in headless environment. Using Font.MONOSPACED as fallback. Error: ${e.message}"
     }
     false

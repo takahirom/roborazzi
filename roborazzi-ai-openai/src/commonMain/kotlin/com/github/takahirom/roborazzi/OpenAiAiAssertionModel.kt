@@ -158,7 +158,7 @@ class OpenAiAiAssertionModel(
         model = modelName
       )
     }
-    debugLog {
+    roborazziDebugLog {
       "OpenAiAiModel: response: $responseText"
     }
     val aiConditionResults = parseOpenAiResponse(responseText, aiAssertionOptions)
@@ -197,7 +197,7 @@ class OpenAiAiAssertionModel(
       }
       bodyText
     }
-    debugLog { "OpenAiAiModel: response: ${bodyText.hideApiKey(apiKey)}" }
+    roborazziDebugLog { "OpenAiAiModel: response: ${bodyText.hideApiKey(apiKey)}" }
 
     val responseBody: ChatCompletionResponse = json.decodeFromString(bodyText)
     return responseBody.choices.firstOrNull()?.message?.content ?: ""
@@ -277,7 +277,7 @@ private fun parseOpenAiResponse(
     }
     OpenAiResponse(results = results)
   } catch (e: Exception) {
-    debugLog { "Failed to parse OpenAI response: ${e.message}" }
+    roborazziDebugLog { "Failed to parse OpenAI response: ${e.message}" }
     OpenAiResponse(results = emptyList())
   }
   return aiAssertionOptions.aiAssertions.mapIndexed { index, condition ->
