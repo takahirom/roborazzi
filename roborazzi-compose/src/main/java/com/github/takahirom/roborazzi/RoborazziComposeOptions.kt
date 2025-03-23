@@ -25,7 +25,20 @@ interface RoborazziComposeOption
 
 @ExperimentalRoborazziApi
 interface RoborazziComposeSetupOption : RoborazziComposeOption {
-  fun configure()
+  class ConfigBuilder {
+    private val qualifiers = mutableListOf<String>()
+
+    fun addRobolectricQualifier(qualifier: String) {
+      qualifiers.add(qualifier)
+    }
+
+    internal fun applyToRobolectric() {
+      // setQualifiers() has a little performance overhead.
+      // That's why we use a single call to setQualifiers() instead of multiple calls.
+      setQualifiers("+${qualifiers.joinToString(separator = " ")}")
+    }
+  }
+  fun configure(configBuilder: ConfigBuilder)
 }
 
 @ExperimentalRoborazziApi
@@ -119,7 +132,10 @@ class RoborazziComposeOptions private constructor(
     activityScenario: ActivityScenario<out Activity>,
     content: @Composable () -> Unit
   ): @Composable () -> Unit {
-    setupOptions.forEach { it.configure() }
+    val configBuilder = RoborazziComposeSetupOption.ConfigBuilder()
+    setupOptions.forEach { it.configure(configBuilder) }
+    configBuilder.applyToRobolectric()
+
     activityScenarioOptions.forEach { it.configureWithActivityScenario(activityScenario) }
     var appliedContent = content
     composableOptions.forEach { config ->
@@ -244,13 +260,13 @@ fun RoborazziComposeOptions.Builder.uiMode(uiMode: Int): RoborazziComposeOptions
 @ExperimentalRoborazziApi
 data class RoborazziComposeUiModeOption(private val uiMode: Int) :
   RoborazziComposeSetupOption {
-  override fun configure() {
+  override fun configure(configBuilder: RoborazziComposeSetupOption.ConfigBuilder) {
     val nightMode =
       when (uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
         true -> "night"
         false -> "notnight"
       }
-    setQualifiers("+$nightMode")
+    configBuilder.addRobolectricQualifier(nightMode)
   }
 }
 
@@ -262,9 +278,9 @@ fun RoborazziComposeOptions.Builder.locale(locale: String): RoborazziComposeOpti
 @ExperimentalRoborazziApi
 data class RoborazziComposeLocaleOption(private val locale: String) :
   RoborazziComposeSetupOption {
-  override fun configure() {
+  override fun configure(configBuilder: RoborazziComposeSetupOption.ConfigBuilder) {
     val localeWithFallback = locale.ifBlank { "en" }
-    setQualifiers("+$localeWithFallback")
+    configBuilder.addRobolectricQualifier(localeWithFallback)
   }
 }
 
@@ -280,7 +296,7 @@ data class RoborazziComposeFontScaleOption(private val fontScale: Float) :
     require(fontScale > 0) { "fontScale must be greater than 0" }
   }
 
-  override fun configure() {
+  override fun configure(configBuilder: RoborazziComposeSetupOption.ConfigBuilder) {
     setFontScale(fontScale)
   }
 }
