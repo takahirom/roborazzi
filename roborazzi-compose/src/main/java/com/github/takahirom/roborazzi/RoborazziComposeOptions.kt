@@ -36,7 +36,7 @@ interface RoborazziComposeSetupOption : RoborazziComposeOption {
     internal fun applyToRobolectric() {
       // setQualifiers() has a little performance overhead.
       // That's why we use a single call to setQualifiers() instead of multiple calls.
-      setQualifiers("+${qualifiers.joinToString(separator = " ")}")
+      setQualifiers("${qualifiers.joinToString(separator = " ")}")
     }
   }
   fun configure(configBuilder: ConfigBuilder)
