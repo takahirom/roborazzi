@@ -75,7 +75,7 @@ fun roborazziSystemPropertyTaskType(): RoborazziTaskType {
       isVerifying = roborazziVerifyEnabled
     )
   }
-  debugLog {
+  roborazziDebugLog {
     "roborazziSystemPropertyTaskType():\n" +
       "roborazziTaskType: $result \n" +
       "roborazziDefaultResizeScale(): ${roborazziDefaultResizeScale()}\n"

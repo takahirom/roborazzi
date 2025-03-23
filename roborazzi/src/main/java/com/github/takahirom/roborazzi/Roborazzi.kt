@@ -145,7 +145,7 @@ fun captureScreenRoboImage(
   Espresso.onIdle()
 
   val roots: List<Root> = fetchRobolectricWindowRoots()
-  debugLog {
+  roborazziDebugLog {
     "captureScreenRoboImage roots: ${roots.joinToString("\n") { it.toString() }}"
   }
   captureRootsInternal(roots, roborazziOptions, file)

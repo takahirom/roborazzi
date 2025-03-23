@@ -38,7 +38,7 @@ fun processOutputImageAndReport(
   comparisonCanvasFactory: ComparisonCanvasFactory,
 ) {
   val taskType = roborazziOptions.taskType
-  debugLog {
+  roborazziDebugLog {
     "processOutputImageAndReport(): " +
       "taskType:" + taskType +
       "\ngoldenFile:${goldenFile.absolutePath}"
@@ -112,7 +112,7 @@ fun processOutputImageAndReport(
           contextData = contextData,
           imageIoFormat = recordOptions.imageIoFormat,
         )
-      debugLog {
+      roborazziDebugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
           "compareFile:${comparisonFile.absolutePath}"
       }
@@ -145,7 +145,7 @@ fun processOutputImageAndReport(
       } else {
         null
       }
-      debugLog {
+      roborazziDebugLog {
         "processOutputImageAndReport(): actualCanvas is saved " +
           "actualFile:${actualFile.absolutePath}"
       }
@@ -176,7 +176,7 @@ fun processOutputImageAndReport(
         contextData = contextData,
       )
     }
-    debugLog {
+    roborazziDebugLog {
       "processOutputImageAndReport: \n" +
         "  goldenFile: $goldenFile\n" +
         "  changed: $changed\n" +
@@ -194,7 +194,7 @@ fun processOutputImageAndReport(
       contextData = contextData,
       imageIoFormat = recordOptions.imageIoFormat,
     )
-    debugLog {
+    roborazziDebugLog {
       "processOutputImageAndReport: \n" +
         " record goldenFile: $goldenFile\n"
     }

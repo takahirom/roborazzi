@@ -66,7 +66,7 @@ class GeminiAiAssertionModel(
       val prompt = template.replace("INPUT_PROMPT", inputPrompt)
       text(prompt)
 
-      debugLog {
+      roborazziDebugLog {
         "RoborazziAi: prompt:$prompt"
       }
     }
@@ -106,7 +106,7 @@ class GeminiAiAssertionModel(
       },
     )
     val response = runBlocking { generativeModel.generateContent(inputContent) }
-    debugLog {
+    roborazziDebugLog {
       "RoborazziAi: response: ${response.text}"
     }
     val geminiResult = CaptureResults.json.decodeFromString<Array<GeminiAiConditionResult>>(

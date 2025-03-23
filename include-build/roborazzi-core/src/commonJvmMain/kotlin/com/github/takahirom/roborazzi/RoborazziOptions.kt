@@ -241,7 +241,7 @@ data class RoborazziOptions(
 
         val jsonResult = json.encodeToJsonElement(captureResult)
         KotlinxIo.writeText(reportFileName, jsonResult.toString())
-        debugLog { "JsonResult file($reportFileName) has been written" }
+        roborazziDebugLog { "JsonResult file($reportFileName) has been written" }
       }
 
     }
