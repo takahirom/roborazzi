@@ -13,7 +13,6 @@ import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
-import org.robolectric.RuntimeEnvironment.setQualifiers
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
@@ -77,11 +76,11 @@ fun RoborazziComposeOptions.Builder.previewDevice(previewDevice: String): Robora
 @ExperimentalRoborazziApi
 data class RoborazziComposePreviewDeviceOption(private val previewDevice: String) :
   RoborazziComposeSetupOption {
-  override fun configure() {
+  override fun configure(configBuilder: RoborazziComposeSetupOption.ConfigBuilder) {
     if (previewDevice.isNotBlank()) {
       // Requires `io.github.sergio-sastre.ComposablePreviewScanner:android:0.4.0` or later
       RobolectricDeviceQualifierBuilder.build(previewDevice)?.run {
-        setQualifiers(this)
+        configBuilder.addRobolectricQualifier(this)
       }
     }
   }
@@ -114,7 +113,7 @@ data class RoborazziComposeManualAdvancePreviewOption(
   private val advanceTimeMillis: Long
 ) :
   RoborazziComposeSetupOption, RoborazziComposeCaptureOption {
-  override fun configure() {
+  override fun configure(configBuilder: RoborazziComposeSetupOption.ConfigBuilder) {
     composeTestRule.mainClock.autoAdvance = false
   }
 
