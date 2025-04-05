@@ -44,8 +44,9 @@ class GeminiWithOpenAiApiInterfaceTest {
             aiAssertionModel = OpenAiAiAssertionModel(
               baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/",
               apiKey = System.getenv("gemini_api_key").orEmpty(),
+              jsonSchemaType = OpenAiAiAssertionModel.JsonSchemaType.Gemini,
               modelName = "gemini-1.5-flash",
-              seed = null
+              seed = null,
             ),
           )
         )

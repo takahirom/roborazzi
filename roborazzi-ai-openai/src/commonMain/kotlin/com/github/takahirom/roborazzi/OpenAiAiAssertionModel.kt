@@ -46,6 +46,7 @@ class OpenAiAiAssertionModel(
   private val temperature: Float = DefaultTemperature,
   private val maxTokens: Int = DefaultMaxOutputTokens,
   private val seed: Int? = 1566,
+  private val jsonSchemaType: JsonSchemaType = JsonSchemaType.OpenAI,
   private val requestBuilderModifier: (HttpRequestBuilder.() -> Unit) = {
     header("Authorization", "Bearer $apiKey")
   },
@@ -71,6 +72,10 @@ class OpenAiAiAssertionModel(
     }
   },
 ) : AiAssertionOptions.AiAssertionModel {
+  enum class JsonSchemaType {
+    Gemini,
+    OpenAI
+  }
 
   override fun assert(
     referenceImageFilePath: String,
@@ -204,36 +209,48 @@ class OpenAiAiAssertionModel(
   }
 
   private fun buildJsonSchema(): JsonObject {
+    val explanationSchemaJson = when (jsonSchemaType) {
+      JsonSchemaType.Gemini -> """
+      "explanation": {
+        "type": "string",
+        "nullable": true 
+      }
+    """.trimIndent() // Gemini uses nullable property
+
+      JsonSchemaType.OpenAI -> """
+      "explanation": {
+        "type": ["string", "null"]
+      }
+    """.trimIndent() // OpenAI uses type union with null
+    }
     val schemaJson = """
-    {
-  "name": "OpenAiResponse1",
-  "description": "Verify image",
-  "strict": true,
-  "schema": {
-    "type": "object",
-    "required": ["results"],
-    "additionalProperties": false,
-    "properties": {
-      "results": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "required": ["fulfillment_percent", "explanation"],
-          "additionalProperties": false,
-          "properties": {
-            "fulfillment_percent": {
-              "type": "integer"
-            },
-            "explanation": {
-              "type": ["string", "null"]
+  {
+    "name": "OpenAiResponse1",
+    "description": "Verify image",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "required": ["results"],
+      "additionalProperties": false,
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["fulfillment_percent", "explanation"],
+            "additionalProperties": false,
+            "properties": {
+              "fulfillment_percent": {
+                "type": "integer"
+              },
+              $explanationSchemaJson
             }
           }
         }
       }
     }
   }
-}
-    """.trimIndent()
+  """.trimIndent()
     return json.parseToJsonElement(schemaJson).jsonObject
   }
 }
