@@ -140,9 +140,6 @@ class RoborazziComposeOptions private constructor(
     val configBuilder = RoborazziComposeSetupOption.ConfigBuilder()
     setupOptions.forEach { it.configure(configBuilder) }
     configBuilder.applyToRobolectric()
-    roborazziReportLog(
-      "Robolectric RuntimeEnvironment.getQualifiers() ${roboOutputName()}: ${RuntimeEnvironment.getQualifiers()}"
-    )
 
     activityScenarioOptions.forEach { it.configureWithActivityScenario(activityScenario) }
     var appliedContent = content
