@@ -1,4 +1,4 @@
-name: Ollama Gemini Test
+name: Ollama Gemma Test
 
 on:
   push:
