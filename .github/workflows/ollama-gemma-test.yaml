@@ -34,7 +34,7 @@ jobs:
           # Docker typically stores volumes under /var/lib/docker/volumes on Linux
           # Cache this specific named volume's data directory
           path: /var/lib/docker/volumes/${{ env.OLLAMA_VOLUME_PATH }}/_data
-          key: ollama-docker-volume-${{ runner.os }}-${{ hashFiles('**/lockfiles') }} # Example key
+          key: ollama-docker-volume-${{ runner.os }}-${{ env.OLLAMA_MODEL_TO_TEST }}
           restore-keys: |
             ollama-docker-volume-${{ runner.os }}-
 
@@ -42,13 +42,29 @@ jobs:
         run: |
           echo "Starting Ollama container using Docker..."
           # Use a named volume for persistence within the job & caching
-          docker run -d --network=host \
+          docker run -d -p 11434:11434 \
             -v ${{ env.OLLAMA_VOLUME_PATH }}:/root/.ollama \
             -e OLLAMA_FLASH_ATTENTION=1 \
             --name ollama ollama/ollama
 
           echo "Waiting for Ollama service to initialize..."
-          sleep 15 # Wait for the server
+          timeout=120
+          interval=5
+          elapsed=0
+          while ! curl -sf http://localhost:11434/; do
+            if [ $elapsed -ge $timeout ]; then
+              echo "Ollama failed to start within $timeout seconds."
+              echo "Docker ps output:"
+              docker ps -a
+              echo "Ollama container logs:"
+              docker logs ollama
+              exit 1
+            fi
+            echo "Ollama not ready yet, waiting $interval seconds..."
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+          echo "Ollama service is ready."
 
           echo "Checking running Docker containers..."
           docker ps

@@ -41,7 +41,7 @@ class OllamaWithOpenAiApiInterfaceTest {
   val roborazziRule = RoborazziRule(
     options = RoborazziRule.Options(
       roborazziOptions = RoborazziOptions(
-        taskType =  RoborazziTaskType.Compare,
+        taskType = RoborazziTaskType.Compare,
         compareOptions = RoborazziOptions.CompareOptions(
           aiAssertionOptions = AiAssertionOptions(
             assertionImageType = AiAssertionOptions.AssertionImageType.Actual(),
@@ -66,7 +66,8 @@ class OllamaWithOpenAiApiInterfaceTest {
       conn.requestMethod = "GET"
       conn.connectTimeout = 500
       conn.readTimeout = 500
-      conn.responseCode == 200 && conn.inputStream.bufferedReader().use { it.readText().trim() } == "Ollama is running"
+      conn.responseCode == 200 && conn.inputStream.bufferedReader()
+        .use { it.readText().trim() } == "Ollama is running"
     } catch (e: Exception) {
       false
     } finally {
@@ -74,7 +75,7 @@ class OllamaWithOpenAiApiInterfaceTest {
   }
 
   @Test(expected = AssertionError::class)
-  fun captureWithAi() {
+  fun captureWithAi_whenAssertionFails_shouldThrowAssertionError() {
     if (!isOllamaRunning()) {
       // Check if Ollama is running
       println("Ollama is not running. Please start Ollama and try again.")
@@ -85,10 +86,33 @@ class OllamaWithOpenAiApiInterfaceTest {
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
+          // This should be failed
           AiAssertionOptions.AiAssertion(
             assertionPrompt = "it should have PREVIOUS button",
             requiredFulfillmentPercent = 90,
           ),
+          // This should be passed
+          AiAssertionOptions.AiAssertion(
+            assertionPrompt = "it should show First Fragment",
+            requiredFulfillmentPercent = 90,
+          )
+        )
+      )
+    File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + "_compare.png").delete()
+  }
+
+  @Test
+  fun captureWithAi_whenAssertionPasses_shouldNotThrowAssertionError() {
+    if (!isOllamaRunning()) {
+      // Check if Ollama is running
+      println("Ollama is not running. Please start Ollama and try again.")
+      throw AssertionError("Ollama is not running. Please start Ollama and try again.")
+    }
+    ROBORAZZI_DEBUG = true
+    File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + ".png").delete()
+    onView(ViewMatchers.isRoot())
+      .captureRoboImage(
+        roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
           AiAssertionOptions.AiAssertion(
             assertionPrompt = "it should show First Fragment",
             requiredFulfillmentPercent = 90,
