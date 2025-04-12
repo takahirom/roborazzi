@@ -44,6 +44,7 @@ class OllamaWithOpenAiApiInterfaceTest {
         taskType =  RoborazziTaskType.Compare,
         compareOptions = RoborazziOptions.CompareOptions(
           aiAssertionOptions = AiAssertionOptions(
+            assertionImageType = AiAssertionOptions.AssertionImageType.Actual(),
             aiAssertionModel = OpenAiAiAssertionModel(
 //              loggingEnabled = true,
               baseUrl = "http://localhost:11434/v1/",
