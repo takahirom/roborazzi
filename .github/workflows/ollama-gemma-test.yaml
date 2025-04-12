@@ -8,13 +8,11 @@ on:
 
 env:
   OLLAMA_MODEL_TO_TEST: 'gemma3:12b'
-  # Docker volume path (can be adjusted if needed)
   OLLAMA_VOLUME_PATH: ollama_data
 
 jobs:
   ollama-test:
-    # Use ubuntu-latest for more RAM and reliable Docker support
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
 
