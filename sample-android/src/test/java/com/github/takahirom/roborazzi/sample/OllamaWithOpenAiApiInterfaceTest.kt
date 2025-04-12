@@ -50,7 +50,7 @@ class OllamaWithOpenAiApiInterfaceTest {
               baseUrl = "http://localhost:11434/v1/",
               apiKey = "",
               apiType = OpenAiAiAssertionModel.ApiType.Ollama,
-              modelName = "gemma3:12b-it-q4_K_M",
+              modelName = "gemma3:4b-it-q8_0",
               seed = null,
             ),
           )
