@@ -1,0 +1,63 @@
+name: Ollama Gemini Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  OLLAMA_MODEL_TO_TEST: 'gemma3:12b'
+  OLLAMA_HOST_DIR: ${{ github.workspace }}/.ollama
+
+jobs:
+  ollama-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required for actions/checkout
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Restore Ollama models cache
+        id: cache-ollama-models
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.OLLAMA_HOST_DIR }}
+          key: ollama-models-${{ runner.os }}
+          restore-keys: |
+            ollama-models-${{ runner.os }}
+
+      - name: Start Ollama
+        run: |
+          echo "Creating cache directory if it doesn't exist..."
+          mkdir -p ${{ env.OLLAMA_HOST_DIR }}
+
+          echo "Starting Ollama container..."
+          # Run Ollama in detached mode, mapping the host cache directory to the container's model storage
+          # Using --network=host allows easy access via localhost from the runner
+          docker run -d --network=host \
+            -v ${{ env.OLLAMA_HOST_DIR }}:/root/.ollama \
+            --name ollama ollama/ollama
+
+          echo "Waiting for Ollama service to initialize..."
+          # Wait a few seconds for the service to become available
+          # Adjust sleep time if needed based on runner performance
+          sleep 10
+
+          echo "Checking running Docker containers..."
+          docker ps # Verify the container is running
+
+      - name: Test Ollama - Pull model and check API
+        run: |
+          echo "Attempting to pull model: ${{ env.OLLAMA_MODEL_TO_TEST }}"
+          # Execute 'ollama pull' inside the running container
+          # This will be fast if the model is already cached/pulled
+          docker exec ollama ollama pull ${{ env.OLLAMA_MODEL_TO_TEST }}
+
+          echo "Listing available models in Ollama..."
+          # List models to confirm the model is available
+          docker exec ollama ollama list
+          
+          ./gradlew sample-android:testDebugUnitTest --tests "*OllamaWithOpenAiApiInterfaceTest"
