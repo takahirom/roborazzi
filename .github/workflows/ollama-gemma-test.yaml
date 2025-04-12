@@ -47,6 +47,7 @@ jobs:
           # Use a named volume for persistence within the job & caching
           docker run -d --network=host \
             -v ${{ env.OLLAMA_VOLUME_PATH }}:/root/.ollama \
+            -e OLLAMA_FLASH_ATTENTION=1 \
             --name ollama ollama/ollama
 
           echo "Waiting for Ollama service to initialize..."
