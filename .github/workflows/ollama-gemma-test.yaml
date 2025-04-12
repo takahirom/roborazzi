@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  OLLAMA_MODEL_TO_TEST: 'gemma3:12b'
+  OLLAMA_MODEL_TO_TEST: 'gemma3:12b-it-q4_K_M'
   OLLAMA_VOLUME_PATH: ollama_data
 
 jobs:
@@ -38,7 +38,6 @@ jobs:
           restore-keys: |
             ollama-docker-volume-${{ runner.os }}-
 
-      # Start Ollama using Docker (standard on Ubuntu)
       - name: Start Ollama using Docker
         run: |
           echo "Starting Ollama container using Docker..."
@@ -60,7 +59,6 @@ jobs:
           docker exec ollama ollama run ${{ env.OLLAMA_MODEL_TO_TEST }} "Respond with just OK."
           echo "Warm-up complete."
 
-      # Pull model using Docker exec
       - name: Pull Ollama Model
         run: |
           echo "Attempting to pull model: ${{ env.OLLAMA_MODEL_TO_TEST }}"
@@ -69,12 +67,10 @@ jobs:
           echo "Listing available models in Ollama..."
           docker exec ollama ollama list
 
-      # Run Gradle tests
       - name: Run Gradle Tests
         run: |
           ./gradlew sample-android:testDebugUnitTest --tests "*OllamaWithOpenAiApiInterfaceTest"
 
-      # Upload artifacts
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
