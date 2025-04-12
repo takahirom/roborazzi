@@ -64,8 +64,8 @@ class OllamaWithOpenAiApiInterfaceTest {
     return try {
       conn = URL("http://localhost:11434").openConnection() as HttpURLConnection
       conn.requestMethod = "GET"
-      conn.connectTimeout = 500
-      conn.readTimeout = 500
+      conn.connectTimeout = 2000
+      conn.readTimeout = 2000
       conn.responseCode == 200 && conn.inputStream.bufferedReader()
         .use { it.readText().trim() } == "Ollama is running"
     } catch (e: Exception) {
@@ -114,7 +114,7 @@ class OllamaWithOpenAiApiInterfaceTest {
       .captureRoboImage(
         roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
           AiAssertionOptions.AiAssertion(
-            assertionPrompt = "it should show First Fragment",
+            assertionPrompt = "it should show a screen titled First Fragment. Please ignore Hello text",
             requiredFulfillmentPercent = 90,
           )
         )
