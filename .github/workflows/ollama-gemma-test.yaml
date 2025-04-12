@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  OLLAMA_MODEL_TO_TEST: 'gemma3:4b-it-q8_0'
+  OLLAMA_MODEL_TO_TEST: 'gemma3:4b-it-q4_K_M'
   OLLAMA_VOLUME_PATH: ollama_data
 
 jobs:
