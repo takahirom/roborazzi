@@ -8,13 +8,12 @@ on:
 
 env:
   OLLAMA_MODEL_TO_TEST: 'gemma3:12b'
-  OLLAMA_HOST_DIR: ${{ github.workspace }}/.ollama
 
 jobs:
   ollama-test:
-    runs-on: macos-latest
+    runs-on: macos-latest # Keep macos-latest for now, but be mindful of resources
     permissions:
-      contents: read # Required for actions/checkout
+      contents: read
 
     steps:
       - name: Checkout repository code
@@ -25,64 +24,51 @@ jobs:
         with:
           gradle-version: wrapper
 
-      - name: Setup Docker using Colima (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          echo "Installing Docker CLI, Compose, Colima and starting Colima..."
-          # Install necessary tools using Homebrew
-          brew install docker docker-compose colima || true
-          # Start Colima (this initializes the Docker daemon backend)
-          colima start
-          echo "Docker and Colima setup complete."
-          docker --version # Verify docker CLI install
-          docker ps # Verify docker daemon connection
-
       - name: Restore Ollama models cache
         id: cache-ollama-models
         uses: actions/cache@v4
         with:
-          path: ${{ env.OLLAMA_HOST_DIR }}
-          key: ollama-models-${{ runner.os }}
+          path: ~/.ollama
+          key: ollama-native-models-${{ runner.os }}-${{ hashFiles('**/lockfiles') }} # Example key
           restore-keys: |
-            ollama-models-${{ runner.os }}
+            ollama-native-models-${{ runner.os }}-
 
-      - name: Start Ollama
+      - name: Install and Start Ollama
         run: |
-          echo "Creating cache directory if it doesn't exist..."
-          mkdir -p ${{ env.OLLAMA_HOST_DIR }}
+          echo "Installing Ollama CLI..."
+          brew install ollama || true # Install ollama using Homebrew
 
-          echo "Starting Ollama container..."
-          # Run Ollama in detached mode, mapping the host cache directory to the container's model storage
-          # Using --network=host allows easy access via localhost from the runner
-          docker run -d --network=host \
-            -v ${{ env.OLLAMA_HOST_DIR }}:/root/.ollama \
-            --name ollama ollama/ollama
+          echo "Starting Ollama service in background..."
+          ollama serve & # Start the server in the background
+          OLLAMA_PID=$! # Store the PID
 
-          echo "Waiting for Ollama service to initialize..."
-          # Wait a few seconds for the service to become available
-          # Adjust sleep time if needed based on runner performance
-          sleep 10
+          echo "Waiting for Ollama service to be ready..."
+          sleep 15 # Wait for the server to initialize
 
-          echo "Checking running Docker containers..."
-          docker ps # Verify the container is running
+          # Optional: Check if the server is responding
+          curl --fail http://localhost:11434/ || (echo "Ollama server failed to start"; kill $OLLAMA_PID; exit 1)
 
-      - name: Test Ollama - Pull model and check API
+          echo "Ollama service started."
+
+      - name: Pull Ollama Model
         run: |
           echo "Attempting to pull model: ${{ env.OLLAMA_MODEL_TO_TEST }}"
-          # Execute 'ollama pull' inside the running container
-          # This will be fast if the model is already cached/pulled
-          docker exec ollama ollama pull ${{ env.OLLAMA_MODEL_TO_TEST }}
+          ollama pull ${{ env.OLLAMA_MODEL_TO_TEST }}
 
           echo "Listing available models in Ollama..."
-          # List models to confirm the model is available
-          docker exec ollama ollama list
-          
+          ollama list
+
+      - name: Run Gradle Tests
+        run: |
+          # This step remains the same, assuming tests access http://localhost:11434
           ./gradlew sample-android:testDebugUnitTest --tests "*OllamaWithOpenAiApiInterfaceTest"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
         with:
           name: reports
           path: |
             **/build/reports
             **/build/outputs/roborazzi
           retention-days: 30
+
