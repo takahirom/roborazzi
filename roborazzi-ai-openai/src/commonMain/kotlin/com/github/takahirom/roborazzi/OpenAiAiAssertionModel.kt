@@ -56,7 +56,7 @@ class OpenAiAiAssertionModel(
     }
     install(HttpTimeout) {
       requestTimeoutMillis = INFINITE_TIMEOUT_MS
-      socketTimeoutMillis = 80_000
+      socketTimeoutMillis = 160_000
     }
     if (loggingEnabled) {
       install(Logging) {
