@@ -8,10 +8,13 @@ on:
 
 env:
   OLLAMA_MODEL_TO_TEST: 'gemma3:12b'
+  # Docker volume path (can be adjusted if needed)
+  OLLAMA_VOLUME_PATH: ollama_data
 
 jobs:
   ollama-test:
-    runs-on: macos-latest # Keep macos-latest for now, but be mindful of resources
+    # Use ubuntu-latest for more RAM and reliable Docker support
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 
@@ -24,45 +27,51 @@ jobs:
         with:
           gradle-version: wrapper
 
-      - name: Restore Ollama models cache
-        id: cache-ollama-models
+      # Cache for Docker volume data
+      - name: Restore Ollama Docker volume cache
+        id: cache-ollama-volume
         uses: actions/cache@v4
         with:
-          path: ~/.ollama
-          key: ollama-native-models-${{ runner.os }}-${{ hashFiles('**/lockfiles') }} # Example key
+          # Cache the Docker named volume content path
+          # Docker typically stores volumes under /var/lib/docker/volumes on Linux
+          # Cache this specific named volume's data directory
+          path: /var/lib/docker/volumes/${{ env.OLLAMA_VOLUME_PATH }}/_data
+          key: ollama-docker-volume-${{ runner.os }}-${{ hashFiles('**/lockfiles') }} # Example key
           restore-keys: |
-            ollama-native-models-${{ runner.os }}-
+            ollama-docker-volume-${{ runner.os }}-
 
-      - name: Install and Start Ollama
+      # Start Ollama using Docker (standard on Ubuntu)
+      - name: Start Ollama using Docker
         run: |
-          echo "Installing Ollama CLI..."
-          brew install ollama || true # Install ollama using Homebrew
+          echo "Starting Ollama container using Docker..."
+          # Use a named volume for persistence within the job & caching
+          docker run -d --network=host \
+            -v ${{ env.OLLAMA_VOLUME_PATH }}:/root/.ollama \
+            --name ollama ollama/ollama
 
-          echo "Starting Ollama service in background..."
-          ollama serve & # Start the server in the background
-          OLLAMA_PID=$! # Store the PID
+          echo "Waiting for Ollama service to initialize..."
+          sleep 15 # Wait for the server
 
-          echo "Waiting for Ollama service to be ready..."
-          sleep 15 # Wait for the server to initialize
+          echo "Checking running Docker containers..."
+          docker ps
+          # Optional: Check API endpoint
+          curl --fail http://localhost:11434/ || (echo "Ollama server failed to start"; exit 1)
 
-          # Optional: Check if the server is responding
-          curl --fail http://localhost:11434/ || (echo "Ollama server failed to start"; kill $OLLAMA_PID; exit 1)
-
-          echo "Ollama service started."
-
+      # Pull model using Docker exec
       - name: Pull Ollama Model
         run: |
           echo "Attempting to pull model: ${{ env.OLLAMA_MODEL_TO_TEST }}"
-          ollama pull ${{ env.OLLAMA_MODEL_TO_TEST }}
+          docker exec ollama ollama pull ${{ env.OLLAMA_MODEL_TO_TEST }}
 
           echo "Listing available models in Ollama..."
-          ollama list
+          docker exec ollama ollama list
 
+      # Run Gradle tests
       - name: Run Gradle Tests
         run: |
-          # This step remains the same, assuming tests access http://localhost:11434
           ./gradlew sample-android:testDebugUnitTest --tests "*OllamaWithOpenAiApiInterfaceTest"
 
+      # Upload artifacts
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -71,4 +80,3 @@ jobs:
             **/build/reports
             **/build/outputs/roborazzi
           retention-days: 30
-
