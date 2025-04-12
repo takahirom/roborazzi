@@ -57,6 +57,10 @@ jobs:
           docker ps
           # Optional: Check API endpoint
           curl --fail http://localhost:11434/ || (echo "Ollama server failed to start"; exit 1)
+          
+          echo "Sending warm-up request..."
+          docker exec ollama ollama run ${{ env.OLLAMA_MODEL_TO_TEST }} "Respond with just OK."
+          echo "Warm-up complete."
 
       # Pull model using Docker exec
       - name: Pull Ollama Model
