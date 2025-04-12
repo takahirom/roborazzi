@@ -25,6 +25,18 @@ jobs:
         with:
           gradle-version: wrapper
 
+      - name: Setup Docker using Colima (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "Installing Docker CLI, Compose, Colima and starting Colima..."
+          # Install necessary tools using Homebrew
+          brew install docker docker-compose colima || true
+          # Start Colima (this initializes the Docker daemon backend)
+          colima start
+          echo "Docker and Colima setup complete."
+          docker --version # Verify docker CLI install
+          docker ps # Verify docker daemon connection
+
       - name: Restore Ollama models cache
         id: cache-ollama-models
         uses: actions/cache@v4
