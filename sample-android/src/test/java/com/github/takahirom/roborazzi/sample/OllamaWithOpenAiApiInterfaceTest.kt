@@ -4,13 +4,27 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.takahirom.roborazzi.*
+import com.github.takahirom.roborazzi.AiAssertionOptions
+import com.github.takahirom.roborazzi.DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.OpenAiAiAssertionModel
+import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
+import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import com.github.takahirom.roborazzi.RoborazziOptions
+import com.github.takahirom.roborazzi.RoborazziRule
+import com.github.takahirom.roborazzi.RoborazziTaskType
+import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.provideRoborazziContext
+import com.github.takahirom.roborazzi.roboOutputName
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLConnection
 
 @OptIn(ExperimentalRoborazziApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -19,7 +33,7 @@ import java.io.File
   sdk = [30],
   qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
-class OpenAiTest {
+class OllamaWithOpenAiApiInterfaceTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
@@ -32,8 +46,11 @@ class OpenAiTest {
           aiAssertionOptions = AiAssertionOptions(
             aiAssertionModel = OpenAiAiAssertionModel(
 //              loggingEnabled = true,
-              apiKey = System.getenv("openai_api_key").orEmpty(),
-              modelName = "gpt-4o",
+              baseUrl = "http://localhost:11434/v1/",
+              apiKey = "",
+              apiType = OpenAiAiAssertionModel.ApiType.Ollama,
+              modelName = "gemma3:12b",
+              seed = null,
             ),
           )
         )
@@ -41,13 +58,28 @@ class OpenAiTest {
     )
   )
 
+  fun isOllamaRunning(): Boolean {
+    val conn: URLConnection?
+    return try {
+      conn = URL("http://localhost:11434").openConnection() as HttpURLConnection
+      conn.requestMethod = "GET"
+      conn.connectTimeout = 500
+      conn.readTimeout = 500
+      conn.responseCode == 200 && conn.inputStream.bufferedReader().use { it.readText().trim() } == "Ollama is running"
+    } catch (e: Exception) {
+      false
+    } finally {
+    }
+  }
+
   @Test
   fun captureWithAi() {
-    ROBORAZZI_DEBUG = true
-    if (System.getenv("openai_api_key") == null) {
-      println("Skip the test because openai_api_key is not set.")
+    if (!isOllamaRunning()) {
+      // Check if Ollama is running
+      println("Ollama is not running. Please start Ollama and try again.")
       return
     }
+    ROBORAZZI_DEBUG = true
     File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + ".png").delete()
     onView(ViewMatchers.isRoot())
       .captureRoboImage(

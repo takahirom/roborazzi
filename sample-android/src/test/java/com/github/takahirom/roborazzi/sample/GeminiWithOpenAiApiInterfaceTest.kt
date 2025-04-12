@@ -42,9 +42,10 @@ class GeminiWithOpenAiApiInterfaceTest {
         compareOptions = RoborazziOptions.CompareOptions(
           aiAssertionOptions = AiAssertionOptions(
             aiAssertionModel = OpenAiAiAssertionModel(
+//              loggingEnabled = true,
               baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/",
               apiKey = System.getenv("gemini_api_key").orEmpty(),
-              jsonSchemaType = OpenAiAiAssertionModel.JsonSchemaType.Gemini,
+              apiType = OpenAiAiAssertionModel.ApiType.Gemini,
               modelName = "gemini-1.5-flash",
               seed = null,
             ),
