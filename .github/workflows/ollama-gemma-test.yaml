@@ -85,14 +85,14 @@ jobs:
 
       - name: Run Ollama Tests
         id: ollama_test
-        continue-on-error: true
+#        continue-on-error: true
         run: |
           ./gradlew sample-android:testDebugUnitTest --tests "*OllamaWithOpenAiApiInterfaceTest"
 
-      - name: Show warning on test failure
-        if: steps.ollama_test.outcome != 'success'
-        run: |
-          echo "::warning::Ollama ${{ env.OLLAMA_MODEL_TO_TEST}} tests failed or encountered issues. This might be acceptable as the local LLM is not yet reliable. Please check the reports artifact for details."
+#      - name: Show warning on test failure
+#        if: steps.ollama_test.outcome != 'success'
+#        run: |
+#          echo "::warning::Ollama ${{ env.OLLAMA_MODEL_TO_TEST}} tests failed or encountered issues. This might be acceptable as the local LLM is not yet reliable. Please check the reports artifact for details."
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()

@@ -1,6 +1,8 @@
 package com.github.takahirom.roborazzi.sample
 
+import android.content.Context
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -113,7 +115,8 @@ class OllamaWithOpenAiApiInterfaceTest {
     // For now, it is not reliable
     // We might need 65 or higher of MMMU benchmark
     // https://mmmu-benchmark.github.io/
-    onView(ViewMatchers.isRoot())
+    val actionBarId = ApplicationProvider.getApplicationContext<Context>().resources.getIdentifier("action_bar", "id", "android")
+    onView(ViewMatchers.withId(actionBarId))
       .captureRoboImage(
         roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
           AiAssertionOptions.AiAssertion(
