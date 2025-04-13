@@ -110,11 +110,14 @@ class OllamaWithOpenAiApiInterfaceTest {
     }
     ROBORAZZI_DEBUG = true
     File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + ".png").delete()
+    // For now, it is not reliable
+    // We might need 65 or higher of MMMU benchmark
+    // https://mmmu-benchmark.github.io/
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
           AiAssertionOptions.AiAssertion(
-            assertionPrompt = "it should show a screen titled First Fragment. Please ignore Hello text",
+            assertionPrompt = "First Fragment should be shown",
             requiredFulfillmentPercent = 90,
           )
         )
