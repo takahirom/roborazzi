@@ -161,7 +161,7 @@ class OpenAiAiAssertionModel(
               listOf(
                 Content(
                   type = "text",
-                  // "Ollama maintainers do recommend that you include instructions in the prompt for the model to output JSON."
+                  // Ollama maintainers recommend including instructions in the prompt for the model to output JSON.
                   // https://blog.danielclayton.co.uk/posts/ollama-structured-outputs/
                   text = "Please provide a JSON response with the following format:\n" +
                     "{\n" +
