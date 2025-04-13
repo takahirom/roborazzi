@@ -117,7 +117,7 @@ class OllamaWithOpenAiApiInterfaceTest {
       .captureRoboImage(
         roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
           AiAssertionOptions.AiAssertion(
-            assertionPrompt = "First Fragment should be shown",
+            assertionPrompt = "Text \"First Fragment\" should be visible",
             requiredFulfillmentPercent = 90,
           )
         )
