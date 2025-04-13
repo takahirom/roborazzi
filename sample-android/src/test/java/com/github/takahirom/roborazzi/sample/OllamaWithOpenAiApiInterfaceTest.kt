@@ -106,7 +106,7 @@ class OllamaWithOpenAiApiInterfaceTest {
     if (!isOllamaRunning()) {
       // Check if Ollama is running
       println("Ollama is not running. Please start Ollama and try again.")
-      throw AssertionError("Ollama is not running. Please start Ollama and try again.")
+      return
     }
     ROBORAZZI_DEBUG = true
     File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + ".png").delete()
