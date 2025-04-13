@@ -22,6 +22,9 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLConnection
 
 @OptIn(ExperimentalRoborazziApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -30,7 +33,7 @@ import java.io.File
   sdk = [30],
   qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
-class GeminiWithOpenAiApiInterfaceTest {
+class OllamaWithOpenAiApiInterfaceTest {
   @get:Rule
   val composeTestRule = createAndroidComposeRule<MainActivity>()
 
@@ -38,15 +41,16 @@ class GeminiWithOpenAiApiInterfaceTest {
   val roborazziRule = RoborazziRule(
     options = RoborazziRule.Options(
       roborazziOptions = RoborazziOptions(
-        taskType =  RoborazziTaskType.Compare,
+        taskType = RoborazziTaskType.Compare,
         compareOptions = RoborazziOptions.CompareOptions(
           aiAssertionOptions = AiAssertionOptions(
+            assertionImageType = AiAssertionOptions.AssertionImageType.Actual(),
             aiAssertionModel = OpenAiAiAssertionModel(
 //              loggingEnabled = true,
-              baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/",
-              apiKey = System.getenv("gemini_api_key").orEmpty(),
-              apiType = OpenAiAiAssertionModel.ApiType.Gemini,
-              modelName = "gemini-1.5-flash",
+              baseUrl = "http://localhost:11434/v1/",
+              apiKey = "",
+              apiType = OpenAiAiAssertionModel.ApiType.Ollama,
+              modelName = "gemma3:4b-it-q4_K_M",
               seed = null,
             ),
           )
@@ -55,23 +59,65 @@ class GeminiWithOpenAiApiInterfaceTest {
     )
   )
 
-  @Test
-  fun captureWithAi() {
-    ROBORAZZI_DEBUG = true
-    if (System.getenv("gemini_api_key") == null) {
-      println("Skip the test because openai_api_key is not set.")
-      return
+  fun isOllamaRunning(): Boolean {
+    val conn: URLConnection?
+    return try {
+      conn = URL("http://localhost:11434").openConnection() as HttpURLConnection
+      conn.requestMethod = "GET"
+      conn.connectTimeout = 2000
+      conn.readTimeout = 2000
+      conn.responseCode == 200 && conn.inputStream.bufferedReader()
+        .use { it.readText().trim() } == "Ollama is running"
+    } catch (e: Exception) {
+      false
+    } finally {
     }
+  }
+
+  @Test(expected = AssertionError::class)
+  fun captureWithAi_whenAssertionFails_shouldThrowAssertionError() {
+    if (!isOllamaRunning()) {
+      // Check if Ollama is running
+      println("Ollama is not running. Please start Ollama and try again.")
+      throw AssertionError("Ollama is not running. Please start Ollama and try again.")
+    }
+    ROBORAZZI_DEBUG = true
     File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + ".png").delete()
     onView(ViewMatchers.isRoot())
       .captureRoboImage(
         roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
+          // This should be failed
           AiAssertionOptions.AiAssertion(
             assertionPrompt = "it should have PREVIOUS button",
             requiredFulfillmentPercent = 90,
           ),
+          // This should be passed
           AiAssertionOptions.AiAssertion(
             assertionPrompt = "it should show First Fragment",
+            requiredFulfillmentPercent = 90,
+          )
+        )
+      )
+    File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + "_compare.png").delete()
+  }
+
+  @Test
+  fun captureWithAi_whenAssertionPasses_shouldNotThrowAssertionError() {
+    if (!isOllamaRunning()) {
+      // Check if Ollama is running
+      println("Ollama is not running. Please start Ollama and try again.")
+      return
+    }
+    ROBORAZZI_DEBUG = true
+    File(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + File.separator + roboOutputName() + ".png").delete()
+    // For now, it is not reliable
+    // We might need 65 or higher of MMMU benchmark
+    // https://mmmu-benchmark.github.io/
+    onView(ViewMatchers.withId(R.id.toolbar))
+      .captureRoboImage(
+        roborazziOptions = provideRoborazziContext().options.addedAiAssertions(
+          AiAssertionOptions.AiAssertion(
+            assertionPrompt = "Text \"First Fragment\" should be visible",
             requiredFulfillmentPercent = 90,
           )
         )

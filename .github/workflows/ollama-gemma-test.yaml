@@ -1,0 +1,104 @@
+name: Ollama Gemma Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  OLLAMA_MODEL_TO_TEST: 'gemma3:4b-it-q4_K_M'
+  OLLAMA_VOLUME_PATH: ollama_data
+
+jobs:
+  ollama-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa # v2.12.0
+        with:
+          gradle-version: wrapper
+
+      # Cache for Docker volume data
+      - name: Restore Ollama Docker volume cache
+        id: cache-ollama-volume
+        uses: actions/cache@v4
+        with:
+          # Cache the Docker named volume content path
+          # Docker typically stores volumes under /var/lib/docker/volumes on Linux
+          # Cache this specific named volume's data directory
+          path: /var/lib/docker/volumes/${{ env.OLLAMA_VOLUME_PATH }}/_data
+          key: ollama-docker-volume-${{ runner.os }}-${{ env.OLLAMA_MODEL_TO_TEST }}
+          restore-keys: |
+            ollama-docker-volume-${{ runner.os }}-
+
+      - name: Start Ollama using Docker
+        run: |
+          echo "Starting Ollama container using Docker..."
+          # Use a named volume for persistence within the job & caching
+          docker run -d -p 11434:11434 \
+            -v ${{ env.OLLAMA_VOLUME_PATH }}:/root/.ollama \
+            -e OLLAMA_FLASH_ATTENTION=1 \
+            --name ollama ollama/ollama
+
+          echo "Waiting for Ollama service to initialize..."
+          timeout=120
+          interval=5
+          elapsed=0
+          while ! curl -sf http://localhost:11434/; do
+            if [ $elapsed -ge $timeout ]; then
+              echo "Ollama failed to start within $timeout seconds."
+              echo "Docker ps output:"
+              docker ps -a
+              echo "Ollama container logs:"
+              docker logs ollama
+              exit 1
+            fi
+            echo "Ollama not ready yet, waiting $interval seconds..."
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+          echo "Ollama service is ready."
+
+          echo "Checking running Docker containers..."
+          docker ps
+          # Optional: Check API endpoint
+          curl --fail http://localhost:11434/ || (echo "Ollama server failed to start"; exit 1)
+          
+          echo "Sending warm-up request..."
+          docker exec ollama ollama run ${{ env.OLLAMA_MODEL_TO_TEST }} "Respond with just OK."
+          echo "Warm-up complete."
+
+      - name: Pull Ollama Model
+        run: |
+          echo "Attempting to pull model: ${{ env.OLLAMA_MODEL_TO_TEST }}"
+          docker exec ollama ollama pull ${{ env.OLLAMA_MODEL_TO_TEST }}
+
+          echo "Listing available models in Ollama..."
+          docker exec ollama ollama list
+
+      - name: Run Ollama Tests
+        id: ollama_test
+        continue-on-error: true
+        run: |
+          ./gradlew sample-android:testDebugUnitTest --tests "*OllamaWithOpenAiApiInterfaceTest"
+
+      - name: Show warning on test failure
+        if: steps.ollama_test.outcome != 'success'
+        run: |
+          echo "::warning::Ollama ${{ env.OLLAMA_MODEL_TO_TEST}} tests failed or encountered issues. This might be acceptable as the local LLM is not yet reliable. Please check the reports artifact for details."
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: reports
+          path: |
+            **/build/reports
+            **/build/outputs/roborazzi
+          retention-days: 30

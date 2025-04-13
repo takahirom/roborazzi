@@ -6,7 +6,6 @@ import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.Target
 import com.github.takahirom.roborazzi.AiAssertionOptions.AiAssertionModel.TargetImages
 import com.github.takahirom.roborazzi.CaptureResults.Companion.json
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.HttpTimeout.Plugin.INFINITE_TIMEOUT_MS
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -18,7 +17,6 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -46,7 +44,7 @@ class OpenAiAiAssertionModel(
   private val temperature: Float = DefaultTemperature,
   private val maxTokens: Int = DefaultMaxOutputTokens,
   private val seed: Int? = 1566,
-  private val jsonSchemaType: JsonSchemaType = JsonSchemaType.OpenAI,
+  private val apiType: ApiType = ApiType.OpenAI,
   private val requestBuilderModifier: (HttpRequestBuilder.() -> Unit) = {
     header("Authorization", "Bearer $apiKey")
   },
@@ -58,7 +56,7 @@ class OpenAiAiAssertionModel(
     }
     install(HttpTimeout) {
       requestTimeoutMillis = INFINITE_TIMEOUT_MS
-      socketTimeoutMillis = 80_000
+      socketTimeoutMillis = 300_000
     }
     if (loggingEnabled) {
       install(Logging) {
@@ -72,9 +70,10 @@ class OpenAiAiAssertionModel(
     }
   },
 ) : AiAssertionOptions.AiAssertionModel {
-  enum class JsonSchemaType {
+  enum class ApiType {
     Gemini,
-    OpenAI
+    OpenAI,
+    Ollama
   }
 
   override fun assert(
@@ -132,6 +131,7 @@ class OpenAiAiAssertionModel(
       val imageBytes = readByteArrayFromFile(image.filePath)
       imageBytes.encodeBase64()
     }
+
     val messages = listOf(
       Message(
         role = "system",
@@ -144,17 +144,46 @@ class OpenAiAiAssertionModel(
       ),
       Message(
         role = "user",
-        content = listOf(
-          Content(
-            type = "text",
-            text = template.replace("INPUT_PROMPT", inputPrompt)
-          ),
-        ) + imageBase64s.map { imageBase64 ->
-          Content(
-            type = "image_url",
-            imageUrl = ImageUrl(url = "data:image/png;base64,$imageBase64")
+        content = (
+          listOf(
+            Content(
+              type = "text",
+              text = template.replace("INPUT_PROMPT", inputPrompt)
+            ),
+          ) +
+            imageBase64s.map { imageBase64 ->
+                Content(
+                  type = "image_url",
+                  imageUrl = ImageUrl(url = "data:image/png;base64,$imageBase64")
+                )
+            } +
+            if (apiType == ApiType.Ollama || apiType == ApiType.Gemini) {
+              listOf(
+                Content(
+                  type = "text",
+                  // Ollama maintainers recommend including instructions in the prompt for the model to output JSON.
+                  // https://blog.danielclayton.co.uk/posts/ollama-structured-outputs/
+                  text = "Please provide a JSON response with the following format:\n" +
+                    "{\n" +
+                    "  \"results\": [\n" + buildString {
+                      aiAssertionOptions.aiAssertions.forEachIndexed { index, _ ->
+                        appendLine(
+                          "    {\n" +
+                            "      \"fulfillment_percent\": 50,\n" +
+                            "      \"explanation\": \"\"\n" +
+                            "    }${if (index != aiAssertionOptions.aiAssertions.lastIndex) "," else ""}"
+                        )
+                      }
+                  }+
+
+                    "  ]\n" +
+                    "}"
+                )
+              )
+            } else {
+              listOf()
+            }
           )
-        }
       )
     )
     val responseText = runBlocking {
@@ -209,15 +238,15 @@ class OpenAiAiAssertionModel(
   }
 
   private fun buildJsonSchema(): JsonObject {
-    val explanationSchemaJson = when (jsonSchemaType) {
-      JsonSchemaType.Gemini -> """
+    val explanationSchemaJson = when (apiType) {
+      ApiType.Gemini -> """
       "explanation": {
         "type": "string",
         "nullable": true 
       }
     """.trimIndent() // Gemini uses nullable property
 
-      JsonSchemaType.OpenAI -> """
+      ApiType.OpenAI, ApiType.Ollama -> """
       "explanation": {
         "type": ["string", "null"]
       }

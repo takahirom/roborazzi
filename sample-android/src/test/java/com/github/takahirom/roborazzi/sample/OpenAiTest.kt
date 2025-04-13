@@ -31,6 +31,7 @@ class OpenAiTest {
         compareOptions = RoborazziOptions.CompareOptions(
           aiAssertionOptions = AiAssertionOptions(
             aiAssertionModel = OpenAiAiAssertionModel(
+//              loggingEnabled = true,
               apiKey = System.getenv("openai_api_key").orEmpty(),
               modelName = "gpt-4o",
             ),
