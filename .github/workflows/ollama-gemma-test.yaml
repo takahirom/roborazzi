@@ -40,7 +40,7 @@ jobs:
           cat > Modelfile << EOF
           FROM gemma3:27b-it-q4_K_M
 
-          PARAMETER num_ctx 6000
+          PARAMETER num_ctx 5000
           PARAMETER temperature 0.1
           PARAMETER stop "<end_of_turn>"
 
