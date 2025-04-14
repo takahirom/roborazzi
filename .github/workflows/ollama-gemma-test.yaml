@@ -34,13 +34,23 @@ jobs:
           restore-keys: |
             ollama-docker-volume-${{ runner.os }}-
 
+      - name: Create Swap Memory
+        run: |
+          echo "Setting up swap memory..."
+          sudo fallocate -l 8G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          echo "/swapfile swap swap defaults 0 0" | sudo tee -a /etc/fstab
+          free -h
+
       - name: Create custom Modelfile
         run: |
           echo "Creating custom Modelfile for Gemma with reduced context window..."
           cat > Modelfile << EOF
           FROM gemma3:27b-it-q4_K_M
 
-          PARAMETER num_ctx 5000
+          PARAMETER num_ctx 4096
           PARAMETER temperature 0.1
           PARAMETER stop "<end_of_turn>"
 
