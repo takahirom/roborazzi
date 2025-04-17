@@ -234,7 +234,7 @@ class AndroidComposePreviewTester : ComposePreviewTester<AndroidPreviewJUnit4Tes
     val junit4TestLifecycleOptions =
       options.testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions
     return AndroidComposablePreviewScanner().scanPackageTrees(*options.scanOptions.packages.toTypedArray())
-      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java).let {
+      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java, ManualClockOptions::class.java).let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
         } else {
