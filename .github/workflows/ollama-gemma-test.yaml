@@ -34,15 +34,15 @@ jobs:
           restore-keys: |
             ollama-docker-volume-${{ runner.os }}-
 
-      - name: Create Swap Memory
-        run: |
-          echo "Setting up swap memory..."
-          sudo fallocate -l 8G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          echo "/swapfile swap swap defaults 0 0" | sudo tee -a /etc/fstab
-          free -h
+#      - name: Create Swap Memory
+#        run: |
+#          echo "Setting up swap memory..."
+#          sudo fallocate -l 8G /swapfile
+#          sudo chmod 600 /swapfile
+#          sudo mkswap /swapfile
+#          sudo swapon /swapfile
+#          echo "/swapfile swap swap defaults 0 0" | sudo tee -a /etc/fstab
+#          free -h
 
       - name: Create custom Modelfile
         run: |
