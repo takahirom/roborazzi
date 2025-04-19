@@ -115,6 +115,7 @@ jobs:
           
           echo "Listing available models in Ollama..."
           docker exec ollama ollama list
+          docker exec ollama ollama rm ${{ env.OLLAMA_MODEL_TO_TEST }}
           
           echo "Sending warm-up request..."
           docker exec ollama ollama run gemma3-reduced-ctx "Respond with just OK."
