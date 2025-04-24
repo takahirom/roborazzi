@@ -41,8 +41,8 @@ class OpenAiAiAssertionModel(
   private val modelName: String = "gpt-4o",
   private val baseUrl: String = "https://api.openai.com/v1/",
   private val loggingEnabled: Boolean = false,
-  private val temperature: Float = DefaultTemperature,
-  private val maxTokens: Int = DefaultMaxOutputTokens,
+  private val temperature: Float? = DefaultTemperature,
+  private val maxTokens: Int? = DefaultMaxOutputTokens,
   private val seed: Int? = 1566,
   private val apiType: ApiType = ApiType.OpenAI,
   private val requestBuilderModifier: (HttpRequestBuilder.() -> Unit) = {
@@ -355,8 +355,8 @@ private fun ByteArray.encodeBase64(): String {
 private data class ChatCompletionRequest(
   val model: String,
   val messages: List<Message>,
-  val temperature: Float,
-  @SerialName("max_tokens") val maxTokens: Int,
+  val temperature: Float?,
+  @SerialName("max_tokens") val maxTokens: Int?,
   @SerialName("response_format") val responseFormat: ResponseFormat?,
   val seed: Int?,
 )
