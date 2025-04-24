@@ -49,6 +49,12 @@ android {
         if (localProperties.getProperty("openai_api_key") != null) {
           environment "openai_api_key", localProperties.getProperty("openai_api_key")
         }
+        if (localProperties.getProperty("azure_openai_api_key") != null) {
+          environment "azure_openai_api_key", localProperties.getProperty("azure_openai_api_key")
+          environment "azure_openai_base_url", localProperties.getProperty("azure_openai_base_url")
+          environment "azure_openai_api_version", localProperties.getProperty("azure_openai_api_version")
+          environment "azure_openai_model", localProperties.getProperty("azure_openai_model")
+        }
         // To run coverage report in Android Studio
         jvmArgs '-noverify'
         // Set the max heap size for the tests JVM(s)
