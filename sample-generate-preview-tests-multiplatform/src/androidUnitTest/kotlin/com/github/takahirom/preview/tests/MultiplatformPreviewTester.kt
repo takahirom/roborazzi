@@ -8,11 +8,11 @@ import com.github.takahirom.roborazzi.*
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter
 import org.junit.rules.RuleChain
 import org.junit.rules.TestWatcher
-import sergio.sastre.composable.preview.scanner.jvm.JvmAnnotationInfo
-import sergio.sastre.composable.preview.scanner.jvm.JvmAnnotationScanner
+import sergio.sastre.composable.preview.scanner.jvm.common.CommonComposablePreviewScanner
+import sergio.sastre.composable.preview.scanner.jvm.common.CommonPreviewInfo
 
-@OptIn(com.github.takahirom.roborazzi.ExperimentalRoborazziApi::class)
-class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<JvmAnnotationInfo>> {
+@OptIn(ExperimentalRoborazziApi::class)
+class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<CommonPreviewInfo>> {
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
       composeRuleFactory = {
@@ -32,9 +32,9 @@ class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<JvmA
     )
   )
 
-  override fun testParameters(): List<JUnit4TestParameter<JvmAnnotationInfo>> {
+  override fun testParameters(): List<JUnit4TestParameter<CommonPreviewInfo>> {
     val options = options()
-    return JvmAnnotationScanner("org.jetbrains.compose.ui.tooling.preview.Preview")
+    return CommonComposablePreviewScanner()
       .scanPackageTrees(*options.scanOptions.packages.toTypedArray())
       .getPreviews()
       .map {
@@ -45,12 +45,13 @@ class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<JvmA
       }
   }
 
-  override fun test(testParameter: JUnit4TestParameter<JvmAnnotationInfo>) {
+  override fun test(testParameter: JUnit4TestParameter<CommonPreviewInfo>) {
     val preview = testParameter.preview
+    val screenshotNameSuffix = preview.previewIndex?.let { "_" + preview.previewIndex }.orEmpty()
     testParameter.composeTestRule.setContent {
       preview()
     }
     testParameter.composeTestRule.onRoot()
-      .captureRoboImage(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + "/" + preview.methodName + ".png")
+      .captureRoboImage(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + "/" + preview.methodName + screenshotNameSuffix + ".png")
   }
 }
