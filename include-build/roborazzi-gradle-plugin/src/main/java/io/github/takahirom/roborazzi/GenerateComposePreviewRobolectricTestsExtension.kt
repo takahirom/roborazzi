@@ -17,7 +17,7 @@ import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.testing.Test
 import java.io.File
 import java.net.URLEncoder
-import java.util.*
+import java.util.Locale
 import javax.inject.Inject
 
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
@@ -194,6 +194,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                   testLifecycleOptions.testRuleFactory(composeTestRule)
                 )
                 
+                @org.junit.experimental.categories.Category(RoborazziComposePreviewTestCategory::class.java)
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)
                 $robolectricConfigString
                 @Test
