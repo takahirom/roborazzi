@@ -173,6 +173,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
             import org.robolectric.annotation.GraphicsMode
             import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
             import com.github.takahirom.roborazzi.*
+            import org.junit.experimental.categories.Category
 
 
             @RunWith(ParameterizedRobolectricTestRunner::class)
@@ -194,7 +195,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                   testLifecycleOptions.testRuleFactory(composeTestRule)
                 )
                 
-                @org.junit.experimental.categories.Category(RoborazziComposePreviewTestCategory::class.java)
+                @Category(RoborazziComposePreviewTestCategory::class)
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)
                 $robolectricConfigString
                 @Test
