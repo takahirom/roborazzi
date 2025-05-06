@@ -19,6 +19,9 @@ import sergio.sastre.composable.preview.scanner.android.device.domain.Robolectri
 import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
+// For Generated junit4 tests
+interface RoborazziComposePreviewTestCategory
+
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   filePath: String,
