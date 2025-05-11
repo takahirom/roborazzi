@@ -43,7 +43,7 @@ allprojects {
   plugins.withId('com.vanniktech.maven.publish') {
     project.group = "io.github.takahirom.roborazzi"
     mavenPublishing {
-      publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.S01)
+      publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
       signAllPublications()
     }
 
