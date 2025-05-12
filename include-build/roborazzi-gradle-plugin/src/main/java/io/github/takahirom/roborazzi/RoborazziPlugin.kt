@@ -630,9 +630,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
     if (isCleanupRun) {
       // Remove all files not in the results from the outputDir
       val removingFiles: MutableSet<String> = outputDir.get().asFile
-        .listFiles()
-        ?.toList()
-        .orEmpty()
+        .walkTopDown()
+        .toList()
         .filter { it.isFile && KnownImageFileExtensions.contains(it.extension) }
         .map { it.absolutePath }
         .toMutableSet()
