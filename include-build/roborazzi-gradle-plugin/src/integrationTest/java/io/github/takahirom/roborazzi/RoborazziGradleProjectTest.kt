@@ -540,6 +540,22 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun whenRemoveSubdirectoryTestTheOldScreenshotShouldBeRemoved() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      removeTests()
+      addTestCaptureWithCustomPathTest()
+      record()
+      removeTests()
+      addRuleTest()
+      recordWithCleanupOldScreenshots()
+
+      checkResultsSummaryFileExists()
+      checkRecordedFileExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("app/build/outputs/roborazzi/custom_outputDirectoryPath_from_rule/custom_outputFileProvider-com.github.takahirom.integration_test_project.RoborazziTest.testCaptureWithCustomPath.png")
+    }
+  }
+
+  @Test
   fun compareWithCustomPath() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
       removeTests()
