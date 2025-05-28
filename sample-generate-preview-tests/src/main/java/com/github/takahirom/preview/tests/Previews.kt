@@ -300,7 +300,7 @@ fun PreviewDelayed() {
   }
   LaunchedEffect(Unit) {
     while (true) {
-      delay(100)
+      delay(5)
       counter++
     }
   }
