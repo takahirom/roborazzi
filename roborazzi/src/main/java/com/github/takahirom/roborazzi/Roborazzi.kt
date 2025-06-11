@@ -14,6 +14,7 @@ import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.view.WindowManager
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.ComposeTestRule
@@ -174,12 +175,14 @@ fun captureRootsInternal(
 }
 
 @InternalRoborazziApi
-fun captureScreenIfMultipleWindows(
+fun captureScreenIfContainOverlays(
   file: File,
   roborazziOptions: RoborazziOptions,
-  captureSingleComponent: () -> Unit
+  captureComponentWithoutOverlays: () -> Unit
 ) {
-  if (fetchRobolectricWindowRoots().size > 1) {
+  if (fetchRobolectricWindowRoots().any {
+      it.windowLayoutParams.get().type >= WindowManager.LayoutParams.TYPE_APPLICATION
+    }) {
     roborazziReportLog(
       "It seems that there are multiple windows." +
         "We capture all windows using captureScreenRoboImage(). " +
@@ -187,7 +190,7 @@ fun captureScreenIfMultipleWindows(
     )
     captureScreenRoboImage(file, roborazziOptions)
   } else {
-    captureSingleComponent()
+    captureComponentWithoutOverlays()
   }
 }
 
@@ -319,10 +322,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  captureScreenIfMultipleWindows(
+  captureScreenIfContainOverlays(
     file = file,
     roborazziOptions = roborazziOptions,
-    captureSingleComponent = {
+    captureComponentWithoutOverlays = {
       capture(
         rootComponent = RoboComponent.Compose(
           node = this.fetchSemanticsNode("fail to captureRoboImage"),

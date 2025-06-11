@@ -124,10 +124,10 @@ private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
 
   onActivity { activity ->
     activity.setContent(content = { content() })
-    captureScreenIfMultipleWindows(
+    captureScreenIfContainOverlays(
       file = file,
       roborazziOptions = roborazziOptions,
-      captureSingleComponent = {
+      captureComponentWithoutOverlays = {
         val composeView = activity.window.decorView
           .findViewById<ViewGroup>(android.R.id.content)
           .getChildAt(0) as ComposeView
