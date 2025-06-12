@@ -1,9 +1,11 @@
 package com.github.takahirom.preview.tests
 
+import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -28,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
@@ -312,5 +315,39 @@ fun PreviewDelayed() {
   ) {
     Text("Counter: ${counter}00ms ")
     CircularProgressIndicator()
+  }
+}
+
+// https://github.com/takahirom/roborazzi/issues/694
+@Preview
+@Composable
+fun PreviewDialogSubcompose() {
+  SubcomposeLayout { _ ->
+    subcompose(Unit) {
+      MaterialTheme {
+        AlertDialog(
+          onDismissRequest = {},
+          confirmButton = @Composable { Text("Confirm") },
+          text = @Composable { Text("Dialog wrapped by Subcompose") }
+        )
+      }
+    }
+
+    layout(0, 0) {}
+  }
+}
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@Preview
+@Composable
+fun PreviewDialogBoxWithConstraints() {
+  BoxWithConstraints {
+    MaterialTheme {
+      AlertDialog(
+        onDismissRequest = {},
+        confirmButton = @Composable { Text("Confirm") },
+        text = @Composable { Text("Dialog wrapped by BoxWithConstraints") }
+      )
+    }
   }
 }
