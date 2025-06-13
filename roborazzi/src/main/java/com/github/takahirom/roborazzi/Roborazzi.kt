@@ -182,7 +182,14 @@ fun captureScreenIfMultipleWindows(
 ) {
   // We need to wait for the main looper to be idle because the dialogs will be added to the window
   // https://github.com/takahirom/roborazzi/issues/694
-  ShadowLooper.shadowMainLooper().idle()
+  try {
+    ShadowLooper.shadowMainLooper().idle()
+  } catch (e: NoClassDefFoundError) {
+    // This should not happen if you are using Robolectric.
+    // If you have a use case where you need to capture the screen without Robolectric,
+    // let us know.
+    e.printStackTrace()
+  }
 
   if (fetchRobolectricWindowRoots().size > 1) {
     roborazziReportLog(
