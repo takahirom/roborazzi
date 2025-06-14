@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
@@ -50,10 +51,11 @@ sealed interface RoboComponent {
       rootsOrderByDepth.forEach { root ->
         val layoutParams = root.windowLayoutParams.get()
         val decorView = root.decorView
-        if ((layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND) !== 0) {
+        if ((layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND) != 0) {
           val alpha = (layoutParams.dimAmount * 255).toInt()
           val color = Color.argb(alpha, 0, 0, 0)
-          decorView.setBackgroundColor(color)
+          val paint = Paint().apply { this.color = color }
+          canvas.drawRect(Rect(0, 0, width, height), paint)
         }
         val outRect = Rect()
         Gravity.apply(
