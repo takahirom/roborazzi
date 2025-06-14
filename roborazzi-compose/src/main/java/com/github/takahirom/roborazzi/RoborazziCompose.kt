@@ -121,7 +121,6 @@ private fun ActivityScenario<out ComponentActivity>.captureRoboImage(
   doBeforeCapture: () -> Unit = {},
   content: @Composable () -> Unit,
 ) {
-
   onActivity { activity ->
     activity.setContent(content = { content() })
     captureScreenIfMultipleWindows(

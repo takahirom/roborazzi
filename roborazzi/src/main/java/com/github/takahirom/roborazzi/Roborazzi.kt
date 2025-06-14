@@ -33,6 +33,7 @@ import com.dropbox.differ.ImageComparator
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsEqual
+import org.robolectric.shadows.ShadowLooper
 import java.io.File
 import java.util.Locale
 
@@ -179,6 +180,17 @@ fun captureScreenIfMultipleWindows(
   roborazziOptions: RoborazziOptions,
   captureSingleComponent: () -> Unit
 ) {
+  // We need to wait for the main looper to be idle because the dialogs will be added to the window
+  // https://github.com/takahirom/roborazzi/issues/694
+  try {
+    ShadowLooper.shadowMainLooper().idle()
+  } catch (e: NoClassDefFoundError) {
+    // This should not happen if you are using Robolectric.
+    // If you have a use case where you need to capture the screen without Robolectric,
+    // let us know.
+    e.printStackTrace()
+  }
+
   if (fetchRobolectricWindowRoots().size > 1) {
     roborazziReportLog(
       "It seems that there are multiple windows." +
