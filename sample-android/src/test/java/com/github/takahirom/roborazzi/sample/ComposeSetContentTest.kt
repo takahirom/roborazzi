@@ -31,7 +31,7 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
-  sdk = [30],
+  sdk = [35],
   qualifiers = RobolectricDeviceQualifiers.WearOSLargeRound
 )
 class ComposeSetContentTest {
