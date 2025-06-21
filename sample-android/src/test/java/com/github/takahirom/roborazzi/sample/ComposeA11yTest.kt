@@ -222,7 +222,7 @@ class ComposeA11yTest {
   }
 
   @Test
-  @Config(sdk = [35])
+  @Config(sdk = [33])
   fun wrongApi() {
     composeTestRule.setContent {
       // No failures because not API 34
