@@ -52,7 +52,7 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
-  sdk = [30],
+  sdk = [35],
   qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
 class WindowCaptureTest {
@@ -226,7 +226,7 @@ class WindowCaptureTest {
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
-  sdk = [30],
+  sdk = [35],
   qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
 class FragmentActivityWindowCaptureTest {
