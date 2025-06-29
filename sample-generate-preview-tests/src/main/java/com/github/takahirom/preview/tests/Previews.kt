@@ -161,7 +161,7 @@ fun PreviewDialogSurface() {
 
 
 @Preview(
-  name = "Preview width & height large",
+  name = "Preview width and height large",
   widthDp = 2000,
   heightDp = 1000,
 )
@@ -178,7 +178,7 @@ fun PreviewWithWidthAndHeight() {
 }
 
 @Preview(
-  name = "Preview width & height",
+  name = "Preview width and height",
   widthDp = 30,
   heightDp = 30,
 )
@@ -246,7 +246,7 @@ fun PreviewShowBackgroundWithoutBackgroundColor() {
 }
 
 @Preview(
-  name = "Preview showBackground & backgroundColor",
+  name = "Preview showBackground and backgroundColor",
   showBackground = true,
   backgroundColor = 0xFF0000FF,
 )
