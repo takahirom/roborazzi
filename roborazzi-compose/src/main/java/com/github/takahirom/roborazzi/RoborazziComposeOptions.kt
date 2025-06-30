@@ -183,7 +183,7 @@ data class RoborazziComposeSizeOption(val widthDp: Int, val heightDp: Int) :
     if (heightDp > 0) qualifiers.add("h${heightDp}dp")
 
     if (widthDp > 0 && heightDp > 0) {
-      qualifiers.add(if (widthDp > heightDp) "land" else if (heightDp > widthDp) "port" else "port")
+      qualifiers.add(if (widthDp > heightDp) "land" else "port")
     } else {
       val display = ShadowDisplay.getDefaultDisplay()
       val dm = android.util.DisplayMetrics()
