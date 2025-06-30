@@ -14,8 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.RuntimeEnvironment.setFontScale
 import org.robolectric.RuntimeEnvironment.setQualifiers
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowDisplay.getDefaultDisplay
+import kotlin.math.roundToInt
 
 @ExperimentalRoborazziApi
 interface RoborazziComposeOption
@@ -172,28 +176,38 @@ fun RoborazziComposeOptions.Builder.size(
 
 @ExperimentalRoborazziApi
 data class RoborazziComposeSizeOption(val widthDp: Int, val heightDp: Int) :
-  RoborazziComposeSetupOption,
+  RoborazziComposeActivityScenarioOption,
   RoborazziComposeComposableOption {
-  override fun configure(configBuilder: RoborazziComposeSetupOption.ConfigBuilder) {
+  override fun configureWithActivityScenario(scenario: ActivityScenario<out Activity>) {
+    scenario.onActivity { activity ->
+      activity.setDisplaySize(widthDp = widthDp, heightDp = heightDp)
+    }
+  }
+
+  private fun Activity.setDisplaySize(
+    widthDp: Int,
+    heightDp: Int
+  ) {
     if (widthDp <= 0 && heightDp <= 0) return
-    
-    val qualifiers = mutableListOf<String>()
+
+    val display = shadowOf(getDefaultDisplay())
+    val density = resources.displayMetrics.density
     if (widthDp > 0) {
-      qualifiers.add("w${widthDp}dp")
+      val widthPx = (widthDp * density).roundToInt()
+      display.setWidth(widthPx)
     }
     if (heightDp > 0) {
-      qualifiers.add("h${heightDp}dp")
+      val heightPx = (heightDp * density).roundToInt()
+      display.setHeight(heightPx)
     }
-    
-    val qualifier = qualifiers.joinToString("-")
-    configBuilder.addRobolectricQualifier(qualifier)
+    recreate()
   }
 
   override fun configureWithComposable(content: @Composable () -> Unit): @Composable () -> Unit {
     /**
      * WARNING:
      * For this to work, it requires that the Display is within the widthDp and heightDp dimensions
-     * The size is configured automatically via Robolectric qualifiers
+     * You can ensure that by calling [Activity.setDisplaySize] before
      */
     val modifier = when {
       widthDp > 0 && heightDp > 0 -> Modifier.size(widthDp.dp, heightDp.dp)
