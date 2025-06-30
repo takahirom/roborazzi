@@ -178,6 +178,38 @@ fun PreviewWithWidthAndHeight() {
 }
 
 @Preview(
+  name = "Preview width large",
+  widthDp = 2000,
+)
+@Composable
+fun PreviewWithWidthLarge() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!2"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview height large",
+  heightDp = 2000,
+)
+@Composable
+fun PreviewWithHeightLarge() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!2"
+    )
+  }
+}
+
+@Preview(
   name = "Preview width and height",
   widthDp = 30,
   heightDp = 30,

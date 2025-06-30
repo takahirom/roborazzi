@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
 import org.robolectric.RuntimeEnvironment.setFontScale
 import org.robolectric.RuntimeEnvironment.setQualifiers
+import org.robolectric.shadows.ShadowDisplay
 
 @ExperimentalRoborazziApi
 interface RoborazziComposeOption
@@ -176,17 +177,26 @@ data class RoborazziComposeSizeOption(val widthDp: Int, val heightDp: Int) :
   RoborazziComposeComposableOption {
   override fun configure(configBuilder: RoborazziComposeSetupOption.ConfigBuilder) {
     if (widthDp <= 0 && heightDp <= 0) return
-    
+
     val qualifiers = mutableListOf<String>()
-    if (widthDp > 0) {
-      qualifiers.add("w${widthDp}dp")
+    if (widthDp  > 0) qualifiers.add("w${widthDp}dp")
+    if (heightDp > 0) qualifiers.add("h${heightDp}dp")
+
+    if (widthDp > 0 && heightDp > 0) {
+      qualifiers.add(if (widthDp > heightDp) "land" else if (heightDp > widthDp) "port" else "port")
+    } else {
+      val display  = ShadowDisplay.getDefaultDisplay()
+      val dm       = android.util.DisplayMetrics()
+      @Suppress("DEPRECATION") // We use ShadowDisplay to get the display metrics
+      display.getRealMetrics(dm)
+      val currentWdp = (dm.widthPixels  / dm.density).toInt()
+      val currentHdp = (dm.heightPixels / dm.density).toInt()
+      val w = if (widthDp  > 0) widthDp  else currentWdp
+      val h = if (heightDp > 0) heightDp else currentHdp
+      qualifiers.add(if (w > h) "land" else "port")
     }
-    if (heightDp > 0) {
-      qualifiers.add("h${heightDp}dp")
-    }
-    
-    val qualifier = qualifiers.joinToString("-")
-    configBuilder.addRobolectricQualifier(qualifier)
+
+    configBuilder.addRobolectricQualifier(qualifiers.joinToString("-"))
   }
 
   override fun configureWithComposable(content: @Composable () -> Unit): @Composable () -> Unit {
