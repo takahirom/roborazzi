@@ -194,11 +194,11 @@ data class RoborazziComposeSizeOption(val widthDp: Int, val heightDp: Int) :
     val density = resources.displayMetrics.density
     if (widthDp > 0) {
       val widthPx = (widthDp * density).roundToInt()
-      display.setWidth(widthPx)
+      display.setRealWidth(widthPx)
     }
     if (heightDp > 0) {
       val heightPx = (heightDp * density).roundToInt()
-      display.setHeight(heightPx)
+      display.setRealHeight(heightPx)
     }
     recreate()
   }
