@@ -179,19 +179,19 @@ data class RoborazziComposeSizeOption(val widthDp: Int, val heightDp: Int) :
     if (widthDp <= 0 && heightDp <= 0) return
 
     val qualifiers = mutableListOf<String>()
-    if (widthDp  > 0) qualifiers.add("w${widthDp}dp")
+    if (widthDp > 0) qualifiers.add("w${widthDp}dp")
     if (heightDp > 0) qualifiers.add("h${heightDp}dp")
 
     if (widthDp > 0 && heightDp > 0) {
       qualifiers.add(if (widthDp > heightDp) "land" else if (heightDp > widthDp) "port" else "port")
     } else {
-      val display  = ShadowDisplay.getDefaultDisplay()
-      val dm       = android.util.DisplayMetrics()
+      val display = ShadowDisplay.getDefaultDisplay()
+      val dm = android.util.DisplayMetrics()
       @Suppress("DEPRECATION") // We use ShadowDisplay to get the display metrics
       display.getRealMetrics(dm)
-      val currentWdp = (dm.widthPixels  / dm.density).toInt()
+      val currentWdp = (dm.widthPixels / dm.density).toInt()
       val currentHdp = (dm.heightPixels / dm.density).toInt()
-      val w = if (widthDp  > 0) widthDp  else currentWdp
+      val w = if (widthDp > 0) widthDp else currentWdp
       val h = if (heightDp > 0) heightDp else currentHdp
       qualifiers.add(if (w > h) "land" else "port")
     }
