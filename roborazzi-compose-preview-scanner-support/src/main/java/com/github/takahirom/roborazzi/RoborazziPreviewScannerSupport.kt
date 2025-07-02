@@ -38,6 +38,7 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): RoborazziComposeOptions {
   return RoborazziComposeOptions {
+    previewDevice(previewInfo.device)
     size(
       widthDp = previewInfo.widthDp, heightDp = previewInfo.heightDp
     )
@@ -46,7 +47,6 @@ fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): Roborazzi
     )
     locale(previewInfo.locale)
     uiMode(previewInfo.uiMode)
-    previewDevice(previewInfo.device)
     fontScale(previewInfo.fontScale)
 
     /*
