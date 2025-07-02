@@ -229,6 +229,92 @@ fun PreviewWithHeight() {
 }
 
 @Preview(
+  name = "Preview width large",
+  widthDp = 2000,
+)
+@Composable
+fun PreviewWithWidthLarge() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!2"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview height large",
+  heightDp = 2000,
+)
+@Composable
+fun PreviewWithHeightLarge() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World!2"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview width and height large pixel5",
+  device = "spec:parent=pixel_5",
+  widthDp = 2000,
+  heightDp = 1000,
+)
+@Composable
+fun PreviewWithWidthAndHeightPixel5() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World in portrait pixel 5"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview width and height large in portrait",
+  device = "spec:parent=pixel_5,orientation=portrait",
+  widthDp = 2000,
+  heightDp = 1000,
+)
+@Composable
+fun PreviewWithWidthAndHeightInportrait() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World in portrait"
+    )
+  }
+}
+
+@Preview(
+  name = "Preview width and height large in landscape",
+  device = "spec:parent=pixel_5,orientation=landscape",
+  widthDp = 2000,
+  heightDp = 1000,
+)
+@Composable
+fun PreviewWithWidthAndHeightInLandscape() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World in Landscape!"
+    )
+  }
+}
+
+@Preview(
   name = "Preview showBackground only",
   showBackground = true,
 )
