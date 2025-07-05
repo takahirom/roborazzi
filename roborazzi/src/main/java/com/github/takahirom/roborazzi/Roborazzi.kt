@@ -648,14 +648,16 @@ private class ImageCaptureViewAction(
   }
 
   override fun perform(uiController: UiController, view: View) {
-    capture(
-      rootComponent = RoboComponent.View(
-        view = view,
-        roborazziOptions,
-      ),
-      roborazziOptions = roborazziOptions,
-      onCanvas = saveAction
-    )
+    measurePerformance("ui_capture") {
+      capture(
+        rootComponent = RoboComponent.View(
+          view = view,
+          roborazziOptions,
+        ),
+        roborazziOptions = roborazziOptions,
+        onCanvas = saveAction
+      )
+    }
   }
 }
 
@@ -673,18 +675,22 @@ internal fun capture(
     )
 
     is RoborazziOptions.CaptureType.Screenshot -> {
-      val image = rootComponent.image
-        ?: throw IllegalStateException("Unable to find the image of the target root component. Does the rendering element exist?")
-      onCanvas(
-        AwtRoboCanvas(
-          width = image.width,
-          height = image.height,
-          filled = true,
-          bufferedImageType = roborazziOptions.recordOptions.pixelBitConfig.toBufferedImageType()
-        ).apply {
-          drawImage(Rect(0, 0, image.width, image.height), image)
-        }
-      )
+      val image = measurePerformance("get_component_image") {
+        rootComponent.image
+          ?: throw IllegalStateException("Unable to find the image of the target root component. Does the rendering element exist?")
+      }
+      measurePerformance("create_canvas") {
+        onCanvas(
+          AwtRoboCanvas(
+            width = image.width,
+            height = image.height,
+            filled = true,
+            bufferedImageType = roborazziOptions.recordOptions.pixelBitConfig.toBufferedImageType()
+          ).apply {
+            drawImage(Rect(0, 0, image.width, image.height), image)
+          }
+        )
+      }
     }
   }
 }
