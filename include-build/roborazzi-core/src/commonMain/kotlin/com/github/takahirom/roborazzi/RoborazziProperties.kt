@@ -31,6 +31,12 @@ fun roborazziEnableContextData(): Boolean {
   return getSystemProperty("roborazzi.contextdata", "true").toBoolean()
 }
 
+@InternalRoborazziApi
+fun roborazziDebugPerformance(): Boolean {
+  val property = getSystemProperty("roborazzi.debug.performance", "false")
+  return property.toBoolean()
+}
+
 @Deprecated(
   message = "Use roborazziSystemPropertyTaskType()",
   replaceWith = ReplaceWith("roborazziSystemPropertyTaskType().isEnabled()"),
