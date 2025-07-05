@@ -36,7 +36,7 @@ fun processOutputImageAndReport(
   emptyCanvasFactory: EmptyCanvasFactory,
   canvasFactoryFromFile: CanvasFactoryFromFile,
   comparisonCanvasFactory: ComparisonCanvasFactory,
-) {
+) = measurePerformance("process_output_image_and_report") {
   val taskType = roborazziOptions.taskType
   roborazziDebugLog {
     "processOutputImageAndReport(): " +
@@ -63,35 +63,39 @@ fun processOutputImageAndReport(
   if (taskType.isVerifying() || taskType.isComparing()) {
     val width = (newRoboCanvas.croppedWidth * resizeScale).toInt()
     val height = (newRoboCanvas.croppedHeight * resizeScale).toInt()
-    val goldenRoboCanvas = if (goldenFile.exists()) {
-      canvasFactoryFromFile(goldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
-    } else {
-      emptyCanvasFactory(
-        width = width,
-        height = height,
-        filled = true,
-        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
-      )
+    val goldenRoboCanvas = measurePerformance("load_golden_file") {
+      if (goldenFile.exists()) {
+        canvasFactoryFromFile(goldenFile, recordOptions.pixelBitConfig.toBufferedImageType())
+      } else {
+        emptyCanvasFactory(
+          width = width,
+          height = height,
+          filled = true,
+          bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
+        )
+      }
     }
 
     // Only used by CaptureResult.Changed
     var diffPercentage: Float? = null
 
     val compareOptions = roborazziOptions.compareOptions
-    val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
-      val comparisonResult: ImageComparator.ComparisonResult =
-        newRoboCanvas.differ(
-          other = goldenRoboCanvas,
-          resizeScale = resizeScale,
-          imageComparator = compareOptions.imageComparator
-        )
-      diffPercentage = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
-      val changed = !compareOptions.resultValidator(comparisonResult)
-      roborazziReportLog("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
-      changed
-    } else {
-      roborazziReportLog("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
-      true
+    val changed = measurePerformance("compare_images") {
+      if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
+        val comparisonResult: ImageComparator.ComparisonResult =
+          newRoboCanvas.differ(
+            other = goldenRoboCanvas,
+            resizeScale = resizeScale,
+            imageComparator = compareOptions.imageComparator
+          )
+        diffPercentage = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
+        val changed = !compareOptions.resultValidator(comparisonResult)
+        roborazziReportLog("${goldenFile.name} The differ result :$comparisonResult changed:$changed")
+        changed
+      } else {
+        roborazziReportLog("${goldenFile.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
+        true
+      }
     }
 
     val result: CaptureResult = if (changed) {
@@ -105,13 +109,15 @@ fun processOutputImageAndReport(
         resizeScale = resizeScale,
         bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
       )
-      comparisonCanvas
-        .save(
-          path = comparisonFile.absolutePath,
-          resizeScale = resizeScale,
-          contextData = contextData,
-          imageIoFormat = recordOptions.imageIoFormat,
-        )
+      measurePerformance("save_comparison_file") {
+        comparisonCanvas
+          .save(
+            path = comparisonFile.absolutePath,
+            resizeScale = resizeScale,
+            contextData = contextData,
+            imageIoFormat = recordOptions.imageIoFormat,
+          )
+      }
       roborazziDebugLog {
         "processOutputImageAndReport(): compareCanvas is saved " +
           "compareFile:${comparisonFile.absolutePath}"
@@ -127,13 +133,15 @@ fun processOutputImageAndReport(
           goldenFile.nameWithoutExtension + "_actual." + goldenFile.extension
         )
       }
-      newRoboCanvas
-        .save(
-          path = actualFile.absolutePath,
-          resizeScale = resizeScale,
-          contextData = contextData,
-          imageIoFormat = recordOptions.imageIoFormat,
-        )
+      measurePerformance("save_actual_file") {
+        newRoboCanvas
+          .save(
+            path = actualFile.absolutePath,
+            resizeScale = resizeScale,
+            contextData = contextData,
+            imageIoFormat = recordOptions.imageIoFormat,
+          )
+      }
       val aiOptions = compareOptions.aiAssertionOptions
       val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
         aiOptions.aiAssertionModel.assert(
@@ -188,24 +196,28 @@ fun processOutputImageAndReport(
     )
   } else {
     // roborazzi.record is checked before
-    newRoboCanvas.save(
-      path = goldenFile.absolutePath,
-      resizeScale = resizeScale,
-      contextData = contextData,
-      imageIoFormat = recordOptions.imageIoFormat,
-    )
+    measurePerformance("save_record_file") {
+      newRoboCanvas.save(
+        path = goldenFile.absolutePath,
+        resizeScale = resizeScale,
+        contextData = contextData,
+        imageIoFormat = recordOptions.imageIoFormat,
+      )
+    }
     roborazziDebugLog {
       "processOutputImageAndReport: \n" +
         " record goldenFile: $goldenFile\n"
     }
-    roborazziOptions.reportOptions.captureResultReporter.report(
-      captureResult = CaptureResult.Recorded(
-        goldenFile = goldenFile.absolutePath,
-        timestampNs = System.nanoTime(),
-        contextData = contextData,
-      ),
-      roborazziTaskType = taskType
-    )
+    measurePerformance("report_result") {
+      roborazziOptions.reportOptions.captureResultReporter.report(
+        captureResult = CaptureResult.Recorded(
+          goldenFile = goldenFile.absolutePath,
+          timestampNs = System.nanoTime(),
+          contextData = contextData,
+        ),
+        roborazziTaskType = taskType
+      )
+    }
   }
 }
 

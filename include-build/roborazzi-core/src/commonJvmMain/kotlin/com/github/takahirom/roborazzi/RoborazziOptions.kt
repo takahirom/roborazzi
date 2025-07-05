@@ -229,7 +229,9 @@ data class RoborazziOptions(
       }
 
       override fun report(captureResult: CaptureResult, roborazziTaskType: RoborazziTaskType) {
-        val absolutePath = File(roborazziSystemPropertyResultDirectory()).absolutePath
+        val absolutePath = measurePerformance("report_setup") {
+          File(roborazziSystemPropertyResultDirectory()).absolutePath
+        }
         val nameWithoutExtension = when (captureResult) {
           is CaptureResult.Added -> captureResult.compareFile
           is CaptureResult.Changed -> captureResult.goldenFile
@@ -239,8 +241,12 @@ data class RoborazziOptions(
         val reportFileName =
           getReportFileName(absolutePath, captureResult.timestampNs, nameWithoutExtension)
 
-        val jsonResult = json.encodeToJsonElement(captureResult)
-        KotlinxIo.writeText(reportFileName, jsonResult.toString())
+        val jsonResult = measurePerformance("json_serialization") {
+          json.encodeToJsonElement(captureResult)
+        }
+        measurePerformance("json_file_write") {
+          KotlinxIo.writeText(reportFileName, jsonResult.toString())
+        }
         roborazziDebugLog { "JsonResult file($reportFileName) has been written" }
       }
 
