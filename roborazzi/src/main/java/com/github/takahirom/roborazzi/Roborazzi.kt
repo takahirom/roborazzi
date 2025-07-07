@@ -157,7 +157,7 @@ fun captureRootsInternal(
   roots: List<Root>,
   roborazziOptions: RoborazziOptions,
   file: File
-) {
+) = measurePerformance("capture_roots_internal") {
   capture(
     rootComponent = RoboComponent.Screen(
       rootsOrderByDepth = roots,
@@ -179,7 +179,7 @@ fun captureScreenIfMultipleWindows(
   file: File,
   roborazziOptions: RoborazziOptions,
   captureSingleComponent: () -> Unit
-) {
+) = measurePerformance("capture_screen_multiple_windows") {
   // We need to wait for the main looper to be idle because the dialogs will be added to the window
   // https://github.com/takahirom/roborazzi/issues/694
   try {
@@ -541,7 +541,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
   composeRule: ComposeTestRule,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: () -> Unit
-): CaptureInternalResult {
+): CaptureInternalResult = measurePerformance("capture_compose_node") {
   val canvases = mutableListOf<AwtRoboCanvas>()
 
   val capture = {
@@ -573,7 +573,7 @@ fun SemanticsNodeInteraction.captureComposeNode(
   } catch (e: IllegalStateException) {
     // No compose hierarchies found in the app, so wait
   }
-  return CaptureInternalResult(
+  CaptureInternalResult(
     result = runCatching {
       try {
         block()
