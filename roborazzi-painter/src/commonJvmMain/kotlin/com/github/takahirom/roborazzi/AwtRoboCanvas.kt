@@ -217,7 +217,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     resizeScale: Double,
     contextData: Map<String, Any>,
     imageIoFormat: ImageIoFormat,
-  ) {
+  ) = measurePerformance("canvas_save") {
     val file = File(path)
     drawPendingDraw()
     val directory = file.parentFile
@@ -241,10 +241,10 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
     other: RoboCanvas,
     resizeScale: Double,
     imageComparator: ImageComparator
-  ): ImageComparator.ComparisonResult {
+  ): ImageComparator.ComparisonResult = measurePerformance("image_comparison") {
     other as AwtRoboCanvas
     val otherImage = other.bufferedImage
-    return imageComparator.compare(
+    imageComparator.compare(
       DifferBufferedImage(croppedImage.scale(resizeScale)),
       DifferBufferedImage(otherImage)
     )
@@ -271,7 +271,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
   }
 
   companion object {
-    fun load(file: File, bufferedImageType: Int, imageIoFormat: ImageIoFormat): AwtRoboCanvas {
+    fun load(file: File, bufferedImageType: Int, imageIoFormat: ImageIoFormat): AwtRoboCanvas = measurePerformance("load_golden_file") {
       val loadedImage: BufferedImage = (imageIoFormat as JvmImageIoFormat).awtImageLoader.load(file)
       val awtRoboCanvas = AwtRoboCanvas(
         loadedImage.width,
@@ -282,7 +282,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       // We should use Src here, it changes the transparent color
       // https://github.com/takahirom/roborazzi/issues/292
       awtRoboCanvas.drawImage(loadedImage, CompositeMode.Src)
-      return awtRoboCanvas
+      awtRoboCanvas
     }
 
     const val TRANSPARENT_NONE = 0xFF shl 56
