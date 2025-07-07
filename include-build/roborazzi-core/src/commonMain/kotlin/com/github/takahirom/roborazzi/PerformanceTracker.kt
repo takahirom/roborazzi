@@ -10,12 +10,12 @@ object PerformanceTracker {
     private val timeSource = TimeSource.Monotonic
 
     fun startMeasurement(operation: String) {
-      if (!roborazziDebugPerformance()) return
+      if (!roborazziPerformanceMeasurement()) return
         startTimes[operation] = timeSource.markNow()
     }
 
     fun endMeasurement(operation: String) {
-        if (!roborazziDebugPerformance()) return
+        if (!roborazziPerformanceMeasurement()) return
         val startTime = startTimes[operation] ?: return
         val duration = startTime.elapsedNow()
         
@@ -38,7 +38,7 @@ object PerformanceTracker {
     }
 
     fun printMeasurements() {
-        if (!roborazziDebugPerformance()) return
+        if (!roborazziPerformanceMeasurement()) return
         if (allMeasurements.isEmpty()) return
         
         println("Roborazzi Performance Statistics:")
@@ -73,7 +73,7 @@ object PerformanceTracker {
 
 @InternalRoborazziApi
 inline fun <T> measurePerformance(operation: String, block: () -> T): T {
-    if (!roborazziDebugPerformance()) {
+    if (!roborazziPerformanceMeasurement()) {
         return block()
     }
     

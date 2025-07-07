@@ -32,8 +32,8 @@ fun roborazziEnableContextData(): Boolean {
 }
 
 @InternalRoborazziApi
-fun roborazziDebugPerformance(): Boolean {
-  val property = getSystemProperty("roborazzi.debug.performance", "false")
+fun roborazziPerformanceMeasurement(): Boolean {
+  val property = getSystemProperty("roborazzi.performance.measurement", "false")
   return property.toBoolean()
 }
 
