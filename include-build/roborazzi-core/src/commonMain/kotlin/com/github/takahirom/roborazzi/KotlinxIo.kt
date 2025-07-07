@@ -52,7 +52,7 @@ object KotlinxIo {
     }
   }
 
-  fun writeText(path: String, text: String) {
+  fun writeText(path: String, text: String) = measurePerformance("json_file_write") {
     SystemFileSystem.sink(Path(path)).buffered().use { sink ->
       sink.write(text.encodeToByteString())
     }
