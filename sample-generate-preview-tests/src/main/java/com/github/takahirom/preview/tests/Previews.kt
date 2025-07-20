@@ -389,7 +389,7 @@ fun PreviewDelayed() {
   }
   LaunchedEffect(Unit) {
     while (true) {
-      delay(100)
+      delay(5)
       counter++
     }
   }
@@ -399,7 +399,7 @@ fun PreviewDelayed() {
       .size(300.dp)
       .background(if (isBlue) Color.Blue else Color.Gray)
   ) {
-    Text("Counter: ${counter}00ms ")
+    Text("Counter: ${counter * 5}ms ")
     CircularProgressIndicator()
   }
 }
