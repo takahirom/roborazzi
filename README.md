@@ -1011,8 +1011,9 @@ roborazzi {
 ```
 
 > [!NOTE] 
-> If you are using build.gradle instead of build.gradle.kts, you need to use the set method for each assignment, like
+> If you are using Groovy DSL instead of Kotlin DSL, you need to use the set method for each assignment:
 > ```kotlin
+> generateComposePreviewRobolectricTests.enable.set(true)
 > generateComposePreviewRobolectricTests.packages.set(["com.example"])
 > ```
 
