@@ -36,7 +36,7 @@ fun processOutputImageAndReport(
   emptyCanvasFactory: EmptyCanvasFactory,
   canvasFactoryFromFile: CanvasFactoryFromFile,
   comparisonCanvasFactory: ComparisonCanvasFactory,
-) {
+) = measurePerformance("process_output_image_and_report") {
   val taskType = roborazziOptions.taskType
   roborazziDebugLog {
     "processOutputImageAndReport(): " +
