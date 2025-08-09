@@ -45,6 +45,44 @@ roborazzi {
 }
 ```
 
+#### Advanced: Custom ComposePreviewTester Implementation
+
+You can create a custom `ComposePreviewTester` to control the screenshot capture behavior, such as setting a custom image comparison threshold:
+
+```kotlin
+import com.dropbox.differ.SimpleImageComparator
+import com.github.takahirom.roborazzi.*
+
+@ExperimentalRoborazziApi
+class MyCustomComposePreviewTester : AndroidComposePreviewTester(
+  capturer = { parameter ->
+    val customOptions = parameter.roborazziOptions.copy(
+      compareOptions = parameter.roborazziOptions.compareOptions.copy(
+        // Set custom comparison threshold (0.0 = exact match, 1.0 = ignore differences)
+        imageComparator = SimpleImageComparator(maxDistance = 0.01f)
+      )
+    )
+    parameter.preview.captureRoboImage(
+      filePath = parameter.filePath,
+      roborazziOptions = customOptions,
+      roborazziComposeOptions = parameter.roborazziComposeOptions
+    )
+  }
+)
+```
+
+Then reference your custom tester in the Gradle configuration:
+
+```kotlin
+roborazzi {
+  @OptIn(ExperimentalRoborazziApi::class)
+  generateComposePreviewRobolectricTests {
+    enable = true
+    testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
+  }
+}
+```
+
 > [!NOTE] 
 > If you are using build.gradle instead of build.gradle.kts, you need to use the set method for each assignment, like
 > ```kotlin
