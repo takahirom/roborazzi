@@ -30,7 +30,7 @@ import java.net.URLConnection
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(
-  sdk = [30],
+  sdk = [35],
   qualifiers = RobolectricDeviceQualifiers.NexusOne
 )
 class OllamaWithOpenAiApiInterfaceTest {
