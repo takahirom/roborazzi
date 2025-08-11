@@ -1019,7 +1019,9 @@ import com.dropbox.differ.SimpleImageComparator
 import com.github.takahirom.roborazzi.*
 
 @ExperimentalRoborazziApi
-class MyCustomComposePreviewTester : AndroidComposePreviewTester(
+class MyCustomComposePreviewTester(
+  private val defaultCapturer: AndroidComposePreviewTester.Capturer = AndroidComposePreviewTester.DefaultCapturer()
+) : AndroidComposePreviewTester(
   capturer = { parameter ->
     val customOptions = parameter.roborazziOptions.copy(
       compareOptions = parameter.roborazziOptions.compareOptions.copy(
@@ -1027,10 +1029,8 @@ class MyCustomComposePreviewTester : AndroidComposePreviewTester(
         imageComparator = SimpleImageComparator(maxDistance = 0.01f)
       )
     )
-    parameter.preview.captureRoboImage(
-      filePath = parameter.filePath,
-      roborazziOptions = customOptions,
-      roborazziComposeOptions = parameter.roborazziComposeOptions
+    defaultCapturer.capture(
+      parameter.copy(roborazziOptions = customOptions)
     )
   }
 )
