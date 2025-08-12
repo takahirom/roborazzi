@@ -6,6 +6,9 @@ plugins {
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
 }
 
+// Disable BuildFusService to avoid classloader conflicts
+System.setProperty("kotlin.build.report.enabled", "false")
+
 allprojects {
   // Apply the same Java compatibility for each module
   def javaVersion = libs.versions.javaTarget.get()
