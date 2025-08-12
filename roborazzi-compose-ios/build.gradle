@@ -1,6 +1,7 @@
 plugins {
   id 'org.jetbrains.kotlin.multiplatform'
   id 'org.jetbrains.compose'
+  id 'org.jetbrains.kotlin.plugin.compose'
   id 'io.github.takahirom.roborazzi'
   id("org.jetbrains.kotlin.plugin.serialization")
     .version(libs.versions.kotlin)
@@ -41,7 +42,6 @@ kotlin {
       dependencies {
         implementation(compose.material3)
         implementation(libs.kotlin.test)
-        implementation(libs.kotlin.test.junit)
       }
     }
   }

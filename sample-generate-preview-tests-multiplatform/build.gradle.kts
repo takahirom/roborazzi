@@ -4,6 +4,7 @@ plugins {
 //  id("com.android.library")
   id("io.github.takahirom.roborazzi")
   id("org.jetbrains.compose")
+  id("org.jetbrains.kotlin.plugin.compose")
 }
 
 roborazzi {
