@@ -144,6 +144,7 @@ class PreviewModule(
               kotlin("multiplatform")
               id("com.android.library")
               id("org.jetbrains.compose")
+              id("org.jetbrains.kotlin.plugin.compose")
               id("io.github.takahirom.roborazzi")
           }
 
@@ -211,6 +212,7 @@ class PreviewModule(
     id("com.android.application")
   //  id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("io.github.takahirom.roborazzi")
   }
 
@@ -300,13 +302,11 @@ class PreviewModule(
 
   fun checkHasImages() {
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
-    println("images:" + images?.toList())
     assert(images?.isNotEmpty() == true)
   }
 
   fun checkNoImages() {
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
-    println("images:" + images?.toList())
     checkResultCount(
       testProjectDir.root.resolve("$moduleName/build/test-results/roborazzi/results-summary.json")
       // All zero
@@ -320,7 +320,6 @@ class PreviewModule(
       testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
         .orEmpty()
         .filter { it.name.contains("PreviewWithPrivate") }
-    println("images:" + privateImages.toList())
     assert(privateImages.isNotEmpty() == true)
   }
 }
