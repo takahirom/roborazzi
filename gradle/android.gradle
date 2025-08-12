@@ -19,7 +19,6 @@ android {
   buildFeatures {
   }
   composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
   }
   testOptions {
     unitTests {

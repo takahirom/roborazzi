@@ -108,7 +108,6 @@ class PreviewModule(
               compose = true
             }
             composeOptions {
-              kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
             }
 
             buildTypes {
