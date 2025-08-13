@@ -107,8 +107,6 @@ class PreviewModule(
             buildFeatures {
               compose = true
             }
-            composeOptions {
-            }
 
             buildTypes {
               release {
