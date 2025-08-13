@@ -30,9 +30,7 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
   buildFeatures {
-    compose = true
-  }
-  composeOptions {
+//    compose = true
   }
 
   buildTypes {

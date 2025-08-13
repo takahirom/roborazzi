@@ -221,6 +221,7 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
 plugins {
   id("com.android.application")
   id("org.jetbrains.kotlin.android")
+  id("org.jetbrains.kotlin.plugin.compose")
   id("io.github.takahirom.roborazzi")
 }
 
@@ -254,7 +255,7 @@ android {
     jvmTarget = "11"
   }
   buildFeatures {
-//    compose = true
+    compose = true
     buildConfig = false
     resValues = false
   }

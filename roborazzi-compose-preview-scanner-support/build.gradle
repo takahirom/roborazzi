@@ -11,6 +11,7 @@ repositories {
   mavenCentral()
 }
 
+// Kotlin 2.0.21 with org.jetbrains.kotlin.plugin.compose still needs compose = true for AGP
 android.buildFeatures.compose = true
 
 // TODO: Use build-logic

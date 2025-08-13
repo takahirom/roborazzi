@@ -17,6 +17,15 @@ roborazzi {
   }
 }
 
+// Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+configurations.all {
+  resolutionStrategy.dependencySubstitution {
+    substitute(module("androidx.compose.compiler:compiler"))
+      .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
+      .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+  }
+}
+
 repositories {
   mavenCentral()
   google()
@@ -32,9 +41,8 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
   buildFeatures {
+    // Kotlin 2.0.21 with org.jetbrains.kotlin.plugin.compose still needs compose = true for AGP
     compose = true
-  }
-  composeOptions {
   }
 
   buildTypes {

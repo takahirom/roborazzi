@@ -20,10 +20,101 @@ class GeneratePreviewTestTest {
 
   @Test
   fun whenKmpModuleAndRecordRunImagesShouldBeRecorded() {
-    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+    val rootProject = RoborazziGradleRootProject(testProjectDir)
+    
+    // First, prepare the build
+    rootProject.previewModule.apply {
       buildGradle.isKmp = true
+      buildGradle.write()
+    }
+    
+    // Check Kotlin compiler args during compilation
+    try {
+      val compileResult = rootProject.runTask(
+        ":${PreviewModule.moduleName}:compileDebugKotlin",
+        BuildType.Build,
+        arrayOf("--debug", "--rerun-tasks")
+      )
+      println("=== KOTLIN COMPILE DEBUG OUTPUT ===")
+      val kotlinArgs = compileResult.output.lines()
+        .filter { it.contains("Kotlin compiler args") || it.contains("Xplugin") || it.contains("compose") }
+        .take(20)
+      kotlinArgs.forEach { println(it) }
+      println("====================================")
+    } catch (e: Exception) {
+      println("compileDebugKotlin failed: ${e.message}")
+    }
+    
+    // Check kotlinCompilerPluginClasspath dependencies
+    try {
+      val kotlinPluginResult = rootProject.runTask(
+        ":${PreviewModule.moduleName}:dependencies",
+        BuildType.Build,
+        arrayOf("--configuration", "kotlinCompilerPluginClasspathAndroidDebugUnitTest")
+      )
+      println("=== KOTLIN COMPILER PLUGIN CLASSPATH ===")
+      val relevantLines = kotlinPluginResult.output.lines()
+        .filter { it.contains("compose", ignoreCase = true) || it.contains("1.3") }
+        .take(100)
+      relevantLines.forEach { println(it) }
+      println("=========================================")
+    } catch (e: Exception) {
+      println("kotlinCompilerPluginClasspath failed: ${e.message}")
+      // Try alternative configuration name
+      try {
+        val altResult = rootProject.runTask(
+          ":${PreviewModule.moduleName}:dependencies",
+          BuildType.Build,
+          arrayOf("--configuration", "kotlinCompilerPluginClasspath")
+        )
+        println("=== KOTLIN COMPILER PLUGIN CLASSPATH (ALT) ===")
+        val lines = altResult.output.lines()
+          .filter { it.contains("compose", ignoreCase = true) || it.contains("1.3") }
+          .take(100)
+        lines.forEach { println(it) }
+        println("===============================================")
+      } catch (e2: Exception) {
+        println("Alternative configuration also failed: ${e2.message}")
+      }
+    }
+    
+    // Also check buildscript dependencies
+    try {
+      val buildscriptInsightResult = rootProject.runTask(
+        ":${PreviewModule.moduleName}:buildEnvironment",
+        BuildType.Build,
+        arrayOf()
+      )
+      println("=== BUILDSCRIPT DEPENDENCIES ===")
+      val relevantLines = buildscriptInsightResult.output.lines()
+        .filter { it.contains("compose", ignoreCase = true) || it.contains("1.3.2") }
+        .take(50)
+      relevantLines.forEach { println(it) }
+      println("=================================")
+    } catch (e: Exception) {
+      println("buildEnvironment failed: ${e.message}")
+    }
+    
+    // Also check what's in the Kotlin compiler arguments
+    try {
+      val helpResult = rootProject.runTask(
+        ":${PreviewModule.moduleName}:compileDebugKotlin",
+        BuildType.Build,
+        arrayOf("--dry-run", "--info")
+      )
+      val compilerArgs = helpResult.output.lines()
+        .filter { it.contains("plugin:") || it.contains("compose", ignoreCase = true) }
+        .take(20)
+      println("=== KOTLIN COMPILER ARGUMENTS ===")
+      compilerArgs.forEach { println(it) }
+      println("==================================")
+    } catch (e: Exception) {
+      println("compileDebugKotlin dry-run failed: ${e.message}")
+    }
+    
+    // Now run the actual test
+    rootProject.previewModule.apply {
       record()
-
       checkHasImages()
     }
   }
@@ -107,6 +198,8 @@ class PreviewModule(
             buildFeatures {
               compose = true
             }
+            // With Kotlin 2.0.21's integrated Compose Compiler, don't set kotlinCompilerExtensionVersion
+            // composeOptions block is not needed
 
             buildTypes {
               release {
@@ -146,42 +239,46 @@ class PreviewModule(
           }
 
           kotlin {
-              androidTarget()
+              androidTarget {
+                  compilerOptions {
+                      freeCompilerArgs.add("-Xopt-in=kotlin.RequiresOptIn")
+                  }
+              }
               
               sourceSets {
                   val commonMain by getting {
                       dependencies {
-                          api(compose.components.uiToolingPreview)
+                          api("androidx.compose.ui:ui-tooling-preview:1.7.5")
                       }
                   }
                   val androidMain by getting {
                       dependencies {
-                          implementation(compose.material3)
-                          implementation(compose.ui)
-                          implementation(compose.uiTooling)
-                          implementation(compose.runtime)
+                          implementation("androidx.compose.material3:material3:1.3.1")
+                          implementation("androidx.compose.ui:ui:1.7.5")
+                          implementation("androidx.compose.ui:ui-tooling:1.7.5")
+                          implementation("androidx.compose.runtime:runtime:1.7.5")
                       }
                   }
                   
                   val androidUnitTest by getting {
                       dependencies {
                           $previewScannerSupportDependency
-                          implementation(libs.junit)
-                          implementation(libs.robolectric)
-                          implementation(libs.composable.preview.scanner)
-                          implementation(libs.androidx.compose.ui.test.junit4)
+                          implementation("junit:junit:4.13.2")
+                          implementation("org.robolectric:robolectric:4.13")
+                          implementation("io.github.sergio-sastre.ComposablePreviewScanner:android:0.6.1")
+                          implementation("androidx.compose.ui:ui-test-junit4:1.7.5")
                       }
                   }
                   val androidDebug by creating {
                       dependencies {
-                          implementation(libs.androidx.compose.ui.test.manifest)
+                          implementation("androidx.compose.ui:ui-test-manifest:1.7.5")
                       }
                   }
                   
                   val androidInstrumentedTest by getting {
                       dependencies {
-                          implementation(libs.androidx.test.ext.junit)
-                          implementation(libs.androidx.test.espresso.core)
+                          implementation("androidx.test.ext:junit:1.2.1")
+                          implementation("androidx.test.espresso:espresso-core:3.6.1")
                       }
                   }
               }
@@ -190,6 +287,15 @@ class PreviewModule(
           $androidBlock
 
           $roborazziExtension
+          
+          // Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+          configurations.all {
+              resolutionStrategy.dependencySubstitution {
+                  substitute(module("androidx.compose.compiler:compiler"))
+                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
+                    .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+              }
+          }
 
           repositories {
               mavenCentral()
@@ -215,6 +321,15 @@ class PreviewModule(
 
   $roborazziExtension
 
+  // Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+  configurations.all {
+      resolutionStrategy.dependencySubstitution {
+          substitute(module("androidx.compose.compiler:compiler"))
+            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
+            .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+      }
+  }
+
   repositories {
     mavenCentral()
     google()
@@ -222,20 +337,20 @@ class PreviewModule(
   $androidBlock
 
   dependencies {
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.tooling)
-    implementation(libs.androidx.compose.runtime)
+    implementation("androidx.compose.material3:material3:1.3.1")
+    implementation("androidx.compose.ui:ui:1.7.5")
+    implementation("androidx.compose.ui:ui-tooling:1.7.5")
+    implementation("androidx.compose.runtime:runtime:1.7.5")
 
     // replaced by dependency substitution
     $previewScannerSupportDependency
-    testImplementation(libs.junit)
-    testImplementation(libs.robolectric)
-    testImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
-    testImplementation(libs.composable.preview.scanner)
-    androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.androidx.test.espresso.core)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("androidx.compose.ui:ui-test-junit4:1.7.5")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.5")
+    testImplementation("io.github.sergio-sastre.ComposablePreviewScanner:android:0.6.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
   }
 """
       }

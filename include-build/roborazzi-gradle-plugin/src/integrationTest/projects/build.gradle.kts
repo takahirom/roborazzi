@@ -17,6 +17,33 @@ val toolchainVersion = libs.versions.javaToolchain.get()
 allprojects {
   val javaTargetVersion = JavaVersion.toVersion (javaVersion)
   val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(javaVersion)
+  
+  // Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+  configurations.all {
+    resolutionStrategy.dependencySubstitution {
+      substitute(module("androidx.compose.compiler:compiler"))
+        .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:${libs.versions.kotlin.get()}"))
+        .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+    }
+//
+//    // Also exclude the old Compose Compiler completely
+//    exclude(group = "androidx.compose.compiler", module = "compiler")
+  }
+
+  // Debug: Check where compose is enabled
+  afterEvaluate {
+    plugins.withType<com.android.build.gradle.BasePlugin>().configureEach {
+      val androidExtension = extensions.findByType(com.android.build.gradle.BaseExtension::class.java)
+      if (androidExtension != null) {
+        val composeEnabled = androidExtension.buildFeatures.compose
+        println("=== COMPOSE DEBUG: Project ${project.name} has compose = $composeEnabled ===")
+        if (composeEnabled == true) {
+          println("    WARNING: compose = true found in ${project.name}!")
+          println("    Build file: ${project.buildFile}")
+        }
+      }
+    }
+  }
 
   plugins.withId("java") {
     configure<org.gradle.api.plugins.JavaPluginExtension> {
@@ -31,7 +58,9 @@ allprojects {
       sourceCompatibility = javaTargetVersion
       targetCompatibility = javaTargetVersion
     }
+    // Don't force compose = true for all projects - let each module decide
   }
+  
   plugins.withType<com.android.build.gradle.BasePlugin>().configureEach {
     when (this) {
       is com.android.build.gradle.AppPlugin -> {

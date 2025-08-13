@@ -18,8 +18,6 @@ android {
   }
   buildFeatures {
   }
-  composeOptions {
-  }
   testOptions {
     unitTests {
       includeAndroidResources = true

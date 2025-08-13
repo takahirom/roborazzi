@@ -20,8 +20,6 @@ android {
   defaultConfig {
     minSdk 21
     targetSdk 35
-    versionCode 1
-    versionName "1.0"
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -34,9 +32,7 @@ android {
   }
   buildFeatures {
     viewBinding true
-    compose true
-  }
-  composeOptions {
+//    compose true
   }
   testOptions {
     unitTests {
