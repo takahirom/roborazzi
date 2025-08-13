@@ -6,8 +6,8 @@ plugins {
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
 }
 
-// Disable BuildFusService to avoid classloader conflicts
-System.setProperty("kotlin.build.report.enabled", "false")
+// BuildFusService conflicts are now handled via gradle.properties
+// kotlin.internal.collectFUSMetrics=false
 
 allprojects {
   // Apply the same Java compatibility for each module
