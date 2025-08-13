@@ -191,11 +191,11 @@ class PreviewModule(
 
           $roborazziExtension
           
-          // Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+          // Replace AGP's default Compose Compiler with Kotlin's integrated version
           configurations.all {
               resolutionStrategy.dependencySubstitution {
                   substitute(module("androidx.compose.compiler:compiler"))
-                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
+                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:\${libs.versions.kotlin.get()}"))
                     .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
               }
           }
@@ -224,11 +224,11 @@ class PreviewModule(
 
   $roborazziExtension
 
-  // Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+  // Replace AGP's default Compose Compiler with Kotlin's integrated version
   configurations.all {
       resolutionStrategy.dependencySubstitution {
           substitute(module("androidx.compose.compiler:compiler"))
-            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
+            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:\${libs.versions.kotlin.get()}"))
             .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
       }
   }
