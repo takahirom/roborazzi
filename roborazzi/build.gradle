@@ -8,7 +8,6 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 
 // TODO: Use build-logic
 apply from: rootProject.file('gradle/android.gradle')
-//android.buildFeatures.compose = false
 
 android.namespace 'com.github.takahirom.roborazzi'
 

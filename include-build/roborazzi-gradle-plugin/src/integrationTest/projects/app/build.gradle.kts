@@ -29,12 +29,6 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
   }
-  buildFeatures {
-//    compose = true
-  }
-//  composeOptions {
-//    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-//  }
   testOptions {
     unitTests {
       isIncludeAndroidResources = true

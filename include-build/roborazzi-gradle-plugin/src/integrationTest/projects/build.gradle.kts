@@ -41,7 +41,6 @@ allprojects {
       sourceCompatibility = javaTargetVersion
       targetCompatibility = javaTargetVersion
     }
-    // Don't force compose = true for all projects - let each module decide
   }
   
   plugins.withType<com.android.build.gradle.BasePlugin>().configureEach {

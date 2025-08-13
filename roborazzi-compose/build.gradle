@@ -10,8 +10,6 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 
 // TODO: Use build-logic
 apply from: rootProject.file('gradle/android.gradle')
-// Kotlin 2.0.21 with org.jetbrains.kotlin.plugin.compose still needs compose = true for AGP
-android.buildFeatures.compose = true
 android.namespace 'com.github.takahirom.roborazzi.compose'
 
 
