@@ -1,3 +1,5 @@
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+
 plugins {
   id("org.jetbrains.kotlin.multiplatform")
   id("com.android.application")
@@ -7,6 +9,7 @@ plugins {
   id("org.jetbrains.kotlin.plugin.compose")
 }
 
+@OptIn(ExperimentalRoborazziApi::class)
 roborazzi {
   generateComposePreviewRobolectricTests {
     enable = true

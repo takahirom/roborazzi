@@ -155,11 +155,11 @@ class PreviewModule(
                       }
                   }
                   val androidMain by getting {
-                      dependencies {
-                          implementation("androidx.compose.material3:material3:1.3.1")
-                          implementation("androidx.compose.ui:ui:1.7.5")
-                          implementation("androidx.compose.ui:ui-tooling:1.7.5")
-                          implementation("androidx.compose.runtime:runtime:1.7.5")
+                    dependencies {
+                        implementation("androidx.compose.material3:material3:1.3.1")
+                        implementation("androidx.compose.ui:ui:1.7.5")
+                        implementation("androidx.compose.ui:ui-tooling:1.7.5")
+                        implementation("androidx.compose.runtime:runtime:1.7.5")
                       }
                   }
                   
@@ -195,7 +195,7 @@ class PreviewModule(
           configurations.all {
               resolutionStrategy.dependencySubstitution {
                   substitute(module("androidx.compose.compiler:compiler"))
-                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:\${libs.versions.kotlin.get()}"))
+                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
                     .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
               }
           }
@@ -228,7 +228,7 @@ class PreviewModule(
   configurations.all {
       resolutionStrategy.dependencySubstitution {
           substitute(module("androidx.compose.compiler:compiler"))
-            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:\${libs.versions.kotlin.get()}"))
+            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
             .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
       }
   }
