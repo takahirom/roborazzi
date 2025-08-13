@@ -166,22 +166,22 @@ class PreviewModule(
                   val androidUnitTest by getting {
                       dependencies {
                           $previewScannerSupportDependency
-                          implementation("junit:junit:4.13.2")
-                          implementation("org.robolectric:robolectric:4.13")
-                          implementation("io.github.sergio-sastre.ComposablePreviewScanner:android:0.6.1")
-                          implementation("androidx.compose.ui:ui-test-junit4:1.7.5")
+                          implementation(libs.junit)
+                          implementation(libs.robolectric)
+                          implementation(libs.composable.preview.scanner)
+                          implementation(libs.androidx.compose.ui.test.junit4)
                       }
                   }
                   val androidDebug by creating {
                       dependencies {
-                          implementation("androidx.compose.ui:ui-test-manifest:1.7.5")
+                          implementation(libs.androidx.compose.ui.test.manifest)
                       }
                   }
                   
                   val androidInstrumentedTest by getting {
                       dependencies {
-                          implementation("androidx.test.ext:junit:1.2.1")
-                          implementation("androidx.test.espresso:espresso-core:3.6.1")
+                          implementation(libs.androidx.test.ext.junit)
+                          implementation(libs.androidx.test.espresso.core)
                       }
                   }
               }
@@ -247,13 +247,13 @@ class PreviewModule(
 
     // replaced by dependency substitution
     $previewScannerSupportDependency
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.robolectric:robolectric:4.13")
-    testImplementation("androidx.compose.ui:ui-test-junit4:1.7.5")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.5")
-    testImplementation("io.github.sergio-sastre.ComposablePreviewScanner:android:0.6.1")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    testImplementation(libs.composable.preview.scanner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
   }
 """
       }
