@@ -255,13 +255,9 @@ android {
     jvmTarget = "11"
   }
   buildFeatures {
-    compose = true
     buildConfig = false
     resValues = false
   }
-//  composeOptions {
-//    kotlinCompilerExtensionVersion = "1.4.8"
-//  }
   testOptions {
     unitTests {
       isIncludeAndroidResources = true

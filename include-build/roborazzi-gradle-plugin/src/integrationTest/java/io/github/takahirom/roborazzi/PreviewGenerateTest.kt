@@ -20,100 +20,8 @@ class GeneratePreviewTestTest {
 
   @Test
   fun whenKmpModuleAndRecordRunImagesShouldBeRecorded() {
-    val rootProject = RoborazziGradleRootProject(testProjectDir)
-    
-    // First, prepare the build
-    rootProject.previewModule.apply {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.isKmp = true
-      buildGradle.write()
-    }
-    
-    // Check Kotlin compiler args during compilation
-    try {
-      val compileResult = rootProject.runTask(
-        ":${PreviewModule.moduleName}:compileDebugKotlin",
-        BuildType.Build,
-        arrayOf("--debug", "--rerun-tasks")
-      )
-      println("=== KOTLIN COMPILE DEBUG OUTPUT ===")
-      val kotlinArgs = compileResult.output.lines()
-        .filter { it.contains("Kotlin compiler args") || it.contains("Xplugin") || it.contains("compose") }
-        .take(20)
-      kotlinArgs.forEach { println(it) }
-      println("====================================")
-    } catch (e: Exception) {
-      println("compileDebugKotlin failed: ${e.message}")
-    }
-    
-    // Check kotlinCompilerPluginClasspath dependencies
-    try {
-      val kotlinPluginResult = rootProject.runTask(
-        ":${PreviewModule.moduleName}:dependencies",
-        BuildType.Build,
-        arrayOf("--configuration", "kotlinCompilerPluginClasspathAndroidDebugUnitTest")
-      )
-      println("=== KOTLIN COMPILER PLUGIN CLASSPATH ===")
-      val relevantLines = kotlinPluginResult.output.lines()
-        .filter { it.contains("compose", ignoreCase = true) || it.contains("1.3") }
-        .take(100)
-      relevantLines.forEach { println(it) }
-      println("=========================================")
-    } catch (e: Exception) {
-      println("kotlinCompilerPluginClasspath failed: ${e.message}")
-      // Try alternative configuration name
-      try {
-        val altResult = rootProject.runTask(
-          ":${PreviewModule.moduleName}:dependencies",
-          BuildType.Build,
-          arrayOf("--configuration", "kotlinCompilerPluginClasspath")
-        )
-        println("=== KOTLIN COMPILER PLUGIN CLASSPATH (ALT) ===")
-        val lines = altResult.output.lines()
-          .filter { it.contains("compose", ignoreCase = true) || it.contains("1.3") }
-          .take(100)
-        lines.forEach { println(it) }
-        println("===============================================")
-      } catch (e2: Exception) {
-        println("Alternative configuration also failed: ${e2.message}")
-      }
-    }
-    
-    // Also check buildscript dependencies
-    try {
-      val buildscriptInsightResult = rootProject.runTask(
-        ":${PreviewModule.moduleName}:buildEnvironment",
-        BuildType.Build,
-        arrayOf()
-      )
-      println("=== BUILDSCRIPT DEPENDENCIES ===")
-      val relevantLines = buildscriptInsightResult.output.lines()
-        .filter { it.contains("compose", ignoreCase = true) || it.contains("1.3.2") }
-        .take(50)
-      relevantLines.forEach { println(it) }
-      println("=================================")
-    } catch (e: Exception) {
-      println("buildEnvironment failed: ${e.message}")
-    }
-    
-    // Also check what's in the Kotlin compiler arguments
-    try {
-      val helpResult = rootProject.runTask(
-        ":${PreviewModule.moduleName}:compileDebugKotlin",
-        BuildType.Build,
-        arrayOf("--dry-run", "--info")
-      )
-      val compilerArgs = helpResult.output.lines()
-        .filter { it.contains("plugin:") || it.contains("compose", ignoreCase = true) }
-        .take(20)
-      println("=== KOTLIN COMPILER ARGUMENTS ===")
-      compilerArgs.forEach { println(it) }
-      println("==================================")
-    } catch (e: Exception) {
-      println("compileDebugKotlin dry-run failed: ${e.message}")
-    }
-    
-    // Now run the actual test
-    rootProject.previewModule.apply {
       record()
       checkHasImages()
     }
@@ -198,8 +106,6 @@ class PreviewModule(
             buildFeatures {
               compose = true
             }
-            // With Kotlin 2.0.21's integrated Compose Compiler, don't set kotlinCompilerExtensionVersion
-            // composeOptions block is not needed
 
             buildTypes {
               release {

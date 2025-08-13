@@ -25,25 +25,8 @@ allprojects {
         .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:${libs.versions.kotlin.get()}"))
         .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
     }
-//
-//    // Also exclude the old Compose Compiler completely
-//    exclude(group = "androidx.compose.compiler", module = "compiler")
   }
 
-  // Debug: Check where compose is enabled
-  afterEvaluate {
-    plugins.withType<com.android.build.gradle.BasePlugin>().configureEach {
-      val androidExtension = extensions.findByType(com.android.build.gradle.BaseExtension::class.java)
-      if (androidExtension != null) {
-        val composeEnabled = androidExtension.buildFeatures.compose
-        println("=== COMPOSE DEBUG: Project ${project.name} has compose = $composeEnabled ===")
-        if (composeEnabled == true) {
-          println("    WARNING: compose = true found in ${project.name}!")
-          println("    Build file: ${project.buildFile}")
-        }
-      }
-    }
-  }
 
   plugins.withId("java") {
     configure<org.gradle.api.plugins.JavaPluginExtension> {

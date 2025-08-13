@@ -41,7 +41,6 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
   buildFeatures {
-    // Kotlin 2.0.21 with org.jetbrains.kotlin.plugin.compose still needs compose = true for AGP
     compose = true
   }
 
