@@ -151,15 +151,15 @@ class PreviewModule(
               sourceSets {
                   val commonMain by getting {
                       dependencies {
-                          api("androidx.compose.ui:ui-tooling-preview:1.7.5")
+                          api(compose.components.uiToolingPreview)
                       }
                   }
                   val androidMain by getting {
                     dependencies {
-                        implementation("androidx.compose.material3:material3:1.3.1")
-                        implementation("androidx.compose.ui:ui:1.7.5")
-                        implementation("androidx.compose.ui:ui-tooling:1.7.5")
-                        implementation("androidx.compose.runtime:runtime:1.7.5")
+                        implementation(compose.material3)
+                        implementation(compose.ui)
+                        implementation(compose.uiTooling)
+                        implementation(compose.runtime)
                       }
                   }
                   
@@ -240,10 +240,10 @@ class PreviewModule(
   $androidBlock
 
   dependencies {
-    implementation("androidx.compose.material3:material3:1.3.1")
-    implementation("androidx.compose.ui:ui:1.7.5")
-    implementation("androidx.compose.ui:ui-tooling:1.7.5")
-    implementation("androidx.compose.runtime:runtime:1.7.5")
+    implementation(compose.material3)
+    implementation(compose.ui)
+    implementation(compose.uiTooling)
+    implementation(compose.runtime)
 
     // replaced by dependency substitution
     $previewScannerSupportDependency
