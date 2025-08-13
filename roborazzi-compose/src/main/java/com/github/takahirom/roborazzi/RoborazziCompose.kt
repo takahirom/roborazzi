@@ -9,7 +9,21 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
+import org.robolectric.RuntimeEnvironment.setQualifiers
+import org.robolectric.shadows.ShadowDisplay
 import java.io.File
+
+private fun getCurrentQualifiersString(): String {
+  val display = ShadowDisplay.getDefaultDisplay()
+  val displayMetrics = android.util.DisplayMetrics()
+  @Suppress("DEPRECATION")
+  display.getRealMetrics(displayMetrics)
+  
+  val currentQualifiers = mutableListOf<String>()
+  currentQualifiers.add("w${(displayMetrics.widthPixels / displayMetrics.density).toInt()}dp")
+  currentQualifiers.add("h${(displayMetrics.heightPixels / displayMetrics.density).toInt()}dp")
+  return currentQualifiers.joinToString("-")
+}
 
 
 fun captureRoboImage(
@@ -61,6 +75,8 @@ fun captureRoboImage(
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   launchRoborazziActivity(roborazziComposeOptions) { activityScenario ->
+    val savedQualifiers = getCurrentQualifiersString()
+    
     val configuredContent = roborazziComposeOptions
       .configured(activityScenario) {
         content()
@@ -74,6 +90,7 @@ fun captureRoboImage(
       )
     } finally {
       roborazziComposeOptions.afterCapture()
+      setQualifiers(savedQualifiers)
     }
   }
 }
