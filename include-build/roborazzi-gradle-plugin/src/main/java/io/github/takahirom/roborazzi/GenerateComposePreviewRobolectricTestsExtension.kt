@@ -20,6 +20,8 @@ import java.net.URLEncoder
 import java.util.Locale
 import javax.inject.Inject
 
+internal const val MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION = "0.7.0"
+
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
@@ -338,12 +340,34 @@ private fun verifyComposablePreviewScannerVersion(
   }
   
   if (composablePreviewScannerDependency != null) {
-    val version = composablePreviewScannerDependency.version
-    if (version != null && isVersionLessThan(version, "0.7.0")) {
+    val declaredVersion = composablePreviewScannerDependency.version
+    
+    // If declared version is null (common with BOMs/constraints), try to resolve it
+    val versionToCheck = declaredVersion ?: run {
+      try {
+        // Try to get the resolved version from configurations
+        project.configurations
+          .filter { it.isCanBeResolved }
+          .flatMap { config ->
+            config.resolvedConfiguration.resolvedArtifacts
+              .filter { artifact ->
+                artifact.moduleVersion.id.group == "io.github.sergio-sastre.ComposablePreviewScanner" &&
+                artifact.moduleVersion.id.name == "android"
+              }
+              .map { it.moduleVersion.id.version }
+          }
+          .firstOrNull()
+      } catch (e: Exception) {
+        // If resolution fails, we can't determine the version
+        null
+      }
+    }
+    
+    if (versionToCheck != null && isVersionLessThan(versionToCheck, MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION)) {
       error(
-        "Roborazzi: ComposablePreviewScanner version 0.7.0 or higher is required. " +
-        "Current version: $version. " +
-        "Please update your ComposablePreviewScanner dependency to version 0.7.0 or higher."
+        "Roborazzi: ComposablePreviewScanner version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher is required. " +
+        "Current version: $versionToCheck. " +
+        "Please update your ComposablePreviewScanner dependency to version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher."
       )
     }
   }
