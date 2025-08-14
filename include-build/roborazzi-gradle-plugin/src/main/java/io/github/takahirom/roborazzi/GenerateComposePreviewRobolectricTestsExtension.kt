@@ -242,6 +242,7 @@ fun verifyGenerateComposePreviewRobolectricTests(
       return@afterEvaluate
     }
     verifyLibraryDependencies(project)
+    verifyComposablePreviewScannerVersion(project)
     verifyAndroidConfig(androidExtension, logger)
   }
 }
@@ -326,4 +327,42 @@ private fun verifyLibraryDependencies(
     "io.github.sergio-sastre.ComposablePreviewScanner:android",
   )
   requiredLibraries.forEach { allDependencies.checkExists(it) }
+}
+
+private fun verifyComposablePreviewScannerVersion(
+  project: Project
+) {
+  val dependencies = project.configurations.flatMap { it.dependencies }
+  val composablePreviewScannerDependency = dependencies.find { 
+    it.group == "io.github.sergio-sastre.ComposablePreviewScanner" && it.name == "android" 
+  }
+  
+  if (composablePreviewScannerDependency != null) {
+    val version = composablePreviewScannerDependency.version
+    if (version != null && isVersionLessThan(version, "0.7.0")) {
+      error(
+        "Roborazzi: ComposablePreviewScanner version 0.7.0 or higher is required. " +
+        "Current version: $version. " +
+        "Please update your ComposablePreviewScanner dependency to version 0.7.0 or higher."
+      )
+    }
+  }
+}
+
+private fun isVersionLessThan(currentVersion: String, requiredVersion: String): Boolean {
+  val current = parseVersion(currentVersion)
+  val required = parseVersion(requiredVersion)
+  
+  for (i in 0 until maxOf(current.size, required.size)) {
+    val currentPart = current.getOrNull(i) ?: 0
+    val requiredPart = required.getOrNull(i) ?: 0
+    
+    if (currentPart < requiredPart) return true
+    if (currentPart > requiredPart) return false
+  }
+  return false
+}
+
+private fun parseVersion(version: String): List<Int> {
+  return version.split(".").mapNotNull { it.toIntOrNull() }
 }

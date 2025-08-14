@@ -71,6 +71,17 @@ class GeneratePreviewTestTest {
       }
     }
   }
+
+  @Test
+  fun whenUsingOldComposablePreviewScannerVersionShouldBeError() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.composablePreviewScannerVersion = "0.6.1"
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("Roborazzi: ComposablePreviewScanner version 0.7.0 or higher is required"))
+      }
+    }
+  }
 }
 
 class PreviewModule(
@@ -87,6 +98,7 @@ class PreviewModule(
     private val PATH = moduleName + "/build.gradle.kts"
     var isKmp = false
     var includePreviewScannerSupportDependenciy = true
+    var composablePreviewScannerVersion = "0.7.0"
     fun write() {
       val file =
         projectFolder.root.resolve(PATH)
@@ -168,7 +180,7 @@ class PreviewModule(
                           $previewScannerSupportDependency
                           implementation(libs.junit)
                           implementation(libs.robolectric)
-                          implementation(libs.composable.preview.scanner)
+                          implementation("io.github.sergio-sastre.ComposablePreviewScanner:android:$composablePreviewScannerVersion")
                           implementation(libs.androidx.compose.ui.test.junit4)
                       }
                   }
@@ -251,7 +263,7 @@ class PreviewModule(
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    testImplementation(libs.composable.preview.scanner)
+    testImplementation("io.github.sergio-sastre.ComposablePreviewScanner:android:$composablePreviewScannerVersion")
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
   }
