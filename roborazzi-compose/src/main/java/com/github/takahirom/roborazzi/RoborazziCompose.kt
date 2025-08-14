@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
+import org.robolectric.RuntimeEnvironment
 import java.io.File
 
 
@@ -61,6 +62,9 @@ fun captureRoboImage(
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   launchRoborazziActivity(roborazziComposeOptions) { activityScenario ->
+    // Save current qualifiers before any modifications
+    val savedQualifiers = RuntimeEnvironment.getQualifiers()
+    
     val configuredContent = roborazziComposeOptions
       .configured(activityScenario) {
         content()
@@ -74,6 +78,8 @@ fun captureRoboImage(
       )
     } finally {
       roborazziComposeOptions.afterCapture()
+      // Restore original qualifiers
+      RuntimeEnvironment.setQualifiers(savedQualifiers)
     }
   }
 }
