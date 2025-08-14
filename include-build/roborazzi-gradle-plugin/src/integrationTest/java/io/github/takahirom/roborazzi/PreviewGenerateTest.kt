@@ -1,6 +1,5 @@
 package io.github.takahirom.roborazzi
 
-import io.github.takahirom.roborazzi.MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION
 import org.gradle.testkit.runner.BuildResult
 import org.junit.Rule
 import org.junit.Test
@@ -79,7 +78,7 @@ class GeneratePreviewTestTest {
       buildGradle.composablePreviewScannerVersion = "0.6.1"
 
       record(BuildType.BuildAndFail) {
-        assert(output.contains("Roborazzi: ComposablePreviewScanner version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher is required"))
+        assert(output.contains("Roborazzi: ComposablePreviewScanner version 0.7.0 or higher is required")) // Should match MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION
       }
     }
   }
@@ -99,7 +98,7 @@ class PreviewModule(
     private val PATH = moduleName + "/build.gradle.kts"
     var isKmp = false
     var includePreviewScannerSupportDependenciy = true
-    var composablePreviewScannerVersion = "0.7.0"
+    var composablePreviewScannerVersion = "0.7.0" // Should match MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION
     fun write() {
       val file =
         projectFolder.root.resolve(PATH)
