@@ -65,7 +65,7 @@ generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-goo
 
 # for sample
 composable-preview-scanner = { module = "io.github.sergio-sastre.ComposablePreviewScanner:android", version.ref = "composable-preview-scanner" }
-composable-preview-scanner-jvm = { module = "io.github.sergio-sastre.ComposablePreviewScanner:jvm", version.ref = "composable-preview-scanner" }
+composable-preview-scanner-common = { module = "io.github.sergio-sastre.ComposablePreviewScanner:common", version.ref = "composable-preview-scanner" }
 
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
