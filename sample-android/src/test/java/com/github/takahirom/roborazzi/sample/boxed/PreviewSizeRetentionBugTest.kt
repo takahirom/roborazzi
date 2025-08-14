@@ -1,5 +1,6 @@
 package com.github.takahirom.roborazzi.sample.boxed
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.InternalRoborazziApi
@@ -24,6 +26,7 @@ import org.robolectric.annotation.GraphicsMode
 import java.io.File
 import android.graphics.BitmapFactory
 import org.junit.Assert
+import kotlin.math.roundToInt
 
 /**
  * Test to reproduce the bug where Preview annotation attributes (heightDp/widthDp)
@@ -95,10 +98,11 @@ class PreviewSizeRetentionBugTest {
                 // Get actual dimensions of first capture
                 val (width1, height1) = getImageDimensions(file1)
                 
-                // Calculate expected pixel size based on density (assuming default density of 1.0)
-                // In Robolectric, default density is usually 1.0, so 600dp = 600px
-                val expectedWidth1 = 600
-                val expectedHeight1 = 800
+                // Calculate expected pixel size based on runtime density
+                val context = ApplicationProvider.getApplicationContext<Context>()
+                val density = context.resources.displayMetrics.density
+                val expectedWidth1 = (600 * density).roundToInt()
+                val expectedHeight1 = (800 * density).roundToInt()
                 
                 // Verify first capture has expected size
                 Assert.assertEquals(
