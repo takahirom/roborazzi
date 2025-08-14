@@ -11,7 +11,7 @@ permissions: {}
 jobs:
   store-screenshot-test:
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     permissions:
       contents: read # for clone
