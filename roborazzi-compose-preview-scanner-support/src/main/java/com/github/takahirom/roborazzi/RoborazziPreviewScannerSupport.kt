@@ -16,7 +16,7 @@ import org.junit.rules.TestWatcher
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
-import sergio.sastre.composable.preview.scanner.core.screenshotid.AndroidPreviewScreenshotIdBuilder
+import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
 // For Generated junit4 tests
