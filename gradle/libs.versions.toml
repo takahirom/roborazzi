@@ -2,6 +2,7 @@
 accessibilityTestFramework = "4.1.1"
 javaToolchain = "17"
 javaTarget = "11"
+# https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-compatibility-guide.html#version-compatibility
 agp = "8.5.2"
 commons-compress = "1.23.0"
 kotlin = "2.0.21"
