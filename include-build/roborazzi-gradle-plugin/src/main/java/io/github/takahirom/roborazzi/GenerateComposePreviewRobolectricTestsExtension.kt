@@ -345,20 +345,32 @@ private fun verifyComposablePreviewScannerVersion(
     // If declared version is null (common with BOMs/constraints), try to resolve it
     val versionToCheck = declaredVersion ?: run {
       try {
-        // Try to get the resolved version from configurations
-        project.configurations
-          .filter { it.isCanBeResolved }
-          .flatMap { config ->
-            config.resolvedConfiguration.resolvedArtifacts
-              .filter { artifact ->
-                artifact.moduleVersion.id.group == "io.github.sergio-sastre.ComposablePreviewScanner" &&
-                artifact.moduleVersion.id.name == "android"
-              }
-              .map { it.moduleVersion.id.version }
+        // Resolve only common test classpaths to minimize work and side effects
+        val candidateConfs = project.configurations
+          .filter { conf ->
+            conf.isCanBeResolved &&
+            conf.name.contains("test", ignoreCase = true) &&
+            (conf.name.contains("runtimeClasspath", ignoreCase = true) ||
+             conf.name.contains("compileClasspath", ignoreCase = true))
+          }
+        candidateConfs
+          .asSequence()
+          .mapNotNull { conf ->
+            try {
+              conf.resolvedConfiguration.firstLevelModuleDependencies
+                .find { dep ->
+                  dep.moduleGroup == "io.github.sergio-sastre.ComposablePreviewScanner" &&
+                  dep.moduleName == "android"
+                }
+                ?.moduleVersion
+            } catch (e: Exception) {
+              project.logger.debug("Roborazzi: Failed to resolve ComposablePreviewScanner version from configuration '${conf.name}': ${e.message}", e)
+              null
+            }
           }
           .firstOrNull()
       } catch (e: Exception) {
-        // If resolution fails, we can't determine the version
+        project.logger.debug("Roborazzi: Failed to resolve ComposablePreviewScanner version from any candidate configuration: ${e.message}", e)
         null
       }
     }
