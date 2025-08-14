@@ -1,6 +1,7 @@
 plugins {
   id 'com.android.library'
   id 'org.jetbrains.kotlin.android'
+  id 'org.jetbrains.kotlin.plugin.compose'
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
@@ -10,7 +11,6 @@ repositories {
   mavenCentral()
 }
 
-android.buildFeatures.compose = true
 
 // TODO: Use build-logic
 apply from: rootProject.file('gradle/android.gradle')

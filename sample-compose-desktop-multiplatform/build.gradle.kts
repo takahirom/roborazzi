@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   kotlin("multiplatform")
   id("org.jetbrains.compose")
+  id("org.jetbrains.kotlin.plugin.compose")
   id("io.github.takahirom.roborazzi")
 }
 

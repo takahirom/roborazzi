@@ -1,11 +1,15 @@
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+
 plugins {
   id("org.jetbrains.kotlin.multiplatform")
   id("com.android.application")
 //  id("com.android.library")
   id("io.github.takahirom.roborazzi")
   id("org.jetbrains.compose")
+  id("org.jetbrains.kotlin.plugin.compose")
 }
 
+@OptIn(ExperimentalRoborazziApi::class)
 roborazzi {
   generateComposePreviewRobolectricTests {
     enable = true
@@ -27,12 +31,6 @@ android {
     minSdk = 24
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-  }
-  buildFeatures {
-    compose = true
-  }
-  composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
   }
 
   buildTypes {

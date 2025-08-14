@@ -23,7 +23,6 @@ class GeneratePreviewTestTest {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.isKmp = true
       record()
-
       checkHasImages()
     }
   }
@@ -104,12 +103,6 @@ class PreviewModule(
 
               testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             }
-            buildFeatures {
-              compose = true
-            }
-            composeOptions {
-              kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-            }
 
             buildTypes {
               release {
@@ -144,11 +137,16 @@ class PreviewModule(
               kotlin("multiplatform")
               id("com.android.library")
               id("org.jetbrains.compose")
+              id("org.jetbrains.kotlin.plugin.compose")
               id("io.github.takahirom.roborazzi")
           }
 
           kotlin {
-              androidTarget()
+              androidTarget {
+                  compilerOptions {
+                      freeCompilerArgs.add("-Xopt-in=kotlin.RequiresOptIn")
+                  }
+              }
               
               sourceSets {
                   val commonMain by getting {
@@ -157,11 +155,11 @@ class PreviewModule(
                       }
                   }
                   val androidMain by getting {
-                      dependencies {
-                          implementation(compose.material3)
-                          implementation(compose.ui)
-                          implementation(compose.uiTooling)
-                          implementation(compose.runtime)
+                    dependencies {
+                        implementation(compose.material3)
+                        implementation(compose.ui)
+                        implementation(compose.uiTooling)
+                        implementation(compose.runtime)
                       }
                   }
                   
@@ -192,6 +190,15 @@ class PreviewModule(
           $androidBlock
 
           $roborazziExtension
+          
+          // Replace AGP's default Compose Compiler with Kotlin's integrated version
+          configurations.all {
+              resolutionStrategy.dependencySubstitution {
+                  substitute(module("androidx.compose.compiler:compiler"))
+                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
+                    .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+              }
+          }
 
           repositories {
               mavenCentral()
@@ -211,10 +218,20 @@ class PreviewModule(
     id("com.android.application")
   //  id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("io.github.takahirom.roborazzi")
   }
 
   $roborazziExtension
+
+  // Replace AGP's default Compose Compiler with Kotlin's integrated version
+  configurations.all {
+      resolutionStrategy.dependencySubstitution {
+          substitute(module("androidx.compose.compiler:compiler"))
+            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
+            .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+      }
+  }
 
   repositories {
     mavenCentral()
@@ -300,13 +317,11 @@ class PreviewModule(
 
   fun checkHasImages() {
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
-    println("images:" + images?.toList())
     assert(images?.isNotEmpty() == true)
   }
 
   fun checkNoImages() {
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
-    println("images:" + images?.toList())
     checkResultCount(
       testProjectDir.root.resolve("$moduleName/build/test-results/roborazzi/results-summary.json")
       // All zero
@@ -320,7 +335,6 @@ class PreviewModule(
       testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
         .orEmpty()
         .filter { it.name.contains("PreviewWithPrivate") }
-    println("images:" + privateImages.toList())
     assert(privateImages.isNotEmpty() == true)
   }
 }
