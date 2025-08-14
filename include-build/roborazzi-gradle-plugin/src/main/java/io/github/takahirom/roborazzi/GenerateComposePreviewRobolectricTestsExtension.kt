@@ -373,20 +373,27 @@ private fun verifyComposablePreviewScannerVersion(
   }
 }
 
-private fun isVersionLessThan(currentVersion: String, requiredVersion: String): Boolean {
-  val current = parseVersion(currentVersion)
-  val required = parseVersion(requiredVersion)
-  
-  for (i in 0 until maxOf(current.size, required.size)) {
-    val currentPart = current.getOrNull(i) ?: 0
-    val requiredPart = required.getOrNull(i) ?: 0
-    
-    if (currentPart < requiredPart) return true
-    if (currentPart > requiredPart) return false
+internal fun isVersionLessThan(currentVersion: String, requiredVersion: String): Boolean {
+  val (currentNums, currentQualifier) = parseVersion(currentVersion)
+  val (requiredNums, requiredQualifier) = parseVersion(requiredVersion)
+
+  for (i in 0 until maxOf(currentNums.size, requiredNums.size)) {
+    val c = currentNums.getOrNull(i) ?: 0
+    val r = requiredNums.getOrNull(i) ?: 0
+    if (c < r) return true
+    if (c > r) return false
   }
-  return false
+  // Numeric parts equal – handle pre-release vs stable
+  if (currentQualifier == requiredQualifier) return false
+  if (currentQualifier != null && requiredQualifier == null) return true   // pre-release < stable
+  if (currentQualifier == null && requiredQualifier != null) return false  // stable !< pre-release
+  // Both have qualifiers: fall back to lexicographic compare (best-effort)
+  return currentQualifier!! < requiredQualifier!!
 }
 
-private fun parseVersion(version: String): List<Int> {
-  return version.split(".").mapNotNull { it.toIntOrNull() }
+internal fun parseVersion(version: String): Pair<List<Int>, String?> {
+  val parts = version.split("-", limit = 2)
+  val numeric = parts[0].split(".").map { it.toIntOrNull() ?: 0 }
+  val qualifier = parts.getOrNull(1)?.lowercase(Locale.ROOT)
+  return numeric to qualifier
 }
