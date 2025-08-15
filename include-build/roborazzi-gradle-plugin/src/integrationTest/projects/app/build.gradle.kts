@@ -12,8 +12,8 @@ android {
 
   defaultConfig {
     applicationId = "com.github.takahirom.integration_test_project"
-    minSdk = 21
-    targetSdk = 35
+    minSdk = libs.versions.minSdk.get().toInt()
+    targetSdk = libs.versions.targetSdk.get().toInt()
     versionCode = 1
     versionName = "1.0"
 
