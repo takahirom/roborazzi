@@ -226,7 +226,7 @@ plugins {
 
 android {
   namespace = "com.github.takahirom.integration_test_project"
-  compileSdk = 34 // Using hardcoded value in integration test - keep in sync with libs.versions.compileSdk
+  compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
     applicationId = "com.github.takahirom.integration_test_project"
