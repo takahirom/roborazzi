@@ -78,7 +78,7 @@ class GeneratePreviewTestTest {
       buildGradle.composablePreviewScannerVersion = "0.6.1"
 
       record(BuildType.BuildAndFail) {
-        assert(output.contains("Roborazzi: ComposablePreviewScanner version 0.7.0 or higher is required")) // Should match MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION
+        assert(output.contains("Roborazzi: ComposablePreviewScanner version 0.7.0 or higher is required"))
       }
     }
   }
@@ -98,7 +98,7 @@ class PreviewModule(
     private val PATH = moduleName + "/build.gradle.kts"
     var isKmp = false
     var includePreviewScannerSupportDependenciy = true
-    var composablePreviewScannerVersion = "0.7.0" // Should match MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION
+    var composablePreviewScannerVersion = "0.7.0"
     fun write() {
       val file =
         projectFolder.root.resolve(PATH)
