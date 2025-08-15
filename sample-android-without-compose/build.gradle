@@ -6,7 +6,7 @@ plugins {
 
 android {
   namespace 'com.github.takahirom.roborazzi.sample'
-  compileSdk 35
+  compileSdk = libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
     minSdk 21
