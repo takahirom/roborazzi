@@ -10,6 +10,7 @@ import org.junit.rules.RuleChain
 import org.junit.rules.TestWatcher
 import sergio.sastre.composable.preview.scanner.common.CommonComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.common.CommonPreviewInfo
+import sergio.sastre.composable.preview.scanner.common.screenshotid.CommonPreviewScreenshotIdBuilder
 
 @OptIn(ExperimentalRoborazziApi::class)
 class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<CommonPreviewInfo>> {
@@ -47,12 +48,13 @@ class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<Comm
 
   override fun test(testParameter: JUnit4TestParameter<CommonPreviewInfo>) {
     val preview = testParameter.preview
-    val screenshotNameSuffix = preview.previewIndex?.let { "_" + preview.previewIndex }.orEmpty()
+    val screenshotName = CommonPreviewScreenshotIdBuilder(preview).build()
+    val filePath = "$DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH/$screenshotName.png"
     
     testParameter.composeTestRule.setContent {
       preview()
     }
     testParameter.composeTestRule.onRoot()
-      .captureRoboImage(DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH + "/" + preview.methodName + screenshotNameSuffix + ".png")
+      .captureRoboImage(filePath)
   }
 }
