@@ -1,57 +1,75 @@
 package io.github.takahirom.roborazzi
 
 import org.junit.Test
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class VersionComparisonTest {
+data class VersionComparisonTestCase(
+    val current: String,
+    val required: String,
+    val expected: Boolean,
+    val description: String
+)
 
-    @Test
-    fun `version comparison basic cases`() {
-        // Test basic numeric comparisons
-        assertTrue("0.6.9 < 0.7.0", isVersionLessThan("0.6.9", "0.7.0"))
-        assertFalse("0.7 == 0.7.0", isVersionLessThan("0.7", "0.7.0")) // 0.7.0 and 0.7 are equivalent (0.7 becomes 0.7.0)
-        assertFalse("0.7.0 == 0.7.0", isVersionLessThan("0.7.0", "0.7.0"))
-        assertFalse("0.7.1 > 0.7.0", isVersionLessThan("0.7.1", "0.7.0"))
+@RunWith(Parameterized::class)
+class VersionComparisonTest(private val testCase: VersionComparisonTestCase) {
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "{0}")
+        fun data(): Collection<Array<VersionComparisonTestCase>> {
+            return listOf(
+                VersionComparisonTestCase("0.6.9", "0.7.0", true, "0.6.9 < 0.7.0"),
+                VersionComparisonTestCase("0.7", "0.7.0", false, "0.7 == 0.7.0"),
+                VersionComparisonTestCase("0.7.0", "0.7.0", false, "0.7.0 == 0.7.0"),
+                VersionComparisonTestCase("0.7.1", "0.7.0", false, "0.7.1 > 0.7.0"),
+                VersionComparisonTestCase("0.7.0-alpha01", "0.7.0", true, "0.7.0-alpha01 < 0.7.0"),
+                VersionComparisonTestCase("0.7.0-beta", "0.7.0", true, "0.7.0-beta < 0.7.0"),
+                VersionComparisonTestCase("0.7.0-rc1", "0.7.0", true, "0.7.0-rc1 < 0.7.0"),
+                VersionComparisonTestCase("0.7.0", "0.7.0-alpha", false, "0.7.0 !< 0.7.0-alpha"),
+                VersionComparisonTestCase("0.7.0-alpha", "0.7.0-beta", true, "0.7.0-alpha < 0.7.0-beta"),
+                VersionComparisonTestCase("0.7.0-alpha01", "0.7.0-alpha02", true, "0.7.0-alpha01 < 0.7.0-alpha02"),
+                VersionComparisonTestCase("0.6", "0.7.0", true, "0.6 < 0.7.0"),
+                VersionComparisonTestCase("0.7.0", "0.7.0.1", true, "0.7.0 < 0.7.0.1"),
+                VersionComparisonTestCase("0.7.0-alpha", "0.7.0-alpha", false, "0.7.0-alpha == 0.7.0-alpha"),
+                VersionComparisonTestCase("0.7.invalid", "0.7.0", false, "0.7.invalid == 0.7.0")
+            ).map { arrayOf(it) }
+        }
     }
 
     @Test
-    fun `version comparison pre-release cases`() {
-        // Pre-release versions should be less than stable versions
-        assertTrue("0.7.0-alpha01 < 0.7.0", isVersionLessThan("0.7.0-alpha01", "0.7.0"))
-        assertTrue("0.7.0-beta < 0.7.0", isVersionLessThan("0.7.0-beta", "0.7.0"))
-        assertTrue("0.7.0-rc1 < 0.7.0", isVersionLessThan("0.7.0-rc1", "0.7.0"))
-        
-        // Stable versions should not be less than pre-release versions
-        assertFalse("0.7.0 !< 0.7.0-alpha", isVersionLessThan("0.7.0", "0.7.0-alpha"))
-        
-        // Pre-release comparison (lexicographic)
-        assertTrue("0.7.0-alpha < 0.7.0-beta", isVersionLessThan("0.7.0-alpha", "0.7.0-beta"))
-        assertTrue("0.7.0-alpha01 < 0.7.0-alpha02", isVersionLessThan("0.7.0-alpha01", "0.7.0-alpha02"))
+    fun `version comparison`() {
+        assertEquals(
+            "${testCase.description} failed", 
+            testCase.expected, 
+            isVersionLessThan(testCase.current, testCase.required)
+        )
     }
+}
 
+// Separate test class for parseVersion function testing
+class ParseVersionTest {
+    
     @Test
-    fun `version comparison edge cases`() {
-        // Different length numeric parts
-        assertTrue("0.6 < 0.7.0", isVersionLessThan("0.6", "0.7.0"))
-        assertTrue("0.7.0 < 0.7.0.1", isVersionLessThan("0.7.0", "0.7.0.1"))
-        
-        // Same pre-release qualifiers
-        assertFalse("0.7.0-alpha == 0.7.0-alpha", isVersionLessThan("0.7.0-alpha", "0.7.0-alpha"))
-        
-        // Invalid version parts should be treated as 0, so 0.7.0 == 0.7.0
-        assertFalse("0.7.invalid == 0.7.0", isVersionLessThan("0.7.invalid", "0.7.0"))
+    fun `parseVersion correctly handles stable version`() {
+        val (nums, qualifier) = parseVersion("0.7.0")
+        assertEquals("Stable version numeric parts", listOf(0, 7, 0), nums)
+        assertNull("Stable version qualifier", qualifier)
     }
-
+    
     @Test
-    fun `parseVersion correctly handles different formats`() {
-        val (nums1, qualifier1) = parseVersion("0.7.0")
-        assertTrue("Stable version parsing", nums1 == listOf(0, 7, 0) && qualifier1 == null)
-        
-        val (nums2, qualifier2) = parseVersion("0.7.0-alpha01")
-        assertTrue("Pre-release version parsing", nums2 == listOf(0, 7, 0) && qualifier2 == "alpha01")
-        
-        val (nums3, qualifier3) = parseVersion("1.2.3-BETA")
-        assertTrue("Case insensitive qualifier", nums3 == listOf(1, 2, 3) && qualifier3 == "beta")
+    fun `parseVersion correctly handles pre-release version`() {
+        val (nums, qualifier) = parseVersion("0.7.0-alpha01")
+        assertEquals("Pre-release version numeric parts", listOf(0, 7, 0), nums)
+        assertEquals("Pre-release version qualifier", "alpha01", qualifier)
+    }
+    
+    @Test
+    fun `parseVersion handles case insensitive qualifier`() {
+        val (nums, qualifier) = parseVersion("1.2.3-BETA")
+        assertEquals("Case insensitive version numeric parts", listOf(1, 2, 3), nums)
+        assertEquals("Case insensitive version qualifier", "beta", qualifier)
     }
 }

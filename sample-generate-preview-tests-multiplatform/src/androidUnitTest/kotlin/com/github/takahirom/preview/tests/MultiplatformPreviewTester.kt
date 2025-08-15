@@ -48,6 +48,7 @@ class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<Comm
   override fun test(testParameter: JUnit4TestParameter<CommonPreviewInfo>) {
     val preview = testParameter.preview
     val screenshotNameSuffix = preview.previewIndex?.let { "_" + preview.previewIndex }.orEmpty()
+    
     testParameter.composeTestRule.setContent {
       preview()
     }
