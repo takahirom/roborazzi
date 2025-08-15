@@ -11,7 +11,9 @@ data class VersionComparisonTestCase(
     val required: String,
     val expected: Boolean,
     val description: String
-)
+) {
+    override fun toString(): String = description
+}
 
 @RunWith(Parameterized::class)
 class VersionComparisonTest(private val testCase: VersionComparisonTestCase) {
