@@ -21,9 +21,3 @@ fun PreviewNormal() {
 fun PreviewParameter(@PreviewParameter(StringProvider::class) name: String) {
   Text("Multiplatform Preview with PreviewParameter is working, $name!")
 }
-
-@Preview
-@Composable
-fun PreviewWithParameters() {
-  Text("Preview with parameters (for future Compose Multiplatform 1.9.0+ support)!")
-}
