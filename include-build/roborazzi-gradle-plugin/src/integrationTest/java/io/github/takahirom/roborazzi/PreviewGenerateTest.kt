@@ -108,7 +108,7 @@ class PreviewModule(
       val androidBlock = """
           android {
             namespace = "com.github.takahirom.preview.tests"
-            compileSdk = 35 // Using hardcoded value in integration test - keep in sync with libs.versions.compileSdk
+            compileSdk = 34 // Using hardcoded value in integration test - keep in sync with libs.versions.compileSdk
 
             defaultConfig {
               minSdk = 24
