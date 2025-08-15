@@ -7,7 +7,7 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
 
-android.compileSdk(34)
+android.compileSdk(libs.versions.compileSdk.get().toInteger())
 
 kotlin {
   applyDefaultHierarchyTemplate()
@@ -44,7 +44,7 @@ kotlin {
 
 android {
   namespace 'com.github.takahirom.roborazzi.ai.gemini'
-  compileSdk 34
+  compileSdk libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
     minSdk 21

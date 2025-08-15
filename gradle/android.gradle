@@ -1,5 +1,5 @@
 android {
-  compileSdk 34
+  compileSdk libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
     minSdk 21

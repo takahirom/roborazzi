@@ -9,7 +9,7 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 
 android {
   namespace 'com.github.takahirom.roborazzi.junit.rule'
-  compileSdk 34
+  compileSdk libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
     minSdk 21
