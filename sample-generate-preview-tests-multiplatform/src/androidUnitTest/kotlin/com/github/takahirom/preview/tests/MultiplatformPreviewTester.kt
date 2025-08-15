@@ -8,8 +8,8 @@ import com.github.takahirom.roborazzi.*
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter
 import org.junit.rules.RuleChain
 import org.junit.rules.TestWatcher
-import sergio.sastre.composable.preview.scanner.jvm.common.CommonComposablePreviewScanner
-import sergio.sastre.composable.preview.scanner.jvm.common.CommonPreviewInfo
+import sergio.sastre.composable.preview.scanner.common.CommonComposablePreviewScanner
+import sergio.sastre.composable.preview.scanner.common.CommonPreviewInfo
 
 @OptIn(ExperimentalRoborazziApi::class)
 class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<CommonPreviewInfo>> {
@@ -48,6 +48,7 @@ class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<Comm
   override fun test(testParameter: JUnit4TestParameter<CommonPreviewInfo>) {
     val preview = testParameter.preview
     val screenshotNameSuffix = preview.previewIndex?.let { "_" + preview.previewIndex }.orEmpty()
+    
     testParameter.composeTestRule.setContent {
       preview()
     }

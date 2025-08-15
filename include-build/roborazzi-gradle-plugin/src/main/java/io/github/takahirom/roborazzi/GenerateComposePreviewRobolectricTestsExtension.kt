@@ -20,6 +20,8 @@ import java.net.URLEncoder
 import java.util.Locale
 import javax.inject.Inject
 
+internal const val MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION = "0.7.0"
+
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
@@ -242,6 +244,7 @@ fun verifyGenerateComposePreviewRobolectricTests(
       return@afterEvaluate
     }
     verifyLibraryDependencies(project)
+    verifyComposablePreviewScannerVersion(project)
     verifyAndroidConfig(androidExtension, logger)
   }
 }
@@ -326,4 +329,83 @@ private fun verifyLibraryDependencies(
     "io.github.sergio-sastre.ComposablePreviewScanner:android",
   )
   requiredLibraries.forEach { allDependencies.checkExists(it) }
+}
+
+private fun verifyComposablePreviewScannerVersion(
+  project: Project
+) {
+  val dependencies = project.configurations.flatMap { it.dependencies }
+  val composablePreviewScannerDependency = dependencies.find { 
+    it.group == "io.github.sergio-sastre.ComposablePreviewScanner" && it.name == "android" 
+  }
+  
+  if (composablePreviewScannerDependency != null) {
+    val declaredVersion = composablePreviewScannerDependency.version
+    
+    // If declared version is null (common with BOMs/constraints), try to resolve it
+    val versionToCheck = declaredVersion ?: run {
+      try {
+        // Resolve only common test classpaths to minimize work and side effects
+        val candidateConfs = project.configurations
+          .filter { conf ->
+            conf.isCanBeResolved &&
+            conf.name.contains("test", ignoreCase = true) &&
+            (conf.name.contains("runtimeClasspath", ignoreCase = true) ||
+             conf.name.contains("compileClasspath", ignoreCase = true))
+          }
+        candidateConfs
+          .asSequence()
+          .mapNotNull { conf ->
+            try {
+              conf.resolvedConfiguration.firstLevelModuleDependencies
+                .find { dep ->
+                  dep.moduleGroup == "io.github.sergio-sastre.ComposablePreviewScanner" &&
+                  dep.moduleName == "android"
+                }
+                ?.moduleVersion
+            } catch (e: Exception) {
+              project.logger.debug("Roborazzi: Failed to resolve ComposablePreviewScanner version from configuration '${conf.name}': ${e.message}", e)
+              null
+            }
+          }
+          .firstOrNull()
+      } catch (e: Exception) {
+        project.logger.debug("Roborazzi: Failed to resolve ComposablePreviewScanner version from any candidate configuration: ${e.message}", e)
+        null
+      }
+    }
+    
+    if (versionToCheck != null && isVersionLessThan(versionToCheck, MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION)) {
+      error(
+        "Roborazzi: ComposablePreviewScanner version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher is required. " +
+        "Current version: $versionToCheck. " +
+        "Please update your ComposablePreviewScanner dependency to version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher."
+      )
+    }
+  }
+}
+
+internal fun isVersionLessThan(currentVersion: String, requiredVersion: String): Boolean {
+  val (currentNums, currentQualifier) = parseVersion(currentVersion)
+  val (requiredNums, requiredQualifier) = parseVersion(requiredVersion)
+
+  for (i in 0 until maxOf(currentNums.size, requiredNums.size)) {
+    val c = currentNums.getOrNull(i) ?: 0
+    val r = requiredNums.getOrNull(i) ?: 0
+    if (c < r) return true
+    if (c > r) return false
+  }
+  // Numeric parts equal – handle pre-release vs stable
+  if (currentQualifier == requiredQualifier) return false
+  if (currentQualifier != null && requiredQualifier == null) return true   // pre-release < stable
+  if (currentQualifier == null && requiredQualifier != null) return false  // stable !< pre-release
+  // Both have qualifiers: fall back to lexicographic compare (best-effort)
+  return currentQualifier!! < requiredQualifier!!
+}
+
+internal fun parseVersion(version: String): Pair<List<Int>, String?> {
+  val parts = version.split("-", limit = 2)
+  val numeric = parts[0].split(".").map { it.toIntOrNull() ?: 0 }
+  val qualifier = parts.getOrNull(1)?.lowercase(Locale.ROOT)
+  return numeric to qualifier
 }

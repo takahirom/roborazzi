@@ -78,7 +78,7 @@ kotlin {
         implementation(project(":roborazzi-annotations"))
         implementation(libs.junit)
         implementation(libs.robolectric)
-        implementation(libs.composable.preview.scanner.jvm)
+        implementation(libs.composable.preview.scanner.common)
         implementation(libs.composable.preview.scanner)
         implementation(libs.androidx.compose.ui.test.junit4)
       }
