@@ -39,7 +39,7 @@ jobs:
           cd include-build; 
           ./gradlew roborazzi-core:test --profile
           cd ..
-          ./gradlew recordRoborazziDebug recordRoborazziDesktop recordRoborazziJvm recordRoborazziIosX64 recordRoborazziIosArm64 --stacktrace  --profile
+          ./gradlew recordRoborazziDebug recordRoborazziDesktop recordRoborazziJvm recordRoborazziIosX64 recordRoborazziIosArm64 --stacktrace --profile
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: ${{ always() }}
