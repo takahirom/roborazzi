@@ -15,11 +15,11 @@ if (localPropertiesFile.exists()) {
 
 android {
   namespace 'com.github.takahirom.roborazzi.sample'
-  compileSdk 35
+  compileSdk = libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
-    minSdk 21
-    targetSdk 35
+    minSdk = libs.versions.minSdk.get().toInteger()
+    targetSdk = libs.versions.targetSdk.get().toInteger()
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }

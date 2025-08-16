@@ -7,7 +7,7 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
 
-android.compileSdk(34)
+android.compileSdk(libs.versions.compileSdk.get().toInteger())
 
 kotlin {
   targetHierarchy.custom {
@@ -96,11 +96,11 @@ kotlin {
 
 android {
   namespace 'com.github.takahirom.roborazzi.core'
-  compileSdk 34
+  compileSdk libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
-    minSdk 21
-    targetSdk 32
+    minSdk = libs.versions.minSdk.get().toInteger()
+    targetSdk = libs.versions.targetSdk.get().toInteger()
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
