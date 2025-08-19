@@ -1,5 +1,6 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.variant.HasUnitTest
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
@@ -79,7 +80,7 @@ fun generateComposePreviewRobolectricTestsIfNeeded(
   )
   project.afterEvaluate {
     // We use afterEvaluate only for verify
-    check(variant.unitTest != null) {
+    check((variant as? HasUnitTest)?.unitTest != null) {
       "Roborazzi: Please enable unit tests for the variant '${variant.name}' in the 'build.gradle' file."
     }
     verifyTestConfig(testTaskProvider, logger)
@@ -113,7 +114,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   }
   // We need to use sources.java here; otherwise, the generate task will not be executed.
   // https://stackoverflow.com/a/76870110/4339442
-  variant.unitTest?.sources?.java?.addGeneratedSourceDirectory(
+  (variant as? HasUnitTest)?.unitTest?.sources?.java?.addGeneratedSourceDirectory(
     generateTestsTask,
     GenerateComposePreviewRobolectricTestsTask::outputDir
   )
