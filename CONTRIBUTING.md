@@ -73,7 +73,7 @@ cd include-build && ./gradlew roborazzi-gradle-plugin:integrationTest --tests "*
 1. Fork the repository
 2. Create a branch for your changes
 3. Make your changes
-4. Run all tests to ensure nothing is broken
+4. Run relevant tests for your changes
 5. Commit your changes with a clear message
 6. Push to your fork
 7. Create a pull request with a description of your changes
