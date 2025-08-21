@@ -64,7 +64,7 @@ Tests for the Gradle plugin functionality with real Gradle projects. If you've m
 cd include-build && ./gradlew roborazzi-gradle-plugin:integrationTest && cd ..
 
 # Or run specific tests
-cd include-build && ./gradlew roborazzi-gradle-plugin:integrationTest --tests "*RoborazziGradle-pluginProjectTest.record" && cd ..
+cd include-build && ./gradlew roborazzi-gradle-plugin:integrationTest --tests "*RoborazziGradleProjectTest.record" && cd ..
 ```
 
 Success indicator: Integration tests pass
