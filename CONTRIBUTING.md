@@ -5,6 +5,7 @@ Thank you for your interest in contributing to Roborazzi! We welcome all contrib
 ## Prerequisites
 
 Before contributing, ensure you have:
+
 - JDK 17 or later
 - Android SDK (API level 35 for latest)
 - Git
@@ -22,9 +23,11 @@ Before contributing, ensure you have:
 
 ## Testing
 
-All tests should pass before submitting a pull request. Run tests in the following order:
+Testing local changes by publishing to Maven Local can be tricky, so we recommend using the test modules within this repository to verify your changes.
 
 ### 1. Screenshot Tests
+
+These commands run screenshot tests against the sample modules. If you've made changes to the core library (e.g., in `roborazzi-core`, `roborazzi-compose`), you should verify them by modifying or adding tests within a sample-xx module (like `sample-android`).
 
 ```bash
 # First, record baseline screenshots
@@ -37,46 +40,44 @@ All tests should pass before submitting a pull request. Run tests in the followi
 ./gradlew compareRoborazziDebug
 ```
 
-**Success indicator**: BUILD SUCCESSFUL
+Success indicator: BUILD SUCCESSFUL
 
 ### 2. Boxed Tests
-Tests that run in an isolated environment to ensure compatibility across different Gradle and AGP versions.
+
+Tests that ensure a clean environment for testing Roborazzi's runtime APIs (like `compare`). They manage screenshot files (e.g., by deleting them before execution) to create a predictable state for each test run.
 Located in: `sample-android/src/test/java/com/github/takahirom/roborazzi/sample/boxed/`
 
-These tests verify:
-- Screenshot file paths are correct
-- Image comparison and diff generation work properly
-- Changes in screenshots are detected accurately
-
 Run with:
+
 ```bash
 ./gradlew :sample-android:test
 ```
 
-**Success indicator**: All tests pass
+Success indicator: All tests pass
 
 ### 3. Integration Tests
-Tests for the Gradle plugin functionality with real Gradle projects:
+
+Tests for the Gradle plugin functionality with real Gradle projects. If you've made changes to the Gradle plugin, you should add a new test case to the integration test suite located at `include-build/roborazzi-gradle-plugin/src/integrationTest`.
 
 ```bash
 # Run from project root
 cd include-build && ./gradlew roborazzi-gradle-plugin:integrationTest && cd ..
 
 # Or run specific tests
-cd include-build && ./gradlew roborazzi-gradle-plugin:integrationTest --tests "*RoborazziGradleProjectTest.record" && cd ..
+cd include-build && ./gradlew roborazzi-gradle-plugin:integrationTest --tests "*RoborazziGradle-pluginProjectTest.record" && cd ..
 ```
 
-**Success indicator**: Integration tests pass
+Success indicator: Integration tests pass
 
 ## Contribution Workflow
 
-1. Fork the repository
-2. Create a branch for your changes
-3. Make your changes
-4. Run relevant tests for your changes
-5. Commit your changes with a clear message
-6. Push to your fork
-7. Create a pull request with a description of your changes
+1.  Fork the repository
+2.  Create a branch for your changes
+3.  Make your changes
+4.  Run relevant tests for your changes
+5.  Commit your changes with a clear message
+6.  Push to your fork
+7.  Create a pull request with a description of your changes
 
 ## Troubleshooting
 
