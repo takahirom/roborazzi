@@ -105,7 +105,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   ) {
     // It seems that this directory path is overridden by addGeneratedSourceDirectory.
     // The generated tests will be located in build/JAVA/generate[VariantName]ComposePreviewRobolectricTests.
-    it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
+    it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot/${variant.name}"))
     it.scanPackageTrees.set(extension.packages)
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(testerQualifiedClassName)
