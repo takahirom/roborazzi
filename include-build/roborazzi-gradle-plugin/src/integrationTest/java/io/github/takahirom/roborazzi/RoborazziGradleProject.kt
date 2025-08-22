@@ -53,6 +53,37 @@ class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
       }
     return buildResult
   }
+
+  fun runMultipleKspTasks(vararg tasks: String): BuildResult {
+    val buildResult = GradleRunner.create()
+      .withProjectDir(testProjectDir.root)
+      .withArguments(
+        *tasks,
+        "--stacktrace",
+        "--build-cache",
+        "--info"
+      )
+      .withPluginClasspath()
+      .forwardStdOutput(System.out.writer())
+      .forwardStdError(System.err.writer())
+      .withEnvironment(
+        mapOf(
+          "ANDROID_HOME" to System.getenv("ANDROID_HOME"),
+          "INTEGRATION_TEST" to "true",
+          "ROBORAZZI_ROOT_PATH" to File("../..").absolutePath,
+          "ROBORAZZI_INCLUDE_BUILD_ROOT_PATH" to File("..").absolutePath,
+        )
+      )
+      .let {
+        try {
+          it.build()
+        } catch (e: Exception) {
+          // If build fails, we still want to examine the output
+          it.buildAndFail()
+        }
+      }
+    return buildResult
+  }
 }
 
 class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir: TemporaryFolder) {

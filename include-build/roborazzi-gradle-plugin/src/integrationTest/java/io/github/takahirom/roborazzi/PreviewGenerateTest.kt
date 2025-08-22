@@ -82,6 +82,44 @@ class GeneratePreviewTestTest {
       }
     }
   }
+
+  /**
+   * Tests reproduction of GitHub Issue #732: AGP 8.12+ causes task dependency errors 
+   * when running multiple KSP variant tasks simultaneously.
+   * 
+   * This test reproduces the cross-variant dependency error between Debug and Release KSP tasks.
+   */
+  @Test
+  fun whenAgp812AndKspMultipleVariantsTaskDependencyErrorShouldBeReproduced() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.useKsp = true
+      buildGradle.write()
+      
+      val buildResult = rootProject.runMultipleKspTasks(
+        ":${PreviewModule.moduleName}:kspDebugUnitTestKotlin",
+        ":${PreviewModule.moduleName}:kspReleaseUnitTestKotlin"
+      )
+
+      // Verify that both KSP tasks actually executed (both required for Issue #732)
+      val kspTasksExecuted = buildResult.output.contains(":kspDebugUnitTestKotlin") && 
+                            buildResult.output.contains(":kspReleaseUnitTestKotlin")
+      
+      assert(kspTasksExecuted) {
+        "Expected KSP tasks to be executed, but not found in output: ${buildResult.output}"
+      }
+
+      // Check if the specific GitHub Issue #732 error is present
+      val hasTaskDependencyError = buildResult.output.contains("uses this output of task") && 
+                                  buildResult.output.contains("without declaring an explicit or implicit dependency")
+      
+      // Assert that the GitHub Issue #732 error was reproduced
+      assert(hasTaskDependencyError) {
+        "Expected GitHub Issue #732 task dependency error to be reproduced, but it was not found. Output: ${buildResult.output}"
+      }
+    }
+  }
+
+
 }
 
 class PreviewModule(
@@ -99,6 +137,22 @@ class PreviewModule(
     var isKmp = false
     var includePreviewScannerSupportDependenciy = true
     var composablePreviewScannerVersion = "0.7.0"
+    var useKsp = false
+    
+    private fun kspDependencies() = if (useKsp) """
+                          ksp("com.google.dagger:hilt-android-compiler:2.57.1")
+                          ksp("com.google.dagger:dagger-compiler:2.57.1")""" else ""
+    
+    private fun kspPlugins() = if (useKsp) """
+    id("com.google.dagger.hilt.android") version "2.57.1"
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"""" else ""
+    
+    private fun hiltImplementationDependencies() = if (useKsp) """
+    implementation("com.google.dagger:dagger:2.57.1")
+    implementation("com.google.dagger:hilt-android:2.57.1")
+    implementation("com.google.dagger:hilt-core:2.57.1")
+    implementation("javax.inject:javax.inject:1")""" else ""
+    
     fun write() {
       val file =
         projectFolder.root.resolve(PATH)
@@ -150,7 +204,7 @@ class PreviewModule(
               id("com.android.library")
               id("org.jetbrains.compose")
               id("org.jetbrains.kotlin.plugin.compose")
-              id("io.github.takahirom.roborazzi")
+              id("io.github.takahirom.roborazzi")${kspPlugins()}
           }
 
           kotlin {
@@ -181,7 +235,7 @@ class PreviewModule(
                           implementation(libs.junit)
                           implementation(libs.robolectric)
                           implementation("io.github.sergio-sastre.ComposablePreviewScanner:android:$composablePreviewScannerVersion")
-                          implementation(libs.androidx.compose.ui.test.junit4)
+                          implementation(libs.androidx.compose.ui.test.junit4)${kspDependencies()}
                       }
                   }
                   val androidDebug by creating {
@@ -231,7 +285,7 @@ class PreviewModule(
   //  id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("io.github.takahirom.roborazzi")
+    id("io.github.takahirom.roborazzi")${kspPlugins()}
   }
 
   $roborazziExtension
@@ -251,7 +305,7 @@ class PreviewModule(
   }
   $androidBlock
 
-  dependencies {
+  dependencies {${hiltImplementationDependencies()}
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling)
@@ -265,7 +319,7 @@ class PreviewModule(
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     testImplementation("io.github.sergio-sastre.ComposablePreviewScanner:android:$composablePreviewScannerVersion")
     androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.espresso.core)${kspDependencies()}
   }
 """
       }
