@@ -84,13 +84,14 @@ class GeneratePreviewTestTest {
   }
 
   /**
-   * Tests reproduction of GitHub Issue #732: AGP 8.12+ causes task dependency errors 
+   * Tests that GitHub Issue #732 should not occur: AGP 8.12+ should not cause task dependency errors 
    * when running multiple KSP variant tasks simultaneously.
    * 
-   * This test reproduces the cross-variant dependency error between Debug and Release KSP tasks.
+   * This test will fail until the cross-variant dependency issue between Debug and Release KSP tasks is fixed.
+   * Following TDD approach: Red (fails now) → Green (passes when issue is fixed).
    */
   @Test
-  fun whenAgp812AndKspMultipleVariantsTaskDependencyErrorShouldBeReproduced() {
+  fun whenAgp812AndKspMultipleVariantsTaskDependencyErrorShouldNotBeReproduced() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.useKsp = true
       buildGradle.write()
@@ -112,9 +113,9 @@ class GeneratePreviewTestTest {
       val hasTaskDependencyError = buildResult.output.contains("uses this output of task") && 
                                   buildResult.output.contains("without declaring an explicit or implicit dependency")
       
-      // Assert that the GitHub Issue #732 error was reproduced
-      assert(hasTaskDependencyError) {
-        "Expected GitHub Issue #732 task dependency error to be reproduced, but it was not found. Output: ${buildResult.output}"
+      // Assert that the GitHub Issue #732 error should NOT be reproduced (TDD approach)
+      assert(!hasTaskDependencyError) {
+        "GitHub Issue #732 should be fixed, but task dependency error still occurs. Output: ${buildResult.output}"
       }
     }
   }
