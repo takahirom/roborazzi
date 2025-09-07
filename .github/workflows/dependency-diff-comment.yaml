@@ -30,7 +30,7 @@ jobs:
       - name: Get pull request number
         id: get-pr-number
         run: |
-          PR_NUMBER=$(cat NR)
+          PR_NUMBER=$(cat NR | tr -d '\n')
           echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
 
       - name: Download dependency diff artifacts
