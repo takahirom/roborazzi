@@ -30,8 +30,13 @@ jobs:
       - name: Get pull request number
         id: get-pr-number
         run: |
-          PR_NUMBER=$(cat NR | tr -d '\n')
-          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+          set -euo pipefail
+          PR_NUMBER="$(tr -d '\r\n' < NR)"
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: '$PR_NUMBER'" >&2
+            exit 1
+          fi
+          printf 'PR_NUMBER=%s\n' "$PR_NUMBER" >> "$GITHUB_ENV"
 
       - name: Download dependency diff artifacts
         uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
