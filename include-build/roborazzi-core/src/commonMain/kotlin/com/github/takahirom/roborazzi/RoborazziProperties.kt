@@ -83,6 +83,7 @@ fun roborazziSystemPropertyTaskType(): RoborazziTaskType {
   return result
 }
 
+fun roborazziSystemPropertyVariantName(): String = getSystemProperty("roborazzi.test.variant")!!
 
 /**
  * Specify the file path strategy for the recorded image.

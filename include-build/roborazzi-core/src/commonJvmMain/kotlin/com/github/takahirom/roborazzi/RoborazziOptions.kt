@@ -236,8 +236,9 @@ data class RoborazziOptions(
           is CaptureResult.Unchanged -> captureResult.goldenFile
           is CaptureResult.Recorded -> captureResult.goldenFile
         }.nameWithoutExtension
+        val variantName = roborazziSystemPropertyVariantName()
         val reportFileName =
-          getReportFileName(absolutePath, captureResult.timestampNs, nameWithoutExtension)
+          getReportFileName(absolutePath, variantName, captureResult.timestampNs, nameWithoutExtension)
 
         val jsonResult = json.encodeToJsonElement(captureResult)
         KotlinxIo.writeText(reportFileName, jsonResult.toString())

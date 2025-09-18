@@ -22,8 +22,12 @@ object RoborazziReportConst {
   const val reportFilePath = "build/reports/roborazzi/index.html"
 
   const val resultsSummaryFilePathFromBuildDir = "test-results/roborazzi/results-summary.json"
-  const val resultDirPathFromBuildDir = "test-results/roborazzi/results/"
+  fun getResultsSummaryFilePathFromBuildDir(variantName: String) =
+    "test-results/roborazzi/$variantName/results-summary.json"
+  const val resultDirPathFromBuildDir = "test-results/roborazzi/"
   const val reportFilePathFromBuildDir = "reports/roborazzi/index.html"
+  fun getReportFilePathFromBuildDir(variantName: String) =
+    "reports/roborazzi/$variantName/index.html"
 
   sealed interface DefaultContextData {
     val key: String

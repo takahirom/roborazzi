@@ -156,10 +156,12 @@ abstract class RoborazziPlugin : Plugin<Project> {
         }
 
     fun configureRoborazziTasks(
-      variantSlug: String,
+      variantName: String,
       testTaskName: String,
       testTaskClass: KClass<out AbstractTestTask> = Test::class
     ) {
+      val variantSlug = variantName.capitalizeUS()
+
       val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
       val intermediateDirForEachVariant =
         testTaskOutputDirForEachVariant.convention(
@@ -266,16 +268,16 @@ abstract class RoborazziPlugin : Plugin<Project> {
       }
       val outputDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
 
-      val resultDirFileProperty =
-        project.layout.buildDirectory.dir(RoborazziReportConst.resultDirPathFromBuildDir)
+      val baseResultDirFileProperty = project.layout.buildDirectory.dir(RoborazziReportConst.resultDirPathFromBuildDir)
+      val resultDirFileProperty = baseResultDirFileProperty.map { it.dir(variantName) }
       val resultDirFileTree =
         resultDirFileProperty.map { it.asFileTree }
-      val resultDirRelativePathFromProjectProvider =
-        resultDirFileProperty.map { project.relativePath(it) }
+      val baseResultDirRelativePathFromProjectProvider =
+        baseResultDirFileProperty.map { project.relativePath(it) }
       val resultSummaryFileProperty =
-        project.layout.buildDirectory.file(RoborazziReportConst.resultsSummaryFilePathFromBuildDir)
+        project.layout.buildDirectory.file(RoborazziReportConst.getResultsSummaryFilePathFromBuildDir(variantName))
       val reportFileProperty =
-        project.layout.buildDirectory.file(RoborazziReportConst.reportFilePathFromBuildDir)
+        project.layout.buildDirectory.file(RoborazziReportConst.getReportFilePathFromBuildDir(variantName))
 
       // The difference between finalizedTask and afterSuite is that
       // finalizedTask is called even if the test is skipped.
@@ -415,6 +417,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 isVerifyRun.get() || isVerifyAndRecordRun.get()
             }
 
+            test.systemProperties["roborazzi.test.variant"] = variantName
+
             // Other properties
             test.systemProperties["roborazzi.output.dir"] =
               outputDirRelativePathFromProjectProvider.get()
@@ -423,7 +427,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 compareOutputDirProvider.get()
             }
             test.systemProperties["roborazzi.result.dir"] =
-              resultDirRelativePathFromProjectProvider.get()
+              baseResultDirRelativePathFromProjectProvider.get()
             test.systemProperties["roborazzi.project.path"] =
               projectAbsolutePathProvider.get()
             test.infoln("Roborazzi: Plugin passed system properties " + test.systemProperties + " to the test")
@@ -509,7 +513,6 @@ abstract class RoborazziPlugin : Plugin<Project> {
     fun AndroidComponentsExtension<*, *, *>.configureComponents() {
       onVariants { variant ->
         val unitTest = variant.unitTest ?: return@onVariants
-        val variantSlug = variant.name.capitalizeUS()
         val testVariantSlug = unitTest.name.capitalizeUS()
         val testTaskName = "test$testVariantSlug"
         generateComposePreviewRobolectricTestsIfNeeded(
@@ -521,7 +524,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
         // e.g. testDebugUnitTest -> recordRoborazziDebug
         configureRoborazziTasks(
-          variantSlug = variantSlug,
+          variantName = variant.name,
           testTaskName = testTaskName,
         )
       }
@@ -548,7 +551,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
     project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
       // e.g. test -> recordRoborazziJvm
       configureRoborazziTasks(
-        variantSlug = "Jvm",
+        variantName = "jvm",
         testTaskName = "test",
       )
     }
@@ -563,7 +566,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           target.testRuns.all { testRun ->
             // e.g. desktopTest -> recordRoborazziDesktop
             configureRoborazziTasks(
-              variantSlug = target.name.capitalizeUS(),
+              variantName = target.name,
               testTaskName = testRun.executionTask.name,
             )
           }
@@ -572,7 +575,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           target.testRuns.all { testRun: KotlinNativeBinaryTestRun ->
             // e.g. desktopTest -> recordRoborazziDesktop
             configureRoborazziTasks(
-              variantSlug = target.name.capitalizeUS(),
+              variantName = target.name,
               testTaskName = (testRun as ExecutionTaskHolder<*>).executionTask.name,
               testTaskClass = KotlinNativeTest::class
             )
