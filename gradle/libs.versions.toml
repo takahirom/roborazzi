@@ -51,7 +51,7 @@ webjar-materialize = "1.0.0"
 webjars-locator-lite = "0.0.6"
 webpImageio = "0.3.3"
 
-composable-preview-scanner = "0.7.0"
+composable-preview-scanner = "0.7.1"
 
 [libraries]
 accessibility-test-framework = { module = "com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework", version.ref = "accessibilityTestFramework" }
