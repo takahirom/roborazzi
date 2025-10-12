@@ -84,9 +84,9 @@ class GeneratePreviewTestTest {
   }
 
   /**
-   * Tests that GitHub Issue #732 should not occur: AGP 8.12+ should not cause task dependency errors 
+   * Tests that GitHub Issue #732 should not occur: AGP 8.12+ should not cause task dependency errors
    * when running multiple KSP variant tasks simultaneously.
-   * 
+   *
    * This test will fail until the cross-variant dependency issue between Debug and Release KSP tasks is fixed.
    * Following TDD approach: Red (fails now) → Green (passes when issue is fixed).
    */
@@ -95,28 +95,55 @@ class GeneratePreviewTestTest {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.useKsp = true
       buildGradle.write()
-      
+
       val buildResult = rootProject.runMultipleKspTasks(
         ":${PreviewModule.moduleName}:kspDebugUnitTestKotlin",
         ":${PreviewModule.moduleName}:kspReleaseUnitTestKotlin"
       )
 
       // Verify that both KSP tasks actually executed (both required for Issue #732)
-      val kspTasksExecuted = buildResult.output.contains(":kspDebugUnitTestKotlin") && 
+      val kspTasksExecuted = buildResult.output.contains(":kspDebugUnitTestKotlin") &&
                             buildResult.output.contains(":kspReleaseUnitTestKotlin")
-      
+
       assert(kspTasksExecuted) {
         "Expected KSP tasks to be executed, but not found in output: ${buildResult.output}"
       }
 
       // Check if the specific GitHub Issue #732 error is present
-      val hasTaskDependencyError = buildResult.output.contains("uses this output of task") && 
+      val hasTaskDependencyError = buildResult.output.contains("uses this output of task") &&
                                   buildResult.output.contains("without declaring an explicit or implicit dependency")
-      
+
       // Assert that the GitHub Issue #732 error should NOT be reproduced (TDD approach)
       assert(!hasTaskDependencyError) {
         "GitHub Issue #732 should be fixed, but task dependency error still occurs. Output: ${buildResult.output}"
       }
+    }
+  }
+
+  @Test
+  fun whenCustomTesterAndIncludePrivatePreviewsWithoutUseScanOptionsShouldFail() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.useCustomTester = true
+      buildGradle.isIncludePrivatePreviews = true
+      buildGradle.useScanOptionParametersInTester = false
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("includePrivatePreviews cannot be set automatically when using a custom tester"))
+        assert(output.contains("You have two options:"))
+      }
+    }
+  }
+
+  @Test
+  fun whenCustomTesterAndIncludePrivatePreviewsWithUseScanOptionsShouldSucceed() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.useCustomTester = true
+      buildGradle.isIncludePrivatePreviews = true
+      buildGradle.useScanOptionParametersInTester = true
+
+      record()
+
+      checkHasImages()
     }
   }
 
@@ -332,6 +359,7 @@ class PreviewModule(
     var enable = true
     var isIncludePrivatePreviews = false
     var useCustomTester = false
+    var useScanOptionParametersInTester = false
 
     private fun createRoborazziExtension(): String {
       val includePrivatePreviewsExpr = if (isIncludePrivatePreviews) {
@@ -344,6 +372,11 @@ class PreviewModule(
       } else {
         ""
       }
+      val useScanOptionParametersInTesterExpr = if (useScanOptionParametersInTester) {
+        """useScanOptionParametersInTester = $useScanOptionParametersInTester"""
+      } else {
+        ""
+      }
       val roborazziExtension = """
               roborazzi {
                 generateComposePreviewRobolectricTests {
@@ -351,6 +384,7 @@ class PreviewModule(
                   packages = listOf("com.github.takahirom.preview.tests")
                   $includePrivatePreviewsExpr
                   $customTesterExpr
+                  $useScanOptionParametersInTesterExpr
                 }
               }
           """.trimIndent()
