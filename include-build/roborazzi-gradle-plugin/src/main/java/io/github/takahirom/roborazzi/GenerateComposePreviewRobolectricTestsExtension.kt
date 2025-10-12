@@ -23,6 +23,10 @@ import javax.inject.Inject
 internal const val MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION = "0.7.0"
 
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
+  companion object {
+    internal const val DEFAULT_TESTER_CLASS = "com.github.takahirom.roborazzi.AndroidComposePreviewTester"
+  }
+
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
 
@@ -55,7 +59,7 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * This is advanced usage. You can implement your own test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
    */
   val testerQualifiedClassName: Property<String> = objects.property(String::class.java)
-    .convention("com.github.takahirom.roborazzi.AndroidComposePreviewTester")
+    .convention(DEFAULT_TESTER_CLASS)
 
   /**
    * If true, the scan options (like includePrivatePreviews) will be passed to the custom tester via scanOptions.
@@ -107,7 +111,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   }
 
   // Validate configuration: check for conflicting settings when using a custom tester
-  val isUsingCustomTester = testerQualifiedClassName.get() != "com.github.takahirom.roborazzi.AndroidComposePreviewTester"
+  val isUsingCustomTester = testerQualifiedClassName.get() != GenerateComposePreviewRobolectricTestsExtension.DEFAULT_TESTER_CLASS
   val useScanOptions = extension.useScanOptionParametersInTester.get()
   val includePrivatePreviews = extension.includePrivatePreviews.get()
 
