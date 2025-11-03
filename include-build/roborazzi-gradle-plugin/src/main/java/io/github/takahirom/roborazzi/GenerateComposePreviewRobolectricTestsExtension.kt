@@ -1,5 +1,6 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
@@ -94,15 +95,17 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   robolectricConfig: MapProperty<String, String>,
   testTaskProvider: TaskCollection<Test>
 ) {
-  check(extension.packages.get().orEmpty().isNotEmpty()) {
-    "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
-      "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
-  }
-
   val generateTestsTask = project.tasks.register(
     "generate${variant.name.capitalize(Locale.ROOT)}ComposePreviewRobolectricTests",
     GenerateComposePreviewRobolectricTestsTask::class.java
   ) {
+    it.doFirst {
+      check(extension.packages.get().orEmpty().isNotEmpty()) {
+        "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
+          "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
+      }
+    }
+
     // It seems that this directory path is overridden by addGeneratedSourceDirectory.
     // The generated tests will be located in build/JAVA/generate[VariantName]ComposePreviewRobolectricTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot/${variant.name}"))
