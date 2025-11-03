@@ -23,6 +23,10 @@ import javax.inject.Inject
 internal const val MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION = "0.7.0"
 
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
+  companion object {
+    internal const val DEFAULT_TESTER_CLASS = "com.github.takahirom.roborazzi.AndroidComposePreviewTester"
+  }
+
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
 
@@ -55,7 +59,14 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * This is advanced usage. You can implement your own test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
    */
   val testerQualifiedClassName: Property<String> = objects.property(String::class.java)
-    .convention("com.github.takahirom.roborazzi.AndroidComposePreviewTester")
+    .convention(DEFAULT_TESTER_CLASS)
+
+  /**
+   * If true, the scan options (like includePrivatePreviews) will be passed to the custom tester via scanOptions.
+   * If false (default), these options cannot be set when using a custom tester, and you must configure them directly in your tester implementation.
+   */
+  val useScanOptionParametersInTester: Property<Boolean> = objects.property(Boolean::class.java)
+    .convention(false)
 
 }
 
@@ -97,6 +108,65 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   check(extension.packages.get().orEmpty().isNotEmpty()) {
     "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
+  }
+
+  // Validate configuration: check for conflicting settings when using a custom tester
+  val isUsingCustomTester = testerQualifiedClassName.get() != GenerateComposePreviewRobolectricTestsExtension.DEFAULT_TESTER_CLASS
+  val useScanOptions = extension.useScanOptionParametersInTester.get()
+  val includePrivatePreviews = extension.includePrivatePreviews.get()
+
+  if (!useScanOptions && isUsingCustomTester && includePrivatePreviews) {
+    throw IllegalArgumentException(
+      """
+      includePrivatePreviews cannot be set automatically when using a custom tester.
+
+      When using a custom tester, if you override testParameters(), you must manually handle
+      the includePrivatePreviews option in your scanner configuration.
+
+      You have two options:
+      1. Remove 'includePrivatePreviews = true' from generateComposePreviewRobolectricTests configuration
+         and call '.includePrivatePreviews()' directly in your custom tester's testParameters() method.
+
+      2. Set 'useScanOptionParametersInTester = true' in generateComposePreviewRobolectricTests configuration
+         and check 'options.scanOptions.includePrivatePreviews' in your testParameters() implementation.
+
+      Example for option 1:
+        // In your custom tester:
+        override fun testParameters(): List<TestParameter> {
+          return AndroidComposablePreviewScanner()
+            .scanPackageTrees(*options().scanOptions.packages.toTypedArray())
+            .includePrivatePreviews()  // Directly call this
+            .getPreviews()
+            // ... rest of your implementation
+        }
+
+      Example for option 2:
+        // In build.gradle.kts:
+        generateComposePreviewRobolectricTests {
+          enable = true
+          packages = listOf("your.package")
+          testerQualifiedClassName = "com.example.CustomTester"
+          includePrivatePreviews = true
+          useScanOptionParametersInTester = true
+        }
+
+        // In your custom tester:
+        override fun testParameters(): List<TestParameter> {
+          val opts = options()
+          return AndroidComposablePreviewScanner()
+            .scanPackageTrees(*opts.scanOptions.packages.toTypedArray())
+            .let {
+              if (opts.scanOptions.includePrivatePreviews) {
+                it.includePrivatePreviews()  // Conditionally call based on plugin config
+              } else {
+                it
+              }
+            }
+            .getPreviews()
+            // ... rest of your implementation
+        }
+      """.trimIndent()
+    )
   }
 
   val generateTestsTask = project.tasks.register(
