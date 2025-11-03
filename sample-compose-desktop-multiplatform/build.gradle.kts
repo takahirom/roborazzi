@@ -13,6 +13,10 @@ version = "1.0-SNAPSHOT"
 
 kotlin {
   jvm("desktop") {
+        val architecture by compilations.creating {}
+        testRuns.create("architecture") { // error here
+            setExecutionSourceFrom(architecture)
+        }
   }
   sourceSets {
     val desktopMain by getting {
