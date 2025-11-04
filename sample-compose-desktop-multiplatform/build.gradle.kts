@@ -13,9 +13,11 @@ version = "1.0-SNAPSHOT"
 
 kotlin {
   jvm("desktop") {
-        val architecture by compilations.creating {}
-        testRuns.create("architecture") { // error here
-            setExecutionSourceFrom(architecture)
+        // Test case for issue #754: Verify that multiple test runs can be created
+        // for the same target without task name conflicts
+        val customCompilation by compilations.creating {}
+        testRuns.create("custom") {
+            setExecutionSourceFrom(customCompilation)
         }
   }
   sourceSets {
