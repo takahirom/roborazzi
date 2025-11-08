@@ -545,6 +545,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
         extension = extension.generateComposePreviewRobolectricTests
       )
     }
+    fun computeVariantName(targetName: String, testRunName: String): String {
+      return if (testRunName == "test") {
+        targetName
+      } else {
+        "$targetName${testRunName.capitalizeUS()}"
+      }
+    }
+
     project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
       // e.g. test -> recordRoborazziJvm
       configureRoborazziTasks(
@@ -563,11 +571,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           target.testRuns.all { testRun ->
             // e.g. desktopTest -> recordRoborazziDesktop
             // Use testRun.name to differentiate between multiple test runs for the same target
-            val variantName = if (testRun.name == "test") {
-              target.name
-            } else {
-              "${target.name}${testRun.name.capitalizeUS()}"
-            }
+            val variantName = computeVariantName(target.name, testRun.name)
             configureRoborazziTasks(
               variantSlug = variantName.capitalizeUS(),
               testTaskName = testRun.executionTask.name,
@@ -578,11 +582,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           target.testRuns.all { testRun: KotlinNativeBinaryTestRun ->
             // e.g. desktopTest -> recordRoborazziDesktop
             // Use testRun.name to differentiate between multiple test runs for the same target
-            val variantName = if (testRun.name == "test") {
-              target.name
-            } else {
-              "${target.name}${testRun.name.capitalizeUS()}"
-            }
+            val variantName = computeVariantName(target.name, testRun.name)
             configureRoborazziTasks(
               variantSlug = variantName.capitalizeUS(),
               testTaskName = (testRun as ExecutionTaskHolder<*>).executionTask.name,
