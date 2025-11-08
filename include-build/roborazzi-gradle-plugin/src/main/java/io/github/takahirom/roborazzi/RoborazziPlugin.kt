@@ -545,6 +545,13 @@ abstract class RoborazziPlugin : Plugin<Project> {
         extension = extension.generateComposePreviewRobolectricTests
       )
     }
+    project.pluginManager.withPlugin("com.android.kotlin.multiplatform.library") {
+      // Since AGP 8.10+, AndroidComponentsExtension can be used with com.android.kotlin.multiplatform.library
+      project.extensions.getByType(AndroidComponentsExtension::class.java)
+        .configureComponents()
+      // Note: TestedExtension is not available for com.android.kotlin.multiplatform.library,
+      // so we skip verifyGenerateComposePreviewRobolectricTests for now
+    }
     fun computeVariantName(targetName: String, testRunName: String): String {
       return if (testRunName == "test") {
         targetName
