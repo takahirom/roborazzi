@@ -3,6 +3,7 @@
 plugins {
   id("com.android.application") version libs.versions.agp apply false
   id("com.android.library") version libs.versions.agp apply false
+  id("com.android.kotlin.multiplatform.library") version libs.versions.agp apply false
   id("org.jetbrains.kotlin.android") version libs.versions.kotlin apply false
   id("org.jetbrains.kotlin.multiplatform") version libs.versions.kotlin apply false
   id("org.jetbrains.compose") version libs.versions.composeMultiplatform apply false

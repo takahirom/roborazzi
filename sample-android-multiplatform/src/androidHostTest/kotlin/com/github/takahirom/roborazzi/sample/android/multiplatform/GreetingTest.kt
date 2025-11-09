@@ -16,9 +16,6 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * Tests for Roborazzi with com.android.kotlin.multiplatform.library plugin.
- *
- * These tests verify the Roborazzi API integration and basic UI behavior.
- * Screenshot files are generated using the RoborazziPlugin with KMP library support.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
