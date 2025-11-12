@@ -1,5 +1,6 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
@@ -316,6 +317,45 @@ fun verifyGenerateComposePreviewRobolectricTests(
     verifyLibraryDependencies(project)
     verifyComposablePreviewScannerVersion(project)
     verifyAndroidConfig(androidExtension, logger)
+  }
+}
+
+fun verifyGenerateComposePreviewRobolectricTests(
+  project: Project,
+  kmpTarget: KotlinMultiplatformAndroidLibraryTarget,
+  extension: GenerateComposePreviewRobolectricTestsExtension,
+  testTaskProvider: TaskCollection<Test>
+) {
+  val logger = project.logger
+  project.afterEvaluate {
+    // KMP library specific check - always check isIncludeAndroidResources
+    kmpTarget.compilations.withType(
+      com.android.build.api.dsl.KotlinMultiplatformAndroidHostTestCompilation::class.java
+    ).all { compilation ->
+      if (!compilation.isIncludeAndroidResources) {
+        val example = """
+          kotlin {
+            androidLibrary {
+              withHostTest {
+                isIncludeAndroidResources = true
+              }
+            }
+          }
+        """.trimIndent()
+        logger.warn(
+          "Roborazzi: Please set 'isIncludeAndroidResources = true' in withHostTest block in the 'build.gradle.kts' file. " +
+            "This is advisable to avoid issues with ActivityNotFoundException.\n" +
+            "Example:\n$example"
+        )
+      }
+    }
+
+    if ((extension.enable.orNull) != true) {
+      return@afterEvaluate
+    }
+    verifyLibraryDependencies(project)
+    verifyComposablePreviewScannerVersion(project)
+    verifyTestConfig(testTaskProvider, logger)
   }
 }
 

@@ -721,7 +721,7 @@ class KmpLibraryModule(
   }
 
   fun recordRoborazzi(): BuildResult {
-    return runTask("testAndroidHostTest", "-Proborazzi.test.record=true")
+    return runTask("recordRoborazziAndroidMain")
   }
 
   fun checkRecordedFileExists(expectedFileName: String) {

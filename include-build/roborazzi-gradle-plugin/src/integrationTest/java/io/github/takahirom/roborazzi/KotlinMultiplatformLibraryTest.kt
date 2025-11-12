@@ -13,26 +13,45 @@ class KotlinMultiplatformLibraryTest {
   val testProjectDir = TemporaryFolder()
 
   @Test
-  fun buildWithKmpLibraryPlugin() {
-    RoborazziGradleRootProject(testProjectDir).kmpLibraryModule.apply {
-      val result = runHelp()
-      assert(result.output.contains("BUILD SUCCESSFUL")) {
-        "Project configuration should succeed with KMP library plugin"
-      }
-      assert(result.output.contains("testAndroidHostTest")) {
-        "Should have testAndroidHostTest task when using androidHostTest source set"
-      }
-    }
-  }
-
-  @Test
   fun recordScreenshotWithKmpLibraryPlugin() {
     RoborazziGradleRootProject(testProjectDir).kmpLibraryModule.apply {
       val result = recordRoborazzi()
       assert(result.output.contains("BUILD SUCCESSFUL")) {
         "Recording should succeed with KMP library plugin"
       }
+      assert(result.output.contains("testAndroidHostTest") ||
+             result.output.contains("recordRoborazziAndroidMain")) {
+        "Should execute Roborazzi recording tasks. Output:\n${result.output}"
+      }
       checkRecordedFileExists("GreetingTest.captureGreeting")
+    }
+  }
+
+  @Test
+  fun verifyIsIncludeAndroidResourcesCheckForKmpLibrary() {
+    val rootProject = RoborazziGradleRootProject(testProjectDir)
+    rootProject.kmpLibraryModule.apply {
+      // Note: testProjectDir is a fresh temporary folder created per test via @Rule,
+      // so this file mutation is isolated and doesn't require cleanup
+      val buildFile = testProjectDir.root.resolve("sample-kmp-library/build.gradle.kts")
+      val originalContent = buildFile.readText()
+
+      // Remove the isIncludeAndroidResources setting by commenting it out
+      val withoutResources = originalContent.replace(
+        "isIncludeAndroidResources = true",
+        "// isIncludeAndroidResources = true  // Removed for testing warning"
+      )
+
+      buildFile.writeText(withoutResources)
+
+      val result = recordRoborazzi()
+
+      assert(result.output.contains("BUILD SUCCESSFUL")) {
+        "Build should succeed"
+      }
+      assert(result.output.contains("Please set 'isIncludeAndroidResources = true'")) {
+        "Should warn about missing isIncludeAndroidResources. Output:\n${result.output}"
+      }
     }
   }
 }

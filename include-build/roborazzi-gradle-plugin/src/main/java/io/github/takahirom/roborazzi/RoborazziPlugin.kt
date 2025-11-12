@@ -1,5 +1,6 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
@@ -547,10 +548,27 @@ abstract class RoborazziPlugin : Plugin<Project> {
     }
     project.pluginManager.withPlugin("com.android.kotlin.multiplatform.library") {
       // Since AGP 8.10+, AndroidComponentsExtension can be used with com.android.kotlin.multiplatform.library
-      project.extensions.getByType(AndroidComponentsExtension::class.java)
-        .configureComponents()
-      // Note: TestedExtension is not available for com.android.kotlin.multiplatform.library,
-      // so we skip verifyGenerateComposePreviewRobolectricTests for now
+      val componentsExtension = project.extensions.getByType(AndroidComponentsExtension::class.java)
+      componentsExtension.configureComponents()
+
+      // Get KotlinMultiplatformAndroidLibraryTarget from KotlinMultiplatformExtension
+      val kotlinMppExtension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
+      val androidTarget = kotlinMppExtension.targets.findByName("android")
+      if (androidTarget is KotlinMultiplatformAndroidLibraryTarget) {
+        // Get test task from first variant
+        componentsExtension.onVariants { variant ->
+          val unitTest = variant.unitTest ?: return@onVariants
+          val testVariantSlug = unitTest.name.capitalizeUS()
+          val testTaskName = "test$testVariantSlug"
+          val testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
+          verifyGenerateComposePreviewRobolectricTests(
+            project = project,
+            kmpTarget = androidTarget,
+            extension = extension.generateComposePreviewRobolectricTests,
+            testTaskProvider = testTaskProvider
+          )
+        }
+      }
     }
     fun computeVariantName(targetName: String, testRunName: String): String {
       return if (testRunName == "test") {
