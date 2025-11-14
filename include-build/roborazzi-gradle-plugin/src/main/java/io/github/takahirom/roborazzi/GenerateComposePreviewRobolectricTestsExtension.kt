@@ -4,6 +4,7 @@ import com.android.build.api.variant.Variant
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -405,13 +406,13 @@ private fun verifyComposablePreviewScannerVersion(
   project: Project
 ) {
   val dependencies = project.configurations.flatMap { it.dependencies }
-  val composablePreviewScannerDependency = dependencies.find { 
-    it.group == "io.github.sergio-sastre.ComposablePreviewScanner" && it.name == "android" 
+  val composablePreviewScannerDependency = dependencies.find {
+    it.group == "io.github.sergio-sastre.ComposablePreviewScanner" && it.name == "android"
   }
-  
+
   if (composablePreviewScannerDependency != null) {
     val declaredVersion = composablePreviewScannerDependency.version
-    
+
     // If declared version is null (common with BOMs/constraints), try to resolve it
     val versionToCheck = declaredVersion ?: run {
       try {
@@ -427,12 +428,14 @@ private fun verifyComposablePreviewScannerVersion(
           .asSequence()
           .mapNotNull { conf ->
             try {
-              conf.resolvedConfiguration.firstLevelModuleDependencies
-                .find { dep ->
-                  dep.moduleGroup == "io.github.sergio-sastre.ComposablePreviewScanner" &&
-                  dep.moduleName == "android"
+              conf.incoming.resolutionResult.allComponents
+                .find { component ->
+                  val id = component.id
+                  id is ModuleComponentIdentifier &&
+                    id.group == "io.github.sergio-sastre.ComposablePreviewScanner" &&
+                    id.module == "android"
                 }
-                ?.moduleVersion
+                ?.moduleVersion?.version
             } catch (e: Exception) {
               project.logger.debug("Roborazzi: Failed to resolve ComposablePreviewScanner version from configuration '${conf.name}': ${e.message}", e)
               null
@@ -444,7 +447,7 @@ private fun verifyComposablePreviewScannerVersion(
         null
       }
     }
-    
+
     if (versionToCheck != null && isVersionLessThan(versionToCheck, MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION)) {
       error(
         "Roborazzi: ComposablePreviewScanner version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher is required. " +
