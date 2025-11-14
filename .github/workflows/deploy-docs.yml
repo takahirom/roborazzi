@@ -18,7 +18,7 @@ env:
     INSTANCE: docs/roborazzi-docs
     ARTIFACT: webHelpROBORAZZI-DOCS2-all.zip
     # Writerside docker image version
-    DOCKER_VERSION: 232.10275
+    DOCKER_VERSION: 243.22562
 # Add the variable below to upload Algolia indexes
 #    ALGOLIA_ARTIFACT: algolia-indexes-roborazzi-docs.zip
 
