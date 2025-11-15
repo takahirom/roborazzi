@@ -555,9 +555,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
       // Get KotlinMultiplatformAndroidLibraryTarget from KotlinMultiplatformExtension
       val kotlinMppExtension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
-      val androidTarget = kotlinMppExtension.targets.findByName("android")
-      if (androidTarget is KotlinMultiplatformAndroidLibraryTarget) {
-        // Get test task from first variant
+      val androidTarget = kotlinMppExtension.targets
+        .withType(KotlinMultiplatformAndroidLibraryTarget::class.java)
+        .singleOrNull()
+      if (androidTarget != null) {
+        // Configure Compose preview tests for each variant
         componentsExtension.onVariants { variant ->
           val unitTest = variant.unitTest ?: return@onVariants
           val testVariantSlug = unitTest.name.capitalizeUS()
