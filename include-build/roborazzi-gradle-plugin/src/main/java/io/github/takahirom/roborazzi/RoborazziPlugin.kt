@@ -507,7 +507,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
       verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
     }
 
-    fun AndroidComponentsExtension<*, *, *>.configureComponents() {
+    fun AndroidComponentsExtension<*, *, *>.configureComponents(useTestVariantName: Boolean = false) {
       onVariants { variant ->
         val unitTest = variant.unitTest ?: return@onVariants
         val variantSlug = variant.name.capitalizeUS()
@@ -521,8 +521,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
         )
 
         // e.g. testDebugUnitTest -> recordRoborazziDebug
+        // For KMP library, use test variant name (e.g., AndroidHostTest) instead of source set name (e.g., AndroidMain)
+        val roborazziVariantSlug = if (useTestVariantName) testVariantSlug else variantSlug
         configureRoborazziTasks(
-          variantSlug = variantSlug,
+          variantSlug = roborazziVariantSlug,
           testTaskName = testTaskName,
         )
       }
@@ -549,7 +551,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
     project.pluginManager.withPlugin("com.android.kotlin.multiplatform.library") {
       // Since AGP 8.10+, AndroidComponentsExtension can be used with com.android.kotlin.multiplatform.library
       val componentsExtension = project.extensions.getByType(AndroidComponentsExtension::class.java)
-      componentsExtension.configureComponents()
+      componentsExtension.configureComponents(useTestVariantName = true)
 
       // Get KotlinMultiplatformAndroidLibraryTarget from KotlinMultiplatformExtension
       val kotlinMppExtension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)

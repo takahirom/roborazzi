@@ -20,7 +20,7 @@ class KotlinMultiplatformLibraryTest {
         "Recording should succeed with KMP library plugin"
       }
       assert(result.output.contains("testAndroidHostTest") ||
-             result.output.contains("recordRoborazziAndroidMain")) {
+             result.output.contains("recordRoborazziAndroidHostTest")) {
         "Should execute Roborazzi recording tasks. Output:\n${result.output}"
       }
       checkRecordedFileExists("GreetingTest.captureGreeting")
