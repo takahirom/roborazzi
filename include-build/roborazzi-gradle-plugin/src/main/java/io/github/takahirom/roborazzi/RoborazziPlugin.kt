@@ -550,6 +550,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
     }
     project.pluginManager.withPlugin("com.android.kotlin.multiplatform.library") {
       // Since AGP 8.10+, AndroidComponentsExtension can be used with com.android.kotlin.multiplatform.library
+      // Note: This plugin uses a single-variant architecture (no build types or product flavors)
       val componentsExtension = project.extensions.getByType(AndroidComponentsExtension::class.java)
       componentsExtension.configureComponents(useTestVariantName = true)
 
