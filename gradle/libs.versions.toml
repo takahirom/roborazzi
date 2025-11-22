@@ -3,7 +3,7 @@ accessibilityTestFramework = "4.1.1"
 javaToolchain = "17"
 javaTarget = "11"
 # https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-compatibility-guide.html#version-compatibility
-agp = "8.12.0"
+agp = "8.12.1"
 compileSdk = "34"
 targetSdk = "35"
 minSdk = "21"
@@ -56,6 +56,7 @@ composable-preview-scanner = "0.7.1"
 [libraries]
 accessibility-test-framework = { module = "com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework", version.ref = "accessibilityTestFramework" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi-for-replacing-by-include-build" }
+roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi-for-replacing-by-include-build" }
 roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi-for-replacing-by-include-build" }
 roborazzi-rule = { module = "io.github.takahirom.roborazzi:roborazzi-rule", version.ref = "roborazzi-for-replacing-by-include-build" }
 

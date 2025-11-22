@@ -1,5 +1,6 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
@@ -506,7 +507,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
       verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
     }
 
-    fun AndroidComponentsExtension<*, *, *>.configureComponents() {
+    fun AndroidComponentsExtension<*, *, *>.configureComponents(useTestVariantName: Boolean = false) {
       onVariants { variant ->
         val unitTest = variant.unitTest ?: return@onVariants
         val variantSlug = variant.name.capitalizeUS()
@@ -520,8 +521,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
         )
 
         // e.g. testDebugUnitTest -> recordRoborazziDebug
+        // For KMP library, use test variant name (e.g., AndroidHostTest) instead of source set name (e.g., AndroidMain)
+        val roborazziVariantSlug = if (useTestVariantName) testVariantSlug else variantSlug
         configureRoborazziTasks(
-          variantSlug = variantSlug,
+          variantSlug = roborazziVariantSlug,
           testTaskName = testTaskName,
         )
       }
@@ -544,6 +547,33 @@ abstract class RoborazziPlugin : Plugin<Project> {
         androidExtension = project.extensions.getByType(TestedExtension::class.java),
         extension = extension.generateComposePreviewRobolectricTests
       )
+    }
+    project.pluginManager.withPlugin("com.android.kotlin.multiplatform.library") {
+      // Since AGP 8.10+, AndroidComponentsExtension can be used with com.android.kotlin.multiplatform.library
+      // Note: This plugin uses a single-variant architecture (no build types or product flavors)
+      val componentsExtension = project.extensions.getByType(AndroidComponentsExtension::class.java)
+      componentsExtension.configureComponents(useTestVariantName = true)
+
+      // Get KotlinMultiplatformAndroidLibraryTarget from KotlinMultiplatformExtension
+      val kotlinMppExtension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
+      val androidTarget = kotlinMppExtension.targets
+        .withType(KotlinMultiplatformAndroidLibraryTarget::class.java)
+        .singleOrNull()
+      if (androidTarget != null) {
+        // Configure Compose preview tests for each variant
+        componentsExtension.onVariants { variant ->
+          val unitTest = variant.unitTest ?: return@onVariants
+          val testVariantSlug = unitTest.name.capitalizeUS()
+          val testTaskName = "test$testVariantSlug"
+          val testTaskProvider = findTestTaskProvider(Test::class, testTaskName)
+          verifyGenerateComposePreviewRobolectricTests(
+            project = project,
+            kmpTarget = androidTarget,
+            extension = extension.generateComposePreviewRobolectricTests,
+            testTaskProvider = testTaskProvider
+          )
+        }
+      }
     }
     fun computeVariantName(targetName: String, testRunName: String): String {
       return if (testRunName == "test") {
