@@ -147,6 +147,47 @@ class GeneratePreviewTestTest {
     }
   }
 
+  @Test
+  fun whenNumOfShardsIs1ShouldGenerateSingleTestClass() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.numOfShards = 1
+
+      record()
+
+      checkHasImages()
+      checkGeneratedTestClassCount(1)
+      checkHasGeneratedTestClass("RoborazziPreviewParameterizedTests")
+    }
+  }
+
+  @Test
+  fun whenNumOfShardsIs4ShouldGenerateMultipleTestClasses() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.numOfShards = 4
+
+      record()
+
+      checkHasImages()
+      checkGeneratedTestClassCount(4)
+      checkHasGeneratedTestClass("RoborazziPreviewParameterizedTests0")
+      checkHasGeneratedTestClass("RoborazziPreviewParameterizedTests1")
+      checkHasGeneratedTestClass("RoborazziPreviewParameterizedTests2")
+      checkHasGeneratedTestClass("RoborazziPreviewParameterizedTests3")
+    }
+  }
+
+  @Test
+  fun whenMaxParallelForksIs4ShouldAutoGenerateMultipleTestClasses() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.maxParallelForks = 4
+
+      record()
+
+      checkHasImages()
+      checkGeneratedTestClassCount(4)
+    }
+  }
+
 
 }
 
@@ -166,6 +207,8 @@ class PreviewModule(
     var includePreviewScannerSupportDependenciy = true
     var composablePreviewScannerVersion = "0.7.0"
     var useKsp = false
+    var numOfShards: Int? = null
+    var maxParallelForks: Int? = null
     
     private fun kspDependencies() = if (useKsp) """
                           ksp("com.google.dagger:hilt-android-compiler:2.57.1")
@@ -212,6 +255,7 @@ class PreviewModule(
                 isIncludeAndroidResources = true
                 all {
                   it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+                  ${if (maxParallelForks != null) "it.maxParallelForks = $maxParallelForks" else ""}
                 }
               }
             }
@@ -377,6 +421,11 @@ class PreviewModule(
       } else {
         ""
       }
+      val numOfShardsExpr = if (numOfShards != null) {
+        """numOfShards = $numOfShards"""
+      } else {
+        ""
+      }
       val roborazziExtension = """
               roborazzi {
                 generateComposePreviewRobolectricTests {
@@ -385,6 +434,7 @@ class PreviewModule(
                   $includePrivatePreviewsExpr
                   $customTesterExpr
                   $useScanOptionParametersInTesterExpr
+                  $numOfShardsExpr
                 }
               }
           """.trimIndent()
@@ -437,5 +487,24 @@ class PreviewModule(
         .orEmpty()
         .filter { it.name.contains("PreviewWithPrivate") }
     assert(privateImages.isNotEmpty() == true)
+  }
+
+  fun checkGeneratedTestClassCount(expectedCount: Int) {
+    val generatedDir = testProjectDir.root.resolve(
+      "$moduleName/build/generated/roborazzi/preview-screenshot/debug/com/github/takahirom/roborazzi/"
+    )
+    val testFiles = generatedDir.listFiles()?.filter { it.name.endsWith(".kt") }.orEmpty()
+    assert(testFiles.size == expectedCount) {
+      "Expected $expectedCount generated test classes, but found ${testFiles.size}: ${testFiles.map { it.name }}"
+    }
+  }
+
+  fun checkHasGeneratedTestClass(className: String) {
+    val generatedFile = testProjectDir.root.resolve(
+      "$moduleName/build/generated/roborazzi/preview-screenshot/debug/com/github/takahirom/roborazzi/$className.kt"
+    )
+    assert(generatedFile.exists()) {
+      "Expected generated test class $className.kt to exist at ${generatedFile.absolutePath}"
+    }
   }
 }
