@@ -18,7 +18,6 @@ import com.github.takahirom.roborazzi.roborazziReportLog
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
-import com.github.takahirom.roborazzi.roborazziSystemPropertyVariantName
 import com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
@@ -752,10 +751,8 @@ private fun writeJson(
   val json = Json(CaptureResults.json) {
     serializersModule = module
   }
-  val variantName = roborazziSystemPropertyVariantName()
   val reportFileName = getReportFileName(
     absolutePath = resultsDir,
-    variantName = variantName,
     timestampNs = result.timestampNs,
     nameWithoutExtension = nameWithoutExtension
   )

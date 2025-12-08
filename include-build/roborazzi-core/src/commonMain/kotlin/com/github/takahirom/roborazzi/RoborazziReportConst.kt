@@ -21,11 +21,10 @@ object RoborazziReportConst {
   )
   const val reportFilePath = "build/reports/roborazzi/index.html"
 
-  const val resultsSummaryFilePathFromBuildDir = "test-results/roborazzi/results-summary.json"
   fun getResultsSummaryFilePathFromBuildDir(variantName: String) =
     "test-results/roborazzi/$variantName/results-summary.json"
-  const val resultDirPathFromBuildDir = "test-results/roborazzi/"
-  const val reportFilePathFromBuildDir = "reports/roborazzi/index.html"
+  fun getResultDirPathFromBuildDir(variantName: String) =
+    "test-results/roborazzi/$variantName"
   fun getReportFilePathFromBuildDir(variantName: String) =
     "reports/roborazzi/$variantName/index.html"
 

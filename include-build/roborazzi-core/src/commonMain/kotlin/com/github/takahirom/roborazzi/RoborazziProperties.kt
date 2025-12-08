@@ -20,9 +20,8 @@ fun roborazziSystemPropertyImageExtension(): String {
 
 @ExperimentalRoborazziApi
 fun roborazziSystemPropertyResultDirectory(): String {
-  return getSystemProperty("roborazzi.result.dir",
-    "build/${RoborazziReportConst.resultDirPathFromBuildDir}"
-  )
+  // This needs to be set before the test (and always is), so it is reasonable to fail otherwise.
+  return getSystemProperty("roborazzi.test.result.dir")!!
 }
 
 @ExperimentalRoborazziApi
@@ -82,8 +81,6 @@ fun roborazziSystemPropertyTaskType(): RoborazziTaskType {
   }
   return result
 }
-
-fun roborazziSystemPropertyVariantName(): String = getSystemProperty("roborazzi.test.variant")!!
 
 /**
  * Specify the file path strategy for the recorded image.
