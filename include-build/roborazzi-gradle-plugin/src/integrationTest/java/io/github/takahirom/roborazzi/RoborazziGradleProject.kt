@@ -17,6 +17,7 @@ class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
 
   val appModule = AppModule(this, testProjectDir)
   val previewModule = PreviewModule(this, testProjectDir)
+  val kmpLibraryModule = KmpLibraryModule(this, testProjectDir)
 
   fun runTask(
     task: String,
@@ -49,6 +50,37 @@ class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
           it.buildAndFail()
         } else {
           it.build()
+        }
+      }
+    return buildResult
+  }
+
+  fun runMultipleKspTasks(vararg tasks: String): BuildResult {
+    val buildResult = GradleRunner.create()
+      .withProjectDir(testProjectDir.root)
+      .withArguments(
+        *tasks,
+        "--stacktrace",
+        "--build-cache",
+        "--info"
+      )
+      .withPluginClasspath()
+      .forwardStdOutput(System.out.writer())
+      .forwardStdError(System.err.writer())
+      .withEnvironment(
+        mapOf(
+          "ANDROID_HOME" to System.getenv("ANDROID_HOME"),
+          "INTEGRATION_TEST" to "true",
+          "ROBORAZZI_ROOT_PATH" to File("../..").absolutePath,
+          "ROBORAZZI_INCLUDE_BUILD_ROOT_PATH" to File("..").absolutePath,
+        )
+      )
+      .let {
+        try {
+          it.build()
+        } catch (e: Exception) {
+          // If build fails, we still want to examine the output
+          it.buildAndFail()
         }
       }
     return buildResult
@@ -670,6 +702,46 @@ class RoborazziTest {
   }
 
   val buildGradle = BuildGradle(testProjectDir)
+}
+
+class KmpLibraryModule(
+  val rootProject: RoborazziGradleRootProject,
+  private val testProjectDir: TemporaryFolder
+) {
+  companion object {
+    val moduleName = "sample-kmp-library"
+  }
+
+  fun build(): BuildResult {
+    return runTask("build")
+  }
+
+  fun runHelp(): BuildResult {
+    return runTask("tasks", "--all")
+  }
+
+  fun recordRoborazzi(): BuildResult {
+    return runTask("recordRoborazziAndroidHostTest")
+  }
+
+  fun checkRecordedFileExists(expectedFileName: String) {
+    val outputDir = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi")
+    val files = outputDir.listFiles()?.map { it.name } ?: emptyList()
+    assert(files.any { it.contains(expectedFileName) }) {
+      "Expected file containing '$expectedFileName' not found in: $files"
+    }
+  }
+
+  private fun runTask(
+    task: String,
+    vararg additionalArgs: String
+  ): BuildResult {
+    return rootProject.runTask(
+      ":$moduleName:$task",
+      BuildType.Build,
+      arrayOf(*additionalArgs)
+    )
+  }
 }
 
 fun checkResultCount(

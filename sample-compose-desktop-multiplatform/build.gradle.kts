@@ -13,6 +13,12 @@ version = "1.0-SNAPSHOT"
 
 kotlin {
   jvm("desktop") {
+        // Test case for issue #754: Verify that multiple test runs can be created
+        // for the same target without task name conflicts
+        val customCompilation by compilations.creating {}
+        testRuns.create("custom") {
+            setExecutionSourceFrom(customCompilation)
+        }
   }
   sourceSets {
     val desktopMain by getting {

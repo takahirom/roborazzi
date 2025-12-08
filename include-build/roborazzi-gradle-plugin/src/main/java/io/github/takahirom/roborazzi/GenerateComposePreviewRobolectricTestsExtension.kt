@@ -1,9 +1,11 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -23,6 +25,10 @@ import javax.inject.Inject
 internal const val MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION = "0.7.0"
 
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
+  companion object {
+    internal const val DEFAULT_TESTER_CLASS = "com.github.takahirom.roborazzi.AndroidComposePreviewTester"
+  }
+
   val enable: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
 
@@ -55,7 +61,14 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * This is advanced usage. You can implement your own test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
    */
   val testerQualifiedClassName: Property<String> = objects.property(String::class.java)
-    .convention("com.github.takahirom.roborazzi.AndroidComposePreviewTester")
+    .convention(DEFAULT_TESTER_CLASS)
+
+  /**
+   * If true, the scan options (like includePrivatePreviews) will be passed to the custom tester via scanOptions.
+   * If false (default), these options cannot be set when using a custom tester, and you must configure them directly in your tester implementation.
+   */
+  val useScanOptionParametersInTester: Property<Boolean> = objects.property(Boolean::class.java)
+    .convention(false)
 
 }
 
@@ -99,13 +112,72 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
 
+  // Validate configuration: check for conflicting settings when using a custom tester
+  val isUsingCustomTester = testerQualifiedClassName.get() != GenerateComposePreviewRobolectricTestsExtension.DEFAULT_TESTER_CLASS
+  val useScanOptions = extension.useScanOptionParametersInTester.get()
+  val includePrivatePreviews = extension.includePrivatePreviews.get()
+
+  if (!useScanOptions && isUsingCustomTester && includePrivatePreviews) {
+    throw IllegalArgumentException(
+      """
+      includePrivatePreviews cannot be set automatically when using a custom tester.
+
+      When using a custom tester, if you override testParameters(), you must manually handle
+      the includePrivatePreviews option in your scanner configuration.
+
+      You have two options:
+      1. Remove 'includePrivatePreviews = true' from generateComposePreviewRobolectricTests configuration
+         and call '.includePrivatePreviews()' directly in your custom tester's testParameters() method.
+
+      2. Set 'useScanOptionParametersInTester = true' in generateComposePreviewRobolectricTests configuration
+         and check 'options.scanOptions.includePrivatePreviews' in your testParameters() implementation.
+
+      Example for option 1:
+        // In your custom tester:
+        override fun testParameters(): List<TestParameter> {
+          return AndroidComposablePreviewScanner()
+            .scanPackageTrees(*options().scanOptions.packages.toTypedArray())
+            .includePrivatePreviews()  // Directly call this
+            .getPreviews()
+            // ... rest of your implementation
+        }
+
+      Example for option 2:
+        // In build.gradle.kts:
+        generateComposePreviewRobolectricTests {
+          enable = true
+          packages = listOf("your.package")
+          testerQualifiedClassName = "com.example.CustomTester"
+          includePrivatePreviews = true
+          useScanOptionParametersInTester = true
+        }
+
+        // In your custom tester:
+        override fun testParameters(): List<TestParameter> {
+          val opts = options()
+          return AndroidComposablePreviewScanner()
+            .scanPackageTrees(*opts.scanOptions.packages.toTypedArray())
+            .let {
+              if (opts.scanOptions.includePrivatePreviews) {
+                it.includePrivatePreviews()  // Conditionally call based on plugin config
+              } else {
+                it
+              }
+            }
+            .getPreviews()
+            // ... rest of your implementation
+        }
+      """.trimIndent()
+    )
+  }
+
   val generateTestsTask = project.tasks.register(
     "generate${variant.name.capitalize(Locale.ROOT)}ComposePreviewRobolectricTests",
     GenerateComposePreviewRobolectricTestsTask::class.java
   ) {
     // It seems that this directory path is overridden by addGeneratedSourceDirectory.
     // The generated tests will be located in build/JAVA/generate[VariantName]ComposePreviewRobolectricTests.
-    it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot"))
+    it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot/${variant.name}"))
     it.scanPackageTrees.set(extension.packages)
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(testerQualifiedClassName)
@@ -249,6 +321,45 @@ fun verifyGenerateComposePreviewRobolectricTests(
   }
 }
 
+fun verifyGenerateComposePreviewRobolectricTests(
+  project: Project,
+  kmpTarget: KotlinMultiplatformAndroidLibraryTarget,
+  extension: GenerateComposePreviewRobolectricTestsExtension,
+  testTaskProvider: TaskCollection<Test>
+) {
+  val logger = project.logger
+  project.afterEvaluate {
+    // KMP library specific check - always check isIncludeAndroidResources
+    kmpTarget.compilations.withType(
+      com.android.build.api.dsl.KotlinMultiplatformAndroidHostTestCompilation::class.java
+    ).all { compilation ->
+      if (!compilation.isIncludeAndroidResources) {
+        val example = """
+          kotlin {
+            androidLibrary {
+              withHostTest {
+                isIncludeAndroidResources = true
+              }
+            }
+          }
+        """.trimIndent()
+        logger.warn(
+          "Roborazzi: Please set 'isIncludeAndroidResources = true' in withHostTest block in the 'build.gradle.kts' file. " +
+            "This is advisable to avoid issues with ActivityNotFoundException.\n" +
+            "Example:\n$example"
+        )
+      }
+    }
+
+    if ((extension.enable.orNull) != true) {
+      return@afterEvaluate
+    }
+    verifyLibraryDependencies(project)
+    verifyComposablePreviewScannerVersion(project)
+    verifyTestConfig(testTaskProvider, logger)
+  }
+}
+
 private fun verifyTestConfig(
   testTaskProvider: TaskCollection<Test>,
   logger: Logger
@@ -335,13 +446,13 @@ private fun verifyComposablePreviewScannerVersion(
   project: Project
 ) {
   val dependencies = project.configurations.flatMap { it.dependencies }
-  val composablePreviewScannerDependency = dependencies.find { 
-    it.group == "io.github.sergio-sastre.ComposablePreviewScanner" && it.name == "android" 
+  val composablePreviewScannerDependency = dependencies.find {
+    it.group == "io.github.sergio-sastre.ComposablePreviewScanner" && it.name == "android"
   }
-  
+
   if (composablePreviewScannerDependency != null) {
     val declaredVersion = composablePreviewScannerDependency.version
-    
+
     // If declared version is null (common with BOMs/constraints), try to resolve it
     val versionToCheck = declaredVersion ?: run {
       try {
@@ -357,12 +468,14 @@ private fun verifyComposablePreviewScannerVersion(
           .asSequence()
           .mapNotNull { conf ->
             try {
-              conf.resolvedConfiguration.firstLevelModuleDependencies
-                .find { dep ->
-                  dep.moduleGroup == "io.github.sergio-sastre.ComposablePreviewScanner" &&
-                  dep.moduleName == "android"
+              conf.incoming.resolutionResult.allComponents
+                .find { component ->
+                  val id = component.id
+                  id is ModuleComponentIdentifier &&
+                    id.group == "io.github.sergio-sastre.ComposablePreviewScanner" &&
+                    id.module == "android"
                 }
-                ?.moduleVersion
+                ?.moduleVersion?.version
             } catch (e: Exception) {
               project.logger.debug("Roborazzi: Failed to resolve ComposablePreviewScanner version from configuration '${conf.name}': ${e.message}", e)
               null
@@ -374,7 +487,7 @@ private fun verifyComposablePreviewScannerVersion(
         null
       }
     }
-    
+
     if (versionToCheck != null && isVersionLessThan(versionToCheck, MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION)) {
       error(
         "Roborazzi: ComposablePreviewScanner version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher is required. " +

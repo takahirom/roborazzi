@@ -18,7 +18,7 @@ env:
     INSTANCE: docs/roborazzi-docs
     ARTIFACT: webHelpROBORAZZI-DOCS2-all.zip
     # Writerside docker image version
-    DOCKER_VERSION: 232.10275
+    DOCKER_VERSION: 243.22562
 # Add the variable below to upload Algolia indexes
 #    ALGOLIA_ARTIFACT: algolia-indexes-roborazzi-docs.zip
 
@@ -31,7 +31,7 @@ jobs:
           uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
 
         - name: Build Writerside docs using Docker
-          uses: JetBrains/writerside-github-action@4d78a741383b7ad14f5a7cc1987593a33c7f65e1 # v4
+          uses: JetBrains/writerside-github-action@73f8f377e7c6a64cce73ca73fe07bbba9a34d556 # v4
           with:
             instance: ${{ env.INSTANCE }}
             artifact: ${{ env.ARTIFACT }}
@@ -54,13 +54,13 @@ jobs:
 
         steps:
             - name: Download artifacts
-              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
               with:
                 name: docs
                 path: artifacts
 
             - name: Test documentation
-              uses: JetBrains/writerside-checker-action@8e11963855941a93dff60b8e39a2ffd4a2c0b767 # v1
+              uses: JetBrains/writerside-checker-action@79ff89902dcd3d5c5a3f26a79bc35830377f38c5 # v1
               with:
                 instance: ${{ env.INSTANCE }}
 
@@ -73,7 +73,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Download artifact
-              uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
               with:
                 name: docs
 

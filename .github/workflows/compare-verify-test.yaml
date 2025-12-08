@@ -9,6 +9,10 @@ on:
 env:
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx6g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   test:
     runs-on: macos-latest
