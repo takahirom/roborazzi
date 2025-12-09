@@ -361,13 +361,13 @@ dependencies {
   }
 
   fun checkResultFileExists(nameSuffix: String) {
-    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results/").listFiles()
+    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/debug/").listFiles()
       .firstOrNull { it.name.endsWith(nameSuffix) }
       ?: error("File not found: $nameSuffix")
   }
 
   fun checkResultFileNotExists(nameSuffix: String) {
-    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results/").listFiles()
+    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/debug/").listFiles()
       ?.firstOrNull { it.name.endsWith(nameSuffix) }
       ?.let {
         error("File exists: $nameSuffix")
@@ -377,7 +377,7 @@ dependencies {
 
   fun checkResultsSummaryFileNotExists() {
     val recordedFile =
-      testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
+      testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/debug/results-summary.json")
     assert(!recordedFile.exists()) {
       "File exists: ${recordedFile.absolutePath}"
     }
@@ -385,7 +385,7 @@ dependencies {
 
   fun checkResultsSummaryFileExists() {
     val recordedFile =
-      testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
+      testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/debug/results-summary.json")
     assert(recordedFile.exists()) {
       "File not exists: ${recordedFile.absolutePath}"
     }
@@ -398,7 +398,7 @@ dependencies {
     unchanged: Int = 0
   ) {
     val recordedFile =
-      testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/results-summary.json")
+      testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/debug/results-summary.json")
     checkResultCount(recordedFile, recorded, added, changed, unchanged)
   }
 

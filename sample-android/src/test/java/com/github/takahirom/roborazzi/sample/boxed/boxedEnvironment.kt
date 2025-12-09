@@ -9,7 +9,10 @@ import com.github.takahirom.roborazzi.provideRoborazziContext
 @OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 fun boxedEnvironment(block: () -> Unit) {
   val originalProperties = System.getProperties().filter { it.key.toString().startsWith("roborazzi") }.toList()
-  originalProperties.forEach { System.clearProperty(it.first.toString()) }
+  originalProperties.forEach {
+    if (it.first.toString() == "roborazzi.test.result.dir") return@forEach
+    System.clearProperty(it.first.toString())
+  }
   val context = provideRoborazziContext()
   RoborazziContext = RoborazziContextImpl()
   try {
