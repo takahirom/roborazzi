@@ -5,7 +5,6 @@ import com.android.build.api.variant.Variant
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -453,45 +452,21 @@ private fun verifyComposablePreviewScannerVersion(
   if (composablePreviewScannerDependency != null) {
     val declaredVersion = composablePreviewScannerDependency.version
 
-    // If declared version is null (common with BOMs/constraints), try to resolve it
-    val versionToCheck = declaredVersion ?: run {
-      try {
-        // Resolve only common test classpaths to minimize work and side effects
-        val candidateConfs = project.configurations
-          .filter { conf ->
-            conf.isCanBeResolved &&
-            conf.name.contains("test", ignoreCase = true) &&
-            (conf.name.contains("runtimeClasspath", ignoreCase = true) ||
-             conf.name.contains("compileClasspath", ignoreCase = true))
-          }
-        candidateConfs
-          .asSequence()
-          .mapNotNull { conf ->
-            try {
-              conf.incoming.resolutionResult.allComponents
-                .find { component ->
-                  val id = component.id
-                  id is ModuleComponentIdentifier &&
-                    id.group == "io.github.sergio-sastre.ComposablePreviewScanner" &&
-                    id.module == "android"
-                }
-                ?.moduleVersion?.version
-            } catch (e: Exception) {
-              project.logger.debug("Roborazzi: Failed to resolve ComposablePreviewScanner version from configuration '${conf.name}': ${e.message}", e)
-              null
-            }
-          }
-          .firstOrNull()
-      } catch (e: Exception) {
-        project.logger.debug("Roborazzi: Failed to resolve ComposablePreviewScanner version from any candidate configuration: ${e.message}", e)
-        null
-      }
+    // If declared version is null (common with BOMs/constraints), skip version verification
+    // to avoid configuration-time resolution which causes build performance issues.
+    // See: https://github.com/gradle/gradle/issues/2298
+    if (declaredVersion == null) {
+      project.logger.debug(
+        "Roborazzi: ComposablePreviewScanner version check skipped because version is managed by BOM/constraints. " +
+        "Please ensure you are using version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher."
+      )
+      return
     }
 
-    if (versionToCheck != null && isVersionLessThan(versionToCheck, MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION)) {
+    if (isVersionLessThan(declaredVersion, MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION)) {
       error(
         "Roborazzi: ComposablePreviewScanner version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher is required. " +
-        "Current version: $versionToCheck. " +
+        "Current version: $declaredVersion. " +
         "Please update your ComposablePreviewScanner dependency to version $MIN_COMPOSABLE_PREVIEW_SCANNER_VERSION or higher."
       )
     }
