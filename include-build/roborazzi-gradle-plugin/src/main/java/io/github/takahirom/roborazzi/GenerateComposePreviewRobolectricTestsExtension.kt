@@ -69,21 +69,14 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
     .convention(false)
 
   /**
-   * The number of test shards to generate for parallel execution.
+   * The number of test classes to generate.
    * By default, this is automatically set to match the test task's maxParallelForks value.
-   * Set this explicitly to override the automatic detection or to disable sharding (numOfShards = 1).
+   * Set this to match maxParallelForks for parallel test execution.
    *
-   * When numOfShards = 1, generates a single test class (backward compatible).
-   * When numOfShards > 1, generates multiple test classes (RoborazziPreviewParameterizedTests0, Tests1, etc.)
-   * Each shard uses modulo-based distribution: shard i contains tests where (testIndex % numOfShards == i)
-   *
-   * Example: With 4 shards and 10 tests:
-   * - Shard 0: tests 0, 4, 8
-   * - Shard 1: tests 1, 5, 9
-   * - Shard 2: tests 2, 6
-   * - Shard 3: tests 3, 7
+   * When generatedTestClassCount = 1, generates a single test class.
+   * When generatedTestClassCount > 1, generates multiple test classes (RoborazziPreviewParameterizedTests0, Tests1, etc.)
    */
-  val numOfShards: Property<Int> = objects.property(Int::class.java)
+  val generatedTestClassCount: Property<Int> = objects.property(Int::class.java)
 
 }
 
@@ -127,11 +120,11 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
 
-  // Auto-detect numOfShards from maxParallelForks if not explicitly set
+  // Auto-detect generatedTestClassCount from maxParallelForks if not explicitly set
   project.afterEvaluate {
-    if (!extension.numOfShards.isPresent) {
+    if (!extension.generatedTestClassCount.isPresent) {
       val maxForks = testTaskProvider.mapNotNull { it.maxParallelForks }.maxOrNull() ?: 1
-      extension.numOfShards.convention(maxForks)
+      extension.generatedTestClassCount.convention(maxForks)
     }
   }
 
@@ -205,7 +198,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(testerQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)
-    it.numOfShards.set(extension.numOfShards)
+    it.generatedTestClassCount.set(extension.generatedTestClassCount)
   }
   // We need to use sources.java here; otherwise, the generate task will not be executed.
   // https://stackoverflow.com/a/76870110/4339442
@@ -236,7 +229,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   abstract val robolectricConfig: MapProperty<String, String>
 
   @get:Input
-  abstract val numOfShards: Property<Int>
+  abstract val generatedTestClassCount: Property<Int>
 
   @TaskAction
   fun generateTests() {
@@ -245,10 +238,10 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
 
     val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
     val includePrivatePreviewsExpr = includePrivatePreviews.get()
-    val numShards = numOfShards.get()
+    val testClassCount = generatedTestClassCount.get()
 
-    require(numShards >= 1) {
-      "numOfShards must be >= 1, but was $numShards"
+    require(testClassCount >= 1) {
+      "generatedTestClassCount must be >= 1, but was $testClassCount"
     }
 
     val generatedClassFQDN = "com.github.takahirom.roborazzi.RoborazziPreviewParameterizedTests"
@@ -257,7 +250,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     val directory = File(testDir, packageName.replace(".", "/"))
     directory.mkdirs()
 
-    // Delete old generated test files to avoid conflicts when changing numOfShards
+    // Delete old generated test files to avoid conflicts when changing generatedTestClassCount
     directory.listFiles()?.filter { it.extension == "kt" }?.forEach { it.delete() }
     val robolectricConfigString =
       "@Config(" + robolectricConfig.get().entries.joinToString(", ") { (key, value) ->
@@ -265,7 +258,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
       } + ")"
     val testerQualifiedClassNameString = testerQualifiedClassName.get()
 
-    if (numShards == 1) {
+    if (testClassCount == 1) {
       generateTestClass(
         directory = directory,
         packageName = packageName,
@@ -278,7 +271,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
         totalShards = 1
       )
     } else {
-      repeat(numShards) { shardIndex ->
+      repeat(testClassCount) { shardIndex ->
         generateTestClass(
           directory = directory,
           packageName = packageName,
@@ -288,7 +281,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
           robolectricConfigString = robolectricConfigString,
           testerQualifiedClassNameString = testerQualifiedClassNameString,
           shardIndex = shardIndex,
-          totalShards = numShards
+          totalShards = testClassCount
         )
       }
     }

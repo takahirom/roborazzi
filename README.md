@@ -1006,6 +1006,8 @@ roborazzi {
     includePrivatePreviews = true
     // The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
     testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
+    // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
+    generatedTestClassCount = 4
   }
 }
 ```

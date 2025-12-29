@@ -36,4 +36,5 @@
 .cxx
 local.properties
 /tmp
+/temp
 .kotlin/

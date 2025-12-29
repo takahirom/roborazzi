@@ -148,9 +148,9 @@ class GeneratePreviewTestTest {
   }
 
   @Test
-  fun whenNumOfShardsIs1ShouldGenerateSingleTestClass() {
+  fun whenGeneratedTestClassCountIs1ShouldGenerateSingleTestClass() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
-      buildGradle.numOfShards = 1
+      buildGradle.generatedTestClassCount = 1
 
       record()
 
@@ -161,9 +161,9 @@ class GeneratePreviewTestTest {
   }
 
   @Test
-  fun whenNumOfShardsIs4ShouldGenerateMultipleTestClasses() {
+  fun whenGeneratedTestClassCountIs4ShouldGenerateMultipleTestClasses() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
-      buildGradle.numOfShards = 4
+      buildGradle.generatedTestClassCount = 4
 
       record()
 
@@ -207,7 +207,7 @@ class PreviewModule(
     var includePreviewScannerSupportDependenciy = true
     var composablePreviewScannerVersion = "0.7.0"
     var useKsp = false
-    var numOfShards: Int? = null
+    var generatedTestClassCount: Int? = null
     var maxParallelForks: Int? = null
     
     private fun kspDependencies() = if (useKsp) """
@@ -421,8 +421,8 @@ class PreviewModule(
       } else {
         ""
       }
-      val numOfShardsExpr = if (numOfShards != null) {
-        """numOfShards = $numOfShards"""
+      val generatedTestClassCountExpr = if (generatedTestClassCount != null) {
+        """generatedTestClassCount = $generatedTestClassCount"""
       } else {
         ""
       }
@@ -434,7 +434,7 @@ class PreviewModule(
                   $includePrivatePreviewsExpr
                   $customTesterExpr
                   $useScanOptionParametersInTesterExpr
-                  $numOfShardsExpr
+                  $generatedTestClassCountExpr
                 }
               }
           """.trimIndent()
