@@ -695,12 +695,29 @@ fun SemanticsNodeInteraction.captureRoboImage(
   }
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private fun writeImage(newImage: UIImage, path: String) {
-  UIImagePNGRepresentation(newImage)!!.writeToFile(
+  val parentPath = path.substringBeforeLast("/")
+  if (parentPath.isNotEmpty() && parentPath != path) {
+    val success = NSFileManager.defaultManager.createDirectoryAtPath(
+      parentPath,
+      withIntermediateDirectories = true,
+      attributes = null,
+      error = null
+    )
+    if (!success) {
+      roborazziReportLog("Failed to create directory at $parentPath")
+    }
+  }
+  val writeSuccess = UIImagePNGRepresentation(newImage)!!.writeToFile(
     path,
     true
   )
-  roborazziReportLog("Image is saved $path")
+  if (writeSuccess) {
+    roborazziReportLog("Image is saved $path")
+  } else {
+    roborazziReportLog("Failed to write image to $path")
+  }
 }
 
 private fun loadGoldenImage(
@@ -721,11 +738,23 @@ private fun loadGoldenImage(
   return goldenImage
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private fun writeJson(
   result: CaptureResult,
   resultsDir: String,
   nameWithoutExtension: String
 ) {
+  if (resultsDir.isNotEmpty()) {
+    val success = NSFileManager.defaultManager.createDirectoryAtPath(
+      resultsDir,
+      withIntermediateDirectories = true,
+      attributes = null,
+      error = null
+    )
+    if (!success) {
+      roborazziReportLog("Failed to create directory at $resultsDir")
+    }
+  }
   val module = SerializersModule {
     polymorphic(
       CaptureResult::class,
@@ -756,12 +785,16 @@ private fun writeJson(
     timestampNs = result.timestampNs,
     nameWithoutExtension = nameWithoutExtension
   )
-  json.encodeToJsonElement(PolymorphicSerializer(CaptureResult::class), result)
+  val writeSuccess = json.encodeToJsonElement(PolymorphicSerializer(CaptureResult::class), result)
     .toString()
     .toNsData()
     .writeToFile(path = reportFileName, atomically = true)
 
-  roborazziReportLog("Report file is saved $reportFileName")
+  if (writeSuccess) {
+    roborazziReportLog("Report file is saved $reportFileName")
+  } else {
+    roborazziReportLog("Failed to write report to $reportFileName")
+  }
 }
 
 private fun getNanoTime(): Long {
