@@ -695,12 +695,29 @@ fun SemanticsNodeInteraction.captureRoboImage(
   }
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private fun writeImage(newImage: UIImage, path: String) {
-  UIImagePNGRepresentation(newImage)!!.writeToFile(
+  val parentPath = path.substringBeforeLast("/")
+  if (parentPath.isNotEmpty() && parentPath != path) {
+    val success = NSFileManager.defaultManager.createDirectoryAtPath(
+      parentPath,
+      withIntermediateDirectories = true,
+      attributes = null,
+      error = null
+    )
+    if (!success) {
+      roborazziReportLog("Failed to create directory at $parentPath")
+    }
+  }
+  val writeSuccess = UIImagePNGRepresentation(newImage)!!.writeToFile(
     path,
     true
   )
-  roborazziReportLog("Image is saved $path")
+  if (writeSuccess) {
+    roborazziReportLog("Image is saved $path")
+  } else {
+    roborazziReportLog("Failed to write image to $path")
+  }
 }
 
 private fun loadGoldenImage(
@@ -721,11 +738,23 @@ private fun loadGoldenImage(
   return goldenImage
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private fun writeJson(
   result: CaptureResult,
   resultsDir: String,
   nameWithoutExtension: String
 ) {
+  if (resultsDir.isNotEmpty()) {
+    val success = NSFileManager.defaultManager.createDirectoryAtPath(
+      resultsDir,
+      withIntermediateDirectories = true,
+      attributes = null,
+      error = null
+    )
+    if (!success) {
+      roborazziReportLog("Failed to create directory at $resultsDir")
+    }
+  }
   val module = SerializersModule {
     polymorphic(
       CaptureResult::class,
@@ -751,26 +780,24 @@ private fun writeJson(
   val json = Json(CaptureResults.json) {
     serializersModule = module
   }
-  json.encodeToJsonElement(PolymorphicSerializer(CaptureResult::class), result)
+  val reportPath = getReportFileName(
+    absolutePath = resultsDir,
+    timestampNs = result.timestampNs,
+    nameWithoutExtension = nameWithoutExtension
+  )
+  val writeSuccess = json.encodeToJsonElement(PolymorphicSerializer(CaptureResult::class), result)
     .toString()
     .toNsData()
     .writeToFile(
-      path = getReportFileName(
-        absolutePath = resultsDir,
-        timestampNs = result.timestampNs,
-        nameWithoutExtension = nameWithoutExtension
-      ), atomically = true
+      path = reportPath,
+      atomically = true
     )
 
-  roborazziReportLog(
-    "Report file is saved ${
-      getReportFileName(
-        absolutePath = resultsDir,
-        timestampNs = result.timestampNs,
-        nameWithoutExtension = nameWithoutExtension
-      )
-    }"
-  )
+  if (writeSuccess) {
+    roborazziReportLog("Report file is saved $reportPath")
+  } else {
+    roborazziReportLog("Failed to write report to $reportPath")
+  }
 }
 
 private fun getNanoTime(): Long {

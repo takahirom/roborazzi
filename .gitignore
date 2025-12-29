@@ -26,6 +26,8 @@
 .idea/vcs.xml
 .idea/deploymentTargetSelector.xml
 .idea/jupyter-settings.xml
+.idea/markdown.xml
+.idea/deviceManager.xml
 
 *.iml
 *.ipr
@@ -36,4 +38,5 @@
 .cxx
 local.properties
 /tmp
+/temp
 .kotlin/
