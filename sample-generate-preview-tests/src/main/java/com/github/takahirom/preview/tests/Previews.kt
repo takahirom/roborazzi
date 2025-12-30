@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
@@ -435,5 +436,21 @@ fun PreviewDialogBoxWithConstraints() {
         text = @Composable { Text("Dialog wrapped by BoxWithConstraints") }
       )
     }
+  }
+}
+
+// Minimal reproduction for https://github.com/takahirom/roborazzi/issues/768
+// onSizeChanged updates state, which should trigger recomposition before capture
+@Preview
+@Composable
+fun PreviewOnSizeChanged() {
+  var size by remember { mutableStateOf("unknown") }
+  Box(
+    modifier = Modifier
+      .size(100.dp)
+      .background(Color.Blue)
+      .onSizeChanged { size = "${it.width}x${it.height}" }
+  ) {
+    Text(text = size, color = Color.White)
   }
 }
