@@ -96,9 +96,29 @@ fun RoborazziComposeOptions.Builder.composeTestRule(composeTestRule: AndroidComp
 
 @ExperimentalRoborazziApi
 data class RoborazziComposeTestRuleOption(private val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) :
-  RoborazziComposeActivityScenarioCreatorOption {
+  RoborazziComposeActivityScenarioCreatorOption,
+  RoborazziComposeCaptureOption {
   override fun createScenario(chain: () -> ActivityScenario<out ComponentActivity>): ActivityScenario<out ComponentActivity> {
     return composeTestRule.activityRule.scenario
+  }
+
+  override fun beforeCapture() {
+    // Wait for Compose to be idle before capturing.
+    // This is necessary because Compose's test clock is independent of
+    // Espresso.onIdle() and ShadowLooper.idle().
+    // Without this, composables that update state in onSizeChanged or similar
+    // callbacks won't have their recomposition completed before capture.
+    // See: https://github.com/takahirom/roborazzi/issues/768
+    //
+    // However, if ManualClockOptions is being used (autoAdvance = false),
+    // the user is explicitly controlling timing, so we skip waitForIdle()
+    // to avoid hanging on infinite animations like CircularProgressIndicator.
+    if (composeTestRule.mainClock.autoAdvance) {
+      composeTestRule.waitForIdle()
+    }
+  }
+
+  override fun afterCapture() {
   }
 }
 
