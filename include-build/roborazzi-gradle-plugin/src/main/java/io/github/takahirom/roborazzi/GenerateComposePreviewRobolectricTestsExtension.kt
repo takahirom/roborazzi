@@ -69,6 +69,16 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
   val useScanOptionParametersInTester: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
 
+  /**
+   * The number of test classes to generate.
+   * By default, this is automatically set to match the test task's maxParallelForks value.
+   * Set this to match maxParallelForks for parallel test execution.
+   *
+   * When generatedTestClassCount = 1, generates a single test class.
+   * When generatedTestClassCount > 1, generates multiple test classes (RoborazziPreviewParameterizedTests0, Tests1, etc.)
+   */
+  val generatedTestClassCount: Property<Int> = objects.property(Int::class.java)
+
 }
 
 fun generateComposePreviewRobolectricTestsIfNeeded(
@@ -109,6 +119,14 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   check(extension.packages.get().orEmpty().isNotEmpty()) {
     "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
+  }
+
+  // Auto-detect generatedTestClassCount from maxParallelForks if not explicitly set
+  project.afterEvaluate {
+    if (!extension.generatedTestClassCount.isPresent) {
+      val maxForks = testTaskProvider.mapNotNull { it.maxParallelForks }.maxOrNull() ?: 1
+      extension.generatedTestClassCount.convention(maxForks)
+    }
   }
 
   // Validate configuration: check for conflicting settings when using a custom tester
@@ -181,6 +199,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(testerQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)
+    it.generatedTestClassCount.set(extension.generatedTestClassCount)
   }
   // We need to use sources.java here; otherwise, the generate task will not be executed.
   // https://stackoverflow.com/a/76870110/4339442
@@ -210,6 +229,9 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   @get:Input
   abstract val robolectricConfig: MapProperty<String, String>
 
+  @get:Input
+  abstract val generatedTestClassCount: Property<Int>
+
   @TaskAction
   fun generateTests() {
     val testDir = outputDir.get().asFile
@@ -217,17 +239,72 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
 
     val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
     val includePrivatePreviewsExpr = includePrivatePreviews.get()
+    val testClassCount = generatedTestClassCount.get()
+
+    require(testClassCount >= 1) {
+      "generatedTestClassCount must be >= 1, but was $testClassCount"
+    }
 
     val generatedClassFQDN = "com.github.takahirom.roborazzi.RoborazziPreviewParameterizedTests"
     val packageName = generatedClassFQDN.substringBeforeLast(".")
-    val className = generatedClassFQDN.substringAfterLast(".")
+    val baseClassName = generatedClassFQDN.substringAfterLast(".")
     val directory = File(testDir, packageName.replace(".", "/"))
     directory.mkdirs()
+
+    // Delete old generated test files to avoid conflicts when changing generatedTestClassCount
+    directory.listFiles()?.filter { it.extension == "kt" }?.forEach { it.delete() }
     val robolectricConfigString =
       "@Config(" + robolectricConfig.get().entries.joinToString(", ") { (key, value) ->
         "$key = $value"
       } + ")"
     val testerQualifiedClassNameString = testerQualifiedClassName.get()
+
+    if (testClassCount == 1) {
+      generateTestClass(
+        directory = directory,
+        packageName = packageName,
+        className = baseClassName,
+        packagesExpr = packagesExpr,
+        includePrivatePreviewsExpr = includePrivatePreviewsExpr,
+        robolectricConfigString = robolectricConfigString,
+        testerQualifiedClassNameString = testerQualifiedClassNameString,
+        shardIndex = null,
+        totalShards = 1
+      )
+    } else {
+      repeat(testClassCount) { shardIndex ->
+        generateTestClass(
+          directory = directory,
+          packageName = packageName,
+          className = "$baseClassName$shardIndex",
+          packagesExpr = packagesExpr,
+          includePrivatePreviewsExpr = includePrivatePreviewsExpr,
+          robolectricConfigString = robolectricConfigString,
+          testerQualifiedClassNameString = testerQualifiedClassNameString,
+          shardIndex = shardIndex,
+          totalShards = testClassCount
+        )
+      }
+    }
+  }
+
+  private fun generateTestClass(
+    directory: File,
+    packageName: String,
+    className: String,
+    packagesExpr: String,
+    includePrivatePreviewsExpr: Boolean,
+    robolectricConfigString: String,
+    testerQualifiedClassNameString: String,
+    shardIndex: Int?,
+    totalShards: Int
+  ) {
+    val valuesFunction = if (shardIndex == null) {
+      "testParameters"
+    } else {
+      "testParameters.filterIndexed { index, _ -> index % $totalShards == $shardIndex }"
+    }
+
     File(directory, "$className.kt").writeText(
       """
             package $packageName
@@ -287,17 +364,17 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                     }
                     @JvmStatic
                     @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-                    fun values(): List<ComposePreviewTester.TestParameter<*>> = testParameters 
-                    
+                    fun values(): List<ComposePreviewTester.TestParameter<*>> = $valuesFunction
+
                     fun setupDefaultOptions() {
                         ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options(
                             scanOptions = ComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),
-                              includePrivatePreviews = $includePrivatePreviewsExpr, 
+                              includePrivatePreviews = $includePrivatePreviewsExpr,
                             )
                         )
                     }
-                } 
+                }
             }
         """.trimIndent()
     )
