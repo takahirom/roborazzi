@@ -424,7 +424,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               test.systemProperties["roborazzi.compare.output.dir"] =
                 compareOutputDirProvider.get()
             }
-            test.systemProperties["roborazzi.test.result.dir"] =
+            test.systemProperties["roborazzi.result.dir"] =
               resultDirRelativePath.get()
             test.systemProperties["roborazzi.project.path"] =
               projectAbsolutePathProvider.get()

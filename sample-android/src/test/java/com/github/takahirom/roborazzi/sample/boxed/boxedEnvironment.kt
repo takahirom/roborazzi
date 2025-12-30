@@ -10,7 +10,7 @@ import com.github.takahirom.roborazzi.provideRoborazziContext
 fun boxedEnvironment(block: () -> Unit) {
   val originalProperties = System.getProperties().filter { it.key.toString().startsWith("roborazzi") }.toList()
   originalProperties.forEach {
-    if (it.first.toString() == "roborazzi.test.result.dir") return@forEach
+    if (it.first.toString() == "roborazzi.result.dir") return@forEach
     System.clearProperty(it.first.toString())
   }
   val context = provideRoborazziContext()

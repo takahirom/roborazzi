@@ -20,8 +20,8 @@ fun roborazziSystemPropertyImageExtension(): String {
 
 @ExperimentalRoborazziApi
 fun roborazziSystemPropertyResultDirectory(): String {
-  // This needs to be set before the test (and always is), so it is reasonable to fail otherwise.
-  return getSystemProperty("roborazzi.test.result.dir")!!
+  return getSystemProperty("roborazzi.result.dir")
+    ?: "build/test-results/roborazzi"
 }
 
 @ExperimentalRoborazziApi
