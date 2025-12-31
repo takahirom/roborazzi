@@ -24,7 +24,7 @@ object RoborazziReportConst {
   fun getResultsSummaryFilePathFromBuildDir(variantName: String) =
     "test-results/roborazzi/$variantName/results-summary.json"
   fun getResultDirPathFromBuildDir(variantName: String) =
-    "test-results/roborazzi/$variantName"
+    "test-results/roborazzi/$variantName/results/"
   fun getReportFilePathFromBuildDir(variantName: String) =
     "reports/roborazzi/$variantName/index.html"
 

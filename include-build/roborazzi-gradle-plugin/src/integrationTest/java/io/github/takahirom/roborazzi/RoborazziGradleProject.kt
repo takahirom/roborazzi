@@ -361,13 +361,13 @@ dependencies {
   }
 
   fun checkResultFileExists(nameSuffix: String) {
-    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/debug/").listFiles()
+    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/debug/results/").listFiles()
       .firstOrNull { it.name.endsWith(nameSuffix) }
       ?: error("File not found: $nameSuffix")
   }
 
   fun checkResultFileNotExists(nameSuffix: String) {
-    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/debug/").listFiles()
+    testProjectDir.root.resolve("app/$buildDirName/test-results/roborazzi/debug/results/").listFiles()
       ?.firstOrNull { it.name.endsWith(nameSuffix) }
       ?.let {
         error("File exists: $nameSuffix")

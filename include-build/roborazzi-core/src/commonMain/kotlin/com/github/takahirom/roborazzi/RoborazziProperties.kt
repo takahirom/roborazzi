@@ -21,7 +21,7 @@ fun roborazziSystemPropertyImageExtension(): String {
 @ExperimentalRoborazziApi
 fun roborazziSystemPropertyResultDirectory(): String {
   return getSystemProperty("roborazzi.result.dir")
-    ?: "build/test-results/roborazzi"
+    ?: "build/test-results/roborazzi/results/"
 }
 
 @ExperimentalRoborazziApi
