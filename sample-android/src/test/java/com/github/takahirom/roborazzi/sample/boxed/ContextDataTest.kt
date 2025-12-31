@@ -86,7 +86,7 @@ class ContextDataTest {
           chunks.verifyKeyValueExistsInImage(testKey4, testValue4.toString())
         }
       }
-      File("build/test-results/roborazzi/${BuildConfig.BUILD_TYPE}")
+      File("build/test-results/roborazzi/${BuildConfig.BUILD_TYPE}/results")
         .listFiles()!!
         .sortedBy { it.name }
         .reversed()
@@ -146,7 +146,7 @@ class ContextDataTest {
           }
         }
       }
-      File("build/test-results/roborazzi/${BuildConfig.BUILD_TYPE}")
+      File("build/test-results/roborazzi/${BuildConfig.BUILD_TYPE}/results")
         .listFiles()!!
         .first { it.name.contains(methodSignature) && it.name.endsWith(".json") }
         .let {
