@@ -20,6 +20,8 @@ fun roborazziSystemPropertyImageExtension(): String {
 
 @ExperimentalRoborazziApi
 fun roborazziSystemPropertyResultDirectory(): String {
+  // The fallback path is for backward compatibility with non-Gradle environments (e.g., Bazel).
+  // When using the Gradle plugin, this property is set to a variant-aware path.
   return getSystemProperty("roborazzi.result.dir")
     ?: "build/test-results/roborazzi/results/"
 }
