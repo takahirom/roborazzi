@@ -17,7 +17,7 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.provideRoborazziContext
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
-import com.github.takahirom.roborazzi.sample.BuildConfig
+import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
 import com.github.takahirom.roborazzi.sample.MainActivity
 import kotlinx.io.files.Path
 import org.junit.Rule
@@ -86,7 +86,7 @@ class ContextDataTest {
           chunks.verifyKeyValueExistsInImage(testKey4, testValue4.toString())
         }
       }
-      File("build/test-results/roborazzi/${BuildConfig.BUILD_TYPE}/results")
+      File(roborazziSystemPropertyResultDirectory())
         .listFiles()!!
         .sortedBy { it.name }
         .reversed()
@@ -146,7 +146,7 @@ class ContextDataTest {
           }
         }
       }
-      File("build/test-results/roborazzi/${BuildConfig.BUILD_TYPE}/results")
+      File(roborazziSystemPropertyResultDirectory())
         .listFiles()!!
         .first { it.name.contains(methodSignature) && it.name.endsWith(".json") }
         .let {
