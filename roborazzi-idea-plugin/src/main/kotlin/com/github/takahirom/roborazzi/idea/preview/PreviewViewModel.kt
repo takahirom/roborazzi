@@ -221,9 +221,16 @@ class PreviewViewModel {
   private suspend fun loadReports(project: Project): List<ReportResult> {
     return withContext(Dispatchers.IO) {
       ProjectRootManager.getInstance(project).contentRootsFromAllModules
-        .map { File(it.path + "/build/test-results/roborazzi/results-summary.json") }
-        .filter {
-          it.exists()
+        .flatMap { contentRoot ->
+          val roborazziDir = File(contentRoot.path + "/build/test-results/roborazzi")
+          if (roborazziDir.exists()) {
+            roborazziDir.walkTopDown()
+              .maxDepth(2)
+              .filter { it.name == "results-summary.json" }
+              .toList()
+          } else {
+            emptyList()
+          }
         }
         .flatMap {
           val text = it.readText()

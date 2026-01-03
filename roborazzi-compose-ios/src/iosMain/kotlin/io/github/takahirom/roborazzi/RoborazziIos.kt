@@ -780,7 +780,7 @@ private fun writeJson(
   val json = Json(CaptureResults.json) {
     serializersModule = module
   }
-  val reportPath = getReportFileName(
+  val reportFileName = getReportFileName(
     absolutePath = resultsDir,
     timestampNs = result.timestampNs,
     nameWithoutExtension = nameWithoutExtension
@@ -788,15 +788,12 @@ private fun writeJson(
   val writeSuccess = json.encodeToJsonElement(PolymorphicSerializer(CaptureResult::class), result)
     .toString()
     .toNsData()
-    .writeToFile(
-      path = reportPath,
-      atomically = true
-    )
+    .writeToFile(path = reportFileName, atomically = true)
 
   if (writeSuccess) {
-    roborazziReportLog("Report file is saved $reportPath")
+    roborazziReportLog("Report file is saved $reportFileName")
   } else {
-    roborazziReportLog("Failed to write report to $reportPath")
+    roborazziReportLog("Failed to write report to $reportFileName")
   }
 }
 
