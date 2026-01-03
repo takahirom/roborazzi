@@ -474,7 +474,7 @@ class PreviewModule(
   fun checkNoImages() {
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
     checkResultCount(
-      testProjectDir.root.resolve("$moduleName/build/test-results/roborazzi/results-summary.json")
+      testProjectDir.root.resolve("$moduleName/build/test-results/roborazzi/debug/results-summary.json")
       // All zero
     )
 

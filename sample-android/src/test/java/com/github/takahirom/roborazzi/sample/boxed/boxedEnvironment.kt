@@ -9,7 +9,12 @@ import com.github.takahirom.roborazzi.provideRoborazziContext
 @OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 fun boxedEnvironment(block: () -> Unit) {
   val originalProperties = System.getProperties().filter { it.key.toString().startsWith("roborazzi") }.toList()
-  originalProperties.forEach { System.clearProperty(it.first.toString()) }
+  originalProperties.forEach {
+    // Keep roborazzi.result.dir to preserve the variant-aware path set by Gradle plugin.
+    // Clearing it would fall back to a non-variant path and break result file assertions.
+    if (it.first.toString() == "roborazzi.result.dir") return@forEach
+    System.clearProperty(it.first.toString())
+  }
   val context = provideRoborazziContext()
   RoborazziContext = RoborazziContextImpl()
   try {
