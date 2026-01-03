@@ -222,7 +222,7 @@ class PreviewViewModel {
     return withContext(Dispatchers.IO) {
       ProjectRootManager.getInstance(project).contentRootsFromAllModules
         .flatMap { contentRoot ->
-          val roborazziDir = File(contentRoot.path + "/build/test-results/roborazzi")
+          val roborazziDir = File(contentRoot.path, "build/test-results/roborazzi")
           if (roborazziDir.exists()) {
             roborazziDir.walkTopDown()
               .maxDepth(2)
