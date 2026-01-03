@@ -102,7 +102,11 @@ private fun getImageWriterFromSystemClassLoader(mimeType: String): ImageWriter {
   val imageIOClass = systemCL.loadClass("javax.imageio.ImageIO")
   val method = imageIOClass.getMethod("getImageWritersByMIMEType", String::class.java)
   val iterator = method.invoke(null, mimeType) as Iterator<ImageWriter>
-  return iterator.next()
+  return if (iterator.hasNext()) {
+    iterator.next()
+  } else {
+    throw IllegalArgumentException("No ImageWriter found for MIME type: $mimeType")
+  }
 }
 
 /**
@@ -118,9 +122,13 @@ private fun losslessWebPWriter(): AwtImageWriter =
     try {
       val writeParam = writer.defaultWriteParam
       writeParam.compressionMode = ImageWriteParam.MODE_EXPLICIT
-      val losslessType = writeParam.compressionTypes.firstOrNull {
+      val compressionTypes = writeParam.compressionTypes
+      if (compressionTypes.isNullOrEmpty()) {
+        throw IllegalStateException("No compression types available for WebP ImageWriter")
+      }
+      val losslessType = compressionTypes.firstOrNull {
         it.contains("Lossless", ignoreCase = true)
-      } ?: writeParam.compressionTypes[0]
+      } ?: compressionTypes[0]
       writeParam.compressionType = losslessType
 
 
