@@ -1,6 +1,5 @@
 package com.github.takahirom.roborazzi
 
-import com.luciad.imageio.webp.WebPWriteParam
 import java.awt.image.BufferedImage
 import java.awt.image.RenderedImage
 import java.io.File
@@ -97,19 +96,40 @@ fun ImageWriter.writeMetadata(
   return meta
 }
 
+@Suppress("UNCHECKED_CAST")
+private fun getImageWriterFromSystemClassLoader(mimeType: String): ImageWriter {
+  val systemCL = ClassLoader.getSystemClassLoader()
+  val imageIOClass = systemCL.loadClass("javax.imageio.ImageIO")
+  val method = imageIOClass.getMethod("getImageWritersByMIMEType", String::class.java)
+  val iterator = method.invoke(null, mimeType) as Iterator<ImageWriter>
+  return if (iterator.hasNext()) {
+    iterator.next()
+  } else {
+    throw IllegalArgumentException("No ImageWriter found for MIME type: $mimeType")
+  }
+}
+
 /**
  * Add testImplementation("io.github.darkxanter:webp-imageio:0.3.3") to use this
  */
 private fun losslessWebPWriter(): AwtImageWriter =
   AwtImageWriter { file, context, bufferedImage ->
-    val writer: ImageWriter =
-      ImageIO.getImageWritersByMIMEType("image/webp").next()
+    // Use system classloader to avoid ClassCastException when running Robolectric tests
+    // with multiple SDK configurations. Each SDK sandbox has its own classloader,
+    // but by using system classloader, the WebPWriter is shared across all sandboxes.
+    // See: https://github.com/takahirom/roborazzi/issues/771
+    val writer: ImageWriter = getImageWriterFromSystemClassLoader("image/webp")
     try {
-      val writeParam = WebPWriteParam(writer.getLocale())
+      val writeParam = writer.defaultWriteParam
       writeParam.compressionMode = ImageWriteParam.MODE_EXPLICIT
-      writeParam.compressionType =
-        writeParam.getCompressionTypes()
-          .get(WebPWriteParam.LOSSLESS_COMPRESSION)
+      val compressionTypes = writeParam.compressionTypes
+      if (compressionTypes.isNullOrEmpty()) {
+        throw IllegalStateException("No compression types available for WebP ImageWriter")
+      }
+      val losslessType = compressionTypes.firstOrNull {
+        it.contains("Lossless", ignoreCase = true)
+      } ?: compressionTypes[0]
+      writeParam.compressionType = losslessType
 
 
       writer.setOutput(FileImageOutputStream(file))
