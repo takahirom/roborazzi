@@ -26,4 +26,5 @@ dependencies {
   compileOnly libs.composable.preview.scanner
   compileOnly libs.robolectric
   compileOnly libs.androidx.compose.ui.test.junit4
+  compileOnly libs.kotlinx.coroutines.test
 }

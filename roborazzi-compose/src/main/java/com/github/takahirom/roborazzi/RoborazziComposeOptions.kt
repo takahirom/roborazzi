@@ -119,6 +119,7 @@ class RoborazziComposeOptions private constructor(
         activityScenarioOptions.forEach { addOption(it) }
         composableOptions.forEach { addOption(it) }
         setupOptions.forEach { addOption(it) }
+        captureOptions.forEach { addOption(it) }
       }
   }
 
