@@ -5,7 +5,7 @@
 plugins {
   id("com.android.application")
 //  id("com.android.library")
-  id("org.jetbrains.kotlin.android")
+  // AGP 9.0: org.jetbrains.kotlin.android is no longer needed (built-in Kotlin)
   id("io.github.takahirom.roborazzi")
 }
 
@@ -16,12 +16,12 @@ roborazzi {
   }
 }
 
-// Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+// Replace AGP's default Compose Compiler with Kotlin's integrated version
 configurations.all {
   resolutionStrategy.dependencySubstitution {
     substitute(module("androidx.compose.compiler:compiler"))
-      .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
-      .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+      .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.2.10"))
+      .because("Compose Compiler is now shipped as part of Kotlin distribution")
   }
 }
 

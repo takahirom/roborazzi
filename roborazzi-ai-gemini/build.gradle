@@ -1,13 +1,11 @@
 plugins {
   id "org.jetbrains.kotlin.multiplatform"
-  id "com.android.library"
+  id "com.android.kotlin.multiplatform.library"
   id("org.jetbrains.kotlin.plugin.serialization") version libs.versions.kotlin
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
-
-android.compileSdk(libs.versions.compileSdk.get().toInteger())
 
 kotlin {
   applyDefaultHierarchyTemplate()
@@ -18,8 +16,13 @@ kotlin {
 
   jvm()
 
-  androidTarget {
-    publishLibraryVariants("release")
+  androidLibrary {
+    namespace = 'com.github.takahirom.roborazzi.ai.gemini'
+    compileSdk = libs.versions.compileSdk.get().toInteger()
+    minSdk = libs.versions.minSdk.get().toInteger()
+
+    withHostTest {
+    }
   }
 
   sourceSets {
@@ -38,24 +41,6 @@ kotlin {
       progressiveMode = true
       optIn("com.github.takahirom.roborazzi.InternalRoborazziApi")
       optIn("com.github.takahirom.roborazzi.ExperimentalRoborazziApi")
-    }
-  }
-}
-
-android {
-  namespace 'com.github.takahirom.roborazzi.ai.gemini'
-  compileSdk libs.versions.compileSdk.get().toInteger()
-
-  defaultConfig {
-    minSdk = libs.versions.minSdk.get().toInteger()
-    targetSdk = libs.versions.targetSdk.get().toInteger()
-
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-  }
-  buildFeatures {}
-  testOptions {
-    unitTests {
-      includeAndroidResources = true
     }
   }
 }
