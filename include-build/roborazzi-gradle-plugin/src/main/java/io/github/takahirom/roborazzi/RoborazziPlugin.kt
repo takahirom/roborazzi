@@ -1,10 +1,11 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.HasUnitTest
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.android.build.gradle.TestedExtension
 import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
@@ -510,7 +511,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
     fun AndroidComponentsExtension<*, *, *>.configureComponents(useTestVariantName: Boolean = false) {
       onVariants { variant ->
-        val unitTest = variant.unitTest ?: return@onVariants
+        // AGP 9.0: unitTest is now on HasUnitTest interface, not Variant
+        val unitTest = (variant as? HasUnitTest)?.unitTest ?: return@onVariants
         val testVariantSlug = unitTest.name.capitalizeUS()
         val testTaskName = "test$testVariantSlug"
         generateComposePreviewRobolectricTestsIfNeeded(
@@ -535,7 +537,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         .configureComponents()
       verifyGenerateComposePreviewRobolectricTests(
         project = project,
-        androidExtension = project.extensions.getByType(TestedExtension::class.java),
+        androidExtension = project.extensions.getByType(CommonExtension::class.java),
         extension = extension.generateComposePreviewRobolectricTests
       )
     }
@@ -544,7 +546,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         .configureComponents()
       verifyGenerateComposePreviewRobolectricTests(
         project = project,
-        androidExtension = project.extensions.getByType(TestedExtension::class.java),
+        androidExtension = project.extensions.getByType(CommonExtension::class.java),
         extension = extension.generateComposePreviewRobolectricTests
       )
     }
@@ -562,7 +564,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
       if (androidTarget != null) {
         // Configure Compose preview tests for each variant
         componentsExtension.onVariants { variant ->
-          val unitTest = variant.unitTest ?: return@onVariants
+          // AGP 9.0: unitTest is now on HasUnitTest interface, not Variant
+          val unitTest = (variant as? HasUnitTest)?.unitTest ?: return@onVariants
           val testVariantSlug = unitTest.name.capitalizeUS()
           val testTaskName = "test$testVariantSlug"
           val testTaskProvider = findTestTaskProvider(Test::class, testTaskName)

@@ -3,7 +3,7 @@ accessibilityTestFramework = "4.1.1"
 javaToolchain = "17"
 javaTarget = "11"
 # https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-compatibility-guide.html#version-compatibility
-agp = "8.12.1"
+agp = "9.0.0-rc02"
 compileSdk = "34"
 targetSdk = "35"
 minSdk = "21"
