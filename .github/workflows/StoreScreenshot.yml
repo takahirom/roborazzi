@@ -38,7 +38,7 @@ jobs:
         id: record-test
         run: |
           cd include-build; 
-          ./gradlew roborazzi-core:test --profile
+          ./gradlew roborazzi-core:testAndroidHostTest --profile
           cd ..
           ./gradlew recordRoborazziDebug recordRoborazziDesktop recordRoborazziJvm recordRoborazziIosX64 recordRoborazziIosArm64 --stacktrace --profile
 
