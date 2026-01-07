@@ -38,5 +38,7 @@ compose.desktop {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-  incremental = false
+  kotlinOptions {
+    incremental = false
+  }
 }

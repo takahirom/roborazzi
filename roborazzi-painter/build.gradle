@@ -10,6 +10,7 @@ kotlin {
   targetHierarchy.custom {
     it.common {
       it.group("commonJvm") {
+        it.withAndroid()
         it.withJvm()
       }
       it.group("ios") {
