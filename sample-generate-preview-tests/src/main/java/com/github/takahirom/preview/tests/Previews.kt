@@ -22,12 +22,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
@@ -452,5 +456,36 @@ fun PreviewOnSizeChanged() {
       .onSizeChanged { size = "${it.width}x${it.height}" }
   ) {
     Text(text = size, color = Color.White)
+  }
+}
+
+// Reproduction for LaunchedEffect + FocusRequester not working issue
+// LaunchedEffect should request focus and the TextField should show focused state (blue border)
+// If LaunchedEffect doesn't run properly, the TextField will remain unfocused (gray border)
+@Preview
+@Composable
+fun PreviewLaunchedEffectFocus() {
+  val focusRequester = remember { FocusRequester() }
+  var isFocused by remember { mutableStateOf(false) }
+
+  LaunchedEffect(Unit) {
+    focusRequester.requestFocus()
+  }
+
+  Box(
+    modifier = Modifier
+      .size(150.dp)
+      .background(Color.White)
+      .padding(16.dp)
+  ) {
+    BasicTextField(
+      value = "Focus test",
+      onValueChange = {},
+      modifier = Modifier
+        .focusRequester(focusRequester)
+        .onFocusChanged { isFocused = it.isFocused }
+        .background(if (isFocused) Color.Blue else Color.Gray)
+        .padding(8.dp)
+    )
   }
 }
