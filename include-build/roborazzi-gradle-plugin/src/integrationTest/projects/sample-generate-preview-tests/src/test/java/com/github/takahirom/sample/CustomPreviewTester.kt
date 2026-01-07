@@ -7,16 +7,18 @@ import org.junit.rules.TestWatcher
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.takahirom.roborazzi.*
 import androidx.compose.ui.test.onRoot
 
+@OptIn(ExperimentalTestApi::class)
 class CustomPreviewTester : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> by AndroidComposePreviewTester() {
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
-      composeRuleFactory = { createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *> },
+      composeRuleFactory = { params -> createAndroidComposeRule<RoborazziActivity>(effectContext = params.effectDispatcher) as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *> },
       testRuleFactory = { composeTestRule ->
         RuleChain.outerRule(
           object : TestWatcher() {
