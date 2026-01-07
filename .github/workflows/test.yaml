@@ -30,13 +30,13 @@ jobs:
         id: test
         run: |
           ./gradlew javaDocReleaseGeneration
-          ./gradlew test --stacktrace -x testReleaseUnitTest
+          ./gradlew test --stacktrace
 
       - name: include build tests
         id: include-build-test
         run: |
           cd include-build
-          ./gradlew test jvmTest --stacktrace -x testReleaseUnitTest
+          ./gradlew test jvmTest --stacktrace
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: ${{ always() }}

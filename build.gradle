@@ -9,7 +9,7 @@ plugins {
   id 'org.jetbrains.compose' version libs.versions.composeMultiplatform apply false
   id 'org.jetbrains.kotlin.plugin.compose' version libs.versions.kotlin
 
-  id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
+  // AGP 9.0: org.jetbrains.kotlin.android is no longer needed (built-in Kotlin)
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
   // Just for Gradle Build, included build will be applied
   id("io.github.takahirom.roborazzi") version "1.0.0" apply false
@@ -23,12 +23,12 @@ allprojects {
   def javaTargetVersion = JavaVersion.toVersion(javaVersion)
   def jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.@Companion.fromTarget(javaVersion)
   
-  // Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+  // Replace AGP's default Compose Compiler with Kotlin's integrated version
   configurations.all {
     resolutionStrategy.dependencySubstitution {
       substitute(module("androidx.compose.compiler:compiler"))
         .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:${libs.versions.kotlin.get()}"))
-        .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+        .because("Compose Compiler is now shipped as part of Kotlin distribution")
     }
   }
 

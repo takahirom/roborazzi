@@ -2,8 +2,8 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 
 plugins {
   id("org.jetbrains.kotlin.multiplatform")
-  id("com.android.application")
-//  id("com.android.library")
+  // AGP 9.0: Use com.android.kotlin.multiplatform.library instead of com.android.application
+  id("com.android.kotlin.multiplatform.library")
   id("io.github.takahirom.roborazzi")
   id("org.jetbrains.compose")
   id("org.jetbrains.kotlin.plugin.compose")
@@ -23,37 +23,16 @@ repositories {
   google()
 }
 
-android {
-  namespace = "com.github.takahirom.preview.tests"
-  compileSdk = libs.versions.compileSdk.get().toInt()
-
-  defaultConfig {
+kotlin {
+  androidLibrary {
+    namespace = "com.github.takahirom.preview.tests"
+    compileSdk = libs.versions.compileSdk.get().toInt()
     minSdk = 24
 
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-  }
-
-  buildTypes {
-    release {
-      isMinifyEnabled = false
-      proguardFiles(
-        getDefaultProguardFile("proguard-android-optimize.txt"),
-        "proguard-rules.pro"
-      )
-    }
-  }
-  testOptions {
-    unitTests {
+    withHostTest {
       isIncludeAndroidResources = true
-      all {
-        it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
-      }
     }
   }
-}
-
-kotlin {
-  androidTarget()
 
   sourceSets {
     val commonMain by getting {
@@ -70,7 +49,7 @@ kotlin {
       }
     }
 
-    val androidUnitTest by getting {
+    val androidHostTest by getting {
       dependencies {
         // replaced by dependency substitution
         implementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
@@ -86,13 +65,6 @@ kotlin {
     val androidDebug by creating {
       dependencies {
         implementation(libs.androidx.compose.ui.test.manifest)
-      }
-    }
-
-    val androidInstrumentedTest by getting {
-      dependencies {
-        implementation(libs.androidx.test.ext.junit)
-        implementation(libs.androidx.test.espresso.core)
       }
     }
   }

@@ -216,7 +216,7 @@ class PreviewModule(
     
     private fun kspPlugins() = if (useKsp) """
     id("com.google.dagger.hilt.android") version "2.57.1"
-    id("com.google.devtools.ksp") version "2.0.21-1.0.28"""" else ""
+    id("com.google.devtools.ksp") version "2.2.10-2.0.2"""" else ""
     
     private fun hiltImplementationDependencies() = if (useKsp) """
     implementation("com.google.dagger:dagger:2.57.1")
@@ -230,6 +230,7 @@ class PreviewModule(
       file.parentFile.mkdirs()
 
       val roborazziExtension = createRoborazziExtension()
+      // AGP 9.0: For non-KMP, use android { } block
       val androidBlock = """
           android {
             namespace = "com.github.takahirom.preview.tests"
@@ -270,22 +271,28 @@ class PreviewModule(
         } else {
           ""
         }
+        // AGP 9.0: Use com.android.kotlin.multiplatform.library instead of com.android.library + kotlin.multiplatform
         """
           plugins {
               kotlin("multiplatform")
-              id("com.android.library")
+              id("com.android.kotlin.multiplatform.library")
               id("org.jetbrains.compose")
               id("org.jetbrains.kotlin.plugin.compose")
               id("io.github.takahirom.roborazzi")${kspPlugins()}
           }
 
           kotlin {
-              androidTarget {
-                  compilerOptions {
-                      freeCompilerArgs.add("-Xopt-in=kotlin.RequiresOptIn")
+              // AGP 9.0: Use androidLibrary { } instead of androidTarget { }
+              androidLibrary {
+                  namespace = "com.github.takahirom.preview.tests"
+                  compileSdk = libs.versions.compileSdk.get().toInt()
+                  minSdk = 24
+
+                  withHostTest {
+                      isIncludeAndroidResources = true
                   }
               }
-              
+
               sourceSets {
                   val commonMain by getting {
                       dependencies {
@@ -300,8 +307,9 @@ class PreviewModule(
                         implementation(compose.runtime)
                       }
                   }
-                  
-                  val androidUnitTest by getting {
+
+                  // AGP 9.0: Use androidHostTest instead of androidUnitTest
+                  val androidHostTest by getting {
                       dependencies {
                           $previewScannerSupportDependency
                           implementation(libs.junit)
@@ -315,26 +323,23 @@ class PreviewModule(
                           implementation(libs.androidx.compose.ui.test.manifest)
                       }
                   }
-                  
-                  val androidInstrumentedTest by getting {
-                      dependencies {
-                          implementation(libs.androidx.test.ext.junit)
-                          implementation(libs.androidx.test.espresso.core)
-                      }
-                  }
               }
           }
 
-          $androidBlock
-
           $roborazziExtension
-          
+
+          // AGP 9.0: Set test options for KMP
+          tasks.withType<Test> {
+              systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+              ${if (maxParallelForks != null) "maxParallelForks = $maxParallelForks" else ""}
+          }
+
           // Replace AGP's default Compose Compiler with Kotlin's integrated version
           configurations.all {
               resolutionStrategy.dependencySubstitution {
                   substitute(module("androidx.compose.compiler:compiler"))
-                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
-                    .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.2.10"))
+                    .because("Compose Compiler is now shipped as part of Kotlin distribution")
               }
           }
 
@@ -355,7 +360,7 @@ class PreviewModule(
   plugins {
     id("com.android.application")
   //  id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    // AGP 9.0: org.jetbrains.kotlin.android is no longer needed (built-in Kotlin)
     id("org.jetbrains.kotlin.plugin.compose")
     id("io.github.takahirom.roborazzi")${kspPlugins()}
   }
@@ -366,8 +371,8 @@ class PreviewModule(
   configurations.all {
       resolutionStrategy.dependencySubstitution {
           substitute(module("androidx.compose.compiler:compiler"))
-            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
-            .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.2.10"))
+            .because("Compose Compiler is now shipped as part of Kotlin distribution")
       }
   }
 
@@ -443,7 +448,9 @@ class PreviewModule(
   }
 
   fun record(buildType: BuildType = BuildType.Build, checks: BuildResult.() -> Unit = {}) {
-    val result = runTask("recordRoborazziDebug", buildType)
+    // AGP 9.0: KMP library uses AndroidHostTest variant instead of Debug
+    val taskName = if (buildGradle.isKmp) "recordRoborazziAndroidHostTest" else "recordRoborazziDebug"
+    val result = runTask(taskName, buildType)
     result.checks()
   }
 

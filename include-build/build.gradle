@@ -3,6 +3,7 @@ plugins {
   id 'org.jetbrains.kotlin.multiplatform' version libs.versions.kotlin apply false
   id 'org.jetbrains.kotlin.plugin.compose' version libs.versions.kotlin apply false
   id 'com.android.library' version libs.versions.agp apply false
+  id 'com.android.kotlin.multiplatform.library' version libs.versions.agp apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
 }
 
@@ -25,7 +26,8 @@ allprojects {
     }
   }
 
-  plugins.withType(com.android.build.gradle.BasePlugin).configureEach {
+  // Configure Android plugin (com.android.library)
+  plugins.withId("com.android.library") {
     android {
       compileOptions {
         sourceCompatibility javaTargetVersion
@@ -33,6 +35,8 @@ allprojects {
       }
     }
   }
+  // Note: com.android.kotlin.multiplatform.library uses kotlin { androidLibrary { } } block
+  // and doesn't expose android.compileOptions - Java compatibility is set via Kotlin tasks
 
   tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
     sourceCompatibility = javaTargetVersion

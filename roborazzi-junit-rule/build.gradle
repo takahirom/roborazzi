@@ -1,6 +1,5 @@
 plugins {
   id 'com.android.library'
-  id 'org.jetbrains.kotlin.android'
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
