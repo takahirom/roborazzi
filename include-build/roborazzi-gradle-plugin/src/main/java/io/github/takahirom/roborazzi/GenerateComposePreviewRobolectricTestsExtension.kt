@@ -1,8 +1,9 @@
 package io.github.takahirom.roborazzi
 
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
+import com.android.build.api.variant.HasUnitTest
 import com.android.build.api.variant.Variant
-import com.android.build.gradle.TestedExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
@@ -101,7 +102,7 @@ fun generateComposePreviewRobolectricTestsIfNeeded(
   )
   project.afterEvaluate {
     // We use afterEvaluate only for verify
-    check(variant.unitTest != null) {
+    check((variant as? HasUnitTest)?.unitTest != null) {
       "Roborazzi: Please enable unit tests for the variant '${variant.name}' in the 'build.gradle' file."
     }
     verifyTestConfig(testTaskProvider, logger)
@@ -203,7 +204,8 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   }
   // We need to use sources.java here; otherwise, the generate task will not be executed.
   // https://stackoverflow.com/a/76870110/4339442
-  variant.unitTest?.sources?.java?.addGeneratedSourceDirectory(
+  // AGP 9.0: unitTest is now on HasUnitTest interface, not Variant
+  (variant as? HasUnitTest)?.unitTest?.sources?.java?.addGeneratedSourceDirectory(
     generateTestsTask,
     GenerateComposePreviewRobolectricTestsTask::outputDir
   )
@@ -383,7 +385,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
 
 fun verifyGenerateComposePreviewRobolectricTests(
   project: Project,
-  androidExtension: TestedExtension,
+  androidExtension: CommonExtension<*, *, *, *, *, *>,
   extension: GenerateComposePreviewRobolectricTestsExtension
 ) {
   val logger = project.logger
@@ -480,7 +482,7 @@ private fun verifyLibraryDependencies(
   verifyLibraryDependencies(dependencies)
 }
 
-private fun verifyAndroidConfig(androidExtension: TestedExtension, logger: Logger) {
+private fun verifyAndroidConfig(androidExtension: CommonExtension<*, *, *, *, *, *>, logger: Logger) {
   if (!androidExtension.testOptions.unitTests.isIncludeAndroidResources) {
     logger.warn(
       "Roborazzi: Please set 'android.testOptions.unitTests.isIncludeAndroidResources = true' in the 'build.gradle' file. " +
