@@ -10,6 +10,7 @@ import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
+import kotlinx.coroutines.test.TestDispatcher
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
@@ -186,7 +187,42 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
               .around(composeTestRule)
           )
         }
-      }
+      },
+      /**
+       * Optional factory to create a TestDispatcher for controlling Effect execution.
+       * When provided, advanceUntilIdle() will be called before capture to ensure
+       * Effects like focus states are properly rendered.
+       *
+       * Note: To use the same dispatcher for both ComposeTestRule creation and Effect control,
+       * you need to coordinate between composeRuleFactory and effectDispatcherFactory using
+       * a holder pattern. The composeRuleFactory creates and stores the dispatcher,
+       * and effectDispatcherFactory retrieves it.
+       *
+       * Usage:
+       * ```kotlin
+       * // Holder to share dispatcher between factories
+       * object DispatcherHolder {
+       *   var dispatcher: TestDispatcher? = null
+       * }
+       *
+       * val options = JUnit4TestLifecycleOptions(
+       *   composeRuleFactory = {
+       *     val dispatcher = StandardTestDispatcher()
+       *     DispatcherHolder.dispatcher = dispatcher
+       *     createAndroidComposeRule<RoborazziActivity>(dispatcher)
+       *   },
+       *   effectDispatcherFactory = { DispatcherHolder.dispatcher!! }
+       * )
+       * ```
+       *
+       * Then in testParameters(), set effectDispatcherFactory on each parameter:
+       * ```kotlin
+       * override fun testParameters() = delegate.testParameters().map { param ->
+       *   param.copy(effectDispatcherFactory = { DispatcherHolder.dispatcher!! })
+       * }
+       * ```
+       */
+      val effectDispatcherFactory: (() -> TestDispatcher)? = null
     ) : TestLifecycleOptions
 
     data class ScanOptions(
@@ -227,7 +263,14 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
       data class AndroidPreviewJUnit4TestParameter(
         override val composeTestRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
         override val preview: ComposablePreview<AndroidPreviewInfo>,
-        val composeRoboComposePreviewOptionVariation: RoboComposePreviewOptionVariation = RoboComposePreviewOptionVariation()
+        val composeRoboComposePreviewOptionVariation: RoboComposePreviewOptionVariation = RoboComposePreviewOptionVariation(),
+        /**
+         * Optional factory to return a TestDispatcher for controlling Effect execution.
+         * This factory is called during test execution AFTER composeTestRule is accessed.
+         * The returned dispatcher should be the same instance used when creating the ComposeTestRule
+         * (typically via a holder pattern). DefaultCapturer will call advanceUntilIdle() on it.
+         */
+        val effectDispatcherFactory: (() -> TestDispatcher)? = null
       ) : JUnit4TestParameter<AndroidPreviewInfo>(composeTestRuleFactory, preview) {
         override fun toString(): String {
           return "JUnit4TestParameter(preview=$preview)"
@@ -272,13 +315,24 @@ class AndroidComposePreviewTester(
     val filePath: String,
     val roborazziComposeOptions: RoborazziComposeOptions,
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+    /**
+     * Optional TestDispatcher for controlling Effect execution.
+     * When present, advanceUntilIdle() should be called before capture
+     * to ensure Effects like focus states are properly rendered.
+     */
+    val effectDispatcher: TestDispatcher? = null,
   )
   
   /**
    * Default implementation of Capturer.
+   * When effectDispatcher is present, calls advanceUntilIdle() before capture
+   * to ensure Effects like focus states are properly rendered.
    */
   class DefaultCapturer : Capturer {
     override fun capture(parameter: CaptureParameter) {
+      // Advance effects before capture if effectDispatcher is provided
+      parameter.effectDispatcher?.scheduler?.advanceUntilIdle()
+
       parameter.preview.captureRoboImage(
         filePath = parameter.filePath,
         roborazziOptions = parameter.roborazziOptions,
@@ -313,7 +367,8 @@ class AndroidComposePreviewTester(
             AndroidPreviewJUnit4TestParameter(
               composeTestRuleFactory = junit4TestLifecycleOptions.composeRuleFactory,
               preview = preview,
-              composeRoboComposePreviewOptionVariation = optionVariation
+              composeRoboComposePreviewOptionVariation = optionVariation,
+              effectDispatcherFactory = junit4TestLifecycleOptions.effectDispatcherFactory
             )
           }
       }
@@ -354,13 +409,17 @@ class AndroidComposePreviewTester(
       }
       .build()
     
+    // Create effectDispatcher from factory if available
+    val effectDispatcher = testParameter.effectDispatcherFactory?.invoke()
+
     @Suppress("USELESS_CAST")
     val parameter = CaptureParameter(
       preview = preview as ComposablePreview<AndroidPreviewInfo>,
       filePath = filePath,
-      roborazziComposeOptions = roborazziComposeOptions
+      roborazziComposeOptions = roborazziComposeOptions,
+      effectDispatcher = effectDispatcher
     )
-    
+
     capturer.capture(parameter)
   }
 
