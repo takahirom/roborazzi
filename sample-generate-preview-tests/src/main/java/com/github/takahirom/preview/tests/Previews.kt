@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -462,41 +463,24 @@ fun PreviewOnSizeChanged() {
   }
 }
 
-// Reproduction for focusGroup + focusRestorer + LaunchedEffect issue
-// With focusGroup and multiple children, requestFocus via LaunchedEffect may not work in Robolectric
-// - Android Studio Preview: OK (works)
-// - Robolectric without TestDispatcher: NG (doesn't work)
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+// Minimal repro: LaunchedEffect focus needs advanceTimeByFrame
 @Preview
 @Composable
-fun PreviewFocusWithFocusGroup() {
-  val outer = remember { FocusRequester() }
-  val inner = remember { FocusRequester() }
+fun PreviewFocusLaunchedEffectMinimal() {
+  val focusRequester = remember { FocusRequester() }
   var focused by remember { mutableStateOf(false) }
 
-  Row(
+  BasicTextField(
+    value = if (focused) "OK" else "NG",
+    onValueChange = {},
     modifier = Modifier
-      .focusRequester(outer)
-      .focusRestorer { inner }
-      .focusGroup()
-  ) {
-    BasicTextField(
-      value = if (focused) "OK" else "NG",
-      onValueChange = {},
-      modifier = Modifier
-        .size(60.dp)
-        .focusRequester(inner)
-        .onFocusChanged { focused = it.isFocused }
-        .background(if (focused) Color.Blue else Color.Gray)
-    )
-    BasicTextField(
-      value = "",
-      onValueChange = {},
-      modifier = Modifier.size(60.dp).background(Color.Gray)
-    )
-  }
+      .focusRequester(focusRequester)
+      .onFocusChanged { focused = it.isFocused }
+      .background(if (focused) Color.Blue else Color.Gray)
+      .padding(4.dp)
+  )
 
   LaunchedEffect(Unit) {
-    outer.requestFocus()
+    focusRequester.requestFocus()
   }
 }
