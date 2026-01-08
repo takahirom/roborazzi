@@ -16,9 +16,9 @@ import sergio.sastre.composable.preview.scanner.common.CommonPreviewInfo
 class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<CommonPreviewInfo>> {
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
-      composeRuleFactory = { params ->
+      composeRuleFactory = {
         @Suppress("UNCHECKED_CAST")
-        createAndroidComposeRule<RoborazziActivity>(effectContext = params.effectDispatcher) as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>
+        createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>
       },
       testRuleFactory = { composeTestRule ->
         RuleChain.outerRule(
@@ -40,10 +40,8 @@ class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<Comm
       .scanPackageTrees(*options.scanOptions.packages.toTypedArray())
       .getPreviews()
       .map {
-        val dispatcher = junit4Options.effectDispatcherFactory()
-        val params = ComposePreviewTester.Options.ComposeRuleFactoryParams(dispatcher)
         JUnit4TestParameter(
-          { junit4Options.composeRuleFactory(params) },
+          { junit4Options.composeRuleFactory() },
           it
         )
       }
