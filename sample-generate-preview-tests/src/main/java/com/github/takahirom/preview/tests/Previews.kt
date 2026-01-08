@@ -463,10 +463,10 @@ fun PreviewOnSizeChanged() {
   }
 }
 
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+// Minimal repro: LaunchedEffect focus needs advanceTimeByFrame
 @Preview
 @Composable
-fun PreviewFocusWithFocusGroupMixedMinimalTiny() {
+fun PreviewFocusLaunchedEffectMinimal() {
   val focusRequester = remember { FocusRequester() }
   var focused by remember { mutableStateOf(false) }
 
