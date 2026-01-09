@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -463,24 +461,39 @@ fun PreviewOnSizeChanged() {
   }
 }
 
-// Minimal repro: LaunchedEffect focus needs advanceTimeByFrame
+// Minimal repro: focusGroup + two children + LaunchedEffect
+// - Android Studio Preview: OK
+// - Robolectric without TestDispatcher: NG
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Preview
 @Composable
-fun PreviewFocusLaunchedEffectMinimal() {
-  val focusRequester = remember { FocusRequester() }
+fun PreviewFocusGroupLaunchedEffectMinimal() {
+  val outer = remember { FocusRequester() }
+  val inner = remember { FocusRequester() }
   var focused by remember { mutableStateOf(false) }
 
-  BasicTextField(
-    value = if (focused) "OK" else "NG",
-    onValueChange = {},
+  Row(
     modifier = Modifier
-      .focusRequester(focusRequester)
-      .onFocusChanged { focused = it.isFocused }
-      .background(if (focused) Color.Blue else Color.Gray)
-      .padding(4.dp)
-  )
+      .focusRequester(outer)
+      .focusGroup()
+  ) {
+    BasicTextField(
+      value = if (focused) "OK" else "NG",
+      onValueChange = {},
+      modifier = Modifier
+        .size(60.dp)
+        .focusRequester(inner)
+        .onFocusChanged { focused = it.isFocused }
+        .background(if (focused) Color.Blue else Color.Gray)
+    )
+    BasicTextField(
+      value = "",
+      onValueChange = {},
+      modifier = Modifier.size(60.dp).background(Color.Gray)
+    )
+  }
 
   LaunchedEffect(Unit) {
-    focusRequester.requestFocus()
+    outer.requestFocus()
   }
 }
