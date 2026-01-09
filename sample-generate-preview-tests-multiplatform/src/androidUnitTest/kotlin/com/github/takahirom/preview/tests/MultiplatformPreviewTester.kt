@@ -1,5 +1,6 @@
 package com.github.takahirom.preview.tests
 
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
@@ -11,7 +12,7 @@ import org.junit.rules.TestWatcher
 import sergio.sastre.composable.preview.scanner.common.CommonComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.common.CommonPreviewInfo
 
-@OptIn(ExperimentalRoborazziApi::class)
+@OptIn(ExperimentalRoborazziApi::class, ExperimentalTestApi::class)
 class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<CommonPreviewInfo>> {
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
@@ -34,12 +35,13 @@ class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<Comm
 
   override fun testParameters(): List<JUnit4TestParameter<CommonPreviewInfo>> {
     val options = options()
+    val junit4Options = options.testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions
     return CommonComposablePreviewScanner()
       .scanPackageTrees(*options.scanOptions.packages.toTypedArray())
       .getPreviews()
       .map {
         JUnit4TestParameter(
-          (options.testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions).composeRuleFactory,
+          { junit4Options.composeRuleFactory() },
           it
         )
       }
