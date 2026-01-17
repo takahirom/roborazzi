@@ -11,6 +11,7 @@ import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4T
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewIgnore
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
+import kotlinx.coroutines.test.StandardTestDispatcher
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
@@ -91,12 +92,16 @@ data class RoborazziComposePreviewDeviceOption(private val previewDevice: String
 }
 
 @ExperimentalRoborazziApi
-fun RoborazziComposeOptions.Builder.composeTestRule(composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>): RoborazziComposeOptions.Builder {
+fun RoborazziComposeOptions.Builder.composeTestRule(
+  composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>,
+): RoborazziComposeOptions.Builder {
   return addOption(RoborazziComposeTestRuleOption(composeTestRule))
 }
 
 @ExperimentalRoborazziApi
-data class RoborazziComposeTestRuleOption(private val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) :
+data class RoborazziComposeTestRuleOption(
+  private val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
+) :
   RoborazziComposeActivityScenarioCreatorOption,
   RoborazziComposeCaptureOption {
   override fun createScenario(chain: () -> ActivityScenario<out ComponentActivity>): ActivityScenario<out ComponentActivity> {
@@ -112,9 +117,12 @@ data class RoborazziComposeTestRuleOption(private val composeTestRule: AndroidCo
     // See: https://github.com/takahirom/roborazzi/issues/768
     //
     // However, if ManualClockOptions is being used (autoAdvance = false),
-    // the user is explicitly controlling timing, so we skip waitForIdle()
+    // the user is explicitly controlling timing, so we skip these calls
     // to avoid hanging on infinite animations like CircularProgressIndicator.
     if (composeTestRule.mainClock.autoAdvance) {
+      // Advance effects before capture.
+      // This ensures LaunchedEffects (e.g., focus requests) are executed.
+      composeTestRule.mainClock.advanceTimeByFrame()
       composeTestRule.waitForIdle()
     }
   }
@@ -167,7 +175,14 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
 
     @Suppress("UNCHECKED_CAST")
     data class JUnit4TestLifecycleOptions(
-      val composeRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> = { createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> },
+      /**
+       * Factory to create the ComposeTestRule.
+       * By default, creates a rule with StandardTestDispatcher for effect execution.
+       */
+      @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+      val composeRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> = {
+        createAndroidComposeRule<RoborazziActivity>(effectContext = StandardTestDispatcher()) as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>
+      },
       /**
        * The TestRule factory to be used for the generated tests.
        * You can use this to add custom behavior to the generated tests.
@@ -187,7 +202,7 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
               .around(composeTestRule)
           )
         }
-      }
+      },
     ) : TestLifecycleOptions
 
     data class ScanOptions(
@@ -228,7 +243,7 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
       data class AndroidPreviewJUnit4TestParameter(
         override val composeTestRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
         override val preview: ComposablePreview<AndroidPreviewInfo>,
-        val composeRoboComposePreviewOptionVariation: RoboComposePreviewOptionVariation = RoboComposePreviewOptionVariation()
+        val composeRoboComposePreviewOptionVariation: RoboComposePreviewOptionVariation = RoboComposePreviewOptionVariation(),
       ) : JUnit4TestParameter<AndroidPreviewInfo>(composeTestRuleFactory, preview) {
         override fun toString(): String {
           return "JUnit4TestParameter(preview=$preview)"
@@ -274,7 +289,7 @@ class AndroidComposePreviewTester(
     val roborazziComposeOptions: RoborazziComposeOptions,
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   )
-  
+
   /**
    * Default implementation of Capturer.
    */
@@ -314,9 +329,9 @@ class AndroidComposePreviewTester(
         annotationOptions.variations()
           .map { optionVariation ->
             AndroidPreviewJUnit4TestParameter(
-              composeTestRuleFactory = junit4TestLifecycleOptions.composeRuleFactory,
+              composeTestRuleFactory = { junit4TestLifecycleOptions.composeRuleFactory() },
               preview = preview,
-              composeRoboComposePreviewOptionVariation = optionVariation
+              composeRoboComposePreviewOptionVariation = optionVariation,
             )
           }
       }
@@ -343,7 +358,7 @@ class AndroidComposePreviewTester(
       testParameter.composeRoboComposePreviewOptionVariation
     val filePath =
       "$pathPrefix$name${optionVariation.nameWithPrefix()}.${provideRoborazziContext().imageExtension}"
-    
+
     @Suppress("USELESS_CAST")
     val roborazziComposeOptions = (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions().builder()
       .apply {
@@ -356,14 +371,14 @@ class AndroidComposePreviewTester(
         }
       }
       .build()
-    
+
     @Suppress("USELESS_CAST")
     val parameter = CaptureParameter(
       preview = preview as ComposablePreview<AndroidPreviewInfo>,
       filePath = filePath,
       roborazziComposeOptions = roborazziComposeOptions
     )
-    
+
     capturer.capture(parameter)
   }
 

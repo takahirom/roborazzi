@@ -51,7 +51,3 @@ compose.desktop {
   }
 }
 
-tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-  }
-}
