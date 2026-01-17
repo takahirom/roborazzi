@@ -9,6 +9,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
+import com.github.takahirom.roborazzi.annotations.RoboComposePreviewIgnore
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -291,7 +292,9 @@ class AndroidComposePreviewTester(
     val junit4TestLifecycleOptions =
       options.testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions
     return AndroidComposablePreviewScanner().scanPackageTrees(*options.scanOptions.packages.toTypedArray())
-      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java).let {
+      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java)
+      .excludeIfAnnotatedWithAnyOf(RoboComposePreviewIgnore::class.java)
+      .let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
         } else {
