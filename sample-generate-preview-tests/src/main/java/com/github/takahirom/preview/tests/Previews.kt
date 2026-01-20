@@ -497,3 +497,32 @@ fun PreviewFocusGroupLaunchedEffectMinimal() {
     outer.requestFocus()
   }
 }
+
+// Reproduction for doBeforeCapture not called with multiple windows
+// AlertDialog creates a separate window, and onSizeChanged needs recomposition before capture
+@Preview
+@Composable
+fun PreviewDialogWithMeasure() {
+  var size by remember { mutableStateOf("unknown") }
+  MaterialTheme {
+    AlertDialog(
+      onDismissRequest = {},
+      confirmButton = @Composable { Text("Confirm") },
+      text = @Composable {
+        Box(
+          modifier = Modifier
+            .size(100.dp)
+            .background(Color.Blue)
+            .onSizeChanged { newSize ->
+              val newSizeStr = "${newSize.width}x${newSize.height}"
+              if (size != newSizeStr) {
+                size = newSizeStr
+              }
+            }
+        ) {
+          Text(text = "Size: $size", color = Color.White)
+        }
+      }
+    )
+  }
+}
