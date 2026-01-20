@@ -27,6 +27,7 @@ include(":sample-kmp-library")
 includeBuild(roborazziRootPath) {
   dependencySubstitution {
     substitute(module("io.github.takahirom.roborazzi:roborazzi")).using(project(":roborazzi"))
+    substitute(module("io.github.takahirom.roborazzi:roborazzi-annotations")).using(project(":roborazzi-annotations"))
     substitute(module("io.github.takahirom.roborazzi:roborazzi-compose")).using(project(":roborazzi-compose"))
     substitute(module("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support")).using(project(":roborazzi-compose-preview-scanner-support"))
     substitute(module("io.github.takahirom.roborazzi:roborazzi-junit-rule")).using(project(":roborazzi-junit-rule"))
