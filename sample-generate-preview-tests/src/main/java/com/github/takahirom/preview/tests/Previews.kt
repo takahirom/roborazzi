@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,6 +24,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -464,7 +464,9 @@ fun PreviewOnSizeChanged() {
 // Minimal repro: focusGroup + two children + LaunchedEffect
 // - Android Studio Preview: OK
 // - Robolectric without TestDispatcher: NG
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+// NOTE: Use TextFieldValue instead of String to avoid internal state that causes
+// infinite loops when BasicTextField is disposed (the String version creates internal
+// mutableStateOf that gets orphaned after disposal).
 @Preview
 @Composable
 fun PreviewFocusGroupLaunchedEffectMinimal() {
@@ -477,21 +479,20 @@ fun PreviewFocusGroupLaunchedEffectMinimal() {
       .focusRequester(outer)
       .focusGroup()
   ) {
-    Box(
+    // Use TextFieldValue version to avoid internal state issues
+    BasicTextField(
+      value = androidx.compose.ui.text.input.TextFieldValue(if (focused) "OK" else "NG"),
+      onValueChange = {},
       modifier = Modifier
         .size(60.dp)
         .focusRequester(inner)
-        .focusable()
         .onFocusChanged { focused = it.isFocused }
         .background(if (focused) Color.Blue else Color.Gray)
-    ) {
-      Text(if (focused) "OK" else "NG")
-    }
-    Box(
-      modifier = Modifier
-        .size(60.dp)
-        .focusable()
-        .background(Color.Gray)
+    )
+    BasicTextField(
+      value = androidx.compose.ui.text.input.TextFieldValue(""),
+      onValueChange = {},
+      modifier = Modifier.size(60.dp).background(Color.Gray)
     )
   }
 
