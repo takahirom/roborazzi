@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,7 +25,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -477,19 +477,21 @@ fun PreviewFocusGroupLaunchedEffectMinimal() {
       .focusRequester(outer)
       .focusGroup()
   ) {
-    BasicTextField(
-      value = if (focused) "OK" else "NG",
-      onValueChange = {},
+    Box(
       modifier = Modifier
         .size(60.dp)
         .focusRequester(inner)
+        .focusable()
         .onFocusChanged { focused = it.isFocused }
         .background(if (focused) Color.Blue else Color.Gray)
-    )
-    BasicTextField(
-      value = "",
-      onValueChange = {},
-      modifier = Modifier.size(60.dp).background(Color.Gray)
+    ) {
+      Text(if (focused) "OK" else "NG")
+    }
+    Box(
+      modifier = Modifier
+        .size(60.dp)
+        .focusable()
+        .background(Color.Gray)
     )
   }
 
