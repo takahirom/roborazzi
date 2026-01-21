@@ -178,6 +178,7 @@ fun captureRootsInternal(
 fun captureScreenIfMultipleWindows(
   file: File,
   roborazziOptions: RoborazziOptions,
+  doBeforeScreenCapture: () -> Unit = {},
   captureSingleComponent: () -> Unit
 ) {
   // We need to wait for the main looper to be idle because the dialogs will be added to the window
@@ -197,6 +198,7 @@ fun captureScreenIfMultipleWindows(
         "We capture all windows using captureScreenRoboImage(). " +
         "We can add a flag to disable this behavior so please let us know if you need it."
     )
+    doBeforeScreenCapture()
     captureScreenRoboImage(file, roborazziOptions)
   } else {
     captureSingleComponent()
