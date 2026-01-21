@@ -464,7 +464,9 @@ fun PreviewOnSizeChanged() {
 // Minimal repro: focusGroup + two children + LaunchedEffect
 // - Android Studio Preview: OK
 // - Robolectric without TestDispatcher: NG
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+// NOTE: Use TextFieldValue instead of String to avoid internal state that causes
+// infinite loops when BasicTextField is disposed (the String version creates internal
+// mutableStateOf that gets orphaned after disposal).
 @Preview
 @Composable
 fun PreviewFocusGroupLaunchedEffectMinimal() {
@@ -477,8 +479,9 @@ fun PreviewFocusGroupLaunchedEffectMinimal() {
       .focusRequester(outer)
       .focusGroup()
   ) {
+    // Use TextFieldValue version to avoid internal state issues
     BasicTextField(
-      value = if (focused) "OK" else "NG",
+      value = androidx.compose.ui.text.input.TextFieldValue(if (focused) "OK" else "NG"),
       onValueChange = {},
       modifier = Modifier
         .size(60.dp)
@@ -487,7 +490,7 @@ fun PreviewFocusGroupLaunchedEffectMinimal() {
         .background(if (focused) Color.Blue else Color.Gray)
     )
     BasicTextField(
-      value = "",
+      value = androidx.compose.ui.text.input.TextFieldValue(""),
       onValueChange = {},
       modifier = Modifier.size(60.dp).background(Color.Gray)
     )
@@ -495,5 +498,34 @@ fun PreviewFocusGroupLaunchedEffectMinimal() {
 
   LaunchedEffect(Unit) {
     outer.requestFocus()
+  }
+}
+
+// Reproduction for doBeforeCapture not called with multiple windows
+// AlertDialog creates a separate window, and onSizeChanged needs recomposition before capture
+@Preview
+@Composable
+fun PreviewDialogWithMeasure() {
+  var size by remember { mutableStateOf("unknown") }
+  MaterialTheme {
+    AlertDialog(
+      onDismissRequest = {},
+      confirmButton = @Composable { Text("Confirm") },
+      text = @Composable {
+        Box(
+          modifier = Modifier
+            .size(100.dp)
+            .background(Color.Blue)
+            .onSizeChanged { newSize ->
+              val newSizeStr = "${newSize.width}x${newSize.height}"
+              if (size != newSizeStr) {
+                size = newSizeStr
+              }
+            }
+        ) {
+          Text(text = "Size: $size", color = Color.White)
+        }
+      }
+    )
   }
 }
