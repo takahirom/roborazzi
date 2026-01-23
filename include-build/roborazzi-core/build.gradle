@@ -10,20 +10,6 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 android.compileSdk(libs.versions.compileSdk.get().toInteger())
 
 kotlin {
-  targetHierarchy.custom {
-    it.common {
-      it.group("commonJvm") {
-        it.withAndroidTarget()
-        it.withJvm()
-      }
-      it.group("ios") {
-        it.withIosX64()
-        it.withIosArm64()
-        it.withIosSimulatorArm64()
-      }
-    }
-  }
-
   iosX64()
   iosArm64()
   iosSimulatorArm64()
@@ -33,6 +19,7 @@ kotlin {
     publishLibraryVariants("release")
   }
 
+  // Kotlin 2.x: Use sourceSets hierarchy instead of deprecated targetHierarchy.custom
   sourceSets {
     commonMain {
       dependencies {
@@ -41,16 +28,9 @@ kotlin {
         implementation libs.kotlinx.io.core
       }
     }
-    iosX64 {
-      dependsOn(commonMain)
-    }
-    iosArm64 {
-      dependsOn(commonMain)
-    }
-    iosSimulatorArm64 {
-      dependsOn(commonMain)
-    }
+    // Custom intermediate source set for JVM-based targets (JVM + Android)
     commonJvmMain {
+      dependsOn(commonMain)
       dependencies {
         implementation libs.junit
         // The library is a little bit heavy, so we use compileOnly here.
@@ -59,6 +39,7 @@ kotlin {
       }
     }
     commonJvmTest {
+      dependsOn(commonTest)
       dependencies {
         implementation libs.kotlin.test
         implementation libs.kotlin.test.junit
@@ -66,15 +47,16 @@ kotlin {
       }
     }
     jvmMain {
+      dependsOn(commonJvmMain)
       dependencies {
         implementation libs.kotlinx.serialization.json
       }
     }
     jvmTest {
-      dependencies {}
+      dependsOn(commonJvmTest)
     }
-
     androidMain {
+      dependsOn(commonJvmMain)
       dependencies {
         compileOnly libs.robolectric
         compileOnly libs.androidx.compose.ui.test
@@ -83,6 +65,19 @@ kotlin {
         implementation libs.androidx.core.ktx
         implementation libs.kotlinx.serialization.json
       }
+    }
+    // iOS source sets hierarchy
+    iosMain {
+      dependsOn(commonMain)
+    }
+    iosX64Main {
+      dependsOn(iosMain)
+    }
+    iosArm64Main {
+      dependsOn(iosMain)
+    }
+    iosSimulatorArm64Main {
+      dependsOn(iosMain)
     }
   }
   sourceSets.all {

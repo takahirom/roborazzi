@@ -7,26 +7,13 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 }
 
 kotlin {
-  targetHierarchy.custom {
-    it.common {
-      it.group("commonJvm") {
-        it.withAndroid()
-        it.withJvm()
-      }
-      it.group("ios") {
-        it.withIosX64()
-        it.withIosArm64()
-        it.withIosSimulatorArm64()
-      }
-    }
-  }
-
   iosX64()
   iosArm64()
   iosSimulatorArm64()
 
   jvm()
 
+  // Kotlin 2.x: Use sourceSets hierarchy instead of deprecated targetHierarchy.custom
   sourceSets {
     commonMain {
       dependencies {
@@ -36,12 +23,29 @@ kotlin {
         api libs.dropbox.differ
       }
     }
+    // Custom intermediate source set for JVM-based targets
     commonJvmMain {
+      dependsOn(commonMain)
       dependencies {
         compileOnly libs.robolectric.android.all
         implementation libs.kotlinx.io.core
-
       }
+    }
+    jvmMain {
+      dependsOn(commonJvmMain)
+    }
+    // iOS source sets hierarchy
+    iosMain {
+      dependsOn(commonMain)
+    }
+    iosX64Main {
+      dependsOn(iosMain)
+    }
+    iosArm64Main {
+      dependsOn(iosMain)
+    }
+    iosSimulatorArm64Main {
+      dependsOn(iosMain)
     }
   }
 }
