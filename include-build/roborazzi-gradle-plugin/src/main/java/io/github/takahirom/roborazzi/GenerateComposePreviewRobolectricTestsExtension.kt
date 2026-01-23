@@ -202,13 +202,25 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     it.robolectricConfig.set(robolectricConfig)
     it.generatedTestClassCount.set(extension.generatedTestClassCount)
   }
-  // We need to use sources.java here; otherwise, the generate task will not be executed.
-  // https://stackoverflow.com/a/76870110/4339442
   // AGP 9.0: unitTest is now on HasUnitTest interface, not Variant
-  (variant as? HasUnitTest)?.unitTest?.sources?.java?.addGeneratedSourceDirectory(
-    generateTestsTask,
-    GenerateComposePreviewRobolectricTestsTask::outputDir
-  )
+  val unitTestSources = (variant as? HasUnitTest)?.unitTest?.sources
+  // KMP library (com.android.kotlin.multiplatform.library) requires sources.kotlin
+  // because Kotlin compilation doesn't pick up sources added via sources.java
+  // https://issuetracker.google.com/issues/259523353
+  val isKmpLibrary = project.plugins.hasPlugin("com.android.kotlin.multiplatform.library")
+  if (isKmpLibrary) {
+    unitTestSources?.kotlin?.addGeneratedSourceDirectory(
+      generateTestsTask,
+      GenerateComposePreviewRobolectricTestsTask::outputDir
+    )
+  } else {
+    // We need to use sources.java here; otherwise, the generate task will not be executed.
+    // https://stackoverflow.com/a/76870110/4339442
+    unitTestSources?.java?.addGeneratedSourceDirectory(
+      generateTestsTask,
+      GenerateComposePreviewRobolectricTestsTask::outputDir
+    )
+  }
   // It seems that the addGeneratedSourceDirectory does not affect the inputs.dir and does not invalidate the task.
   testTaskProvider.configureEach {
     it.inputs.dir(generateTestsTask.flatMap { it.outputDir })
