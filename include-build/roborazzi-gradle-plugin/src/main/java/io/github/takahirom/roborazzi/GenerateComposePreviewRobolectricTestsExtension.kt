@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -397,7 +398,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
 
 fun verifyGenerateComposePreviewRobolectricTests(
   project: Project,
-  androidExtension: CommonExtension<*, *, *, *, *, *>,
+  androidExtension: CommonExtension,
   extension: GenerateComposePreviewRobolectricTestsExtension
 ) {
   val logger = project.logger
@@ -494,7 +495,7 @@ private fun verifyLibraryDependencies(
   verifyLibraryDependencies(dependencies)
 }
 
-private fun verifyAndroidConfig(androidExtension: CommonExtension<*, *, *, *, *, *>, logger: Logger) {
+private fun verifyAndroidConfig(androidExtension: CommonExtension, logger: Logger) {
   if (!androidExtension.testOptions.unitTests.isIncludeAndroidResources) {
     logger.warn(
       "Roborazzi: Please set 'android.testOptions.unitTests.isIncludeAndroidResources = true' in the 'build.gradle' file. " +

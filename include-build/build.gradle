@@ -26,10 +26,12 @@ allprojects {
   }
 
   plugins.withType(com.android.build.gradle.BasePlugin).configureEach {
-    android {
-      compileOptions {
-        sourceCompatibility javaTargetVersion
-        targetCompatibility javaTargetVersion
+    if (!plugins.hasPlugin('com.android.kotlin.multiplatform.library')) {
+      android {
+        compileOptions {
+          sourceCompatibility javaTargetVersion
+          targetCompatibility javaTargetVersion
+        }
       }
     }
   }

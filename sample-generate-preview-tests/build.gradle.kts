@@ -1,7 +1,6 @@
 plugins {
   id("com.android.application")
 //  id("com.android.library")
-  // AGP 9.0: org.jetbrains.kotlin.android is no longer needed (built-in Kotlin)
   id("org.jetbrains.kotlin.plugin.compose")
   id("io.github.takahirom.roborazzi")
 }

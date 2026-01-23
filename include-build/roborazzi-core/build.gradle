@@ -1,13 +1,11 @@
 plugins {
   id "org.jetbrains.kotlin.multiplatform"
-  id "com.android.library"
+  id "com.android.kotlin.multiplatform.library"
   id("org.jetbrains.kotlin.plugin.serialization") version libs.versions.kotlin
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
-
-android.compileSdk(libs.versions.compileSdk.get().toInteger())
 
 kotlin {
   iosX64()
@@ -15,8 +13,13 @@ kotlin {
   iosSimulatorArm64()
 
   jvm()
-  androidTarget {
-    publishLibraryVariants("release")
+  androidLibrary {
+    namespace = 'com.github.takahirom.roborazzi.core'
+    compileSdk = libs.versions.compileSdk.get().toInteger()
+    minSdk = libs.versions.minSdk.get().toInteger()
+    withHostTest {
+      includeAndroidResources = true
+    }
   }
 
   // Kotlin 2.x: Use sourceSets hierarchy instead of deprecated targetHierarchy.custom
@@ -87,28 +90,6 @@ kotlin {
       optIn("com.github.takahirom.roborazzi.ExperimentalRoborazziApi")
     }
   }
-}
-
-android {
-  namespace 'com.github.takahirom.roborazzi.core'
-  compileSdk libs.versions.compileSdk.get().toInteger()
-
-  defaultConfig {
-    minSdk = libs.versions.minSdk.get().toInteger()
-    targetSdk = libs.versions.targetSdk.get().toInteger()
-
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-  }
-  buildFeatures {}
-  testOptions {
-    unitTests {
-      includeAndroidResources = true
-    }
-  }
-}
-
-dependencies {
-  compileOnly gradleApi()
 }
 
 sourceSets {

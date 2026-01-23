@@ -6,11 +6,8 @@ plugins {
   id 'com.android.library' version libs.versions.agp apply false
   id 'com.android.kotlin.multiplatform.library' version libs.versions.agp apply false
   id 'org.jetbrains.kotlin.multiplatform' version libs.versions.kotlin apply false
-  id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
   id 'org.jetbrains.compose' version libs.versions.composeMultiplatform apply false
   id 'org.jetbrains.kotlin.plugin.compose' version libs.versions.kotlin
-
-  // AGP 9.0: keep kotlin-android for modules that still require explicit Kotlin compilation.
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
   // Just for Gradle Build, included build will be applied
   id("io.github.takahirom.roborazzi") version "1.0.0" apply false
