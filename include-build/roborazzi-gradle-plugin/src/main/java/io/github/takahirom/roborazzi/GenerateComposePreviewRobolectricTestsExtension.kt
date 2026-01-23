@@ -397,7 +397,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
 
 fun verifyGenerateComposePreviewRobolectricTests(
   project: Project,
-  androidExtension: CommonExtension,
+  androidExtension: CommonExtension<*, *, *, *, *, *>,
   extension: GenerateComposePreviewRobolectricTestsExtension
 ) {
   val logger = project.logger
@@ -494,7 +494,7 @@ private fun verifyLibraryDependencies(
   verifyLibraryDependencies(dependencies)
 }
 
-private fun verifyAndroidConfig(androidExtension: CommonExtension, logger: Logger) {
+private fun verifyAndroidConfig(androidExtension: CommonExtension<*, *, *, *, *, *>, logger: Logger) {
   if (!androidExtension.testOptions.unitTests.isIncludeAndroidResources) {
     logger.warn(
       "Roborazzi: Please set 'android.testOptions.unitTests.isIncludeAndroidResources = true' in the 'build.gradle' file. " +

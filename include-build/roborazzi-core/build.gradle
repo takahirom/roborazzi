@@ -1,11 +1,13 @@
 plugins {
   id "org.jetbrains.kotlin.multiplatform"
-  id "com.android.kotlin.multiplatform.library"
+  id "com.android.library"
   id("org.jetbrains.kotlin.plugin.serialization") version libs.versions.kotlin
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
+
+android.compileSdk(libs.versions.compileSdk.get().toInteger())
 
 kotlin {
   targetHierarchy.custom {
@@ -27,15 +29,8 @@ kotlin {
   iosSimulatorArm64()
 
   jvm()
-
-  // AGP 9.0: Use androidLibrary block instead of android block + androidTarget
-  androidLibrary {
-    namespace = 'com.github.takahirom.roborazzi.core'
-    compileSdk = libs.versions.compileSdk.get().toInteger()
-    minSdk = libs.versions.minSdk.get().toInteger()
-
-    withHostTest {
-    }
+  androidTarget {
+    publishLibraryVariants("release")
   }
 
   sourceSets {
@@ -80,8 +75,6 @@ kotlin {
     }
 
     androidMain {
-      // Explicitly depend on commonJvmMain for KMP Android library plugin
-      dependsOn(commonJvmMain)
       dependencies {
         compileOnly libs.robolectric
         compileOnly libs.androidx.compose.ui.test
@@ -99,4 +92,30 @@ kotlin {
       optIn("com.github.takahirom.roborazzi.ExperimentalRoborazziApi")
     }
   }
+}
+
+android {
+  namespace 'com.github.takahirom.roborazzi.core'
+  compileSdk libs.versions.compileSdk.get().toInteger()
+
+  defaultConfig {
+    minSdk = libs.versions.minSdk.get().toInteger()
+    targetSdk = libs.versions.targetSdk.get().toInteger()
+
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+  }
+  buildFeatures {}
+  testOptions {
+    unitTests {
+      includeAndroidResources = true
+    }
+  }
+}
+
+dependencies {
+  compileOnly gradleApi()
+}
+
+sourceSets {
+  main.java.srcDir 'src/generated/kotlin'
 }

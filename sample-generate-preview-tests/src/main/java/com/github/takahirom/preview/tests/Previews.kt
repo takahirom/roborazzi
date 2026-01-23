@@ -3,10 +3,12 @@ package com.github.takahirom.preview.tests
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,12 +24,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
@@ -452,5 +458,74 @@ fun PreviewOnSizeChanged() {
       .onSizeChanged { size = "${it.width}x${it.height}" }
   ) {
     Text(text = size, color = Color.White)
+  }
+}
+
+// Minimal repro: focusGroup + two children + LaunchedEffect
+// - Android Studio Preview: OK
+// - Robolectric without TestDispatcher: NG
+// NOTE: Use TextFieldValue instead of String to avoid internal state that causes
+// infinite loops when BasicTextField is disposed (the String version creates internal
+// mutableStateOf that gets orphaned after disposal).
+@Preview
+@Composable
+fun PreviewFocusGroupLaunchedEffectMinimal() {
+  val outer = remember { FocusRequester() }
+  val inner = remember { FocusRequester() }
+  var focused by remember { mutableStateOf(false) }
+
+  Row(
+    modifier = Modifier
+      .focusRequester(outer)
+      .focusGroup()
+  ) {
+    // Use TextFieldValue version to avoid internal state issues
+    BasicTextField(
+      value = androidx.compose.ui.text.input.TextFieldValue(if (focused) "OK" else "NG"),
+      onValueChange = {},
+      modifier = Modifier
+        .size(60.dp)
+        .focusRequester(inner)
+        .onFocusChanged { focused = it.isFocused }
+        .background(if (focused) Color.Blue else Color.Gray)
+    )
+    BasicTextField(
+      value = androidx.compose.ui.text.input.TextFieldValue(""),
+      onValueChange = {},
+      modifier = Modifier.size(60.dp).background(Color.Gray)
+    )
+  }
+
+  LaunchedEffect(Unit) {
+    outer.requestFocus()
+  }
+}
+
+// Reproduction for doBeforeCapture not called with multiple windows
+// AlertDialog creates a separate window, and onSizeChanged needs recomposition before capture
+@Preview
+@Composable
+fun PreviewDialogWithMeasure() {
+  var size by remember { mutableStateOf("unknown") }
+  MaterialTheme {
+    AlertDialog(
+      onDismissRequest = {},
+      confirmButton = @Composable { Text("Confirm") },
+      text = @Composable {
+        Box(
+          modifier = Modifier
+            .size(100.dp)
+            .background(Color.Blue)
+            .onSizeChanged { newSize ->
+              val newSizeStr = "${newSize.width}x${newSize.height}"
+              if (size != newSizeStr) {
+                size = newSizeStr
+              }
+            }
+        ) {
+          Text(text = "Size: $size", color = Color.White)
+        }
+      }
+    )
   }
 }
