@@ -39,7 +39,7 @@ jobs:
         continue-on-error: true
         run: |
           cd include-build
-          ./gradlew roborazzi-core:test --profile
+          ./gradlew roborazzi-core:testDebugUnitTest --profile
 
       - name: record screenshot
         id: record-test
