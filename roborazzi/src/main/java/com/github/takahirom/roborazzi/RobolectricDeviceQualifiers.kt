@@ -7,13 +7,25 @@ object RobolectricDeviceQualifiers {
 	// Type: android-automotive-playstore
 	const val Automotive1024plandscape = "w1024dp-h768dp-normal-notlong-notround-car-mdpi-keyshidden-nonav"
 
+	// Type: android-automotive
+	const val Automotive1080plandscape = "w1440dp-h800dp-normal-notlong-notround-any-ldpi-keyshidden-nonav"
+	const val Automotive1408plandscapewithGooglePlay = "w1408dp-h792dp-normal-notlong-notround-any-mdpi-keyshidden-nonav"
+	const val Automotive1408plandscape = "w1408dp-h792dp-normal-notlong-notround-any-mdpi-keyshidden-nonav"
+	const val AutomotivePortrait = "w1067dp-h1707dp-normal-notlong-notround-any-ldpi-keyshidden-nonav"
+	const val AutomotiveUltrawide = "w2603dp-h880dp-normal-notlong-notround-any-hdpi-keyshidden-nonav"
+	const val AutomotiveLargePortrait = "w1280dp-h1606dp-normal-notlong-notround-any-mdpi-keyshidden-nonav"
+
+	// Type: android-automotive-distantdisplay
+	const val AutomotiveDistantDisplay = "w1440dp-h800dp-normal-notlong-notround-any-ldpi-keyshidden-nonav"
+	const val AutomotiveDistantDisplaywithGooglePlay = "w1440dp-h800dp-normal-notlong-notround-any-ldpi-keyshidden-nonav"
+
 	// Type: android-desktop
 	const val SmallDesktop = "w1366dp-h768dp-xlarge-long-notround-any-mdpi-keyshidden-nonav"
 	const val MediumDesktop = "w1920dp-h1080dp-xlarge-long-notround-any-xhdpi-keyshidden-nonav"
 	const val LargeDesktop = "w1920dp-h1080dp-xlarge-long-notround-any-mdpi-keyshidden-nonav"
 
 	// Type: default
-	const val ResizableExperimental = "w411dp-h891dp-normal-notlong-notround-any-420dpi-keyshidden-nonav"
+	const val ResizableExperimental = "w411dp-h914dp-normal-notlong-notround-any-420dpi-keyshidden-nonav"
 	const val SmallPhone = "w360dp-h640dp-normal-long-notround-any-xhdpi-keyshidden-nonav"
 	const val MediumPhone = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
 	const val MediumTablet = "w1280dp-h800dp-xlarge-notlong-notround-any-xhdpi-keyshidden-nonav"
@@ -31,6 +43,17 @@ object RobolectricDeviceQualifiers {
 	const val Pixel6a = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
 	const val Pixel7Pro = "w411dp-h891dp-normal-long-notround-any-560dpi-keyshidden-nonav"
 	const val Pixel7 = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
+	const val PixelFold = "w841dp-h701dp-large-notlong-notround-any-420dpi-keyshidden-nonav"
+	const val PixelTablet = "w1280dp-h800dp-large-notlong-notround-any-xhdpi-keyshidden-nonav"
+	const val Pixel7a = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
+	const val Pixel8 = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
+	const val Pixel8Pro = "w448dp-h997dp-normal-long-notround-any-xxhdpi-keyshidden-nonav"
+	const val Pixel8a = "w411dp-h914dp-normal-long-notround-any-420dpi-keyshidden-nonav"
+	const val Pixel9 = "w411dp-h923dp-normal-long-notround-any-420dpi-keyshidden-nonav"
+	const val Pixel9a = "w411dp-h923dp-normal-long-notround-any-420dpi-keyshidden-nonav"
+	const val Pixel9Pro = "w427dp-h952dp-normal-long-notround-any-xxhdpi-keyshidden-nonav"
+	const val Pixel9ProXL = "w448dp-h997dp-normal-long-notround-any-xxhdpi-keyshidden-nonav"
+	const val Pixel9ProFold = "w852dp-h883dp-large-notlong-notround-any-390dpi-keyshidden-nonav"
 
 	// Type: android-tv
 	const val Television4K = "w960dp-h540dp-xlarge-long-notround-television-xxxhdpi-keyshidden-dpad"
@@ -40,7 +63,15 @@ object RobolectricDeviceQualifiers {
 	// Type: android-wear
 	const val WearOSLargeRound = "w227dp-h227dp-small-long-round-watch-xhdpi-keyshidden-nonav"
 	const val WearOSSmallRound = "w192dp-h192dp-small-long-round-watch-xhdpi-keyshidden-nonav"
+	const val WearOSXLRound = "w240dp-h240dp-small-long-round-watch-xhdpi-keyshidden-nonav"
 	const val WearOSRectangular = "w201dp-h238dp-small-long-notround-watch-xhdpi-keyshidden-nonav"
 	const val WearOSSquare = "w180dp-h180dp-small-long-notround-watch-xhdpi-keyshidden-nonav"
+
+	// Type: android-xr
+	const val XRHeadset = "w1280dp-h1279dp-normal-notlong-notround-any-xhdpi-keyshidden-trackball"
+	const val XRGlasses = "w960dp-h600dp-normal-notlong-notround-any-xhdpi-keyshidden-trackball"
+
+	// Type: ai-glasses
+	const val AIGlasses = "w450dp-h450dp-normal-notlong-notround-any-mdpi-keyshidden-nonav"
 
 }
