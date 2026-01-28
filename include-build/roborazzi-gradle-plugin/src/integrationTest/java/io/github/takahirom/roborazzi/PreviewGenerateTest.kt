@@ -211,17 +211,17 @@ class PreviewModule(
     var maxParallelForks: Int? = null
     
     private fun kspDependencies() = if (useKsp) """
-                          ksp("com.google.dagger:hilt-android-compiler:2.57.1")
-                          ksp("com.google.dagger:dagger-compiler:2.57.1")""" else ""
-    
+                          ksp("com.google.dagger:hilt-android-compiler:2.59")
+                          ksp("com.google.dagger:dagger-compiler:2.59")""" else ""
+
     private fun kspPlugins() = if (useKsp) """
-    id("com.google.dagger.hilt.android") version "2.57.1"
+    id("com.google.dagger.hilt.android") version "2.59"
     id("com.google.devtools.ksp") version "2.2.10-2.0.2"""" else ""
-    
+
     private fun hiltImplementationDependencies() = if (useKsp) """
-    implementation("com.google.dagger:dagger:2.57.1")
-    implementation("com.google.dagger:hilt-android:2.57.1")
-    implementation("com.google.dagger:hilt-core:2.57.1")
+    implementation("com.google.dagger:dagger:2.59")
+    implementation("com.google.dagger:hilt-android:2.59")
+    implementation("com.google.dagger:hilt-core:2.59")
     implementation("javax.inject:javax.inject:1")""" else ""
     
     fun write() {
