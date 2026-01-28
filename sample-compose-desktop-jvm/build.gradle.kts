@@ -37,8 +37,7 @@ compose.desktop {
   }
 }
 
+// Kotlin 2.x: incremental is a task property, not a compiler option
 tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    incremental = false
-  }
+  incremental = false
 }

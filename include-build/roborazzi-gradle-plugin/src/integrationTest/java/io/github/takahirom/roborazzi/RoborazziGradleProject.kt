@@ -252,7 +252,7 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
   id("com.android.application")
-  id("org.jetbrains.kotlin.android")
+  // AGP 9.0: org.jetbrains.kotlin.android is no longer needed (built-in Kotlin)
   id("io.github.takahirom.roborazzi")
 }
 
@@ -281,9 +281,6 @@ android {
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
-  }
-  kotlinOptions {
-    jvmTarget = "11"
   }
   buildFeatures {
     buildConfig = false

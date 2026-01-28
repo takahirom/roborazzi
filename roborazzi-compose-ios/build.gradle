@@ -11,20 +11,11 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 }
 
 kotlin {
-  targetHierarchy.custom {
-    it.common {
-      it.group("ios") {
-        it.withIosX64()
-        it.withIosArm64()
-        it.withIosSimulatorArm64()
-      }
-    }
-  }
-
   iosX64()
   iosArm64()
   iosSimulatorArm64()
 
+  // Kotlin 2.x: Use sourceSets hierarchy instead of deprecated targetHierarchy.custom
   sourceSets {
     commonMain {
       dependencies {
@@ -37,7 +28,19 @@ kotlin {
         api libs.dropbox.differ
       }
     }
-
+    // iOS source sets hierarchy
+    iosMain {
+      dependsOn(commonMain)
+    }
+    iosX64Main {
+      dependsOn(iosMain)
+    }
+    iosArm64Main {
+      dependsOn(iosMain)
+    }
+    iosSimulatorArm64Main {
+      dependsOn(iosMain)
+    }
     iosTest {
       dependencies {
         implementation(compose.material3)

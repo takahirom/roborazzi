@@ -1,38 +1,28 @@
 plugins {
   id "org.jetbrains.kotlin.multiplatform"
-  id "com.android.library"
+  id "com.android.kotlin.multiplatform.library"
   id("org.jetbrains.kotlin.plugin.serialization") version libs.versions.kotlin
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
 
-android.compileSdk(libs.versions.compileSdk.get().toInteger())
-
 kotlin {
-  targetHierarchy.custom {
-    it.common {
-      it.group("commonJvm") {
-        it.withAndroidTarget()
-        it.withJvm()
-      }
-      it.group("ios") {
-        it.withIosX64()
-        it.withIosArm64()
-        it.withIosSimulatorArm64()
-      }
-    }
-  }
-
   iosX64()
   iosArm64()
   iosSimulatorArm64()
 
   jvm()
-  androidTarget {
-    publishLibraryVariants("release")
+  androidLibrary {
+    namespace = 'com.github.takahirom.roborazzi.core'
+    compileSdk = libs.versions.compileSdk.get().toInteger()
+    minSdk = libs.versions.minSdk.get().toInteger()
+    withHostTest {
+      includeAndroidResources = true
+    }
   }
 
+  // Kotlin 2.x: Use sourceSets hierarchy instead of deprecated targetHierarchy.custom
   sourceSets {
     commonMain {
       dependencies {
@@ -41,16 +31,9 @@ kotlin {
         implementation libs.kotlinx.io.core
       }
     }
-    iosX64 {
-      dependsOn(commonMain)
-    }
-    iosArm64 {
-      dependsOn(commonMain)
-    }
-    iosSimulatorArm64 {
-      dependsOn(commonMain)
-    }
+    // Custom intermediate source set for JVM-based targets (JVM + Android)
     commonJvmMain {
+      dependsOn(commonMain)
       dependencies {
         implementation libs.junit
         // The library is a little bit heavy, so we use compileOnly here.
@@ -59,6 +42,7 @@ kotlin {
       }
     }
     commonJvmTest {
+      dependsOn(commonTest)
       dependencies {
         implementation libs.kotlin.test
         implementation libs.kotlin.test.junit
@@ -66,15 +50,16 @@ kotlin {
       }
     }
     jvmMain {
+      dependsOn(commonJvmMain)
       dependencies {
         implementation libs.kotlinx.serialization.json
       }
     }
     jvmTest {
-      dependencies {}
+      dependsOn(commonJvmTest)
     }
-
     androidMain {
+      dependsOn(commonJvmMain)
       dependencies {
         compileOnly libs.robolectric
         compileOnly libs.androidx.compose.ui.test
@@ -84,6 +69,19 @@ kotlin {
         implementation libs.kotlinx.serialization.json
       }
     }
+    // iOS source sets hierarchy
+    iosMain {
+      dependsOn(commonMain)
+    }
+    iosX64Main {
+      dependsOn(iosMain)
+    }
+    iosArm64Main {
+      dependsOn(iosMain)
+    }
+    iosSimulatorArm64Main {
+      dependsOn(iosMain)
+    }
   }
   sourceSets.all {
     it.languageSettings {
@@ -92,28 +90,6 @@ kotlin {
       optIn("com.github.takahirom.roborazzi.ExperimentalRoborazziApi")
     }
   }
-}
-
-android {
-  namespace 'com.github.takahirom.roborazzi.core'
-  compileSdk libs.versions.compileSdk.get().toInteger()
-
-  defaultConfig {
-    minSdk = libs.versions.minSdk.get().toInteger()
-    targetSdk = libs.versions.targetSdk.get().toInteger()
-
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-  }
-  buildFeatures {}
-  testOptions {
-    unitTests {
-      includeAndroidResources = true
-    }
-  }
-}
-
-dependencies {
-  compileOnly gradleApi()
 }
 
 sourceSets {

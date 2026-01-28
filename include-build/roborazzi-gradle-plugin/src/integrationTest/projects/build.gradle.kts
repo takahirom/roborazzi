@@ -4,7 +4,7 @@ plugins {
   id("com.android.application") version libs.versions.agp apply false
   id("com.android.library") version libs.versions.agp apply false
   id("com.android.kotlin.multiplatform.library") version libs.versions.agp apply false
-  id("org.jetbrains.kotlin.android") version libs.versions.kotlin apply false
+  // AGP 9.0: org.jetbrains.kotlin.android is no longer needed (built-in Kotlin)
   id("org.jetbrains.kotlin.multiplatform") version libs.versions.kotlin apply false
   id("org.jetbrains.compose") version libs.versions.composeMultiplatform apply false
   id("org.jetbrains.kotlin.plugin.compose") version libs.versions.kotlin apply false
@@ -19,12 +19,12 @@ allprojects {
   val javaTargetVersion = JavaVersion.toVersion (javaVersion)
   val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(javaVersion)
   
-  // Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+  // Replace AGP's default Compose Compiler with Kotlin's integrated version
   configurations.all {
     resolutionStrategy.dependencySubstitution {
       substitute(module("androidx.compose.compiler:compiler"))
         .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:${libs.versions.kotlin.get()}"))
-        .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+        .because("Compose Compiler is now shipped as part of Kotlin distribution")
     }
   }
 
@@ -37,24 +37,20 @@ allprojects {
     }
   }
 
-  fun configureAndroid(extension: com.android.build.gradle.BaseExtension) {
-    extension.compileOptions {
-      sourceCompatibility = javaTargetVersion
-      targetCompatibility = javaTargetVersion
+  // AGP 9.0: Use specific extension types for new DSL
+  plugins.withId("com.android.application") {
+    extensions.configure<com.android.build.api.dsl.ApplicationExtension> {
+      compileOptions {
+        sourceCompatibility = javaTargetVersion
+        targetCompatibility = javaTargetVersion
+      }
     }
   }
-  
-  plugins.withType<com.android.build.gradle.BasePlugin>().configureEach {
-    when (this) {
-      is com.android.build.gradle.AppPlugin -> {
-        extensions.configure<com.android.build.gradle.internal.dsl.BaseAppModuleExtension> {
-          configureAndroid(this)
-        }
-      }
-      is com.android.build.gradle.LibraryPlugin -> {
-        extensions.configure<com.android.build.gradle.LibraryExtension> {
-          configureAndroid(this)
-        }
+  plugins.withId("com.android.library") {
+    extensions.configure<com.android.build.api.dsl.LibraryExtension> {
+      compileOptions {
+        sourceCompatibility = javaTargetVersion
+        targetCompatibility = javaTargetVersion
       }
     }
   }
