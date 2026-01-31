@@ -55,7 +55,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   robolectricConfig: MapProperty<String, String>,
   testTaskProvider: TaskCollection<Test>
 ) {
-  check(extension.packages.get().orEmpty().isNotEmpty()) {
+  check(extension.packages.getOrElse(emptyList()).isNotEmpty()) {
     "Please set roborazzi.generateComposePreviewRobolectricTests.packages in the generatePreviewTests extension or set roborazzi.generateComposePreviewRobolectricTests.enable = false." +
       "See https://github.com/sergio-sastre/ComposablePreviewScanner?tab=readme-ov-file#how-to-use for more information."
   }
