@@ -266,6 +266,7 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
   }
 }
 
+@OptIn(InternalRoborazziApi::class)
 @ExperimentalRoborazziApi
 class AndroidComposePreviewTester(
   private val capturer: Capturer = DefaultCapturer()
@@ -355,6 +356,17 @@ class AndroidComposePreviewTester(
       testParameter.composeRoboComposePreviewOptionVariation
     val filePath =
       "$pathPrefix$name${optionVariation.nameWithPrefix()}.${provideRoborazziContext().imageExtension}"
+
+    roborazziDebugLog {
+      "AndroidComposePreviewTester.test():\n" +
+        "  filePathStrategy: ${roborazziRecordFilePathStrategy()}\n" +
+        "  outputDirectory: ${roborazziSystemPropertyOutputDirectory()}\n" +
+        "  pathPrefix: \"$pathPrefix\"\n" +
+        "  name: \"$name\"\n" +
+        "  optionVariation: \"${optionVariation.nameWithPrefix()}\"\n" +
+        "  imageExtension: ${provideRoborazziContext().imageExtension}\n" +
+        "  filePath: $filePath"
+    }
 
     @Suppress("USELESS_CAST")
     val roborazziComposeOptions = (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions().builder()
