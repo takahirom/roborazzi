@@ -413,16 +413,23 @@ abstract class RoborazziPlugin : Plugin<Project> {
             }
 
             // Other properties
+            val useRelativePath = roborazziProperties["roborazzi.gradle.use.relative.path"] == "true"
             test.systemProperties["roborazzi.output.dir"] =
               outputDirRelativePathFromProjectProvider.get()
             if (compareOutputDirProvider.isPresent) {
               test.systemProperties["roborazzi.compare.output.dir"] =
-                compareOutputDirProvider.get()
+                if (useRelativePath) {
+                  project.relativePath(compareOutputDirProvider.get())
+                } else {
+                  compareOutputDirProvider.get()
+                }
             }
             test.systemProperties["roborazzi.result.dir"] =
               resultDirRelativePath.get()
-            test.systemProperties["roborazzi.project.path"] =
-              projectAbsolutePathProvider.get()
+            if (!useRelativePath) {
+              test.systemProperties["roborazzi.project.path"] =
+                projectAbsolutePathProvider.get()
+            }
             test.infoln("Roborazzi: Plugin passed system properties " + test.systemProperties + " to the test")
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
