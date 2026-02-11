@@ -1,7 +1,7 @@
 package com.github.takahirom.roborazzi
 
 const val DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH: String = "build/outputs/roborazzi"
-var ROBORAZZI_DEBUG: Boolean = false
+var ROBORAZZI_DEBUG: Boolean = getSystemProperty("roborazzi.debug")?.toBoolean() ?: false
 
 @ExperimentalRoborazziApi
 fun roborazziSystemPropertyOutputDirectory(): String {
