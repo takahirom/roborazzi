@@ -12,7 +12,7 @@ kotlin = "2.0.21"
 mavenPublish = "0.31.0"
 composeMultiplatform = "1.7.0"
 robolectric = "4.14.1"
-generativeaiGoogle = "0.9.0-1.0.1"
+generativeaiGoogle = "0.9.0-1.1.0"
 robolectric-android-all = "15-robolectric-13954326"
 
 roborazzi-for-replacing-by-include-build = "1.0.0"
