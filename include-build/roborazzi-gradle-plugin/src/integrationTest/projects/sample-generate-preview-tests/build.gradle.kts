@@ -20,7 +20,7 @@ roborazzi {
 configurations.all {
   resolutionStrategy.dependencySubstitution {
     substitute(module("androidx.compose.compiler:compiler"))
-      .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
+      .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.3.10"))
       .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
   }
 }
