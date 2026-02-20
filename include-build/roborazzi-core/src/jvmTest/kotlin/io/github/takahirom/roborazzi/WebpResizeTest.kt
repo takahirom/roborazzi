@@ -19,21 +19,21 @@ class WebpResizeTest {
 
   @Test
   fun resizesImageWhenWidthExceedsMaxDimension() {
-    val originalImage = BufferedImage(20000, 10000, BufferedImage.TYPE_INT_ARGB)
+    val originalImage = BufferedImage(32000, 30, BufferedImage.TYPE_INT_ARGB)
 
     val result = resizeImageToFitMaxDimension(originalImage, maxDimension = 16383)
 
     assertEquals(16383, result.width)
-    assertEquals(8191, result.height)
+    assertEquals(15, result.height)
   }
 
   @Test
   fun resizesImageWhenHeightExceedsMaxDimension() {
-    val originalImage = BufferedImage(8000, 32000, BufferedImage.TYPE_INT_ARGB)
+    val originalImage = BufferedImage(50, 32000, BufferedImage.TYPE_INT_ARGB)
 
     val result = resizeImageToFitMaxDimension(originalImage, maxDimension = 16383)
 
-    assertEquals(4095, result.width)
+    assertEquals(15, result.width)
     assertEquals(16383, result.height)
   }
 }
