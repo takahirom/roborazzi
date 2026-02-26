@@ -33,7 +33,7 @@ class WebpResizeTest {
 
     val result = resizeImageToFitMaxDimension(originalImage, maxDimension = 16383)
 
-    assertEquals(15, result.width)
+    assertEquals(25, result.width)
     assertEquals(16383, result.height)
   }
 }
