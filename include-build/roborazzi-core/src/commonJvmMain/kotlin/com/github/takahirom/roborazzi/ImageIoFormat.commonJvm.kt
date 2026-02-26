@@ -12,6 +12,10 @@ import javax.imageio.metadata.IIOMetadata
 import javax.imageio.metadata.IIOMetadataFormatImpl
 import javax.imageio.metadata.IIOMetadataNode
 import javax.imageio.stream.FileImageOutputStream
+import kotlin.math.max
+import kotlin.math.min
+
+private const val WEBP_MAX_IMAGE_DIMENSION = 16383
 
 @ExperimentalRoborazziApi
 @Suppress("FunctionName")
@@ -134,10 +138,38 @@ private fun losslessWebPWriter(): AwtImageWriter =
 
       writer.setOutput(FileImageOutputStream(file))
 
-      writer.write(null, IIOImage(bufferedImage, null, null), writeParam)
+      val webpCompatibleImage = resizeImageToFitMaxDimension(bufferedImage, WEBP_MAX_IMAGE_DIMENSION)
+      writer.write(null, IIOImage(webpCompatibleImage, null, null), writeParam)
     } catch (e: NoClassDefFoundError) {
       throw IllegalStateException("Add testImplementation(\"io.github.darkxanter:webp-imageio:0.3.0\") to use this")
     } finally {
       writer.dispose()
     }
   }
+
+internal fun resizeImageToFitMaxDimension(
+  bufferedImage: BufferedImage,
+  maxDimension: Int,
+): BufferedImage {
+  if (bufferedImage.width <= maxDimension && bufferedImage.height <= maxDimension) {
+    return bufferedImage
+  }
+
+  val scale = min(
+    maxDimension.toDouble() / bufferedImage.width,
+    maxDimension.toDouble() / bufferedImage.height,
+  )
+  val targetWidth = max(1, (bufferedImage.width * scale).toInt())
+  val targetHeight = max(1, (bufferedImage.height * scale).toInt())
+  val imageType =
+    if (bufferedImage.type == BufferedImage.TYPE_CUSTOM) BufferedImage.TYPE_INT_ARGB else bufferedImage.type
+
+  val resizedImage = BufferedImage(targetWidth, targetHeight, imageType)
+  val graphics = resizedImage.createGraphics()
+  try {
+    graphics.drawImage(bufferedImage, 0, 0, targetWidth, targetHeight, null)
+  } finally {
+    graphics.dispose()
+  }
+  return resizedImage
+}
