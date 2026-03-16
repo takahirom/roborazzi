@@ -168,7 +168,7 @@ fun PreviewDialogSurface() {
 
 
 @Preview(
-  name = "Preview width and height large",
+  name = "Preview width & height large",
   widthDp = 2000,
   heightDp = 1000,
 )
