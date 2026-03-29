@@ -1,11 +1,10 @@
 package com.github.takahirom.roborazzi
 
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ActivityScenario
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
@@ -90,21 +89,30 @@ data class RoborazziComposePreviewDeviceOption(private val previewDevice: String
   }
 }
 
+/**
+ * Accepts [ComposeTestRule] to support both v1 (`AndroidComposeTestRule` from
+ * `androidx.compose.ui.test.junit4`) and v2 (`AndroidComposeTestRule` from
+ * `androidx.compose.ui.test.junit4.v2`).
+ *
+ * The activity scenario is extracted at runtime via reflection from the underlying
+ * `AndroidComposeTestRule.activityRule.scenario`, falling back to the default
+ * scenario creation if the rule type does not expose it.
+ */
 @ExperimentalRoborazziApi
 fun RoborazziComposeOptions.Builder.composeTestRule(
-  composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>,
+  composeTestRule: ComposeTestRule,
 ): RoborazziComposeOptions.Builder {
   return addOption(RoborazziComposeTestRuleOption(composeTestRule))
 }
 
 @ExperimentalRoborazziApi
 data class RoborazziComposeTestRuleOption(
-  private val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
+  private val composeTestRule: ComposeTestRule,
 ) :
   RoborazziComposeActivityScenarioCreatorOption,
   RoborazziComposeCaptureOption {
   override fun createScenario(chain: () -> ActivityScenario<out ComponentActivity>): ActivityScenario<out ComponentActivity> {
-    return composeTestRule.activityRule.scenario
+    return extractActivityScenario(composeTestRule) ?: chain()
   }
 
   override fun beforeCapture() {
@@ -127,6 +135,27 @@ data class RoborazziComposeTestRuleOption(
   }
 
   override fun afterCapture() {
+  }
+
+  companion object {
+    /**
+     * Extracts [ActivityScenario] from the given [ComposeTestRule] via reflection.
+     * Works with both v1 and v2 `AndroidComposeTestRule` since both expose
+     * `getActivityRule()` returning an `ActivityScenarioRule` with `getScenario()`.
+     *
+     * Returns null if the rule does not expose an activity scenario
+     * (e.g. a custom ComposeTestRule implementation).
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun extractActivityScenario(rule: ComposeTestRule): ActivityScenario<out ComponentActivity>? {
+      return try {
+        val activityRule = rule.javaClass.getMethod("getActivityRule").invoke(rule)
+        val scenario = activityRule?.javaClass?.getMethod("getScenario")?.invoke(activityRule)
+        scenario as? ActivityScenario<out ComponentActivity>
+      } catch (_: Throwable) {
+        null
+      }
+    }
   }
 }
 
@@ -177,19 +206,23 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
       /**
        * Factory to create the ComposeTestRule.
        * By default, creates a rule with StandardTestDispatcher for effect execution.
+       *
+       * Accepts [ComposeContentTestRule] to support both v1 and v2 AndroidComposeTestRule.
        */
       @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
-      val composeRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> = {
-        createAndroidComposeRule<RoborazziActivity>(effectContext = StandardTestDispatcher()) as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>
+      val composeRuleFactory: () -> ComposeContentTestRule = {
+        createAndroidComposeRule<RoborazziActivity>(effectContext = StandardTestDispatcher())
       },
       /**
        * The TestRule factory to be used for the generated tests.
        * You can use this to add custom behavior to the generated tests.
+       *
+       * Accepts [ComposeContentTestRule] to support both v1 and v2 AndroidComposeTestRule.
        */
       // Used from generated tests
-      @Suppress("unused") val testRuleFactory: (AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) -> TestRule = object :
-          (AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) -> TestRule {
-        override fun invoke(composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>): TestRule {
+      @Suppress("unused") val testRuleFactory: (ComposeContentTestRule) -> TestRule = object :
+          (ComposeContentTestRule) -> TestRule {
+        override fun invoke(composeTestRule: ComposeContentTestRule): TestRule {
           return RuleChain.outerRule(
             RuleChain
               .outerRule(object : TestWatcher() {
@@ -232,15 +265,15 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
 
   sealed class TestParameter<T> {
     open class JUnit4TestParameter<T>(
-      open val composeTestRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
+      open val composeTestRuleFactory: () -> ComposeContentTestRule,
       open val preview: ComposablePreview<T>
     ) : TestParameter<T>() {
-      val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> by lazy {
+      val composeTestRule: ComposeContentTestRule by lazy {
         composeTestRuleFactory()
       }
 
       data class AndroidPreviewJUnit4TestParameter(
-        override val composeTestRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
+        override val composeTestRuleFactory: () -> ComposeContentTestRule,
         override val preview: ComposablePreview<AndroidPreviewInfo>,
         val composeRoboComposePreviewOptionVariation: RoboComposePreviewOptionVariation = RoboComposePreviewOptionVariation(),
       ) : JUnit4TestParameter<AndroidPreviewInfo>(composeTestRuleFactory, preview) {
@@ -271,7 +304,7 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
 class AndroidComposePreviewTester(
   private val capturer: Capturer = DefaultCapturer()
 ) : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
-  
+
   /**
    * Interface for customizing the capture behavior.
    * Implement this interface to customize how screenshots are captured.
@@ -279,7 +312,7 @@ class AndroidComposePreviewTester(
   fun interface Capturer {
     fun capture(parameter: CaptureParameter)
   }
-  
+
   /**
    * Parameters for capturing a preview screenshot.
    */

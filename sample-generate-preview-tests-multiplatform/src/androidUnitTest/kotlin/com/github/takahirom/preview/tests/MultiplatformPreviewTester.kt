@@ -1,10 +1,8 @@
 package com.github.takahirom.preview.tests
 
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.takahirom.roborazzi.*
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter
 import org.junit.rules.RuleChain
@@ -17,8 +15,7 @@ class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<Comm
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
       composeRuleFactory = {
-        @Suppress("UNCHECKED_CAST")
-        createAndroidComposeRule<RoborazziActivity>() as AndroidComposeTestRule<ActivityScenarioRule<out androidx.activity.ComponentActivity>, *>
+        createAndroidComposeRule<RoborazziActivity>()
       },
       testRuleFactory = { composeTestRule ->
         RuleChain.outerRule(
@@ -50,7 +47,7 @@ class MultiplatformPreviewTester : ComposePreviewTester<JUnit4TestParameter<Comm
   override fun test(testParameter: JUnit4TestParameter<CommonPreviewInfo>) {
     val preview = testParameter.preview
     val screenshotNameSuffix = preview.previewIndex?.let { "_" + preview.previewIndex }.orEmpty()
-    
+
     testParameter.composeTestRule.setContent {
       preview()
     }
