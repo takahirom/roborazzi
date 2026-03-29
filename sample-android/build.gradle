@@ -15,10 +15,10 @@ if (localPropertiesFile.exists()) {
 
 android {
   namespace 'com.github.takahirom.roborazzi.sample'
-  compileSdk = libs.versions.compileSdk.get().toInteger()
+  compileSdk = 35
 
   defaultConfig {
-    minSdk = libs.versions.minSdk.get().toInteger()
+    minSdk = 23
     targetSdk = libs.versions.targetSdk.get().toInteger()
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -33,6 +33,13 @@ android {
   buildFeatures {
     viewBinding true
     buildConfig true
+  }
+  // Disable allWarningsAsErrors for compose test v2 migration
+  // (v1 APIs are deprecated in 1.11.0+)
+  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    compilerOptions {
+      allWarningsAsErrors = false
+    }
   }
   testOptions {
     unitTests {
@@ -71,7 +78,7 @@ dependencies {
   implementation libs.androidx.compose.material3
   implementation libs.androidx.compose.ui
   implementation libs.androidx.compose.foundation
-  testImplementation libs.androidx.compose.ui.test.junit4
+  testImplementation("androidx.compose.ui:ui-test-junit4:1.11.0-beta02")
   debugImplementation libs.androidx.compose.ui.test.manifest
   implementation libs.androidx.activity.compose
   testImplementation(libs.webp.imageio)
