@@ -164,11 +164,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     File(directory, "$className.kt").writeText(
       """
             package $packageName
-            import androidx.activity.ComponentActivity
-            import androidx.compose.ui.test.junit4.AndroidComposeTestRule
             import androidx.compose.ui.test.junit4.ComposeContentTestRule
-            import androidx.compose.ui.test.junit4.createComposeRule
-            import androidx.test.ext.junit.rules.ActivityScenarioRule
             import org.junit.Rule
             import org.junit.Test
             import org.junit.runner.RunWith
@@ -192,7 +188,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 val junit4TestParameter: ComposePreviewTester.TestParameter.JUnit4TestParameter<Any> = testParameter as ComposePreviewTester.TestParameter.JUnit4TestParameter<Any>
                 private val tester = getComposePreviewTester("$testerQualifiedClassNameString")
                 private val testLifecycleOptions = tester.options().testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions
-                val composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> by lazy {
+                val composeTestRule: ComposeContentTestRule by lazy {
                   junit4TestParameter.composeTestRule
                 }
                 @Suppress("UNCHECKED_CAST")
