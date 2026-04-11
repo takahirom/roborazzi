@@ -1,3 +1,9 @@
+@file:OptIn(ExperimentalRoborazziApi::class)
+
+import com.github.takahirom.roborazzi.AnnotationFilter.Exclude
+import com.github.takahirom.roborazzi.AnnotationFilter.Include
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+
 plugins {
   id("com.android.application")
 //  id("com.android.library")
@@ -6,10 +12,13 @@ plugins {
   id("io.github.takahirom.roborazzi")
 }
 
+// Execute ./gradlew :sample-generate-preview-tests:recordRoborazziDebug --rerun-tasks
 roborazzi {
   generateComposePreviewRobolectricTests {
     enable = true
     packages = listOf("com.github.takahirom.preview.tests")
+    //annotationFilter = Include("com.github.takahirom.preview.tests.Include")
+    //annotationFilter = Exclude("com.github.takahirom.preview.tests.Exclude")
   }
 }
 
@@ -42,7 +51,7 @@ android {
       isIncludeAndroidResources = true
       all {
         it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
-        // For large preview
+// For large preview
         it.maxHeapSize = "4096m"
         it.jvmArgs("-noverify")
       }
@@ -57,7 +66,7 @@ dependencies {
   implementation(libs.androidx.compose.ui.tooling)
   implementation(libs.androidx.compose.runtime)
 
-  // replaced by dependency substitution
+// replaced by dependency substitution
   testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
   testImplementation(libs.junit)
   testImplementation(libs.robolectric)

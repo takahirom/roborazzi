@@ -46,6 +46,10 @@ import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import kotlinx.coroutines.delay
 
+annotation class Exclude
+annotation class Include
+
+@Exclude
 @Preview
 @Composable
 fun PreviewNormal() {
@@ -69,6 +73,7 @@ fun PreviewNormal() {
   }
 }
 
+@Include
 @Preview(
   uiMode = Configuration.UI_MODE_NIGHT_YES
 )
