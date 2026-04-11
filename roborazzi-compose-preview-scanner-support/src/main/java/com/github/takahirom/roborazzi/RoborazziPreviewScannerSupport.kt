@@ -213,6 +213,10 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
        * Whether to include private previews in the scan.
        */
       val includePrivatePreviews: Boolean = false,
+      /**
+       * Filter for composable previews by annotation.
+       */
+      val annotationFilter: AnnotationFilter? = null,
     )
   }
 
@@ -271,7 +275,7 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
 class AndroidComposePreviewTester(
   private val capturer: Capturer = DefaultCapturer()
 ) : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
-  
+
   /**
    * Interface for customizing the capture behavior.
    * Implement this interface to customize how screenshots are captured.
@@ -279,7 +283,7 @@ class AndroidComposePreviewTester(
   fun interface Capturer {
     fun capture(parameter: CaptureParameter)
   }
-  
+
   /**
    * Parameters for capturing a preview screenshot.
    */
@@ -302,18 +306,36 @@ class AndroidComposePreviewTester(
       )
     }
   }
+
   override fun testParameters(): List<AndroidPreviewJUnit4TestParameter> {
     val options = options()
     val junit4TestLifecycleOptions =
       options.testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions
-    return AndroidComposablePreviewScanner().scanPackageTrees(*options.scanOptions.packages.toTypedArray())
-      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java).let {
+
+    val scanner = AndroidComposablePreviewScanner()
+      .scanPackageTrees(*options.scanOptions.packages.toTypedArray())
+      .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java)
+      .let {
         if (options.scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
         } else {
           it
         }
-      }.getPreviews()
+      }
+
+    val filteredPreviews = when (val filter = options.scanOptions.annotationFilter) {
+      is AnnotationFilter.Exclude -> scanner.excludeIfAnnotatedWithAnyOf(
+        *filter.annotations.toAnnotationClasses()
+      )
+
+      is AnnotationFilter.Include -> scanner.includeIfAnnotatedWithAnyOf(
+        *filter.annotations.toAnnotationClasses()
+      )
+
+      null -> scanner
+    }.getPreviews()
+
+    return filteredPreviews
       .flatMap { preview ->
         // FIXME
         // This cause IllegalArgumentException
@@ -369,17 +391,18 @@ class AndroidComposePreviewTester(
     }
 
     @Suppress("USELESS_CAST")
-    val roborazziComposeOptions = (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions().builder()
-      .apply {
-        composeTestRule(junit4TestParameter.composeTestRule)
-        optionVariation.manualClockOptions?.let {
-          manualAdvance(
-            junit4TestParameter.composeTestRule,
-            it.advanceTimeMillis
-          )
+    val roborazziComposeOptions =
+      (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions().builder()
+        .apply {
+          composeTestRule(junit4TestParameter.composeTestRule)
+          optionVariation.manualClockOptions?.let {
+            manualAdvance(
+              junit4TestParameter.composeTestRule,
+              it.advanceTimeMillis
+            )
+          }
         }
-      }
-      .build()
+        .build()
 
     @Suppress("USELESS_CAST")
     val parameter = CaptureParameter(
@@ -393,6 +416,21 @@ class AndroidComposePreviewTester(
 
   private fun createScreenshotIdFor(preview: ComposablePreview<AndroidPreviewInfo>) =
     AndroidPreviewScreenshotIdBuilder(preview).ignoreClassName().build()
+
+  private fun List<String>.toAnnotationClasses(): Array<Class<out Annotation>> {
+    return map { annotationClassName ->
+      try {
+        val clazz = Class.forName(annotationClassName)
+        if (!clazz.isAnnotation) {
+          throw IllegalArgumentException("The class $annotationClassName is not an annotation")
+        }
+        @Suppress("UNCHECKED_CAST")
+        clazz as Class<out Annotation>
+      } catch (e: ClassNotFoundException) {
+        throw IllegalArgumentException("The annotation class $annotationClassName not found", e)
+      }
+    }.toTypedArray()
+  }
 }
 
 @ExperimentalRoborazziApi

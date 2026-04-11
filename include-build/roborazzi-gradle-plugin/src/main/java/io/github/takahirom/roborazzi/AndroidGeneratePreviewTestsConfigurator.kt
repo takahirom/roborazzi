@@ -10,6 +10,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.testing.Test
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import java.net.URLEncoder
 import java.util.Locale
 
@@ -47,6 +48,7 @@ internal fun generateComposePreviewRobolectricTestsIfNeeded(
   }
 }
 
+@OptIn(ExperimentalRoborazziApi::class)
 private fun setupGenerateComposePreviewRobolectricTestsTask(
   project: Project,
   variant: Variant,
@@ -139,6 +141,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     it.testerQualifiedClassName.set(testerQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)
     it.generatedTestClassCount.set(extension.generatedTestClassCount)
+    it.annotationFilter.set(extension.annotationFilter)
   }
   // AGP 9.0: unitTest is now on HasUnitTest interface, not Variant
   val unitTestSources = (variant as? HasUnitTest)?.unitTest?.sources
