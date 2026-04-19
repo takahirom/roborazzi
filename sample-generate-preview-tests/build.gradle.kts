@@ -1,7 +1,6 @@
 @file:OptIn(ExperimentalRoborazziApi::class)
 
-import com.github.takahirom.roborazzi.AnnotationFilter.Exclude
-import com.github.takahirom.roborazzi.AnnotationFilter.Include
+import com.github.takahirom.roborazzi.AnnotationFilter.Filter
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 
 plugins {
@@ -17,8 +16,9 @@ roborazzi {
   generateComposePreviewRobolectricTests {
     enable = true
     packages = listOf("com.github.takahirom.preview.tests")
-    //annotationFilter = Include("com.github.takahirom.preview.tests.Include")
-    //annotationFilter = Exclude("com.github.takahirom.preview.tests.Exclude")
+    annotationFilter = Filter.ExcludeRoborazzi
+    //annotationFilter = Include("com.github.takahirom.roborazzi.annotations.filter.IncludeRoborazzi")
+    //annotationFilter = Exclude("com.github.takahirom.roborazzi.annotations.filter.ExcludeRoborazzi")
   }
 }
 
