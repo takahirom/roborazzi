@@ -5,6 +5,7 @@ import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziReportConst
+import com.github.takahirom.roborazzi.RoborazziTaskType
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
@@ -47,6 +48,8 @@ private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
 
+  val taskType: Property<RoborazziTaskType> = objects.property(RoborazziTaskType::class.java)
+    .convention(RoborazziTaskType.None)
   @ExperimentalRoborazziApi
   val compare: RoborazziCompareExtension =
     objects.newInstance(RoborazziCompareExtension::class.java)
@@ -245,6 +248,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
             isCompareRun.map { compareRunValue ->
               isRecordRunValue || isVerifyRunValue || isVerifyAndRecordRunValue || compareRunValue
                 || hasRoborazziTaskProperty(roborazziProperties)
+                || extension.taskType.orNull != RoborazziTaskType.None
             }
           }
         }
@@ -395,9 +399,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
             val isTaskPresent =
               isAnyTaskRun(isRecordRun, isVerifyRun, isVerifyAndRecordRun, isCompareRun)
             // Task properties
-            if (!isTaskPresent) {
+            if (!isTaskPresent && extension.taskType.orNull == RoborazziTaskType.None) {
               test.systemProperties.putAll(roborazziProperties)
             } else {
+              val extensionTaskType = extension.taskType.orNull
               // Apply other roborazzi properties except for the ones that
               // start with "roborazzi.test"
               test.systemProperties.putAll(
@@ -406,10 +411,13 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 }
               )
               test.systemProperties["roborazzi.test.record"] =
-                isRecordRun.get() || isVerifyAndRecordRun.get()
-              test.systemProperties["roborazzi.test.compare"] = isCompareRun.get()
+                isRecordRun.get() || isVerifyAndRecordRun.get() ||
+                  extensionTaskType == RoborazziTaskType.Record || extensionTaskType == RoborazziTaskType.VerifyAndRecord
+              test.systemProperties["roborazzi.test.compare"] =
+                isCompareRun.get() || extensionTaskType == RoborazziTaskType.Compare
               test.systemProperties["roborazzi.test.verify"] =
-                isVerifyRun.get() || isVerifyAndRecordRun.get()
+                isVerifyRun.get() || isVerifyAndRecordRun.get() ||
+                  extensionTaskType == RoborazziTaskType.Verify || extensionTaskType == RoborazziTaskType.VerifyAndRecord
             }
 
             // Other properties

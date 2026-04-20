@@ -1,5 +1,7 @@
 package io.github.takahirom.roborazzi
 
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.RoborazziTaskType
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -656,6 +658,21 @@ class RoborazziGradleProjectTest {
       recordWithFilter2().output.run(::assertNotSkipped)
       checkRecordedFileExists("$screenshotAndName.testCapture1.png")
       checkRecordedFileExists("$screenshotAndName.testCapture2.png")
+
+  @Test
+  fun shouldNotRecordResultsByDefault() {
+    RoborazziGradleProject(testProjectDir).apply {
+      unitTest()
+      checkResultsSummaryFileNotExists()
+    }
+  }
+
+  @Test
+  fun shouldRecordResultsByDefaultIfExtensionIsConfigured() {
+    RoborazziGradleProject(testProjectDir).apply {
+      appBuildFile.taskType = RoborazziTaskType.Record
+      unitTest()
+      checkResultsSummaryFileExists()
     }
   }
 }
