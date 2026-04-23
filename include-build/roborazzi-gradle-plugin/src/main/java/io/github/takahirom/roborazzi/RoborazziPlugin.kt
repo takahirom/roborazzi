@@ -20,6 +20,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.options.Option
@@ -328,7 +329,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
             }
           test.inputs.files(
             imageInputProvider
-          )
+          ).withPathSensitivity(PathSensitivity.RELATIVE)
           test.outputs.dirs(
             compareOutputDirProvider.flatMap { compareOutputDir: Directory ->
               isCompareOrVerifyRunProvider.flatMap { isCompareOrVerifyRun ->
