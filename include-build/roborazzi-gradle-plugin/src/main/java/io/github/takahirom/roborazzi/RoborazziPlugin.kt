@@ -259,10 +259,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
           roborazziProperties["roborazzi.test.compare"] == "true"
       }
 
-      val projectAbsolutePathProvider = project.providers.provider {
-        project.projectDir.absolutePath
-      }
-      val outputDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
+      val projectAbsolutePath = project.projectDir.absolutePath
+      val outputDirRelativePath = outputDir.map(project::relativePath)
+      val compareOutputDirRelativePath = compareOutputDirProvider.map(project::relativePath)
 
       val resultDir = project.layout.buildDirectory.dir(RoborazziReportConst.getResultDirPathFromBuildDir(variantName))
       val resultDirFileTree =
@@ -414,15 +413,18 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
             // Other properties
             test.systemProperties["roborazzi.output.dir"] =
-              outputDirRelativePathFromProjectProvider.get()
-            if (compareOutputDirProvider.isPresent) {
+              outputDirRelativePath.get()
+            if (compareOutputDirRelativePath.isPresent) {
               test.systemProperties["roborazzi.compare.output.dir"] =
-                compareOutputDirProvider.get()
+                compareOutputDirRelativePath.get()
             }
             test.systemProperties["roborazzi.result.dir"] =
               resultDirRelativePath.get()
-            test.systemProperties["roborazzi.project.path"] =
-              projectAbsolutePathProvider.get()
+            // The iOS simulator runs with a different working directory (the simulator sandbox). We must use absolute path here.
+            if (test is KotlinNativeTest) {
+              test.systemProperties["roborazzi.project.path"] =
+                projectAbsolutePath
+            }
             test.infoln("Roborazzi: Plugin passed system properties " + test.systemProperties + " to the test")
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
