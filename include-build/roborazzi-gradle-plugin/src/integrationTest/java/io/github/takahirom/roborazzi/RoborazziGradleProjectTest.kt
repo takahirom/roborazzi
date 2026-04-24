@@ -5,6 +5,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import java.io.File
 
 /**
  * Run this test with `cd include-build` and `./gradlew roborazzi-gradle-plugin:check`
@@ -656,6 +657,42 @@ class RoborazziGradleProjectTest {
       recordWithFilter2().output.run(::assertNotSkipped)
       checkRecordedFileExists("$screenshotAndName.testCapture1.png")
       checkRecordedFileExists("$screenshotAndName.testCapture2.png")
+    }
+  }
+
+  /**
+   * Test that the build cache is relocatable across different project directories.
+   * This verifies that tasks like verifyRoborazziDebug can reuse the cache
+   * when run from a different project directory (simulating a different CI agent
+   * or developer machine).
+   *
+   * See https://github.com/takahirom/roborazzi/issues/820
+   */
+  @Test
+  fun verifyCacheShouldBeRelocatableAcrossDifferentProjectDirs() {
+    val secondProjectDir = TemporaryFolder()
+    secondProjectDir.create()
+    try {
+      // First project: record golden images, then verify (populates verify cache entry)
+      RoborazziGradleRootProject(testProjectDir).appModule.apply {
+        record()
+        checkRecordedFileExists("$screenshotAndName.testCapture.png")
+        verify()
+      }
+
+      // Copy golden images to the second project so verify has the same file inputs
+      val goldenSource = File(testProjectDir.root, "app/build/outputs/roborazzi")
+      val goldenDest = File(secondProjectDir.root, "app/build/outputs/roborazzi")
+      goldenSource.copyRecursively(goldenDest, overwrite = true)
+
+      // Second project: verify from a different directory, should hit cache
+      // since all inputs (golden images content, task properties) are identical
+      RoborazziGradleRootProject(secondProjectDir).appModule.apply {
+        val output = verify().output
+        assertFromCache(output)
+      }
+    } finally {
+      secondProjectDir.delete()
     }
   }
 }
