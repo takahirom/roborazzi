@@ -8,7 +8,8 @@ import java.io.Serializable
 @ExperimentalRoborazziApi
 sealed class AnnotationFilter : Serializable {
   /**
-   * Exclude only previews with the specified annotations.
+   * Exclude only previews with the specified annotations, passing their absolute Path as String.
+   * If the absolute path is a nested class, pass the JVM binary name using `$`, * e.g. `com.example.Outer$Inner`.
    */
   @ConsistentCopyVisibility
   data class Exclude private constructor(val annotations: List<String>) : AnnotationFilter() {
@@ -16,12 +17,13 @@ sealed class AnnotationFilter : Serializable {
   }
 
   companion object Filter {
-    val ExcludeRoborazzi = Exclude("com.github.takahirom.roborazzi.annotations.filter.ExcludeFromRoborazzi")
-    val IncludeRoborazzi = Include("com.github.takahirom.roborazzi.annotations.filter.IncludeInRoborazzi")
+    val ExcludeFromRoborazzi = Exclude("com.github.takahirom.roborazzi.annotations.filter.ExcludeFromRoborazzi")
+    val IncludeInRoborazzi = Include("com.github.takahirom.roborazzi.annotations.filter.IncludeInRoborazzi")
   }
 
   /**
-   * Include only previews with the specified annotations.
+   * Include only previews with the specified annotations, passing their absolute Path as String.
+   * If the absolute path is a nested class, pass the JVM binary name using `$`, * e.g. `com.example.Outer$Inner`.
    */
   @ConsistentCopyVisibility
   data class Include private constructor(val annotations: List<String>) : AnnotationFilter() {

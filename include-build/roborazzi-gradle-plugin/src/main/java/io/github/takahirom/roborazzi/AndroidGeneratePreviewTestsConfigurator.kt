@@ -74,18 +74,19 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   val isUsingCustomTester = testerQualifiedClassName.get() != GenerateComposePreviewRobolectricTestsExtension.DEFAULT_TESTER_CLASS
   val useScanOptions = extension.useScanOptionParametersInTester.get()
   val includePrivatePreviews = extension.includePrivatePreviews.get()
+  extension.annotationFilter.isPresent
 
-  if (!useScanOptions && isUsingCustomTester && includePrivatePreviews) {
+  if (!useScanOptions && isUsingCustomTester && (includePrivatePreviews || extension.annotationFilter.isPresent)) {
     throw IllegalArgumentException(
       """
-      includePrivatePreviews cannot be set automatically when using a custom tester.
+      includePrivatePreviews / annotationFilter cannot be set automatically when using a custom tester.
 
       When using a custom tester, if you override testParameters(), you must manually handle
       the includePrivatePreviews option in your scanner configuration.
 
       You have two options:
-      1. Remove 'includePrivatePreviews = true' from generateComposePreviewRobolectricTests configuration
-         and call '.includePrivatePreviews()' directly in your custom tester's testParameters() method.
+      1. Remove 'includePrivatePreviews = true' / annotationFilter option from generateComposePreviewRobolectricTests configuration
+         and call '.includePrivatePreviews()' / '.excludeIfAnnotatedWithAnyOf()' / '.includeIfAnnotatedWithAnyOf() directly in your custom tester's testParameters() method.
 
       2. Set 'useScanOptionParametersInTester = true' in generateComposePreviewRobolectricTests configuration
          and check 'options.scanOptions.includePrivatePreviews' in your testParameters() implementation.
@@ -95,7 +96,10 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
         override fun testParameters(): List<TestParameter> {
           return AndroidComposablePreviewScanner()
             .scanPackageTrees(*options().scanOptions.packages.toTypedArray())
-            .includePrivatePreviews()  // Directly call this
+            // exclude annotated previews (or .includeIfAnnotatedWithAnyOf() to include)
+            .excludeIfAnnotatedWithAnyOf(ExcludeFromRoborazzi::class.java)
+            // include private previews
+            .includePrivatePreviews()
             .getPreviews()
             // ... rest of your implementation
         }
@@ -107,6 +111,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
           packages = listOf("your.package")
           testerQualifiedClassName = "com.example.CustomTester"
           includePrivatePreviews = true
+          annotationFilter = Filter.ExcludeFromRoborazzi // or Filter.IncludeInRoborazzi
           useScanOptionParametersInTester = true
         }
 
@@ -115,6 +120,13 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
           val opts = options()
           return AndroidComposablePreviewScanner()
             .scanPackageTrees(*opts.scanOptions.packages.toTypedArray())
+            .let {
+                when (val filter = opts.scanOptions.annotationFilter) {
+                  is AnnotationFilter.Exclude -> it.excludeIfAnnotatedWithAnyOf(*filter.annotations.map { Class.forName(it) as Class<out Annotation> }.toTypedArray())
+                  is AnnotationFilter.Include -> it.includeIfAnnotatedWithAnyOf(*filter.annotations.map { Class.forName(it) as Class<out Annotation> }.toTypedArray())
+                  else -> it
+                }
+            }
             .let {
               if (opts.scanOptions.includePrivatePreviews) {
                 it.includePrivatePreviews()  // Conditionally call based on plugin config
