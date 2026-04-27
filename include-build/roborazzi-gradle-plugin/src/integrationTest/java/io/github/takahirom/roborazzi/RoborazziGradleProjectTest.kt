@@ -685,10 +685,17 @@ class RoborazziGradleProjectTest {
       val goldenDest = File(secondProjectDir.root, "app/build/outputs/roborazzi")
       goldenSource.copyRecursively(goldenDest, overwrite = true)
 
+      val originalProjectDir = testProjectDir
       RoborazziGradleRootProject(secondProjectDir).appModule.apply {
         // Verify from a different directory — should hit cache since inputs are identical
         val output = verify().output
         assertFromCache(output)
+
+        // Delete the original project's golden file. If verify's inputs are properly
+        // scoped to secondProjectDir, the task stays UP-TO-DATE; if originalProjectDir
+        // is referenced, the deletion would invalidate the up-to-date check.
+        File(originalProjectDir.root, "$screenshotAndName.testCapture.png").delete()
+        assertSkipped(verify().output)
 
         // Confirm that when verification fails in secondProjectDir, the actual/compare
         // output files are written to secondProjectDir (not testProjectDir)
