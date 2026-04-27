@@ -10,10 +10,7 @@ enum class BuildType {
   Build, BuildAndFail
 }
 
-class RoborazziGradleRootProject(
-  private val testProjectDir: TemporaryFolder,
-  private val gradleUserHome: File? = null,
-) {
+class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
   init {
     File("./src/integrationTest/projects").copyRecursively(testProjectDir.root, true)
   }
@@ -27,15 +24,6 @@ class RoborazziGradleRootProject(
     buildType: BuildType,
     additionalParameters: Array<String>
   ): BuildResult {
-    val environment = mutableMapOf(
-      "ANDROID_HOME" to System.getenv("ANDROID_HOME"),
-      "INTEGRATION_TEST" to "true",
-      "ROBORAZZI_ROOT_PATH" to File("../..").absolutePath,
-      "ROBORAZZI_INCLUDE_BUILD_ROOT_PATH" to File("..").absolutePath,
-    )
-    if (gradleUserHome != null) {
-      environment["GRADLE_USER_HOME"] = gradleUserHome.absolutePath
-    }
     val buildResult = GradleRunner.create()
       .withProjectDir(testProjectDir.root)
       .withArguments(
@@ -48,7 +36,15 @@ class RoborazziGradleRootProject(
       .withPluginClasspath()
       .forwardStdOutput(System.out.writer())
       .forwardStdError(System.err.writer())
-      .withEnvironment(environment)
+      .withEnvironment(
+        mapOf(
+          "ANDROID_HOME" to System.getenv("ANDROID_HOME"),
+          "INTEGRATION_TEST" to "true",
+          "ROBORAZZI_ROOT_PATH" to File("../..").absolutePath,
+          "ROBORAZZI_INCLUDE_BUILD_ROOT_PATH" to File("..").absolutePath,
+//          "GRADLE_USER_HOME" to File(testProjectDir.root, "gradle").absolutePath,
+        )
+      )
       .let {
         if (buildType == BuildType.BuildAndFail) {
           it.buildAndFail()
@@ -60,15 +56,6 @@ class RoborazziGradleRootProject(
   }
 
   fun runMultipleKspTasks(vararg tasks: String): BuildResult {
-    val environment = mutableMapOf(
-      "ANDROID_HOME" to System.getenv("ANDROID_HOME"),
-      "INTEGRATION_TEST" to "true",
-      "ROBORAZZI_ROOT_PATH" to File("../..").absolutePath,
-      "ROBORAZZI_INCLUDE_BUILD_ROOT_PATH" to File("..").absolutePath,
-    )
-    if (gradleUserHome != null) {
-      environment["GRADLE_USER_HOME"] = gradleUserHome.absolutePath
-    }
     val buildResult = GradleRunner.create()
       .withProjectDir(testProjectDir.root)
       .withArguments(
@@ -80,7 +67,14 @@ class RoborazziGradleRootProject(
       .withPluginClasspath()
       .forwardStdOutput(System.out.writer())
       .forwardStdError(System.err.writer())
-      .withEnvironment(environment)
+      .withEnvironment(
+        mapOf(
+          "ANDROID_HOME" to System.getenv("ANDROID_HOME"),
+          "INTEGRATION_TEST" to "true",
+          "ROBORAZZI_ROOT_PATH" to File("../..").absolutePath,
+          "ROBORAZZI_INCLUDE_BUILD_ROOT_PATH" to File("..").absolutePath,
+        )
+      )
       .let {
         try {
           it.build()
