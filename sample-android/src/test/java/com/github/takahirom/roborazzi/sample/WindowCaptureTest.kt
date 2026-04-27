@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -39,6 +40,7 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.ROBORAZZI_DEBUG
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
+import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.launch
@@ -141,6 +143,62 @@ class WindowCaptureTest {
     composeTestRule.waitForIdle()
 
     captureScreenRoboImage()
+  }
+
+  @OptIn(ExperimentalMaterial3Api::class)
+  @Test
+  fun composeBottomSheet_onRoot() {
+    composeTestRule.setContent {
+      Column(
+        modifier = Modifier
+          .background(Color.Cyan)
+          .fillMaxSize()
+      ) {
+        val sheetState = rememberModalBottomSheetState()
+        val scope = rememberCoroutineScope()
+        var showBottomSheet by remember { mutableStateOf(false) }
+        Scaffold(
+          floatingActionButton = {
+            ExtendedFloatingActionButton(
+              text = { Text("Show bottom sheet") },
+              icon = { Icon(Icons.Filled.Add, contentDescription = "") },
+              onClick = {
+                showBottomSheet = true
+              }
+            )
+          }
+        ) { contentPadding ->
+          Text(text = "Under the dialog")
+
+          if (showBottomSheet) {
+            ModalBottomSheet(
+              onDismissRequest = {
+                showBottomSheet = false
+              },
+              sheetState = sheetState
+            ) {
+              Button(onClick = {
+                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                  if (!sheetState.isVisible) {
+                    showBottomSheet = false
+                  }
+                }
+              }) {
+                Text(modifier = Modifier.padding(contentPadding), text = "Hide bottom sheet")
+              }
+            }
+          }
+        }
+      }
+    }
+
+    composeTestRule
+      .onNode(hasText("Show bottom sheet"), true)
+      .performClick()
+    composeTestRule.waitForIdle()
+
+    // Issue #812: Using onRoot().captureRoboImage() instead of captureScreenRoboImage()
+    composeTestRule.onRoot().captureRoboImage()
   }
 
   @Test
