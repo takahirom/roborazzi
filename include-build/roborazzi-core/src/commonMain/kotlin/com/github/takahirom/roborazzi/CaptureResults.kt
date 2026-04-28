@@ -2,11 +2,14 @@ package com.github.takahirom.roborazzi
 
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemPathSeparator
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
@@ -23,7 +26,6 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.longOrNull
-import kotlinx.serialization.modules.SerializersModule
 
 @Serializable
 data class CaptureResults(
@@ -216,9 +218,6 @@ data class CaptureResults(
       ignoreUnknownKeys = true
       classDiscriminator = "#class"
       explicitNulls = false
-      serializersModule = SerializersModule {
-        contextual(Any::class, AnySerializer)
-      }
     }
 
     fun fromJsonFile(inputPath: String): CaptureResults {
@@ -258,7 +257,7 @@ object AnySerializer : KSerializer<Any> {
       is String -> encoder.encodeString(value)
       is Int -> encoder.encodeInt(value)
       is Long -> encoder.encodeLong(value)
-      is Double -> encoder.encodeDouble(value.toDouble())
+      is Double -> encoder.encodeDouble(value)
       is Boolean -> encoder.encodeBoolean(value)
       else -> throw IllegalArgumentException("Unknown type: ${value::class.qualifiedName}")
     }
@@ -274,6 +273,21 @@ object AnySerializer : KSerializer<Any> {
       input.doubleOrNull != null -> input.double
       else -> throw IllegalArgumentException("Unknown type: ${input::class.qualifiedName}")
     }
+  }
+}
+
+object ContextDataSerializer : KSerializer<Map<String, Any>> {
+  private val delegateSerializer = MapSerializer(String.serializer(), AnySerializer)
+
+  override val descriptor: SerialDescriptor
+    get() = delegateSerializer.descriptor
+
+  override fun serialize(encoder: Encoder, value: Map<String, Any>) {
+    encoder.encodeSerializableValue(delegateSerializer, value)
+  }
+
+  override fun deserialize(decoder: Decoder): Map<String, Any> {
+    return decoder.decodeSerializableValue(delegateSerializer)
   }
 }
 
