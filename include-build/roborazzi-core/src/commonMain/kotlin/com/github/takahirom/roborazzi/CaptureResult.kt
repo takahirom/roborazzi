@@ -22,7 +22,7 @@ sealed interface CaptureResult {
   val compareFile: String?
   val actualFile: String?
   val goldenFile: String?
-  val contextData: Map<String, @Contextual Any>
+  val contextData: Map<String, Any>
 
   @InternalRoborazziApi
   val aiAssertionResultsOrNull: AiAssertionResults?
@@ -33,7 +33,7 @@ sealed interface CaptureResult {
     }
 
   @InternalRoborazziApi
-  val contextDataOrNull: Map<String, @Contextual Any>?
+  val contextDataOrNull: Map<String, Any>?
     get() = contextData
       .filter { it.value.toString() != "null" && it.value.toString().isNotEmpty() }
       .takeIf { it.isNotEmpty() }
@@ -53,7 +53,8 @@ sealed interface CaptureResult {
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("context_data")
-    override val contextData: Map<String, @Contextual Any>
+    @Serializable(with = ContextDataSerializer::class)
+    override val contextData: Map<String, Any>
   ) : CaptureResult {
     override val type = "recorded"
     override val actualFile: String?
@@ -75,7 +76,8 @@ sealed interface CaptureResult {
     @SerialName("ai_assertion_results")
     val aiAssertionResults: AiAssertionResults?,
     @SerialName("context_data")
-    override val contextData: Map<String, @Contextual Any>
+    @Serializable(with = ContextDataSerializer::class)
+    override val contextData: Map<String, Any>
   ) : CaptureResult {
     override val type = "added"
   }
@@ -95,7 +97,8 @@ sealed interface CaptureResult {
     @SerialName("ai_assertion_results")
     val aiAssertionResults: AiAssertionResults?,
     @SerialName("context_data")
-    override val contextData: Map<String, @Contextual Any>
+    @Serializable(with = ContextDataSerializer::class)
+    override val contextData: Map<String, Any>
   ) : CaptureResult {
     override val type = "changed"
   }
@@ -107,7 +110,8 @@ sealed interface CaptureResult {
     @SerialName("timestamp")
     override val timestampNs: Long,
     @SerialName("context_data")
-    override val contextData: Map<String, @Contextual Any>
+    @Serializable(with = ContextDataSerializer::class)
+    override val contextData: Map<String, Any>
   ) : CaptureResult {
     override val type = "unchanged"
     override val actualFile: String?
