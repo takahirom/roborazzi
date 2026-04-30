@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,6 +26,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,10 +46,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import kotlinx.coroutines.delay
@@ -492,7 +507,9 @@ fun PreviewFocusGroupLaunchedEffectMinimal() {
     BasicTextField(
       value = androidx.compose.ui.text.input.TextFieldValue(""),
       onValueChange = {},
-      modifier = Modifier.size(60.dp).background(Color.Gray)
+      modifier = Modifier
+        .size(60.dp)
+        .background(Color.Gray)
     )
   }
 
@@ -526,6 +543,41 @@ fun PreviewDialogWithMeasure() {
           Text(text = "Size: $size", color = Color.White)
         }
       }
+    )
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun PreviewTextWithInlineContent() {
+  BasicAlertDialog(onDismissRequest = {}) {
+
+    val text = buildAnnotatedString {
+      append(stringResource(R.string.testing_inline_content))
+      append(" ")
+      appendInlineContent("linkIcon", "[linkIcon]")
+      append(" ")
+      append(stringResource(R.string.for_preview_tests))
+    }
+
+    Text(
+      modifier = Modifier.fillMaxWidth(),
+      text = text,
+      style = MaterialTheme.typography.bodySmall,
+      textAlign = TextAlign.Center,
+      inlineContent = mapOf(
+        "linkIcon" to InlineTextContent(
+          placeholder = Placeholder(20.sp, 20.sp, PlaceholderVerticalAlign.Center),
+          children = {
+            Icon(
+              modifier = Modifier.fillMaxSize(),
+              imageVector = Icons.Default.Add,
+              contentDescription = null,
+            )
+          },
+        ),
+      ),
     )
   }
 }
