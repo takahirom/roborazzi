@@ -20,7 +20,7 @@ repositories {
 
 android {
   namespace = "com.github.takahirom.preview.tests"
-  compileSdk = libs.versions.compileSdk.get().toInt()
+  compileSdk = 36//libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
     minSdk = 24
