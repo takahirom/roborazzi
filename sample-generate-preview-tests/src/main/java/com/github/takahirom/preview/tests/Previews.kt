@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +41,8 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewWrapper
+import androidx.compose.ui.tooling.preview.PreviewWrapperProvider
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
@@ -528,4 +531,26 @@ fun PreviewDialogWithMeasure() {
       }
     )
   }
+}
+
+private class SampleScaffoldWrapper : PreviewWrapperProvider {
+  @Composable
+  override fun Wrap(content: @Composable () -> Unit) {
+    MaterialTheme {
+      Scaffold { padding ->
+        Box(
+          Modifier
+            .padding(padding)
+            .background(Color.LightGray)
+        ) { content() }
+      }
+    }
+  }
+}
+
+@Preview
+@Composable
+@PreviewWrapper(wrapper = SampleScaffoldWrapper::class)
+fun PreviewWrapperSample() {
+  Text("PreviewWrapperSample")
 }
