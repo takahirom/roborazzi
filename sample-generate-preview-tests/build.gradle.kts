@@ -16,9 +16,9 @@ roborazzi {
   generateComposePreviewRobolectricTests {
     enable = true
     packages = listOf("com.github.takahirom.preview.tests")
-    annotationFilter = Filter.ExcludeFromRoborazzi
-    //annotationFilter = Include("com.github.takahirom.roborazzi.annotations.filter.IncludeRoborazzi")
-    //annotationFilter = Exclude("com.github.takahirom.roborazzi.annotations.filter.ExcludeRoborazzi")
+    annotationFilter = Filter.RoboPreviewExclude
+    //annotationFilter = Include("com.github.takahirom.roborazzi.annotations.filter.RoboPreviewInclude")
+    //annotationFilter = Exclude("com.github.takahirom.roborazzi.annotations.filter.RoboPreviewExclude")
   }
 }
 

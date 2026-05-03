@@ -97,7 +97,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
           return AndroidComposablePreviewScanner()
             .scanPackageTrees(*options().scanOptions.packages.toTypedArray())
             // exclude annotated previews (or .includeIfAnnotatedWithAnyOf() to include)
-            .excludeIfAnnotatedWithAnyOf(ExcludeFromRoborazzi::class.java)
+            .excludeIfAnnotatedWithAnyOf(RoboPreviewExclude::class.java)
             // include private previews
             .includePrivatePreviews()
             .getPreviews()
@@ -111,7 +111,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
           packages = listOf("your.package")
           testerQualifiedClassName = "com.example.CustomTester"
           includePrivatePreviews = true
-          annotationFilter = Filter.ExcludeFromRoborazzi // or Filter.IncludeInRoborazzi
+          annotationFilter = Filter.RoboPreviewExclude // or Filter.RoboPreviewInclude
           useScanOptionParametersInTester = true
         }
 
