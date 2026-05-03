@@ -1,5 +1,4 @@
 package com.github.takahirom.roborazzi.annotations.filter
 
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
-@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FUNCTION)
 annotation class RoboPreviewExclude
