@@ -128,7 +128,7 @@ class GeneratePreviewTestTest {
       buildGradle.useScanOptionParametersInTester = false
 
       record(BuildType.BuildAndFail) {
-        assert(output.contains("includePrivatePreviews cannot be set automatically when using a custom tester"))
+        assert(output.contains("includePrivatePreviews / annotationFilter cannot be set automatically when using a custom tester"))
         assert(output.contains("You have two options:"))
       }
     }

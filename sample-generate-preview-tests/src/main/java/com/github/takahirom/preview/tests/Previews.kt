@@ -44,8 +44,11 @@ import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
+import com.github.takahirom.roborazzi.annotations.RoboPreviewExclude
+import com.github.takahirom.roborazzi.annotations.RoboPreviewInclude
 import kotlinx.coroutines.delay
 
+@RoboPreviewInclude
 @Preview
 @Composable
 fun PreviewNormal() {
@@ -69,6 +72,7 @@ fun PreviewNormal() {
   }
 }
 
+@RoboPreviewExclude
 @Preview(
   uiMode = Configuration.UI_MODE_NIGHT_YES
 )
