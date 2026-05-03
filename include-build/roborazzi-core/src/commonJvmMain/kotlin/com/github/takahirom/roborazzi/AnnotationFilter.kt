@@ -17,8 +17,8 @@ sealed class AnnotationFilter : Serializable {
   }
 
   companion object Filter {
-    val RoboPreviewExclude = Exclude("com.github.takahirom.roborazzi.annotations.filter.RoboPreviewExclude")
-    val RoboPreviewInclude = Include("com.github.takahirom.roborazzi.annotations.filter.RoboPreviewInclude")
+    val RoboPreviewExclude = Exclude("com.github.takahirom.roborazzi.annotations.RoboPreviewExclude")
+    val RoboPreviewInclude = Include("com.github.takahirom.roborazzi.annotations.RoboPreviewInclude")
   }
 
   /**

@@ -44,8 +44,8 @@ import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
-import com.github.takahirom.roborazzi.annotations.filter.RoboPreviewExclude
-import com.github.takahirom.roborazzi.annotations.filter.RoboPreviewInclude
+import com.github.takahirom.roborazzi.annotations.RoboPreviewExclude
+import com.github.takahirom.roborazzi.annotations.RoboPreviewInclude
 import kotlinx.coroutines.delay
 
 @RoboPreviewInclude

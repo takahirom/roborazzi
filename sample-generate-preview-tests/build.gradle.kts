@@ -17,8 +17,8 @@ roborazzi {
     enable = true
     packages = listOf("com.github.takahirom.preview.tests")
     annotationFilter = Filter.RoboPreviewExclude
-    //annotationFilter = Include("com.github.takahirom.roborazzi.annotations.filter.RoboPreviewInclude")
-    //annotationFilter = Exclude("com.github.takahirom.roborazzi.annotations.filter.RoboPreviewExclude")
+    //annotationFilter = Include("com.github.takahirom.roborazzi.annotations.RoboPreviewInclude")
+    //annotationFilter = Exclude("com.github.takahirom.roborazzi.annotations.RoboPreviewExclude")
   }
 }
 
