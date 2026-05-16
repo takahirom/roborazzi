@@ -330,7 +330,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
             }
           test.inputs.files(
             imageInputProvider
-          ).withPathSensitivity(PathSensitivity.RELATIVE)
+          )
+            .withPropertyName("roborazziImageInput")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
           test.outputs.dirs(
             compareOutputDirProvider.flatMap { compareOutputDir: Directory ->
               isCompareOrVerifyRunProvider.flatMap { isCompareOrVerifyRun ->
