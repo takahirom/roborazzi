@@ -60,10 +60,7 @@ allprojects {
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     compilerOptions {
       jvmTarget.set(jvmTargetVersion)
-      // TODO: re-enable after fixing Kotlin 2.3 / Compose 1.10 deprecations
-      //  (deprecated androidx.compose.desktop.ui.tooling.preview.Preview,
-      //   KTLC-14 inferred return type warnings, etc.) in a follow-up PR.
-      // allWarningsAsErrors = true
+      allWarningsAsErrors = true
     }
   }
 
