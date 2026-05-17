@@ -7,7 +7,7 @@ plugins {
   id("org.jetbrains.kotlin.android") version libs.versions.kotlin apply false
   id("org.jetbrains.kotlin.multiplatform") version libs.versions.kotlin apply false
   id("org.jetbrains.compose") version libs.versions.composeMultiplatform apply false
-  id("org.jetbrains.kotlin.plugin.compose") version libs.versions.kotlin apply false
+  id("org.jetbrains.kotlin.plugin.compose") version libs.versions.kotlinComposeCompiler apply false
   // Just for Gradle Build, included build will be applied
   id("io.github.takahirom.roborazzi") version "1.0.0" apply false
 }
