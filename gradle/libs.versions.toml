@@ -9,12 +9,12 @@ targetSdk = "35"
 minSdk = "21"
 commons-compress = "1.23.0"
 kotlin = "2.3.21"
-# Compose Compiler Gradle Plugin pinned one minor version behind the main
-# Kotlin compiler: 2.3.21's ComposeAgpMappingFile triggers a
+# Compose Compiler Gradle Plugin pinned to the 2.2.x line. The 2.3.x series
+# introduced ComposeAgpMappingFile, whose application throws
 # TypeNotPresentException for com.android.build.api.variant.ApplicationAndroidComponentsExtension
-# when applied to an Android project together with AGP 8.13.2. 2.3.20 is the
-# nearest version without this regression; revisit when Kotlin ships a fix.
-kotlinComposeCompiler = "2.3.20"
+# on Android projects together with AGP 8.13.2 (classloader visibility regression).
+# 2.2.21 is the last release without this code path. Revisit when Kotlin ships a fix.
+kotlinComposeCompiler = "2.2.21"
 # Version of kotlin-stdlib declared in our published POMs. Pinned to the
 # minimum supported Kotlin version so consumers on older Kotlin are not
 # force-bumped; on newer Kotlin, Gradle's conflict resolution picks the
