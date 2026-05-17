@@ -216,7 +216,7 @@ class PreviewModule(
     
     private fun kspPlugins() = if (useKsp) """
     id("com.google.dagger.hilt.android") version "2.57.1"
-    id("com.google.devtools.ksp") version "2.0.21-1.0.28"""" else ""
+    id("com.google.devtools.ksp") version "2.3.8"""" else ""
     
     private fun hiltImplementationDependencies() = if (useKsp) """
     implementation("com.google.dagger:dagger:2.57.1")
