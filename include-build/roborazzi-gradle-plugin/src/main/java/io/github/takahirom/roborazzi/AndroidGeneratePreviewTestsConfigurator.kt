@@ -10,6 +10,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.testing.Test
+import com.github.takahirom.roborazzi.AnnotationFilter
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import java.net.URLEncoder
 import java.util.Locale
@@ -74,7 +75,6 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   val isUsingCustomTester = testerQualifiedClassName.get() != GenerateComposePreviewRobolectricTestsExtension.DEFAULT_TESTER_CLASS
   val useScanOptions = extension.useScanOptionParametersInTester.get()
   val includePrivatePreviews = extension.includePrivatePreviews.get()
-  extension.annotationFilter.isPresent
 
   if (!useScanOptions && isUsingCustomTester && (includePrivatePreviews || extension.annotationFilter.isPresent)) {
     throw IllegalArgumentException(
@@ -153,7 +153,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     it.testerQualifiedClassName.set(testerQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)
     it.generatedTestClassCount.set(extension.generatedTestClassCount)
-    it.annotationFilter.set(extension.annotationFilter)
+    it.annotationFilter.set(extension.annotationFilter.orElse(AnnotationFilter.Filter.RoboPreviewExclude))
   }
   // AGP 9.0: unitTest is now on HasUnitTest interface, not Variant
   val unitTestSources = (variant as? HasUnitTest)?.unitTest?.sources

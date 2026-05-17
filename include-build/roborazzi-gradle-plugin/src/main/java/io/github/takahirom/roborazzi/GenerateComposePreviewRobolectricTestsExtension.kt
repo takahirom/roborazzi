@@ -72,7 +72,9 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
   val generatedTestClassCount: Property<Int> = objects.property(Int::class.java)
 
   /**
-   * Filter for composable previews by annotation.
+   * Filter for composable previews by annotation. When unset, the plugin defaults to
+   * [AnnotationFilter.Filter.RoboPreviewExclude] so `@RoboPreviewExclude` works out of the box.
+   * Set explicitly to switch to an opt-in [AnnotationFilter.Include] policy.
    */
   @ExperimentalRoborazziApi
   val annotationFilter: Property<AnnotationFilter> = objects.property(AnnotationFilter::class.java)
