@@ -96,3 +96,7 @@ tasks.named('check') {
   dependsOn(testing.suites.integrationTest)
 }
 
+tasks.withType(ValidatePlugins).configureEach {
+  enableStricterValidation = true
+}
+
