@@ -20,10 +20,12 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.options.Option
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
@@ -654,9 +656,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
   private fun String.capitalizeUS() =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
 
+  @DisableCachingByDefault(because = "Copies previously recorded screenshots; caching is not useful")
   abstract class RestoreOutputDirRoborazziTask @Inject constructor(objects: ObjectFactory) :
     DefaultTask() {
     @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     val inputDir: DirectoryProperty = objects.directoryProperty()
 
@@ -672,6 +676,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
     }
   }
 
+  @DisableCachingByDefault(because = "Lifecycle task only; exposes --tests option to underlying Test tasks")
   open class RoborazziTask : DefaultTask() {
     @Option(
       option = "tests",
