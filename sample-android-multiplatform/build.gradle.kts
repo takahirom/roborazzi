@@ -13,7 +13,9 @@ kotlin {
   androidLibrary {
     namespace = "com.github.takahirom.roborazzi.sample.android.multiplatform"
     compileSdk = libs.versions.compileSdk.get().toInt()
-    minSdk = libs.versions.minSdk.get().toInt()
+    // Compose Multiplatform 1.10's material module requires minSdk 23; this
+    // sample is the only consumer with that requirement.
+    minSdk = 23
 
     // Enable host-side (unit) tests with Android resources
     withHostTest {
