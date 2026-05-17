@@ -363,23 +363,23 @@ abstract class RoborazziPlugin : Plugin<Project> {
             }.map {
               test.infoln("Roborazzi: Set output dir ${it} to test task")
               it
-            })
+            }).withPropertyName("roborazziCompareOutput")
           test.outputs.dir(intermediateDirForEachVariant.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
-          })
+          }).withPropertyName("roborazziIntermediateDir")
           test.outputs.dir(resultDir.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
-          })
+          }).withPropertyName("roborazziResultDir")
           test.outputs.file(resultSummaryFile.map {
             test.infoln("Roborazzi: Set output file $it to test task")
             it
-          })
+          }).withPropertyName("roborazziResultSummary")
           test.outputs.file(reportFile.map {
             test.infoln("Roborazzi: Set output file $it to test task")
             it
-          })
+          }).withPropertyName("roborazziReport")
 
           test.inputs.properties(
             mapOf(
