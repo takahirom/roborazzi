@@ -7,10 +7,10 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 }
 
 kotlin {
-  targetHierarchy.custom {
+  applyHierarchyTemplate {
     it.common {
       it.group("commonJvm") {
-        it.withAndroid()
+        it.withAndroidTarget()
         it.withJvm()
       }
       it.group("ios") {

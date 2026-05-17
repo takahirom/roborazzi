@@ -258,7 +258,6 @@ class RoborazziRule private constructor(
         val isOnlyFail = when (captureType) {
           is CaptureType.AllImage -> captureType.onlyFail
           is CaptureType.Gif -> captureType.onlyFail
-          else -> false
         }
         if (!isOnlyFail || result.result.isFailure) {
           if (captureType is CaptureType.AllImage) {

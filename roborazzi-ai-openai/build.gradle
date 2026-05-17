@@ -7,8 +7,6 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
 
-android.compileSdk(libs.versions.compileSdk.get().toInteger())
-
 kotlin {
   applyDefaultHierarchyTemplate()
 
@@ -48,8 +46,8 @@ kotlin {
 }
 
 android {
-  namespace 'com.github.takahirom.roborazzi.ai.openai'
-  compileSdk libs.versions.compileSdk.get().toInteger()
+  namespace = 'com.github.takahirom.roborazzi.ai.openai'
+  compileSdk = libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInteger()

@@ -7,10 +7,8 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
 
-android.compileSdk(libs.versions.compileSdk.get().toInteger())
-
 kotlin {
-  targetHierarchy.custom {
+  applyHierarchyTemplate {
     it.common {
       it.group("commonJvm") {
         it.withAndroidTarget()
@@ -96,7 +94,7 @@ kotlin {
 
 android {
   namespace 'com.github.takahirom.roborazzi.core'
-  compileSdk libs.versions.compileSdk.get().toInteger()
+  compileSdk = libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInteger()
