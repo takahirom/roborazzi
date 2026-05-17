@@ -30,6 +30,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        api libs.kotlin.stdlib
         compileOnly libs.kotlinx.serialization.json
         // Please see settings.gradle
         api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"

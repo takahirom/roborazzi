@@ -9,6 +9,11 @@ targetSdk = "35"
 minSdk = "21"
 commons-compress = "1.23.0"
 kotlin = "2.3.21"
+# Version of kotlin-stdlib declared in our published POMs. Pinned to the
+# minimum supported Kotlin version so consumers on older Kotlin are not
+# force-bumped; on newer Kotlin, Gradle's conflict resolution picks the
+# consumer's higher version.
+kotlinStdlibPin = "2.0.21"
 mavenPublish = "0.34.0"
 composeMultiplatform = "1.7.0"
 robolectric = "4.14.1"
@@ -61,7 +66,8 @@ roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit
 roborazzi-rule = { module = "io.github.takahirom.roborazzi:roborazzi-rule", version.ref = "roborazzi-for-replacing-by-include-build" }
 
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlinStdlibPin" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinStdlibPin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit" }
 

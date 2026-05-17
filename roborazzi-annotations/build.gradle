@@ -14,10 +14,3 @@ repositories {
 apply from: rootProject.file('gradle/android.gradle')
 
 android.namespace 'com.github.takahirom.roborazzi.annotations'
-
-// We disable KGP's auto-added kotlin-stdlib (kotlin.stdlib.default.dependency=false)
-// to keep POMs clean. This module has no other deps that transitively bring stdlib,
-// so we add it compileOnly to satisfy the compile classpath without leaking into the POM.
-dependencies {
-  compileOnly libs.kotlin.stdlib.jdk8
-}

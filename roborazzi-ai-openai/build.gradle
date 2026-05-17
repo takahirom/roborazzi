@@ -23,6 +23,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        api libs.kotlin.stdlib
         implementation "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
         // To expose requestBuilderModifier
         api(libs.ktor.client.core)

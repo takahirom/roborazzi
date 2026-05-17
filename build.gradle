@@ -63,6 +63,19 @@ allprojects {
       allWarningsAsErrors = true
     }
   }
+
+  // We disable KGP's auto-added kotlin-stdlib dependency
+  // (kotlin.stdlib.default.dependency=false) so we can pin the published
+  // stdlib version. Re-add it ourselves at the pinned version on Android
+  // and JVM Kotlin modules.
+  ["org.jetbrains.kotlin.android", "org.jetbrains.kotlin.jvm"].each { pluginId ->
+    plugins.withId(pluginId) {
+      dependencies {
+        api libs.kotlin.stdlib.jdk8
+      }
+    }
+  }
+
   if (project.name.startsWith("roborazzi") &&
     project.name != "roborazzi-idea-plugin" &&
     project.name != "roborazzi-annotations") {

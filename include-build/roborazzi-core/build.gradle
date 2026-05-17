@@ -34,6 +34,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        api libs.kotlin.stdlib
         compileOnly libs.kotlinx.serialization.json
         api libs.dropbox.differ
         implementation libs.kotlinx.io.core

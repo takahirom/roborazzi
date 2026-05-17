@@ -26,7 +26,7 @@ kotlin {
         implementation(compose.runtime)
         implementation(compose.desktop.currentOs)
         implementation(project(":roborazzi-painter"))
-        implementation(libs.kotlin.stdlib.jdk8)
+        api(libs.kotlin.stdlib.jdk8)
         api libs.compose.ui.test.junit4.desktop
         implementation libs.compose.ui.graphics.desktop
       }
