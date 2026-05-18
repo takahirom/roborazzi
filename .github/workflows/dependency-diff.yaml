@@ -45,7 +45,7 @@ jobs:
         with:
           modules: |
             roborazzi-core|commonMainImplementationDependenciesMetadata
-            roborazzi-core|releaseRuntimeClasspath
+            roborazzi-core|androidRuntimeClasspath
             roborazzi-gradle-plugin
           configuration: 'runtimeClasspath'
           project-dir: 'include-build'

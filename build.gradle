@@ -83,6 +83,13 @@ allprojects {
     targetCompatibility = javaTargetVersion
   }
 
+  // Gradle 9 fails test tasks that have test sources configured but discover
+  // zero tests at runtime. Several modules in this repo (e.g. roborazzi-ai-*)
+  // have empty KMP test source sets — relax the gate.
+  tasks.withType(Test).configureEach {
+    failOnNoDiscoveredTests = false
+  }
+
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     compilerOptions {
       jvmTarget.set(jvmTargetVersion)
