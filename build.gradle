@@ -82,7 +82,7 @@ allprojects {
   ["org.jetbrains.kotlin.android", "org.jetbrains.kotlin.jvm"].each { pluginId ->
     plugins.withId(pluginId) {
       dependencies {
-        api libs.kotlin.stdlib.jdk8
+        api libs.kotlin.stdlib
       }
     }
   }
