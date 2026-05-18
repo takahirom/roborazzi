@@ -19,7 +19,7 @@ kotlinComposeCompiler = "2.2.21"
 # minimum supported Kotlin version so consumers on older Kotlin are not
 # force-bumped; on newer Kotlin, Gradle's conflict resolution picks the
 # consumer's higher version.
-kotlinStdlibPin = "2.3.21"
+kotlinStdlibPin = "2.0.21"
 mavenPublish = "0.34.0"
 composeMultiplatform = "1.10.3"
 robolectric = "4.14.1"
