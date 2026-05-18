@@ -874,7 +874,7 @@ internal class NeuQuant(thepic: ByteArray?, len: Int, sample: Int) {
       if (j < hi) {
         p = network[j++]
         try {
-          p!![0] -= a * (p!![0] - b) / alpharadbias
+          p!![0] -= a * (p[0] - b) / alpharadbias
           p[1] -= a * (p[1] - g) / alpharadbias
           p[2] -= a * (p[2] - r) / alpharadbias
         } catch (e: Exception) {
@@ -883,7 +883,7 @@ internal class NeuQuant(thepic: ByteArray?, len: Int, sample: Int) {
       if (k > lo) {
         p = network[k--]
         try {
-          p!![0] -= a * (p!![0] - b) / alpharadbias
+          p!![0] -= a * (p[0] - b) / alpharadbias
           p[1] -= a * (p[1] - g) / alpharadbias
           p[2] -= a * (p[2] - r) / alpharadbias
         } catch (e: Exception) {
@@ -900,7 +900,7 @@ internal class NeuQuant(thepic: ByteArray?, len: Int, sample: Int) {
 
     /* alter hit neuron */
     val n = network[i]
-    n!![0] -= alpha * (n!![0] - b) / initalpha
+    n!![0] -= alpha * (n[0] - b) / initalpha
     n[1] -= alpha * (n[1] - g) / initalpha
     n[2] -= alpha * (n[2] - r) / initalpha
   }

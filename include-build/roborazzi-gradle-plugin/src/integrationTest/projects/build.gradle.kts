@@ -7,7 +7,7 @@ plugins {
   id("org.jetbrains.kotlin.android") version libs.versions.kotlin apply false
   id("org.jetbrains.kotlin.multiplatform") version libs.versions.kotlin apply false
   id("org.jetbrains.compose") version libs.versions.composeMultiplatform apply false
-  id("org.jetbrains.kotlin.plugin.compose") version libs.versions.kotlin apply false
+  id("org.jetbrains.kotlin.plugin.compose") version libs.versions.kotlinComposeCompiler apply false
   // Just for Gradle Build, included build will be applied
   id("io.github.takahirom.roborazzi") version "1.0.0" apply false
 }
@@ -19,12 +19,23 @@ allprojects {
   val javaTargetVersion = JavaVersion.toVersion (javaVersion)
   val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(javaVersion)
   
-  // Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+  // Replace AGP's default Compose Compiler with the embeddable compiler shipped
+  // with Kotlin, and force it to match the main Kotlin compiler version. The
+  // Compose Compiler Gradle Plugin is pinned to an older minor (see
+  // kotlinComposeCompiler in libs.versions.toml) and would otherwise drag in
+  // an embeddable compiler that mismatches the main compiler.
   configurations.all {
     resolutionStrategy.dependencySubstitution {
       substitute(module("androidx.compose.compiler:compiler"))
         .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:${libs.versions.kotlin.get()}"))
-        .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+        .because("Compose Compiler ships with the Kotlin distribution since 2.0")
+    }
+    resolutionStrategy.eachDependency {
+      if (requested.group == "org.jetbrains.kotlin"
+        && requested.name == "kotlin-compose-compiler-plugin-embeddable") {
+        useVersion(libs.versions.kotlin.get())
+        because("Align embeddable compose compiler with main Kotlin compiler")
+      }
     }
   }
 

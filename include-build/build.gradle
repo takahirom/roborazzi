@@ -1,7 +1,7 @@
 plugins {
   id "org.jetbrains.kotlin.jvm" version libs.versions.kotlin apply false
   id 'org.jetbrains.kotlin.multiplatform' version libs.versions.kotlin apply false
-  id 'org.jetbrains.kotlin.plugin.compose' version libs.versions.kotlin apply false
+  id 'org.jetbrains.kotlin.plugin.compose' version libs.versions.kotlinComposeCompiler apply false
   id 'com.android.library' version libs.versions.agp apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
 }
@@ -48,7 +48,7 @@ allprojects {
   plugins.withId('com.vanniktech.maven.publish') {
     project.group = "io.github.takahirom.roborazzi"
     mavenPublishing {
-      publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+      publishToMavenCentral()
       signAllPublications()
     }
 

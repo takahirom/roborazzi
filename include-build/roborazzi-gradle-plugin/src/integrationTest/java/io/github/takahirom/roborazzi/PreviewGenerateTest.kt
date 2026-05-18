@@ -216,7 +216,7 @@ class PreviewModule(
     
     private fun kspPlugins() = if (useKsp) """
     id("com.google.dagger.hilt.android") version "2.57.1"
-    id("com.google.devtools.ksp") version "2.0.21-1.0.28"""" else ""
+    id("com.google.devtools.ksp") version "2.3.8"""" else ""
     
     private fun hiltImplementationDependencies() = if (useKsp) """
     implementation("com.google.dagger:dagger:2.57.1")
@@ -329,12 +329,22 @@ class PreviewModule(
 
           $roborazziExtension
           
-          // Replace AGP's default Compose Compiler with Kotlin's integrated version
+          // Replace AGP's default Compose Compiler with the embeddable compiler
+          // shipped with Kotlin, forcing the version to match the main Kotlin
+          // compiler (the Compose Compiler Gradle Plugin is pinned to an older
+          // minor and would otherwise drag in a mismatched embeddable compiler).
           configurations.all {
               resolutionStrategy.dependencySubstitution {
                   substitute(module("androidx.compose.compiler:compiler"))
-                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
-                    .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+                    .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:${'$'}{libs.versions.kotlin.get()}"))
+                    .because("Compose Compiler ships with the Kotlin distribution since 2.0")
+              }
+              resolutionStrategy.eachDependency {
+                  if (requested.group == "org.jetbrains.kotlin"
+                    && requested.name == "kotlin-compose-compiler-plugin-embeddable") {
+                      useVersion(libs.versions.kotlin.get())
+                      because("Align embeddable compose compiler with main Kotlin compiler")
+                  }
               }
           }
 
@@ -362,12 +372,20 @@ class PreviewModule(
 
   $roborazziExtension
 
-  // Replace AGP's default Compose Compiler with Kotlin's integrated version
+  // Replace AGP's default Compose Compiler with the embeddable compiler
+  // shipped with Kotlin, forcing the version to match the main Kotlin compiler.
   configurations.all {
       resolutionStrategy.dependencySubstitution {
           substitute(module("androidx.compose.compiler:compiler"))
-            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.21"))
-            .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+            .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:${'$'}{libs.versions.kotlin.get()}"))
+            .because("Compose Compiler ships with the Kotlin distribution since 2.0")
+      }
+      resolutionStrategy.eachDependency {
+          if (requested.group == "org.jetbrains.kotlin"
+            && requested.name == "kotlin-compose-compiler-plugin-embeddable") {
+              useVersion(libs.versions.kotlin.get())
+              because("Align embeddable compose compiler with main Kotlin compiler")
+          }
       }
   }
 

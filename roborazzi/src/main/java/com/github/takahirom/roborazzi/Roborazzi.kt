@@ -208,8 +208,8 @@ fun captureScreenIfMultipleWindows(
 @InternalRoborazziApi
 fun fetchRobolectricWindowRoots(): List<Root> {
   try {
-    @Suppress("INACCESSIBLE_TYPE") val rootsOracle = RootsOracle_Factory({ Looper.getMainLooper() })
-      .get()
+    val factory: Any = RootsOracle_Factory({ Looper.getMainLooper() })
+    val rootsOracle: Any = factory.javaClass.getMethod("get").invoke(factory)!!
     // Invoke rootOracle.listActiveRoots() via reflection
     @Suppress("INACCESSIBLE_TYPE") val listActiveRoots =
       rootsOracle.javaClass.getMethod("listActiveRoots")

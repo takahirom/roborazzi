@@ -8,8 +8,8 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 
 
 android {
-  namespace 'com.github.takahirom.roborazzi.junit.rule'
-  compileSdk libs.versions.compileSdk.get().toInteger()
+  namespace = 'com.github.takahirom.roborazzi.junit.rule'
+  compileSdk = libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInteger()
