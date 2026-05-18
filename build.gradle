@@ -48,6 +48,13 @@ allprojects {
         details.useVersion("23.0.0")
         details.because("Resolve compile/runtime consistent-resolution conflict")
       }
+      if (details.requested.group == "androidx.annotation"
+        && details.requested.name == "annotation-experimental") {
+        // Gradle 9 consistent resolution: androidx.test:annotation strictly
+        // requires 1.1.0 while androidx.compose.foundation requires 1.4.0.
+        details.useVersion("1.4.0")
+        details.because("Resolve compile/runtime consistent-resolution conflict")
+      }
     }
   }
 
