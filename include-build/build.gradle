@@ -51,6 +51,12 @@ allprojects {
     }
   }
 
+  // Gradle 9 fails test tasks that have test sources but no discovered tests.
+  // roborazzi-core's androidHostTest sits in this state — relax the gate.
+  tasks.withType(Test).configureEach {
+    failOnNoDiscoveredTests = false
+  }
+
   plugins.withId('com.vanniktech.maven.publish') {
     project.group = "io.github.takahirom.roborazzi"
     mavenPublishing {
