@@ -80,5 +80,11 @@ allprojects {
       jvmTarget.set(jvmTargetVersion)
     }
   }
+
+  // Gradle 9 fails test tasks that have test sources but no discovered tests.
+  // The preview-generate sample exercises this path.
+  tasks.withType(Test::class.java).configureEach {
+    failOnNoDiscoveredTests = false
+  }
 }
 true // Needed to make the Suppress annotation work for the plugins block
