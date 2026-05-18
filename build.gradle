@@ -40,6 +40,14 @@ allprojects {
         details.useVersion(libs.versions.kotlin.get())
         details.because("Align embeddable compose compiler with main Kotlin compiler")
       }
+      if (details.requested.group == "org.jetbrains"
+        && details.requested.name == "annotations") {
+        // Gradle 9's consistent resolution flags the strict 13.0 constraint that
+        // kotlin-stdlib pulls in as incompatible with the 23.0 that
+        // kotlinx-coroutines requires. Pin to a version that satisfies both.
+        details.useVersion("23.0.0")
+        details.because("Resolve compile/runtime consistent-resolution conflict")
+      }
     }
   }
 
