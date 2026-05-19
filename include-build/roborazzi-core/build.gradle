@@ -1,6 +1,6 @@
 plugins {
   id "org.jetbrains.kotlin.multiplatform"
-  id "com.android.library"
+  id "com.android.kotlin.multiplatform.library"
   id("org.jetbrains.kotlin.plugin.serialization") version libs.versions.kotlin
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
@@ -11,7 +11,7 @@ kotlin {
   applyHierarchyTemplate {
     it.common {
       it.group("commonJvm") {
-        it.withAndroidTarget()
+        it.withCompilations { compilation -> compilation.target.name == "androidLibrary" }
         it.withJvm()
       }
       it.group("ios") {
@@ -27,8 +27,13 @@ kotlin {
   iosSimulatorArm64()
 
   jvm()
-  androidTarget {
-    publishLibraryVariants("release")
+  androidLibrary {
+    namespace = 'com.github.takahirom.roborazzi.core'
+    compileSdk = libs.versions.compileSdk.get().toInteger()
+    minSdk = libs.versions.minSdk.get().toInteger()
+    withHostTest {
+      it.includeAndroidResources = true
+    }
   }
 
   sourceSets {
@@ -39,15 +44,6 @@ kotlin {
         api libs.dropbox.differ
         implementation libs.kotlinx.io.core
       }
-    }
-    iosX64 {
-      dependsOn(commonMain)
-    }
-    iosArm64 {
-      dependsOn(commonMain)
-    }
-    iosSimulatorArm64 {
-      dependsOn(commonMain)
     }
     commonJvmMain {
       dependencies {
@@ -74,6 +70,7 @@ kotlin {
     }
 
     androidMain {
+      dependsOn(commonJvmMain)
       dependencies {
         compileOnly libs.robolectric
         compileOnly libs.androidx.compose.ui.test
@@ -93,28 +90,19 @@ kotlin {
   }
 }
 
-android {
-  namespace 'com.github.takahirom.roborazzi.core'
-  compileSdk = libs.versions.compileSdk.get().toInteger()
-
-  defaultConfig {
-    minSdk = libs.versions.minSdk.get().toInteger()
-    targetSdk = libs.versions.targetSdk.get().toInteger()
-
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-  }
-  buildFeatures {}
-  testOptions {
-    unitTests {
-      includeAndroidResources = true
+// Back-compat alias for tools that query the old AGP-variant runtime classpath
+// name. The com.android.kotlin.multiplatform.library plugin renamed the
+// resolvable runtime config from `releaseRuntimeClasspath` to
+// `androidRuntimeClasspath`; this alias keeps the older name working until
+// every external consumer (e.g. the dependency-diff GitHub workflow) is
+// updated to the new name post-migration.
+afterEvaluate {
+  if (configurations.findByName("releaseRuntimeClasspath") == null) {
+    configurations.create("releaseRuntimeClasspath") {
+      canBeResolved = true
+      canBeConsumed = false
+      extendsFrom configurations.androidRuntimeClasspath
     }
   }
 }
 
-dependencies {
-  compileOnly gradleApi()
-}
-
-sourceSets {
-  main.java.srcDir 'src/generated/kotlin'
-}

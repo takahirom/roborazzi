@@ -23,8 +23,10 @@ jobs:
             roborazzi-compose-ios|iosArm64CompileKlibraries
             roborazzi-compose-desktop|commonMainImplementationDependenciesMetadata
             roborazzi-ai-gemini|commonMainImplementationDependenciesMetadata
+            roborazzi-ai-gemini|jvmRuntimeClasspath
             roborazzi-ai-gemini|releaseRuntimeClasspath
             roborazzi-ai-openai|commonMainImplementationDependenciesMetadata
+            roborazzi-ai-openai|jvmRuntimeClasspath
             roborazzi-ai-openai|releaseRuntimeClasspath
             roborazzi-painter|commonMainImplementationDependenciesMetadata
             roborazzi-painter|jvmRuntimeClasspath
@@ -45,6 +47,7 @@ jobs:
         with:
           modules: |
             roborazzi-core|commonMainImplementationDependenciesMetadata
+            roborazzi-core|jvmRuntimeClasspath
             roborazzi-core|releaseRuntimeClasspath
             roborazzi-gradle-plugin
           configuration: 'runtimeClasspath'

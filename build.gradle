@@ -40,6 +40,21 @@ allprojects {
         details.useVersion(libs.versions.kotlin.get())
         details.because("Align embeddable compose compiler with main Kotlin compiler")
       }
+      if (details.requested.group == "org.jetbrains"
+        && details.requested.name == "annotations") {
+        // Gradle 9's consistent resolution flags the strict 13.0 constraint that
+        // kotlin-stdlib pulls in as incompatible with the 23.0 that
+        // kotlinx-coroutines requires. Pin to a version that satisfies both.
+        details.useVersion("23.0.0")
+        details.because("Resolve compile/runtime consistent-resolution conflict")
+      }
+      if (details.requested.group == "androidx.annotation"
+        && details.requested.name == "annotation-experimental") {
+        // Gradle 9 consistent resolution: androidx.test:annotation strictly
+        // requires 1.1.0 while androidx.compose.foundation requires 1.4.0.
+        details.useVersion("1.4.0")
+        details.because("Resolve compile/runtime consistent-resolution conflict")
+      }
     }
   }
 
@@ -66,6 +81,24 @@ allprojects {
   tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
     sourceCompatibility = javaTargetVersion
     targetCompatibility = javaTargetVersion
+  }
+
+  // Gradle 9 fails test tasks that have test sources configured but discover
+  // zero tests at runtime. These modules have implicit empty Android unit-test
+  // source sets (no `src/*/test` dirs with .kt files). Scope the relax to the
+  // single empty task name so other test tasks (e.g. jvmTest) that lose all
+  // their tests would still fail loudly.
+  def modulesWithEmptyAndroidUnitTest = [
+    "roborazzi-ai-gemini",
+    "roborazzi-ai-openai",
+    "roborazzi-annotations",
+    "roborazzi-compose",
+    "roborazzi-compose-preview-scanner-support",
+  ]
+  if (modulesWithEmptyAndroidUnitTest.contains(project.name)) {
+    tasks.matching { it.name == "testDebugUnitTest" }.configureEach {
+      failOnNoDiscoveredTests = false
+    }
   }
 
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
