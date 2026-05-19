@@ -84,11 +84,18 @@ allprojects {
   }
 
   // Gradle 9 fails test tasks that have test sources configured but discover
-  // zero tests at runtime. The roborazzi-ai-* KMP modules have implicit empty
-  // androidUnitTest source sets; scope the relax to that one task name so a
-  // future jvmTest (or any other test task) that becomes empty would still
-  // fail loudly.
-  if (project.name == "roborazzi-ai-gemini" || project.name == "roborazzi-ai-openai") {
+  // zero tests at runtime. These modules have implicit empty Android unit-test
+  // source sets (no `src/*/test` dirs with .kt files). Scope the relax to the
+  // single empty task name so other test tasks (e.g. jvmTest) that lose all
+  // their tests would still fail loudly.
+  def modulesWithEmptyAndroidUnitTest = [
+    "roborazzi-ai-gemini",
+    "roborazzi-ai-openai",
+    "roborazzi-annotations",
+    "roborazzi-compose",
+    "roborazzi-compose-preview-scanner-support",
+  ]
+  if (modulesWithEmptyAndroidUnitTest.contains(project.name)) {
     tasks.matching { it.name == "testDebugUnitTest" }.configureEach {
       failOnNoDiscoveredTests = false
     }
