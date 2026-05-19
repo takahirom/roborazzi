@@ -431,6 +431,19 @@ abstract class RoborazziPlugin : Plugin<Project> {
             test.infoln("Roborazzi: Plugin passed system properties " + test.systemProperties + " to the test")
             resultsDir.deleteRecursively()
             resultsDir.mkdirs()
+
+            val isRecordRun = isRecordRun.get() || isVerifyAndRecordRun.get()
+
+            if (isRecordRun) {
+              test.infoln("Roborazzi: test.doFirst refreshing intermediate directory ${intermediateDir.get()}")
+              clearIntermediateDir(intermediateDir)
+
+              test.infoln("Roborazzi: test.doFirst copying output directory ${outputDir.get()} to intermediate directory ${intermediateDir.get()}")
+              copyOutputImagesToIntermediateDir(
+                outputDir = outputDir,
+                intermediateDir = intermediateDir,
+              )
+            }
           }
           test.addTestListener(object : TestListener {
             override fun beforeSuite(suite: TestDescriptor?) {
@@ -484,10 +497,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
               // outputDir.get().asFileTree.forEach {
               //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
               // }
-              outputDir.get().asFile.mkdirs()
-              outputDir.get().asFile.copyRecursively(
-                target = intermediateDir.get().asFile,
-                overwrite = true
+              copyOutputImagesToIntermediateDir(
+                outputDir = outputDir,
+                intermediateDir = intermediateDir,
               )
             }
 
@@ -618,12 +630,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
     val isRecordRun = test.systemProperties["roborazzi.test.record"] == true
 
     if (isCleanupRun || isRecordRun) {
-      // Delete all images from the intermediateDir
-      intermediateDir.get().asFile.walkTopDown().forEach { file ->
-        if (KnownImageFileExtensions.contains(file.extension)) {
-          file.delete()
-        }
-      }
+      clearIntermediateDir(intermediateDir)
     }
 
     if (isCleanupRun) {
@@ -647,6 +654,28 @@ abstract class RoborazziPlugin : Plugin<Project> {
         File(file).delete()
       }
     }
+  }
+
+  private fun clearIntermediateDir(
+    intermediateDir: DirectoryProperty,
+  ) {
+    // Delete all images from the intermediateDir
+    intermediateDir.get().asFile.walkTopDown().forEach { file ->
+      if (KnownImageFileExtensions.contains(file.extension)) {
+        file.delete()
+      }
+    }
+  }
+
+  private fun copyOutputImagesToIntermediateDir(
+    outputDir: DirectoryProperty,
+    intermediateDir: DirectoryProperty,
+  ) {
+    outputDir.get().asFile.mkdirs()
+    outputDir.get().asFile.copyRecursively(
+      target = intermediateDir.get().asFile,
+      overwrite = true,
+    )
   }
 
   private fun readIndexHtmlFile(): String? {
