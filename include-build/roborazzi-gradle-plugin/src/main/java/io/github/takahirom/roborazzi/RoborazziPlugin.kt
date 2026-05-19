@@ -279,6 +279,13 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
       // The difference between finalizedTask and afterSuite is that
       // finalizedTask is called even if the test is skipped.
+      // Set to true by the test task's doFirst when it is about to execute (i.e.
+      // not UP-TO-DATE and not FROM-CACHE). When this is true the test task itself
+      // writes fresh screenshots into outputDir and afterSuite copies them into
+      // intermediateDir, so the intermediateDir -> outputDir copy below would race
+      // with afterSuite and clobber the fresh screenshots with the pre-test
+      // intermediates snapshot. See https://github.com/takahirom/roborazzi/issues/615.
+      val testTaskExecuted = java.util.concurrent.atomic.AtomicBoolean(false)
       val finalizeTestRoborazziTask = project.tasks.register(
         /* name = */ "finalizeTestRoborazzi$variantSlug",
         /* configurationAction = */ object : Action<Task> {
@@ -289,6 +296,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
               doesRoborazziRun
             }
             finalizeTestTask.doLast {
+              if (testTaskExecuted.get()) {
+                finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask skipping intermediates -> outputDir copy because the test task already produced fresh files in outputDir")
+                return@doLast
+              }
               val startCopy = System.currentTimeMillis()
               intermediateDir.get().asFile.mkdirs()
               intermediateDir.get().asFile.copyRecursively(
@@ -391,6 +402,12 @@ abstract class RoborazziPlugin : Plugin<Project> {
             )
           )
           test.doFirst {
+            // doFirst runs only when the task actually executes (not UP-TO-DATE
+            // and not FROM-CACHE), which is exactly when the test process itself
+            // will write to outputDir and afterSuite will copy it to intermediateDir.
+            // We signal this to finalizeTestRoborazziTask so it skips the reverse
+            // copy and avoids racing with afterSuite over the fresh screenshots.
+            testTaskExecuted.set(true)
             val doesRoborazziRun =
               doesRoborazziRunProvider.get()
             if (!doesRoborazziRun) {
