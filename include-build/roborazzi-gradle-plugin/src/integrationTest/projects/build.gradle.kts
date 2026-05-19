@@ -84,12 +84,12 @@ allprojects {
   // Gradle 9 fails test tasks that have test sources but no discovered tests.
   // sample-generate-preview-tests exercises this path in scenarios that
   // deliberately produce zero discovered tests (e.g. the missing
-  // roborazzi-compose-preview-scanner-support dependency assertion); scope the
-  // relax to that module so accidental test loss elsewhere still fails.
+  // roborazzi-compose-preview-scanner-support dependency assertion). Scope
+  // the relax to the single empty task so other Test tasks still fail loudly.
   if (name == "sample-generate-preview-tests") {
-    tasks.withType(Test::class.java).configureEach {
-      failOnNoDiscoveredTests = false
-    }
+    tasks.withType(org.gradle.api.tasks.testing.Test::class.java)
+      .matching { it.name == "testDebugUnitTest" }
+      .configureEach { failOnNoDiscoveredTests = false }
   }
 }
 true // Needed to make the Suppress annotation work for the plugins block

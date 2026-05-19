@@ -53,10 +53,10 @@ allprojects {
 
   // Gradle 9 fails test tasks that have test sources but no discovered tests.
   // roborazzi-core's androidHostTest source set is empty (Android tests live
-  // in jvmTest); scope the relax to that module so other modules still fail
-  // loudly on accidental test loss.
+  // in jvmTest). Scope the relax to that single task so jvmTest losing its
+  // tests would still fail loudly.
   if (project.name == "roborazzi-core") {
-    tasks.withType(Test).configureEach {
+    tasks.matching { it.name == "testAndroidHostTest" }.configureEach {
       failOnNoDiscoveredTests = false
     }
   }
