@@ -90,3 +90,19 @@ kotlin {
   }
 }
 
+// Back-compat alias for tools that query the old AGP-variant runtime classpath
+// name. The com.android.kotlin.multiplatform.library plugin renamed the
+// resolvable runtime config from `releaseRuntimeClasspath` to
+// `androidRuntimeClasspath`; this alias keeps the older name working until
+// every external consumer (e.g. the dependency-diff GitHub workflow) is
+// updated to the new name post-migration.
+afterEvaluate {
+  if (configurations.findByName("releaseRuntimeClasspath") == null) {
+    configurations.create("releaseRuntimeClasspath") {
+      canBeResolved = true
+      canBeConsumed = false
+      extendsFrom configurations.androidRuntimeClasspath
+    }
+  }
+}
+
