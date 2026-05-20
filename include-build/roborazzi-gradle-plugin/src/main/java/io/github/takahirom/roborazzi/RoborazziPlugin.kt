@@ -356,8 +356,20 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 }
               }
             }
+          // Restrict the tracked input to known image extensions so that unrelated
+          // files (e.g. .DS_Store) cannot trip Gradle 9's stricter input snapshot
+          // validation when an OS indexer / IDE writer touches them mid-snapshot.
+          // imageInputProvider itself is left untouched so that the overlap check
+          // for test.outputs.dirs below still observes the input directory itself.
+          // See https://github.com/takahirom/roborazzi/issues/830
+          val trackedImageInputProvider: Provider<FileCollection> =
+            imageInputProvider.map { collection ->
+              collection.asFileTree.matching { spec ->
+                spec.include(KnownImageFileExtensions.map { ext -> "**/*.$ext" })
+              }
+            }
           test.inputs.files(
-            imageInputProvider
+            trackedImageInputProvider
           )
             .withPropertyName("roborazziImageInput")
             .withPathSensitivity(PathSensitivity.RELATIVE)
