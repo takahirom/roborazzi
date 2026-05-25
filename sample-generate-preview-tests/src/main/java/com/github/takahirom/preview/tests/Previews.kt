@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
+import com.github.takahirom.roborazzi.annotations.RoboComposePreviewIgnore
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import kotlinx.coroutines.delay
 
@@ -498,6 +499,23 @@ fun PreviewFocusGroupLaunchedEffectMinimal() {
 
   LaunchedEffect(Unit) {
     outer.requestFocus()
+  }
+}
+
+// Test for @RoboComposePreviewIgnore annotation (GitHub issue #783)
+@RoboComposePreviewIgnore
+@Preview
+@Composable
+fun PreviewIgnored() {
+  MaterialTheme {
+    Card(
+      Modifier.width(180.dp)
+    ) {
+      Text(
+        modifier = Modifier.padding(8.dp),
+        text = "This preview should be ignored from screenshot tests"
+      )
+    }
   }
 }
 

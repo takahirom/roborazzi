@@ -148,6 +148,16 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenRecordRunIgnoredPreviewShouldNotBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      record()
+
+      checkHasImages()
+      checkNoIgnoredPreviewImages()
+    }
+  }
+
+  @Test
   fun whenGeneratedTestClassCountIs1ShouldGenerateSingleTestClass() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.generatedTestClassCount = 1
@@ -298,6 +308,7 @@ class PreviewModule(
                         implementation(compose.ui)
                         implementation(compose.uiTooling)
                         implementation(compose.runtime)
+                        implementation("io.github.takahirom.roborazzi:roborazzi-annotations:0.1.0")
                       }
                   }
                   
@@ -400,6 +411,7 @@ class PreviewModule(
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.compose.runtime)
+    implementation("io.github.takahirom.roborazzi:roborazzi-annotations:0.1.0")
 
     // replaced by dependency substitution
     $previewScannerSupportDependency
@@ -505,6 +517,16 @@ class PreviewModule(
         .orEmpty()
         .filter { it.name.contains("PreviewWithPrivate") }
     assert(privateImages.isNotEmpty() == true)
+  }
+
+  fun checkNoIgnoredPreviewImages() {
+    val ignoredImages =
+      testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+        .orEmpty()
+        .filter { it.name.contains("PreviewIgnored") }
+    assert(ignoredImages.isEmpty()) {
+      "Expected no images for PreviewIgnored, but found: ${ignoredImages.map { it.name }}"
+    }
   }
 
   fun checkGeneratedTestClassCount(expectedCount: Int) {
