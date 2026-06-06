@@ -5,6 +5,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import java.io.File
 
 /**
  * Run this test with `cd include-build` and `./gradlew roborazzi-gradle-plugin:check`
@@ -656,6 +657,55 @@ class RoborazziGradleProjectTest {
       recordWithFilter2().output.run(::assertNotSkipped)
       checkRecordedFileExists("$screenshotAndName.testCapture1.png")
       checkRecordedFileExists("$screenshotAndName.testCapture2.png")
+    }
+  }
+
+  /**
+   * Test that the build cache is relocatable across different project directories.
+   * This verifies that tasks like verifyRoborazziDebug can reuse the cache
+   * when run from a different project directory (simulating a different CI agent
+   * or developer machine).
+   *
+   * See https://github.com/takahirom/roborazzi/issues/820
+   */
+  @Test
+  fun verifyCacheShouldBeRelocatableAcrossDifferentProjectDirs() {
+    val secondProjectDir = TemporaryFolder()
+    secondProjectDir.create()
+    try {
+      // First project: record golden images, then verify (populates verify cache entry)
+      RoborazziGradleRootProject(testProjectDir).appModule.apply {
+        record()
+        checkRecordedFileExists("$screenshotAndName.testCapture.png")
+        verify()
+      }
+
+      // Copy golden images to the second project so verify has the same file inputs
+      val goldenSource = File(testProjectDir.root, "app/build/outputs/roborazzi")
+      val goldenDest = File(secondProjectDir.root, "app/build/outputs/roborazzi")
+      goldenSource.copyRecursively(goldenDest, overwrite = true)
+
+      val originalProjectDir = testProjectDir
+      RoborazziGradleRootProject(secondProjectDir).appModule.apply {
+        // Verify from a different directory — should hit cache since inputs are identical
+        val output = verify().output
+        assertFromCache(output)
+
+        // Delete the original project's golden file. If verify's inputs are properly
+        // scoped to secondProjectDir, the task stays UP-TO-DATE; if originalProjectDir
+        // is referenced, the deletion would invalidate the up-to-date check.
+        File(originalProjectDir.root, "$screenshotAndName.testCapture.png").delete()
+        assertSkipped(verify().output)
+
+        // Confirm that when verification fails in secondProjectDir, the actual/compare
+        // output files are written to secondProjectDir (not testProjectDir)
+        changeScreen()
+        verifyAndFail()
+        checkRecordedFileExists("$screenshotAndName.testCapture_actual.png")
+        checkRecordedFileExists("$screenshotAndName.testCapture_compare.png")
+      }
+    } finally {
+      secondProjectDir.delete()
     }
   }
 }

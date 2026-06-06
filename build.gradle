@@ -7,7 +7,7 @@ plugins {
   id 'com.android.kotlin.multiplatform.library' version libs.versions.agp apply false
   id 'org.jetbrains.kotlin.multiplatform' version libs.versions.kotlin apply false
   id 'org.jetbrains.compose' version libs.versions.composeMultiplatform apply false
-  id 'org.jetbrains.kotlin.plugin.compose' version libs.versions.kotlin
+  id 'org.jetbrains.kotlin.plugin.compose' version libs.versions.kotlinComposeCompiler
 
   id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
@@ -23,12 +23,38 @@ allprojects {
   def javaTargetVersion = JavaVersion.toVersion(javaVersion)
   def jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.@Companion.fromTarget(javaVersion)
   
-  // Replace AGP's default Compose Compiler with Kotlin 2.0.21's integrated version
+  // Replace AGP's default Compose Compiler with the embeddable compiler shipped
+  // with Kotlin, and force it to match the main Kotlin compiler version. The
+  // Compose Compiler Gradle Plugin is pinned to an older minor (see
+  // kotlinComposeCompiler in libs.versions.toml) and would otherwise drag in
+  // an embeddable compiler that mismatches the main compiler.
   configurations.all {
     resolutionStrategy.dependencySubstitution {
       substitute(module("androidx.compose.compiler:compiler"))
         .using(module("org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:${libs.versions.kotlin.get()}"))
-        .because("Compose Compiler is now shipped as part of Kotlin 2.0.21 distribution")
+        .because("Compose Compiler ships with the Kotlin distribution since 2.0")
+    }
+    resolutionStrategy.eachDependency { details ->
+      if (details.requested.group == "org.jetbrains.kotlin"
+        && details.requested.name == "kotlin-compose-compiler-plugin-embeddable") {
+        details.useVersion(libs.versions.kotlin.get())
+        details.because("Align embeddable compose compiler with main Kotlin compiler")
+      }
+      if (details.requested.group == "org.jetbrains"
+        && details.requested.name == "annotations") {
+        // Gradle 9's consistent resolution flags the strict 13.0 constraint that
+        // kotlin-stdlib pulls in as incompatible with the 23.0 that
+        // kotlinx-coroutines requires. Pin to a version that satisfies both.
+        details.useVersion("23.0.0")
+        details.because("Resolve compile/runtime consistent-resolution conflict")
+      }
+      if (details.requested.group == "androidx.annotation"
+        && details.requested.name == "annotation-experimental") {
+        // Gradle 9 consistent resolution: androidx.test:annotation strictly
+        // requires 1.1.0 while androidx.compose.foundation requires 1.4.0.
+        details.useVersion("1.4.0")
+        details.because("Resolve compile/runtime consistent-resolution conflict")
+      }
     }
   }
 
@@ -57,12 +83,43 @@ allprojects {
     targetCompatibility = javaTargetVersion
   }
 
+  // Gradle 9 fails test tasks that have test sources configured but discover
+  // zero tests at runtime. These modules have implicit empty Android unit-test
+  // source sets (no `src/*/test` dirs with .kt files). Scope the relax to the
+  // single empty task name so other test tasks (e.g. jvmTest) that lose all
+  // their tests would still fail loudly.
+  def modulesWithEmptyAndroidUnitTest = [
+    "roborazzi-ai-gemini",
+    "roborazzi-ai-openai",
+    "roborazzi-annotations",
+    "roborazzi-compose",
+    "roborazzi-compose-preview-scanner-support",
+  ]
+  if (modulesWithEmptyAndroidUnitTest.contains(project.name)) {
+    tasks.matching { it.name == "testDebugUnitTest" }.configureEach {
+      failOnNoDiscoveredTests = false
+    }
+  }
+
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     compilerOptions {
       jvmTarget.set(jvmTargetVersion)
       allWarningsAsErrors = true
     }
   }
+
+  // We disable KGP's auto-added kotlin-stdlib dependency
+  // (kotlin.stdlib.default.dependency=false) so we can pin the published
+  // stdlib version. Re-add it ourselves at the pinned version on Android
+  // and JVM Kotlin modules.
+  ["org.jetbrains.kotlin.android", "org.jetbrains.kotlin.jvm"].each { pluginId ->
+    plugins.withId(pluginId) {
+      dependencies {
+        api libs.kotlin.stdlib
+      }
+    }
+  }
+
   if (project.name.startsWith("roborazzi") &&
     project.name != "roborazzi-idea-plugin" &&
     project.name != "roborazzi-annotations") {
@@ -78,7 +135,7 @@ allprojects {
   plugins.withId('com.vanniktech.maven.publish') {
     project.group = "io.github.takahirom.roborazzi"
     mavenPublishing {
-      publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+      publishToMavenCentral()
       signAllPublications()
     }
 

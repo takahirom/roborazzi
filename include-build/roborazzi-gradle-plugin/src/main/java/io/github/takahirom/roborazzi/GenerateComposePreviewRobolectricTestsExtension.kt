@@ -6,6 +6,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -80,6 +81,7 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
   val annotationFilter: Property<AnnotationFilter> = objects.property(AnnotationFilter::class.java)
 }
 
+@CacheableTask
 abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   @get:OutputDirectory
   abstract val outputDir: DirectoryProperty

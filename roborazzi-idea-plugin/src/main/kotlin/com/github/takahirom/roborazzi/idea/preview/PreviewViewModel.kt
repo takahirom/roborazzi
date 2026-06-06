@@ -141,7 +141,7 @@ class PreviewViewModel {
       }
     }
 
-    return methodCnadidate as? KtFunction
+    return methodCnadidate
   }
 
   private fun refreshImageList(project: Project) {

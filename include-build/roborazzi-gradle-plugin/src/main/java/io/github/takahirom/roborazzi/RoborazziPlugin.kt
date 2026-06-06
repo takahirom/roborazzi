@@ -17,12 +17,17 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.api.tasks.options.Option
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
@@ -274,18 +279,42 @@ abstract class RoborazziPlugin : Plugin<Project> {
       val reportFile =
         project.layout.buildDirectory.file(RoborazziReportConst.getReportFilePathFromBuildDir(variantName))
 
+      // BuildService that records whether the test task actually executed in
+      // this build invocation. Set inside the test task's doFirst (which is not
+      // invoked when the task is UP-TO-DATE / FROM-CACHE) and read by the
+      // finalizer's doLast. Using a BuildService rather than a captured
+      // AtomicBoolean keeps the cross-task state Configuration Cache safe.
+      val testExecutedServiceName =
+        "roborazziTestExecuted-${project.path}-$variantSlug"
+      val testExecutedService: Provider<TestExecutedBuildService> =
+        project.gradle.sharedServices.registerIfAbsent(
+          testExecutedServiceName,
+          TestExecutedBuildService::class.java
+        ) {}
+
       // The difference between finalizedTask and afterSuite is that
       // finalizedTask is called even if the test is skipped.
       val finalizeTestRoborazziTask = project.tasks.register(
         /* name = */ "finalizeTestRoborazzi$variantSlug",
         /* configurationAction = */ object : Action<Task> {
           override fun execute(finalizeTestTask: Task) {
+            finalizeTestTask.usesService(testExecutedService)
             finalizeTestTask.onlyIf {
               val doesRoborazziRun = doesRoborazziRunProvider.get()
               finalizeTestTask.infoln("Roborazzi: roborazziTestFinalizer.onlyIf doesRoborazziRun $doesRoborazziRun")
               doesRoborazziRun
             }
             finalizeTestTask.doLast {
+              if (testExecutedService.get().wasExecuted()) {
+                // The test task actually executed this build, so it has already
+                // written fresh screenshots into outputDir and afterSuite has
+                // copied them to intermediateDir. Performing the reverse copy
+                // here would race with afterSuite and clobber the fresh
+                // screenshots with the pre-test intermediates snapshot. See
+                // https://github.com/takahirom/roborazzi/issues/615.
+                finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask skipping intermediates -> outputDir copy because the test task already produced fresh files in outputDir")
+                return@doLast
+              }
               val startCopy = System.currentTimeMillis()
               intermediateDir.get().asFile.mkdirs()
               intermediateDir.get().asFile.copyRecursively(
@@ -327,9 +356,23 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 }
               }
             }
+          // Restrict the tracked input to known image extensions so that unrelated
+          // files (e.g. .DS_Store) cannot trip Gradle 9's stricter input snapshot
+          // validation when an OS indexer / IDE writer touches them mid-snapshot.
+          // imageInputProvider itself is left untouched so that the overlap check
+          // for test.outputs.dirs below still observes the input directory itself.
+          // See https://github.com/takahirom/roborazzi/issues/830
+          val trackedImageInputProvider: Provider<FileCollection> =
+            imageInputProvider.map { collection ->
+              collection.asFileTree.matching { spec ->
+                spec.include(KnownImageFileExtensions.map { ext -> "**/*.$ext" })
+              }
+            }
           test.inputs.files(
-            imageInputProvider
+            trackedImageInputProvider
           )
+            .withPropertyName("roborazziImageInput")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
           test.outputs.dirs(
             compareOutputDirProvider.flatMap { compareOutputDir: Directory ->
               isCompareOrVerifyRunProvider.flatMap { isCompareOrVerifyRun ->
@@ -358,23 +401,23 @@ abstract class RoborazziPlugin : Plugin<Project> {
             }.map {
               test.infoln("Roborazzi: Set output dir ${it} to test task")
               it
-            })
+            }).withPropertyName("roborazziCompareOutput")
           test.outputs.dir(intermediateDirForEachVariant.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
-          })
+          }).withPropertyName("roborazziIntermediateDir")
           test.outputs.dir(resultDir.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
-          })
+          }).withPropertyName("roborazziResultDir")
           test.outputs.file(resultSummaryFile.map {
             test.infoln("Roborazzi: Set output file $it to test task")
             it
-          })
+          }).withPropertyName("roborazziResultSummary")
           test.outputs.file(reportFile.map {
             test.infoln("Roborazzi: Set output file $it to test task")
             it
-          })
+          }).withPropertyName("roborazziReport")
 
           test.inputs.properties(
             mapOf(
@@ -385,7 +428,14 @@ abstract class RoborazziPlugin : Plugin<Project> {
               "roborazziProperties" to roborazziProperties,
             )
           )
+          test.usesService(testExecutedService)
           test.doFirst {
+            // doFirst runs only when the task actually executes (not UP-TO-DATE
+            // and not FROM-CACHE), which is exactly when the test process itself
+            // writes to outputDir and afterSuite will copy it to intermediateDir.
+            // We signal this to finalizeTestRoborazziTask so it skips the reverse
+            // copy and avoids racing with afterSuite over the fresh screenshots.
+            testExecutedService.get().markExecuted()
             val doesRoborazziRun =
               doesRoborazziRunProvider.get()
             if (!doesRoborazziRun) {
@@ -651,9 +701,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
   private fun String.capitalizeUS() =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
 
+  @DisableCachingByDefault(because = "Copies previously recorded screenshots; caching is not useful")
   abstract class RestoreOutputDirRoborazziTask @Inject constructor(objects: ObjectFactory) :
     DefaultTask() {
     @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     val inputDir: DirectoryProperty = objects.directoryProperty()
 
@@ -669,6 +721,23 @@ abstract class RoborazziPlugin : Plugin<Project> {
     }
   }
 
+  // Tracks whether the test task actually executed in this build invocation,
+  // so finalizeTestRoborazziTask can skip its intermediateDir -> outputDir copy
+  // when afterSuite is the authoritative copier and would race with it.
+  // Implemented as a BuildService so the state is safely shared across tasks under
+  // Configuration Cache and parallel execution. A fresh instance is created for
+  // each build invocation, so executed defaults back to false on every run.
+  abstract class TestExecutedBuildService :
+    BuildService<BuildServiceParameters.None> {
+    private val executed = java.util.concurrent.atomic.AtomicBoolean(false)
+    fun markExecuted() {
+      executed.set(true)
+    }
+
+    fun wasExecuted(): Boolean = executed.get()
+  }
+
+  @DisableCachingByDefault(because = "Lifecycle task only; exposes --tests option to underlying Test tasks")
   open class RoborazziTask : DefaultTask() {
     @Option(
       option = "tests",

@@ -11,7 +11,7 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 }
 
 kotlin {
-  targetHierarchy.custom {
+  applyHierarchyTemplate {
     it.common {
       it.group("ios") {
         it.withIosX64()
@@ -28,6 +28,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
+        api libs.kotlin.stdlib
         // Please see settings.gradle
         api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
         implementation(project(":roborazzi-painter"))
