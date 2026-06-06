@@ -96,6 +96,33 @@ roborazzi {
 > generateComposePreviewRobolectricTests.packages.set(["com.example"])
 > ```
 
+### Filtering previews by annotation
+
+`annotationFilter` controls which previews are captured (requires the `roborazzi-annotations` dependency).
+By default it is `AnnotationFilter.Filter.RoboPreviewExclude`, so previews annotated with
+`@RoboPreviewExclude` are skipped. Set it to `RoboPreviewInclude` to capture **only** previews
+annotated with `@RoboPreviewInclude`:
+
+```kotlin
+roborazzi {
+  @OptIn(ExperimentalRoborazziApi::class)
+  generateComposePreviewRobolectricTests {
+    enable = true
+    packages = listOf("com.example")
+    annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
+  }
+}
+```
+
+To filter by your own annotations, pass their fully qualified class names
+(use the JVM binary name with `$` for nested classes, e.g. `com.example.Outer$Inner`):
+
+```kotlin
+// Set either one, not both
+annotationFilter = AnnotationFilter.Exclude("com.example.MyExcludeAnnotation")
+annotationFilter = AnnotationFilter.Include("com.example.MyIncludeAnnotation")
+```
+
 ## Annotation-based Capture Control
 
 To enable fine-grained control over screenshot timing in Compose Previews, add the new annotations dependency:
