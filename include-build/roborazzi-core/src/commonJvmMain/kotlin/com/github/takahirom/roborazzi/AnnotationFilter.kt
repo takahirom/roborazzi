@@ -8,8 +8,10 @@ import java.io.Serializable
 @ExperimentalRoborazziApi
 sealed class AnnotationFilter : Serializable {
   /**
-   * Exclude only previews with the specified annotations, passing their absolute Path as String.
-   * If the absolute path is a nested class, pass the JVM binary name using `$`, * e.g. `com.example.Outer$Inner`.
+   * Exclude previews annotated with any of the given annotations.
+   *
+   * @param annotations Fully qualified annotation class names. For nested classes, use the
+   * JVM binary name with `$`, e.g. `com.example.Outer$Inner`.
    */
   @ConsistentCopyVisibility
   data class Exclude private constructor(val annotations: List<String>) : AnnotationFilter() {
@@ -22,8 +24,10 @@ sealed class AnnotationFilter : Serializable {
   }
 
   /**
-   * Include only previews with the specified annotations, passing their absolute Path as String.
-   * If the absolute path is a nested class, pass the JVM binary name using `$`, * e.g. `com.example.Outer$Inner`.
+   * Include only previews annotated with any of the given annotations.
+   *
+   * @param annotations Fully qualified annotation class names. For nested classes, use the
+   * JVM binary name with `$`, e.g. `com.example.Outer$Inner`.
    */
   @ConsistentCopyVisibility
   data class Include private constructor(val annotations: List<String>) : AnnotationFilter() {
