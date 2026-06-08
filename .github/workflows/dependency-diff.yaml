@@ -19,20 +19,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set +e
-          echo "=== git/gh versions ==="; git --version; gh --version | head -1
-          echo "=== replicate action: gh repo clone --no-checkout ==="
-          gh repo clone "${{ github.repository }}" sources -- --depth 1 --no-checkout; echo "ghClone exit=$?"
-          cd sources
-          echo "=== git config BEFORE manual extraheader ==="
-          git config --local --list
-          echo "=== extraheader values gh already set (count) ==="
-          git config --local --get-all 'http.https://github.com/.extraheader' | wc -l
-          echo "=== add action's extraheader (as the action does) ==="
+          REF="refs/pull/${{ github.event.number }}/merge"
+          URL="https://github.com/${{ github.repository }}"
+          echo "=== token length (chars) ==="; printf 'x-access-token:%s' "$GH_TOKEN" | wc -c
+          echo "=== base64 line counts: bare vs -w0 ==="
+          echo "bare base64 lines: $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | wc -l)"
+          echo "-w0  base64 lines: $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0 | wc -l)"
+          echo "=== A) action-style: base64 WITHOUT -w0 (may wrap) ==="
+          mkdir a && cd a && git init -q && git remote add origin "$URL"
+          git config --local 'http.https://github.com/.extraheader' "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64)"
+          git fetch --depth 1 origin "$REF"; echo "A bareBase64 fetch exit=$?"
+          cd ..
+          echo "=== B) base64 -w0 (no wrap) ==="
+          mkdir b && cd b && git init -q && git remote add origin "$URL"
           git config --local 'http.https://github.com/.extraheader' "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
-          echo "=== extraheader values AFTER (count) ==="
-          git config --local --get-all 'http.https://github.com/.extraheader' | wc -l
-          echo "=== fetch refs/pull/N/merge (stderr VISIBLE) ==="
-          git fetch --depth 1 origin "refs/pull/${{ github.event.number }}/merge"; echo "mergeRef exit=$?"
+          git fetch --depth 1 origin "$REF"; echo "B w0Base64 fetch exit=$?"
       - name: Generate dependency diff report for library
         uses: yumemi-inc/gradle-dependency-diff-report@v2
         id: report-library
