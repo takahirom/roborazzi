@@ -7,11 +7,30 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read
     steps:
       - uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3.13.0
         with:
           distribution: 'zulu'
           java-version: 19
+      - name: DEBUG fetch diagnostics (temporary)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          echo "=== git version ==="; git --version
+          mkdir s && cd s && git init -q
+          git remote add origin https://github.com/${{ github.repository }}
+          git config --local 'http.https://github.com/.extraheader' "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "=== ls-remote pull refs ==="
+          git ls-remote origin "refs/pull/${{ github.event.number }}/*"; echo "ls-remote exit=$?"
+          echo "=== fetch refs/pull/N/merge ==="
+          git fetch --depth 1 origin "refs/pull/${{ github.event.number }}/merge"; echo "mergeRef exit=$?"
+          echo "=== fetch refs/pull/N/head ==="
+          git fetch --depth 1 origin "refs/pull/${{ github.event.number }}/head"; echo "headRef exit=$?"
+          echo "=== fetch bare github.sha (${{ github.sha }}) ==="
+          git fetch --depth 1 origin "${{ github.sha }}"; echo "bareSha exit=$?"
       - name: Generate dependency diff report for library
         uses: yumemi-inc/gradle-dependency-diff-report@v2
         id: report-library
