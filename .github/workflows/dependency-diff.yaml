@@ -19,18 +19,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set +e
-          echo "=== git version ==="; git --version
-          mkdir s && cd s && git init -q
-          git remote add origin https://github.com/${{ github.repository }}
+          echo "=== git/gh versions ==="; git --version; gh --version | head -1
+          echo "=== replicate action: gh repo clone --no-checkout ==="
+          gh repo clone "${{ github.repository }}" sources -- --depth 1 --no-checkout; echo "ghClone exit=$?"
+          cd sources
+          echo "=== git config BEFORE manual extraheader ==="
+          git config --local --list
+          echo "=== extraheader values gh already set (count) ==="
+          git config --local --get-all 'http.https://github.com/.extraheader' | wc -l
+          echo "=== add action's extraheader (as the action does) ==="
           git config --local 'http.https://github.com/.extraheader' "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
-          echo "=== ls-remote pull refs ==="
-          git ls-remote origin "refs/pull/${{ github.event.number }}/*"; echo "ls-remote exit=$?"
-          echo "=== fetch refs/pull/N/merge ==="
+          echo "=== extraheader values AFTER (count) ==="
+          git config --local --get-all 'http.https://github.com/.extraheader' | wc -l
+          echo "=== fetch refs/pull/N/merge (stderr VISIBLE) ==="
           git fetch --depth 1 origin "refs/pull/${{ github.event.number }}/merge"; echo "mergeRef exit=$?"
-          echo "=== fetch refs/pull/N/head ==="
-          git fetch --depth 1 origin "refs/pull/${{ github.event.number }}/head"; echo "headRef exit=$?"
-          echo "=== fetch bare github.sha (${{ github.sha }}) ==="
-          git fetch --depth 1 origin "${{ github.sha }}"; echo "bareSha exit=$?"
       - name: Generate dependency diff report for library
         uses: yumemi-inc/gradle-dependency-diff-report@v2
         id: report-library
