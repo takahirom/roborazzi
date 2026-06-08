@@ -16,6 +16,11 @@ jobs:
         uses: yumemi-inc/gradle-dependency-diff-report@v2
         id: report-library
         with:
+          # Pin head-ref to the PR merge ref. The action defaults head-ref to github.sha
+          # (the PR merge commit) and fetches it by bare SHA, which the Actions GITHUB_TOKEN
+          # cannot fetch because that commit is only on the unadvertised refs/pull/N/merge.
+          # Fetching by ref name works. See https://github.com/yumemi-inc/gradle-dependency-diff-report
+          head-ref: refs/pull/${{ github.event.number }}/merge
           configuration: 'releaseRuntimeClasspath'
           modules: |
             roborazzi-compose-ios|commonMainImplementationDependenciesMetadata
@@ -45,6 +50,8 @@ jobs:
         uses: yumemi-inc/gradle-dependency-diff-report@v2
         id: report-plugin
         with:
+          # See report-library above for why head-ref is pinned to the PR merge ref.
+          head-ref: refs/pull/${{ github.event.number }}/merge
           modules: |
             roborazzi-core|commonMainImplementationDependenciesMetadata
             roborazzi-core|jvmRuntimeClasspath
