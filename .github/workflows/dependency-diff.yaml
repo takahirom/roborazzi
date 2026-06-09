@@ -13,7 +13,11 @@ jobs:
           distribution: 'zulu'
           java-version: 19
       - name: Generate dependency diff report for library
-        uses: yumemi-inc/gradle-dependency-diff-report@v2
+        # Temporarily pinned to our fork carrying the base64-newline fix.
+        # GNU base64 wraps the long GITHUB_TOKEN at 76 cols, corrupting the git auth header.
+        # Revert to yumemi-inc/...@v2 once upstream PR is released:
+        # https://github.com/yumemi-inc/gradle-dependency-diff-report/pull/23
+        uses: takahirom/gradle-dependency-diff-report@040c2ac7f114677b70a4f3f91767f2e0d765a96d # v2.1.1-base64fix
         id: report-library
         with:
           configuration: 'releaseRuntimeClasspath'
@@ -42,7 +46,11 @@ jobs:
           echo "exists-diff=${{ steps.report-library.outputs.exists-diff }}" > outputs/report-library.txt
 
       - name: Generate dependency diff report for plugin
-        uses: yumemi-inc/gradle-dependency-diff-report@v2
+        # Temporarily pinned to our fork carrying the base64-newline fix.
+        # GNU base64 wraps the long GITHUB_TOKEN at 76 cols, corrupting the git auth header.
+        # Revert to yumemi-inc/...@v2 once upstream PR is released:
+        # https://github.com/yumemi-inc/gradle-dependency-diff-report/pull/23
+        uses: takahirom/gradle-dependency-diff-report@040c2ac7f114677b70a4f3f91767f2e0d765a96d # v2.1.1-base64fix
         id: report-plugin
         with:
           modules: |
