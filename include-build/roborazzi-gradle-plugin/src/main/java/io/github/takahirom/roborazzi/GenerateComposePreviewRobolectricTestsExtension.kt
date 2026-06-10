@@ -8,10 +8,13 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import javax.inject.Inject
+import com.github.takahirom.roborazzi.AnnotationFilter
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 
 open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(objects: ObjectFactory) {
   companion object {
@@ -68,6 +71,14 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * When generatedTestClassCount > 1, generates multiple test classes (RoborazziPreviewParameterizedTests0, Tests1, etc.)
    */
   val generatedTestClassCount: Property<Int> = objects.property(Int::class.java)
+
+  /**
+   * Filter for composable previews by annotation. When unset, the plugin defaults to
+   * [AnnotationFilter.Filter.RoboPreviewExclude] so `@RoboPreviewExclude` works out of the box.
+   * Set explicitly to switch to an opt-in [AnnotationFilter.Include] policy.
+   */
+  @ExperimentalRoborazziApi
+  val annotationFilter: Property<AnnotationFilter> = objects.property(AnnotationFilter::class.java)
 }
 
 @CacheableTask
@@ -90,13 +101,24 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   @get:Input
   abstract val generatedTestClassCount: Property<Int>
 
+  @get:Input
+  @get:Optional
+  @ExperimentalRoborazziApi
+  abstract val annotationFilter: Property<AnnotationFilter>
+
   @TaskAction
+  @OptIn(ExperimentalRoborazziApi::class)
   fun generateTests() {
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
     val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
     val includePrivatePreviewsExpr = includePrivatePreviews.get()
+    val annotationFilterExpr = when (val filter = annotationFilter.orNull) {
+      is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
+      is AnnotationFilter.Include -> "AnnotationFilter.Include(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
+      null -> "null"
+    }
     val testClassCount = generatedTestClassCount.get()
 
     require(testClassCount >= 1) {
@@ -124,6 +146,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
         className = baseClassName,
         packagesExpr = packagesExpr,
         includePrivatePreviewsExpr = includePrivatePreviewsExpr,
+        annotationFilterExpr = annotationFilterExpr,
         robolectricConfigString = robolectricConfigString,
         testerQualifiedClassNameString = testerQualifiedClassNameString,
         shardIndex = null,
@@ -137,6 +160,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
           className = "$baseClassName$shardIndex",
           packagesExpr = packagesExpr,
           includePrivatePreviewsExpr = includePrivatePreviewsExpr,
+          annotationFilterExpr = annotationFilterExpr,
           robolectricConfigString = robolectricConfigString,
           testerQualifiedClassNameString = testerQualifiedClassNameString,
           shardIndex = shardIndex,
@@ -152,6 +176,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     className: String,
     packagesExpr: String,
     includePrivatePreviewsExpr: Boolean,
+    annotationFilterExpr: String,
     robolectricConfigString: String,
     testerQualifiedClassNameString: String,
     shardIndex: Int?,
@@ -229,6 +254,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                             scanOptions = ComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
+                              annotationFilter = $annotationFilterExpr,
                             )
                         )
                     }

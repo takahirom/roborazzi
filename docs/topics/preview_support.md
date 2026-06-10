@@ -43,6 +43,10 @@ roborazzi {
     testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
     // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
     generatedTestClassCount = 4
+    // Filter previews by annotation. Defaults to AnnotationFilter.Filter.RoboPreviewExclude
+    // (previews annotated with @RoboPreviewExclude are skipped). Override to switch to opt-in mode
+    // where only previews annotated with @RoboPreviewInclude are captured.
+    annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
   }
 }
 ```
@@ -91,6 +95,33 @@ roborazzi {
 > generateComposePreviewRobolectricTests.enable.set(true)
 > generateComposePreviewRobolectricTests.packages.set(["com.example"])
 > ```
+
+### Filtering previews by annotation
+
+`annotationFilter` controls which previews are captured (requires the `roborazzi-annotations` dependency).
+By default it is `AnnotationFilter.Filter.RoboPreviewExclude`, so previews annotated with
+`@RoboPreviewExclude` are skipped. Set it to `RoboPreviewInclude` to capture **only** previews
+annotated with `@RoboPreviewInclude`:
+
+```kotlin
+roborazzi {
+  @OptIn(ExperimentalRoborazziApi::class)
+  generateComposePreviewRobolectricTests {
+    enable = true
+    packages = listOf("com.example")
+    annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
+  }
+}
+```
+
+To filter by your own annotations, pass their fully qualified class names
+(use the JVM binary name with `$` for nested classes, e.g. `com.example.Outer$Inner`):
+
+```kotlin
+// Set either one, not both
+annotationFilter = AnnotationFilter.Exclude("com.example.MyExcludeAnnotation")
+annotationFilter = AnnotationFilter.Include("com.example.MyIncludeAnnotation")
+```
 
 ## Annotation-based Capture Control
 
