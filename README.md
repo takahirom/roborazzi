@@ -1065,8 +1065,8 @@ roborazzi {
 
 To use the built-in `@RoboPreviewExclude` / `@RoboPreviewInclude` annotations, add the `roborazzi-annotations` dependency:
 
-```gradle
-testImplementation("io.github.takahirom.roborazzi:roborazzi-annotations:[version]")
+```kotlin
+implementation("io.github.takahirom.roborazzi:roborazzi-annotations:[version]")
 ```
 
 By default, previews annotated with `@RoboPreviewExclude` are skipped and everything else is captured:
