@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.window.Dialog
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.Dump
@@ -160,6 +161,40 @@ class WindowCaptureTest {
             .setPositiveButton("OK") { _, _ -> }
             .setNegativeButton("Cancel") { _, _ -> }
             .show()
+        }
+      }
+    }
+
+    captureScreenRoboImage()
+  }
+
+  // https://github.com/takahirom/roborazzi/issues/842
+  @Test
+  fun stackedComposeDialogs() {
+    composeTestRule.setContent {
+      Column(
+        modifier = Modifier
+          .background(Color.Cyan)
+          .fillMaxSize()
+      ) {
+        Text("bottom")
+      }
+      Dialog(onDismissRequest = {}) {
+        Column(
+          modifier = Modifier
+            .background(Color.Green)
+            .fillMaxSize()
+        ) {
+          Text("mid")
+        }
+      }
+      Dialog(onDismissRequest = {}) {
+        Column(
+          modifier = Modifier
+            .background(Color.Blue)
+            .fillMaxSize(fraction = 0.5f)
+        ) {
+          Text("top")
         }
       }
     }

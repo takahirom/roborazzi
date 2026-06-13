@@ -215,8 +215,13 @@ fun fetchRobolectricWindowRoots(): List<Root> {
       rootsOracle.javaClass.getMethod("listActiveRoots")
     listActiveRoots.isAccessible = true
     @Suppress("UNCHECKED_CAST", "INACCESSIBLE_TYPE") val roots: List<Root> =
-      (listActiveRoots.invoke(rootsOracle) as List<Root>
-        ).sortedBy { it.windowLayoutParams.get()?.type }
+      (listActiveRoots.invoke(rootsOracle) as List<Root>)
+        // RootsOracle.listActiveRoots() returns roots ordered top-most first.
+        // Restore the window addition order (bottom-most first) so that the stable
+        // sort below keeps the correct z-order for windows of the same type.
+        // https://github.com/takahirom/roborazzi/issues/842
+        .reversed()
+        .sortedBy { it.windowLayoutParams.get()?.type }
     return roots
   } catch (e: Throwable) {
     e.printStackTrace()
