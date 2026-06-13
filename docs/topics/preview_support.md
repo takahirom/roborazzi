@@ -98,10 +98,22 @@ roborazzi {
 
 ### Filtering previews by annotation
 
-`annotationFilter` controls which previews are captured (requires the `roborazzi-annotations` dependency).
-By default it is `AnnotationFilter.Filter.RoboPreviewExclude`, so previews annotated with
-`@RoboPreviewExclude` are skipped. Set it to `RoboPreviewInclude` to capture **only** previews
-annotated with `@RoboPreviewInclude`:
+To use the built-in `@RoboPreviewExclude` / `@RoboPreviewInclude` annotations, add the `roborazzi-annotations` dependency:
+
+```gradle
+testImplementation("io.github.takahirom.roborazzi:roborazzi-annotations:[version]")
+```
+
+By default, previews annotated with `@RoboPreviewExclude` are skipped and everything else is captured:
+
+```kotlin
+@RoboPreviewExclude
+@Preview
+@Composable
+fun WorkInProgressPreview() { /* not captured */ }
+```
+
+Set `annotationFilter` to `RoboPreviewInclude` to instead capture **only** previews annotated with `@RoboPreviewInclude`:
 
 ```kotlin
 roborazzi {
@@ -114,7 +126,7 @@ roborazzi {
 }
 ```
 
-To filter by your own annotations, pass their fully qualified class names
+To filter by your own annotations instead, pass their fully qualified class names
 (use the JVM binary name with `$` for nested classes, e.g. `com.example.Outer$Inner`):
 
 ```kotlin
