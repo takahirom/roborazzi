@@ -42,12 +42,73 @@ import org.jetbrains.kotlin.gradle.targets.native.KotlinNativeBinaryTestRun
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
 private const val DEFAULT_OUTPUT_DIR = "outputs/roborazzi"
 private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
+
+private const val ROBORAZZI_COPY_MAX_ATTEMPTS = 3
+
+/**
+ * Copies the [source] file tree into [target], always overwriting existing files.
+ *
+ * Unlike Kotlin's [File.copyRecursively], this is resilient to the filesystem races
+ * that surface on Gradle 9 / macOS (Spotlight indexing, IDE file watchers, or parallel
+ * tasks touching the shared screenshot directories). Concretely it:
+ *  - replaces destination files atomically via [Files.copy] with REPLACE_EXISTING, so a
+ *    reference screenshot is never momentarily absent. `copyRecursively(overwrite = true)`
+ *    deletes the destination before re-copying it, which both opens a window where Gradle's
+ *    input snapshot sees the file disappear (`NoSuchFileException` on `roborazziImageInput`)
+ *    and throws `FileAlreadyExistsException` when the delete loses a race;
+ *  - silently skips source entries that vanish mid-walk;
+ *  - retries a few times on transient IO errors.
+ *
+ * See https://github.com/takahirom/roborazzi/issues/830
+ */
+private fun robustCopyRecursively(source: File, target: File) {
+  if (!source.exists()) return
+  source.walkTopDown()
+    // Ignore entries that disappear while walking (e.g. a concurrent cleanup or an OS indexer).
+    .onFail { _, _ -> }
+    .forEach { src ->
+      val relative = src.toRelativeString(source)
+      val dst = if (relative.isEmpty()) target else File(target, relative)
+      try {
+        if (src.isDirectory) {
+          Files.createDirectories(dst.toPath())
+        } else {
+          dst.toPath().parent?.let { Files.createDirectories(it) }
+          copyFileWithRetry(src.toPath(), dst.toPath())
+        }
+      } catch (e: java.nio.file.NoSuchFileException) {
+        // The source entry vanished between listing and copying; nothing to copy.
+      }
+    }
+}
+
+private fun copyFileWithRetry(source: Path, target: Path) {
+  var attempt = 0
+  while (true) {
+    attempt++
+    try {
+      Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
+      return
+    } catch (e: java.nio.file.NoSuchFileException) {
+      // Source disappeared; let the caller skip this entry instead of retrying.
+      throw e
+    } catch (e: IOException) {
+      if (attempt >= ROBORAZZI_COPY_MAX_ATTEMPTS) throw e
+      // Back off briefly; the contending actor (indexer / watcher) is usually transient.
+      Thread.sleep(50L * attempt)
+    }
+  }
+}
 
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
@@ -317,9 +378,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
               }
               val startCopy = System.currentTimeMillis()
               intermediateDir.get().asFile.mkdirs()
-              intermediateDir.get().asFile.copyRecursively(
-                target = outputDir.get().asFile,
-                overwrite = true
+              robustCopyRecursively(
+                source = intermediateDir.get().asFile,
+                target = outputDir.get().asFile
               )
               finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask Copy files from ${intermediateDir.get()} to ${outputDir.get()} end ${System.currentTimeMillis() - startCopy}ms")
             }
@@ -530,9 +591,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
               //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
               // }
               outputDir.get().asFile.mkdirs()
-              outputDir.get().asFile.copyRecursively(
-                target = intermediateDir.get().asFile,
-                overwrite = true
+              robustCopyRecursively(
+                source = outputDir.get().asFile,
+                target = intermediateDir.get().asFile
               )
             }
 
@@ -717,7 +778,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
       val outputDirFile = outputDir.get().asFile
       if (outputDirFile.exists() && outputDirFile.listFiles().isNotEmpty()) return
       this.infoln("Roborazzi RestoreOutputDirRoborazziTask: Copy files from ${inputDir.get()} to ${outputDirFile}")
-      inputDir.get().asFile.copyRecursively(outputDirFile)
+      robustCopyRecursively(source = inputDir.get().asFile, target = outputDirFile)
     }
   }
 
