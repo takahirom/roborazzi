@@ -102,6 +102,13 @@ apply plugin: "io.github.takahirom.roborazzi"
 </table>
 </details>
 
+Roborazzi can then be activated in multiple ways:
+1. By adding a specific property into the module's `gradle.properties` file, to enable the default mode Roborazzi operates in, e.g. verification.
+2. By configuring the `roborazzi.taskType` property in the module's build file or an build convention plugin, again, to enable the default mode Roborazzi operates in.
+3. By calling one of the specific tasks created by the Roborazzi plugin; this overrides any previously configured defaults.
+
+The following table lists the specific configuration options in detail:
+
 <table>
 <tr>
 <td> Use Roborazzi task </td> <td> Use default unit test task </td> <td> Description </td>
@@ -120,6 +127,9 @@ or
 
 `./gradlew testDebugUnitTest -Proborazzi.test.record=true`
 
+or
+
+`./gradlew testDebugUnitTest` after adding `roborazzi { taskType.set(RoborazziTaskType.Record) }` to your module's Gradle build file or build convention plugin.
 
 </td><td> 
 
@@ -142,6 +152,10 @@ You can check a report under `build/reports/roborazzi/index.html`
 or
 
 `./gradlew testDebugUnitTest -Proborazzi.test.compare=true`
+
+or
+
+`./gradlew testDebugUnitTest` after adding `roborazzi { taskType.set(RoborazziTaskType.Compare) }` to your module's Gradle build file or build convention plugin.
 
 </td><td>
 
@@ -166,6 +180,10 @@ or
 
 `./gradlew testDebugUnitTest -Proborazzi.test.verify=true`
 
+or
+
+`./gradlew testDebugUnitTest` after adding `roborazzi { taskType.set(RoborazziTaskType.Verify) }` to your module's Gradle build file or build convention plugin.
+
 </td><td>
 
 Validate changes made to an image. If there is any difference between the current image and the
@@ -186,6 +204,10 @@ saved one, the test will fail.
 or
 
 `./gradlew testDebugUnitTest -Proborazzi.test.verify=true -Proborazzi.test.record=true`
+
+or
+
+`./gradlew testDebugUnitTest` after adding `roborazzi { taskType.set(RoborazziTaskType.VerifyAndRecord) }` to your module's Gradle build file or build convention plugin.
 
 </td><td>
 
