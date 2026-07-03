@@ -14,7 +14,10 @@ class MainKmpTest {
         App()
       }
       val roborazziOptions = RoborazziOptions(
-        compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0F)
+        // Desktop Compose renders real fonts on the host JVM, so anti-aliasing /
+        // sub-pixel rendering can differ slightly between the recording runner and
+        // the comparing runner. Allow a tiny tolerance to avoid spurious diffs.
+        compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0.01F)
       )
       onRoot().captureRoboImage(roborazziOptions = roborazziOptions)
 
