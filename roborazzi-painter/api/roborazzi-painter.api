@@ -1,0 +1,134 @@
+public final class com/github/takahirom/roborazzi/AnimatedGifEncoder {
+	public fun <init> ()V
+	public final fun addFrame (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;D)Z
+	public final fun finish ()Z
+	public final fun setDelay (I)V
+	public final fun setDispose (I)V
+	public final fun setFrameRate (F)V
+	public final fun setQuality (I)V
+	public final fun setRepeat (I)V
+	public final fun setSize (II)V
+	public final fun setTransparent (Ljava/awt/Color;)V
+	public final fun start (Ljava/io/OutputStream;)Z
+	public final fun start (Ljava/lang/String;)Z
+}
+
+public final class com/github/takahirom/roborazzi/AwtRoboCanvas : com/github/takahirom/roborazzi/RoboCanvas {
+	public static final field Companion Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion;
+	public static final field TRANSPARENT_BIT I
+	public static final field TRANSPARENT_MEDIUM I
+	public static final field TRANSPARENT_NONE I
+	public static final field TRANSPARENT_STRONG I
+	public fun <init> (IIZI)V
+	public final fun addBaseDraw (Lkotlin/jvm/functions/Function0;)V
+	public final fun addPendingDraw (Lkotlin/jvm/functions/Function0;)V
+	public fun differ (Lcom/github/takahirom/roborazzi/RoboCanvas;DLcom/dropbox/differ/ImageComparator;)Lcom/dropbox/differ/ImageComparator$ComparisonResult;
+	public final fun drawImage (Landroid/graphics/Rect;Landroid/graphics/Bitmap;)V
+	public final fun drawImage (Ljava/awt/image/BufferedImage;Lcom/github/takahirom/roborazzi/AwtRoboCanvas$CompositeMode;)V
+	public static synthetic fun drawImage$default (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;Ljava/awt/image/BufferedImage;Lcom/github/takahirom/roborazzi/AwtRoboCanvas$CompositeMode;ILjava/lang/Object;)V
+	public final fun drawLine (Landroid/graphics/Rect;Landroid/graphics/Paint;)V
+	public final fun drawRect (Landroid/graphics/Rect;Landroid/graphics/Paint;)V
+	public final fun drawRectOutline (Landroid/graphics/Rect;Landroid/graphics/Paint;)V
+	public final fun drawText (FFLjava/util/List;Landroid/graphics/Paint;)V
+	public fun getCroppedHeight ()I
+	public fun getCroppedWidth ()I
+	public final fun getEmptyPoints ()Ljava/util/Set;
+	public fun getHeight ()I
+	public final fun getPixel (II)I
+	public fun getWidth ()I
+	public fun release ()V
+	public fun save (Ljava/lang/String;DLjava/util/Map;Lcom/github/takahirom/roborazzi/ImageIoFormat;)V
+	public final fun textCalc (Ljava/util/List;)Lkotlin/Pair;
+}
+
+public final class com/github/takahirom/roborazzi/AwtRoboCanvas$Companion {
+	public final fun generateCompareCanvas (Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters;)Lcom/github/takahirom/roborazzi/AwtRoboCanvas;
+	public final fun load (Ljava/io/File;ILcom/github/takahirom/roborazzi/ImageIoFormat;)Lcom/github/takahirom/roborazzi/AwtRoboCanvas;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters {
+	public static final field Companion Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Companion;
+	public abstract fun getBufferedImageType ()I
+	public abstract fun getComparisonImageHeight ()I
+	public abstract fun getComparisonImageWidth ()I
+	public abstract fun getDiffImage ()Ljava/awt/image/BufferedImage;
+	public abstract fun getNewCanvasResize ()D
+	public abstract fun getNewImage ()Ljava/awt/image/BufferedImage;
+	public abstract fun getReferenceImage ()Ljava/awt/image/BufferedImage;
+}
+
+public final class com/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Companion {
+	public final fun create (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;Lcom/github/takahirom/roborazzi/AwtRoboCanvas;DILjava/lang/Float;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle;)Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters;
+}
+
+public final class com/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Grid : com/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters {
+	public fun <init> (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;DILjava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;FLjava/lang/Integer;Ljava/lang/Integer;Z)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;DILjava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;FLjava/lang/Integer;Ljava/lang/Integer;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/AwtRoboCanvas;
+	public final fun component10 ()Z
+	public final fun component2 ()D
+	public final fun component3 ()I
+	public final fun component4 ()Ljava/awt/image/BufferedImage;
+	public final fun component5 ()Ljava/awt/image/BufferedImage;
+	public final fun component6 ()Ljava/awt/image/BufferedImage;
+	public final fun component7 ()F
+	public final fun component8 ()Ljava/lang/Integer;
+	public final fun component9 ()Ljava/lang/Integer;
+	public final fun copy (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;DILjava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;FLjava/lang/Integer;Ljava/lang/Integer;Z)Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Grid;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Grid;Lcom/github/takahirom/roborazzi/AwtRoboCanvas;DILjava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;FLjava/lang/Integer;Ljava/lang/Integer;ZILjava/lang/Object;)Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Grid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBigLineSpaceDp ()Ljava/lang/Integer;
+	public fun getBufferedImageType ()I
+	public fun getComparisonImageHeight ()I
+	public fun getComparisonImageWidth ()I
+	public fun getDiffImage ()Ljava/awt/image/BufferedImage;
+	public final fun getGoldenCanvas ()Lcom/github/takahirom/roborazzi/AwtRoboCanvas;
+	public final fun getHasLabel ()Z
+	public final fun getMargin ()I
+	public fun getNewCanvasResize ()D
+	public fun getNewImage ()Ljava/awt/image/BufferedImage;
+	public final fun getOneDpPx ()F
+	public fun getReferenceImage ()Ljava/awt/image/BufferedImage;
+	public final fun getSmallLineSpaceDp ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Simple : com/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters {
+	public fun <init> (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;Lcom/github/takahirom/roborazzi/AwtRoboCanvas;DILjava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;)V
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/AwtRoboCanvas;
+	public final fun component2 ()Lcom/github/takahirom/roborazzi/AwtRoboCanvas;
+	public final fun component3 ()D
+	public final fun component4 ()I
+	public final fun component5 ()Ljava/awt/image/BufferedImage;
+	public final fun component6 ()Ljava/awt/image/BufferedImage;
+	public final fun component7 ()Ljava/awt/image/BufferedImage;
+	public final fun copy (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;Lcom/github/takahirom/roborazzi/AwtRoboCanvas;DILjava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;)Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Simple;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Simple;Lcom/github/takahirom/roborazzi/AwtRoboCanvas;Lcom/github/takahirom/roborazzi/AwtRoboCanvas;DILjava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;Ljava/awt/image/BufferedImage;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/AwtRoboCanvas$Companion$ComparisonCanvasParameters$Simple;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getBufferedImageType ()I
+	public fun getComparisonImageHeight ()I
+	public fun getComparisonImageWidth ()I
+	public fun getDiffImage ()Ljava/awt/image/BufferedImage;
+	public final fun getGoldenCanvas ()Lcom/github/takahirom/roborazzi/AwtRoboCanvas;
+	public final fun getNewCanvas ()Lcom/github/takahirom/roborazzi/AwtRoboCanvas;
+	public fun getNewCanvasResize ()D
+	public fun getNewImage ()Ljava/awt/image/BufferedImage;
+	public fun getReferenceImage ()Ljava/awt/image/BufferedImage;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/AwtRoboCanvas$CompositeMode : java/lang/Enum {
+	public static final field Src Lcom/github/takahirom/roborazzi/AwtRoboCanvas$CompositeMode;
+	public static final field SrcOver Lcom/github/takahirom/roborazzi/AwtRoboCanvas$CompositeMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/AwtRoboCanvas$CompositeMode;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/AwtRoboCanvas$CompositeMode;
+}
+
+public final class com/github/takahirom/roborazzi/BitmapToBufferedImageConverter {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/BitmapToBufferedImageConverter;
+	public final fun convert (Landroid/graphics/Bitmap;)Ljava/awt/image/BufferedImage;
+}
+

@@ -1,0 +1,86 @@
+public class io/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTestsExtension {
+	public static final field Companion Lio/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTestsExtension$Companion;
+	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
+	public final fun getAnnotationFilter ()Lorg/gradle/api/provider/Property;
+	public final fun getEnable ()Lorg/gradle/api/provider/Property;
+	public final fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
+	public final fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
+	public final fun getPackages ()Lorg/gradle/api/provider/ListProperty;
+	public final fun getRobolectricConfig ()Lorg/gradle/api/provider/MapProperty;
+	public final fun getTesterQualifiedClassName ()Lorg/gradle/api/provider/Property;
+	public final fun getUseScanOptionParametersInTester ()Lorg/gradle/api/provider/Property;
+}
+
+public final class io/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTestsExtension$Companion {
+}
+
+public abstract class io/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTestsTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public final fun generateTests ()V
+	public abstract fun getAnnotationFilter ()Lorg/gradle/api/provider/Property;
+	public abstract fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
+	public abstract fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
+	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getRobolectricConfig ()Lorg/gradle/api/provider/MapProperty;
+	public final fun getScanPackageTrees ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getTesterQualifiedClassName ()Lorg/gradle/api/provider/Property;
+	public final fun setScanPackageTrees (Lorg/gradle/api/provider/ListProperty;)V
+}
+
+public class io/github/takahirom/roborazzi/RoborazziCompareExtension {
+	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
+	public final fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+}
+
+public class io/github/takahirom/roborazzi/RoborazziExtension {
+	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
+	public final fun compare (Lorg/gradle/api/Action;)V
+	public final fun generateComposePreviewRobolectricTests (Lkotlin/jvm/functions/Function1;)V
+	public final fun getCompare ()Lio/github/takahirom/roborazzi/RoborazziCompareExtension;
+	public final fun getGenerateComposePreviewRobolectricTests ()Lio/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTestsExtension;
+	public final fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public final fun getSeparateOutputDirs ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class io/github/takahirom/roborazzi/RoborazziPlugin : org/gradle/api/Plugin {
+	public fun <init> ()V
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+	public final fun getSystemProperties (Lorg/gradle/api/tasks/testing/AbstractTestTask;)Ljava/util/Map;
+}
+
+public abstract class io/github/takahirom/roborazzi/RoborazziPlugin$RestoreOutputDirRoborazziTask : org/gradle/api/DefaultTask {
+	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
+	public final fun copy ()V
+	public final fun getInputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public final fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+}
+
+public class io/github/takahirom/roborazzi/RoborazziPlugin$RoborazziTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public fun setTestNameIncludePatterns (Ljava/util/List;)Lio/github/takahirom/roborazzi/RoborazziPlugin$RoborazziTask;
+}
+
+public abstract class io/github/takahirom/roborazzi/RoborazziPlugin$TestExecutedBuildService : org/gradle/api/services/BuildService {
+	public fun <init> ()V
+	public final fun markExecuted ()V
+	public final fun wasExecuted ()Z
+}
+
+public final class io/github/takahirom/roborazzi/RoborazziPluginKt {
+	public static final fun getKnownImageFileExtensions ()Ljava/util/Set;
+	public static final fun infoln (Lorg/gradle/api/Task;Ljava/lang/String;)V
+}
+
+public final class io/github/takahirom/roborazzi/WebAssets {
+	public static final field Companion Lio/github/takahirom/roborazzi/WebAssets$Companion;
+	public synthetic fun <init> (Lorg/webjars/WebJarVersionLocator;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAssets ()Ljava/util/List;
+	public final fun writeToRoborazziReportsDir (Ljava/io/File;)V
+}
+
+public final class io/github/takahirom/roborazzi/WebAssets$Companion {
+	public final fun create (Lorg/webjars/WebJarVersionLocator;)Lio/github/takahirom/roborazzi/WebAssets;
+	public static synthetic fun create$default (Lio/github/takahirom/roborazzi/WebAssets$Companion;Lorg/webjars/WebJarVersionLocator;ILjava/lang/Object;)Lio/github/takahirom/roborazzi/WebAssets;
+}
+

@@ -1,0 +1,67 @@
+public final class com/github/takahirom/roborazzi/AccessibilityCheckAfterTestStrategy : com/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy {
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlin/jvm/functions/Function0;
+	public final fun copy (Lkotlin/jvm/functions/Function0;)Lcom/github/takahirom/roborazzi/AccessibilityCheckAfterTestStrategy;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/AccessibilityCheckAfterTestStrategy;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/AccessibilityCheckAfterTestStrategy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccessibilityOptionsFactory ()Lkotlin/jvm/functions/Function0;
+	public fun hashCode ()I
+	public fun runAccessibilityChecks (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureRoot;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziATFAccessibilityCheckOptions : com/github/takahirom/roborazzi/RoborazziAccessibilityOptions {
+	public fun <init> ()V
+	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker;Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker;Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker;
+	public final fun component2 ()Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;
+	public final fun copy (Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker;Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;)Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityCheckOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityCheckOptions;Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker;Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityCheckOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChecker ()Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker;
+	public final fun getFailureLevel ()Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker : com/github/takahirom/roborazzi/RoborazziAccessibilityOptions {
+	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$Companion;
+	public fun <init> ()V
+	public fun <init> (Lcom/google/android/apps/common/testing/accessibility/framework/AccessibilityCheckPreset;Lorg/hamcrest/Matcher;)V
+	public synthetic fun <init> (Lcom/google/android/apps/common/testing/accessibility/framework/AccessibilityCheckPreset;Lorg/hamcrest/Matcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/Set;Lorg/hamcrest/Matcher;)V
+	public synthetic fun <init> (Ljava/util/Set;Lorg/hamcrest/Matcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Set;
+	public final fun component2 ()Lorg/hamcrest/Matcher;
+	public final fun copy (Ljava/util/Set;Lorg/hamcrest/Matcher;)Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker;Ljava/util/Set;Lorg/hamcrest/Matcher;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChecks ()Ljava/util/Set;
+	public final fun getSuppressions ()Lorg/hamcrest/Matcher;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel : java/lang/Enum {
+	public static final field Error Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;
+	public static final field LogOnly Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;
+	public static final field Warning Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun isFailure (Lcom/google/android/apps/common/testing/accessibility/framework/AccessibilityCheckResult$AccessibilityCheckResultType;)Z
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$CheckLevel;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziATFAccessibilityChecker$Companion {
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziATFAccessibilityCheckerKt {
+	public static final fun checkRoboAccessibility (Landroidx/compose/ui/test/SemanticsNodeInteraction;Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityCheckOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun checkRoboAccessibility (Landroidx/test/espresso/ViewInteraction;Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityCheckOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static synthetic fun checkRoboAccessibility$default (Landroidx/compose/ui/test/SemanticsNodeInteraction;Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityCheckOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun checkRoboAccessibility$default (Landroidx/test/espresso/ViewInteraction;Lcom/github/takahirom/roborazzi/RoborazziATFAccessibilityCheckOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+}
+

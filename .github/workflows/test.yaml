@@ -30,12 +30,14 @@ jobs:
         id: test
         run: |
           ./gradlew javaDocReleaseGeneration
+          ./gradlew apiCheck --stacktrace
           ./gradlew test --stacktrace -x testReleaseUnitTest
 
       - name: include build tests
         id: include-build-test
         run: |
           cd include-build
+          ./gradlew apiCheck --stacktrace
           ./gradlew test jvmTest --stacktrace
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

@@ -1,0 +1,132 @@
+public final class com/github/takahirom/roborazzi/CaptureDumpKt {
+	public static final fun findTextPoint (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;IIII)Lkotlin/Pair;
+	public static final fun formattedTextList (Ljava/lang/String;)Ljava/util/List;
+	public static final fun isColorBright (I)Z
+}
+
+public final class com/github/takahirom/roborazzi/CaptureInternalResult {
+	public fun <init> (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;)V
+	public final fun getClear ()Lkotlin/jvm/functions/Function0;
+	public final fun getResult-d1pmJ48 ()Ljava/lang/Object;
+	public final fun getSaveAllImage ()Lkotlin/jvm/functions/Function1;
+	public final fun getSaveGif ()Lkotlin/jvm/functions/Function1;
+	public final fun getSaveLastImage ()Lkotlin/jvm/functions/Function1;
+}
+
+public final class com/github/takahirom/roborazzi/RobolectricDeviceQualifiers {
+	public static final field AIGlasses Ljava/lang/String;
+	public static final field Automotive1024plandscape Ljava/lang/String;
+	public static final field Automotive1080plandscape Ljava/lang/String;
+	public static final field Automotive1408plandscape Ljava/lang/String;
+	public static final field Automotive1408plandscapewithGooglePlay Ljava/lang/String;
+	public static final field AutomotiveDistantDisplay Ljava/lang/String;
+	public static final field AutomotiveDistantDisplaywithGooglePlay Ljava/lang/String;
+	public static final field AutomotiveLargePortrait Ljava/lang/String;
+	public static final field AutomotivePortrait Ljava/lang/String;
+	public static final field AutomotiveUltrawide Ljava/lang/String;
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RobolectricDeviceQualifiers;
+	public static final field LargeDesktop Ljava/lang/String;
+	public static final field MediumDesktop Ljava/lang/String;
+	public static final field MediumPhone Ljava/lang/String;
+	public static final field MediumTablet Ljava/lang/String;
+	public static final field Nexus7 Ljava/lang/String;
+	public static final field Nexus9 Ljava/lang/String;
+	public static final field NexusOne Ljava/lang/String;
+	public static final field Pixel4 Ljava/lang/String;
+	public static final field Pixel4XL Ljava/lang/String;
+	public static final field Pixel4a Ljava/lang/String;
+	public static final field Pixel5 Ljava/lang/String;
+	public static final field Pixel6 Ljava/lang/String;
+	public static final field Pixel6Pro Ljava/lang/String;
+	public static final field Pixel6a Ljava/lang/String;
+	public static final field Pixel7 Ljava/lang/String;
+	public static final field Pixel7Pro Ljava/lang/String;
+	public static final field Pixel7a Ljava/lang/String;
+	public static final field Pixel8 Ljava/lang/String;
+	public static final field Pixel8Pro Ljava/lang/String;
+	public static final field Pixel8a Ljava/lang/String;
+	public static final field Pixel9 Ljava/lang/String;
+	public static final field Pixel9Pro Ljava/lang/String;
+	public static final field Pixel9ProFold Ljava/lang/String;
+	public static final field Pixel9ProXL Ljava/lang/String;
+	public static final field Pixel9a Ljava/lang/String;
+	public static final field PixelC Ljava/lang/String;
+	public static final field PixelFold Ljava/lang/String;
+	public static final field PixelTablet Ljava/lang/String;
+	public static final field PixelXL Ljava/lang/String;
+	public static final field ResizableExperimental Ljava/lang/String;
+	public static final field SmallDesktop Ljava/lang/String;
+	public static final field SmallPhone Ljava/lang/String;
+	public static final field Television1080p Ljava/lang/String;
+	public static final field Television4K Ljava/lang/String;
+	public static final field Television720p Ljava/lang/String;
+	public static final field WearOSLargeRound Ljava/lang/String;
+	public static final field WearOSRectangular Ljava/lang/String;
+	public static final field WearOSSmallRound Ljava/lang/String;
+	public static final field WearOSSquare Ljava/lang/String;
+	public static final field WearOSXLRound Ljava/lang/String;
+	public static final field XRGlasses Ljava/lang/String;
+	public static final field XRHeadset Ljava/lang/String;
+}
+
+public class com/github/takahirom/roborazzi/RoborazziActivity : androidx/activity/ComponentActivity {
+	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziActivity$Companion;
+	public static final field EXTRA_THEME Ljava/lang/String;
+	public fun <init> ()V
+	protected fun onCreate (Landroid/os/Bundle;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziActivity$Companion {
+	public final fun createIntent (Landroid/content/Context;I)Landroid/content/Intent;
+	public static synthetic fun createIntent$default (Lcom/github/takahirom/roborazzi/RoborazziActivity$Companion;Landroid/content/Context;IILjava/lang/Object;)Landroid/content/Intent;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziKt {
+	public static final fun captureAndroidView (Landroidx/test/espresso/ViewInteraction;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;)Lcom/github/takahirom/roborazzi/CaptureInternalResult;
+	public static final fun captureComposeNode (Landroidx/compose/ui/test/SemanticsNodeInteraction;Landroidx/compose/ui/test/junit4/ComposeTestRule;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;)Lcom/github/takahirom/roborazzi/CaptureInternalResult;
+	public static synthetic fun captureComposeNode$default (Landroidx/compose/ui/test/SemanticsNodeInteraction;Landroidx/compose/ui/test/junit4/ComposeTestRule;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/CaptureInternalResult;
+	public static final fun captureRoboAllImage (Landroidx/test/espresso/ViewInteraction;Lkotlin/jvm/functions/Function1;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun captureRoboAllImage$default (Landroidx/test/espresso/ViewInteraction;Lkotlin/jvm/functions/Function1;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static final fun captureRoboGif (Landroidx/compose/ui/test/SemanticsNodeInteraction;Landroidx/compose/ui/test/junit4/ComposeTestRule;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;)V
+	public static final fun captureRoboGif (Landroidx/compose/ui/test/SemanticsNodeInteraction;Landroidx/compose/ui/test/junit4/ComposeTestRule;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;)V
+	public static final fun captureRoboGif (Landroidx/test/espresso/ViewInteraction;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;)V
+	public static final fun captureRoboGif (Landroidx/test/espresso/ViewInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun captureRoboGif$default (Landroidx/compose/ui/test/SemanticsNodeInteraction;Landroidx/compose/ui/test/junit4/ComposeTestRule;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboGif$default (Landroidx/compose/ui/test/SemanticsNodeInteraction;Landroidx/compose/ui/test/junit4/ComposeTestRule;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboGif$default (Landroidx/test/espresso/ViewInteraction;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboGif$default (Landroidx/test/espresso/ViewInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static final fun captureRoboImage (Landroid/graphics/Bitmap;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroid/graphics/Bitmap;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroid/view/View;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroid/view/View;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroidx/compose/ui/test/SemanticsNodeInteraction;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroidx/compose/ui/test/SemanticsNodeInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroidx/test/espresso/ViewInteraction;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroidx/test/espresso/ViewInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static synthetic fun captureRoboImage$default (Landroid/graphics/Bitmap;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Landroid/graphics/Bitmap;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Landroid/view/View;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Landroid/view/View;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Landroidx/compose/ui/test/SemanticsNodeInteraction;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Landroidx/compose/ui/test/SemanticsNodeInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Landroidx/test/espresso/ViewInteraction;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Landroidx/test/espresso/ViewInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static final fun captureRoboLastImage (Landroidx/test/espresso/ViewInteraction;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;)V
+	public static final fun captureRoboLastImage (Landroidx/test/espresso/ViewInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun captureRoboLastImage$default (Landroidx/test/espresso/ViewInteraction;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboLastImage$default (Landroidx/test/espresso/ViewInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static final fun captureRootsInternal (Ljava/util/List;Lcom/github/takahirom/roborazzi/RoborazziOptions;Ljava/io/File;)V
+	public static final fun captureScreenIfMultipleWindows (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun captureScreenIfMultipleWindows$default (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static final fun captureScreenRoboImage (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureScreenRoboImage (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static synthetic fun captureScreenRoboImage$default (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun captureScreenRoboImage$default (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static final fun fetchRobolectricWindowRoots ()Ljava/util/List;
+	public static final fun processOutputImageAndReportWithDefaults (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziTransparentActivity : com/github/takahirom/roborazzi/RoborazziActivity {
+	public fun <init> ()V
+}
+

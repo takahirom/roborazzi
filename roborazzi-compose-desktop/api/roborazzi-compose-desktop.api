@@ -1,0 +1,10 @@
+public final class io/github/takahirom/roborazzi/RoborazziDesktopKt {
+	public static final fun captureRoboImage (Landroidx/compose/ui/graphics/ImageBitmap;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroidx/compose/ui/graphics/ImageBitmap;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroidx/compose/ui/test/SemanticsNodeInteraction;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun captureRoboImage (Landroidx/compose/ui/test/SemanticsNodeInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static synthetic fun captureRoboImage$default (Landroidx/compose/ui/graphics/ImageBitmap;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Landroidx/compose/ui/test/SemanticsNodeInteraction;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
+	public static final fun processOutputImageAndReportWithDefaults (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Landroidx/compose/ui/unit/Density;)V
+}
+

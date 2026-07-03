@@ -1,0 +1,197 @@
+public final class com/github/takahirom/roborazzi/AndroidComposePreviewTester : com/github/takahirom/roborazzi/ComposePreviewTester {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Lcom/github/takahirom/roborazzi/AndroidComposePreviewTester$Capturer;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/AndroidComposePreviewTester$Capturer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun options ()Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options;
+	public fun test (Lcom/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$JUnit4TestParameter$AndroidPreviewJUnit4TestParameter;)V
+	public synthetic fun test (Lcom/github/takahirom/roborazzi/ComposePreviewTester$TestParameter;)V
+	public fun testParameters ()Ljava/util/List;
+}
+
+public final class com/github/takahirom/roborazzi/AndroidComposePreviewTester$CaptureParameter {
+	public static final field $stable I
+	public fun <init> (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public synthetic fun <init> (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;
+	public final fun component4 ()Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public final fun copy (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;)Lcom/github/takahirom/roborazzi/AndroidComposePreviewTester$CaptureParameter;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/AndroidComposePreviewTester$CaptureParameter;Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/AndroidComposePreviewTester$CaptureParameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFilePath ()Ljava/lang/String;
+	public final fun getPreview ()Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;
+	public final fun getRoborazziComposeOptions ()Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;
+	public final fun getRoborazziOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/AndroidComposePreviewTester$Capturer {
+	public abstract fun capture (Lcom/github/takahirom/roborazzi/AndroidComposePreviewTester$CaptureParameter;)V
+}
+
+public final class com/github/takahirom/roborazzi/AndroidComposePreviewTester$DefaultCapturer : com/github/takahirom/roborazzi/AndroidComposePreviewTester$Capturer {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun capture (Lcom/github/takahirom/roborazzi/AndroidComposePreviewTester$CaptureParameter;)V
+}
+
+public abstract interface class com/github/takahirom/roborazzi/ComposePreviewTester {
+	public static final field Companion Lcom/github/takahirom/roborazzi/ComposePreviewTester$Companion;
+	public fun options ()Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options;
+	public abstract fun test (Lcom/github/takahirom/roborazzi/ComposePreviewTester$TestParameter;)V
+	public abstract fun testParameters ()Ljava/util/List;
+}
+
+public final class com/github/takahirom/roborazzi/ComposePreviewTester$Companion {
+	public final fun getDefaultOptionsFromPlugin ()Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options;
+	public final fun setDefaultOptionsFromPlugin (Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options;)V
+}
+
+public final class com/github/takahirom/roborazzi/ComposePreviewTester$DefaultImpls {
+	public static fun options (Lcom/github/takahirom/roborazzi/ComposePreviewTester;)Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options;
+}
+
+public final class com/github/takahirom/roborazzi/ComposePreviewTester$Options {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$TestLifecycleOptions;
+	public final fun component2 ()Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions;
+	public final fun copy (Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions;)Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options;Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getScanOptions ()Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions;
+	public final fun getTestLifecycleOptions ()Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$TestLifecycleOptions;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/ComposePreviewTester$Options$JUnit4TestLifecycleOptions : com/github/takahirom/roborazzi/ComposePreviewTester$Options$TestLifecycleOptions {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlin/jvm/functions/Function0;
+	public final fun component2 ()Lkotlin/jvm/functions/Function1;
+	public final fun copy (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;)Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$JUnit4TestLifecycleOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$JUnit4TestLifecycleOptions;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$JUnit4TestLifecycleOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getComposeRuleFactory ()Lkotlin/jvm/functions/Function0;
+	public final fun getTestRuleFactory ()Lkotlin/jvm/functions/Function1;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions {
+	public static final field $stable I
+	public fun <init> (Ljava/util/List;ZLcom/github/takahirom/roborazzi/AnnotationFilter;)V
+	public synthetic fun <init> (Ljava/util/List;ZLcom/github/takahirom/roborazzi/AnnotationFilter;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Z
+	public final fun component3 ()Lcom/github/takahirom/roborazzi/AnnotationFilter;
+	public final fun copy (Ljava/util/List;ZLcom/github/takahirom/roborazzi/AnnotationFilter;)Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions;Ljava/util/List;ZLcom/github/takahirom/roborazzi/AnnotationFilter;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/ComposePreviewTester$Options$ScanOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotationFilter ()Lcom/github/takahirom/roborazzi/AnnotationFilter;
+	public final fun getIncludePrivatePreviews ()Z
+	public final fun getPackages ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/ComposePreviewTester$Options$TestLifecycleOptions {
+}
+
+public abstract class com/github/takahirom/roborazzi/ComposePreviewTester$TestParameter {
+	public static final field $stable I
+}
+
+public class com/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$JUnit4TestParameter : com/github/takahirom/roborazzi/ComposePreviewTester$TestParameter {
+	public static final field $stable I
+	public fun <init> (Lkotlin/jvm/functions/Function0;Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;)V
+	public final fun getComposeTestRule ()Landroidx/compose/ui/test/junit4/AndroidComposeTestRule;
+	public fun getComposeTestRuleFactory ()Lkotlin/jvm/functions/Function0;
+	public fun getPreview ()Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;
+}
+
+public final class com/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$JUnit4TestParameter$AndroidPreviewJUnit4TestParameter : com/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$JUnit4TestParameter {
+	public static final field $stable I
+	public fun <init> (Lkotlin/jvm/functions/Function0;Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlin/jvm/functions/Function0;
+	public final fun component2 ()Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;
+	public final fun component3 ()Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation;
+	public final fun copy (Lkotlin/jvm/functions/Function0;Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation;)Lcom/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$JUnit4TestParameter$AndroidPreviewJUnit4TestParameter;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$JUnit4TestParameter$AndroidPreviewJUnit4TestParameter;Lkotlin/jvm/functions/Function0;Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$JUnit4TestParameter$AndroidPreviewJUnit4TestParameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getComposeRoboComposePreviewOptionVariation ()Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation;
+	public fun getComposeTestRuleFactory ()Lkotlin/jvm/functions/Function0;
+	public fun getPreview ()Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoboComposePreviewOptionVariation {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Lcom/github/takahirom/roborazzi/annotations/ManualClockOptions;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/annotations/ManualClockOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getManualClockOptions ()Lcom/github/takahirom/roborazzi/annotations/ManualClockOptions;
+	public final fun nameWithPrefix ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeManualAdvancePreviewOption : com/github/takahirom/roborazzi/RoborazziComposeCaptureOption, com/github/takahirom/roborazzi/RoborazziComposeSetupOption {
+	public static final field $stable I
+	public fun <init> (Landroidx/compose/ui/test/junit4/ComposeTestRule;J)V
+	public fun afterCapture ()V
+	public fun beforeCapture ()V
+	public fun configure (Lcom/github/takahirom/roborazzi/RoborazziComposeSetupOption$ConfigBuilder;)V
+	public final fun copy (Landroidx/compose/ui/test/junit4/ComposeTestRule;J)Lcom/github/takahirom/roborazzi/RoborazziComposeManualAdvancePreviewOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposeManualAdvancePreviewOption;Landroidx/compose/ui/test/junit4/ComposeTestRule;JILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeManualAdvancePreviewOption;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposePreviewDeviceOption : com/github/takahirom/roborazzi/RoborazziComposeSetupOption {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;)V
+	public fun configure (Lcom/github/takahirom/roborazzi/RoborazziComposeSetupOption$ConfigBuilder;)V
+	public final fun copy (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoborazziComposePreviewDeviceOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposePreviewDeviceOption;Ljava/lang/String;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposePreviewDeviceOption;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziComposePreviewTestCategory {
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeTestRuleOption : com/github/takahirom/roborazzi/RoborazziComposeActivityScenarioCreatorOption, com/github/takahirom/roborazzi/RoborazziComposeCaptureOption {
+	public static final field $stable I
+	public fun <init> (Landroidx/compose/ui/test/junit4/AndroidComposeTestRule;)V
+	public fun afterCapture ()V
+	public fun beforeCapture ()V
+	public final fun copy (Landroidx/compose/ui/test/junit4/AndroidComposeTestRule;)Lcom/github/takahirom/roborazzi/RoborazziComposeTestRuleOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposeTestRuleOption;Landroidx/compose/ui/test/junit4/AndroidComposeTestRule;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeTestRuleOption;
+	public fun createScenario (Lkotlin/jvm/functions/Function0;)Landroidx/test/core/app/ActivityScenario;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziPreviewScannerSupportKt {
+	public static final fun applyToRobolectricConfiguration (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;)V
+	public static final fun captureRoboImage (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;)V
+	public static synthetic fun captureRoboImage$default (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;ILjava/lang/Object;)V
+	public static final fun composeTestRule (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;Landroidx/compose/ui/test/junit4/AndroidComposeTestRule;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static final fun getComposePreviewTester (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/ComposePreviewTester;
+	public static final fun manualAdvance (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;Landroidx/compose/ui/test/junit4/ComposeTestRule;J)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static final fun previewDevice (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static final fun toRoborazziComposeOptions (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;
+}
+

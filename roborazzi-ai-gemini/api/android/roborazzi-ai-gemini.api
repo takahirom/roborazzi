@@ -1,0 +1,11 @@
+public final class com/github/takahirom/roborazzi/GeminiAiAssertionModel : com/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun assert (Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel$TargetImages;Lcom/github/takahirom/roborazzi/AiAssertionOptions;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public fun assert (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/github/takahirom/roborazzi/AiAssertionOptions;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+}
+
+public final class com/github/takahirom/roborazzi/GeminiRoborazziAi_androidKt {
+	public static final fun readByteArrayFromFile (Ljava/lang/String;)Ldev/shreyaspatil/ai/client/generativeai/type/PlatformImage;
+}
+
