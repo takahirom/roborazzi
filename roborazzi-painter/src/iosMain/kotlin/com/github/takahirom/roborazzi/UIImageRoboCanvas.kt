@@ -91,10 +91,11 @@ class UIImageRoboCanvas private constructor(
     val r = data[base + 2].toInt() and 0xFF
     val a = data[base + 3].toInt() and 0xFF
     if (a == 0) return Color(0, 0, 0, 0)
-    // Un-premultiply.
-    val sr = (r * 255 / a).coerceAtMost(255)
-    val sg = (g * 255 / a).coerceAtMost(255)
-    val sb = (b * 255 / a).coerceAtMost(255)
+    // Un-premultiply, rounding to the nearest straight value so translucent
+    // pixels do not drift by one from what the JVM sees.
+    val sr = ((r * 255 + a / 2) / a).coerceAtMost(255)
+    val sg = ((g * 255 + a / 2) / a).coerceAtMost(255)
+    val sb = ((b * 255 + a / 2) / a).coerceAtMost(255)
     return Color(sr, sg, sb, a)
   }
 
@@ -215,14 +216,18 @@ class UIImageRoboCanvas private constructor(
       }
       val canvas = create(width, height)
       val sourceImage = createStraightRgbaImage(width, height, bytes)
-      if (sourceImage != null) {
-        CGContextDrawImage(
-          canvas.context,
-          CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()),
-          sourceImage
-        )
-        CGImageRelease(sourceImage)
+      if (sourceImage == null) {
+        // Returning the cleared canvas here would silently replace the
+        // requested image with transparent pixels.
+        canvas.release()
+        error("Failed to create CGImage from the ${width}x$height pixel buffer")
       }
+      CGContextDrawImage(
+        canvas.context,
+        CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()),
+        sourceImage
+      )
+      CGImageRelease(sourceImage)
       return canvas
     }
 
@@ -254,6 +259,10 @@ class UIImageRoboCanvas private constructor(
     }
 
     private fun createContext(width: Int, height: Int): CGContextRef {
+      require(width > 0 && height > 0) { "Invalid canvas size: ${width}x$height" }
+      require(width.toLong() * height * 4 <= Int.MAX_VALUE) {
+        "Canvas size ${width}x$height exceeds the supported pixel buffer size"
+      }
       val colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB)
       // kCGImageAlphaFirst is not supported for CGBitmapContextCreate on iOS,
       // so we always store premultiplied pixels.
@@ -326,6 +335,9 @@ class UIImageRoboCanvas private constructor(
       val sectionWidth = maxOf(goldenWidth, newWidth)
       val height = maxOf(goldenHeight, newHeight)
       val totalWidth = sectionWidth * 3
+      require(totalWidth.toLong() * height * 4 <= Int.MAX_VALUE) {
+        "Comparison canvas ${totalWidth}x$height exceeds the supported pixel buffer size"
+      }
 
       val out = ByteArray(totalWidth * height * 4)
       fun setPixel(x: Int, y: Int, color: Color) {
