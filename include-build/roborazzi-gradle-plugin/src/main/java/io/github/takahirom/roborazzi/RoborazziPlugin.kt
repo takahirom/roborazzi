@@ -52,6 +52,27 @@ private const val DEFAULT_TEMP_DIR = "intermediates/roborazzi"
 open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   val outputDir: DirectoryProperty = objects.directoryProperty()
 
+  /**
+   * When enabled, each Roborazzi task slug gets its own output and intermediate
+   * subdirectory instead of sharing a single directory across every variant/target.
+   *
+   * The unit of separation is the `recordRoborazzi<Slug>` slug: for Android that is
+   * the variant name (e.g. `outputs/roborazzi/debug/`), for Kotlin Multiplatform it is
+   * the target (× test run) name (e.g. `outputs/roborazzi/desktop/`).
+   *
+   * This eliminates the cross-task directory races that make Gradle 9 hard-fail with
+   * "Cannot access input property 'roborazziImageInput'" when several Roborazzi test
+   * tasks run in a single invocation (e.g. `check`, `allTests`). See
+   * https://github.com/takahirom/roborazzi/issues/830.
+   *
+   * Enabling this changes where golden images live, so existing users must re-record
+   * (or move) their goldens into the per-slug subdirectory. Defaults to `false` to keep
+   * the existing behavior.
+   */
+  @ExperimentalRoborazziApi
+  val separateOutputDirs: Property<Boolean> =
+    objects.property(Boolean::class.java).convention(false)
+
   @ExperimentalRoborazziApi
   val compare: RoborazziCompareExtension =
     objects.newInstance(RoborazziCompareExtension::class.java)
@@ -163,18 +184,60 @@ abstract class RoborazziPlugin : Plugin<Project> {
     ) {
       val variantSlug = variantName.capitalizeUS()
 
-      val testTaskOutputDirForEachVariant: DirectoryProperty = project.objects.directoryProperty()
-      val intermediateDirForEachVariant =
-        testTaskOutputDirForEachVariant.convention(
-          project.layout.buildDirectory.dir(
-            DEFAULT_TEMP_DIR
-          )
-        )
+      // Per-slug directories. When separateOutputDirs is enabled, each task slug gets
+      // its own subdirectory (e.g. outputs/roborazzi/debug/) so that concurrent
+      // Roborazzi test tasks in a single Gradle invocation never share a directory
+      // (see https://github.com/takahirom/roborazzi/issues/830). When disabled these
+      // resolve to the shared directories, keeping behavior byte-for-byte identical.
+      // Resolved only via Provider chains so they stay Configuration Cache safe.
+      val variantOutputDir: Provider<Directory> =
+        extension.separateOutputDirs.flatMap { separate ->
+          if (separate) outputDir.dir(variantName) else outputDir
+        }
+      val variantCompareOutputDir: Provider<Directory> =
+        extension.separateOutputDirs.flatMap { separate ->
+          if (separate) compareOutputDirProvider.dir(variantName) else compareOutputDirProvider
+        }
+      val variantIntermediateDir: Provider<Directory> =
+        extension.separateOutputDirs.flatMap { separate ->
+          if (separate) intermediateDir.dir(variantName) else intermediateDir
+        }
+
+      // Per-slug restore task, used as the compare/verify input source when
+      // separateOutputDirs is enabled. When disabled we keep using the shared
+      // restoreOutputDirRoborazzi task (see restoreTaskProviderForVariant below) so the
+      // existing task graph is untouched.
+      val restoreOutputDirRoborazziVariantTaskProvider =
+        project.tasks.register(
+          "restoreOutputDirRoborazzi$variantSlug",
+          RestoreOutputDirRoborazziTask::class.java
+        ) { task ->
+          task.inputDir.set(variantIntermediateDir.map {
+            if (!it.asFile.exists()) {
+              it.asFile.mkdirs()
+            }
+            it
+          })
+          task.outputDir.set(variantOutputDir)
+          task.onlyIf {
+            val outputDirFile = task.outputDir.asFile.get()
+            val inputDirFile = task.inputDir.asFile.get()
+            (outputDirFile.listFiles()?.isEmpty() ?: true)
+              && (inputDirFile.listFiles()?.isNotEmpty() ?: false)
+          }
+        }
+      // Select the restore task lazily based on the flag: shared task when off,
+      // per-slug task when on.
+      val restoreTaskProviderForVariant: Provider<RestoreOutputDirRoborazziTask> =
+        extension.separateOutputDirs.flatMap { separate ->
+          if (separate) restoreOutputDirRoborazziVariantTaskProvider
+          else restoreOutputDirRoborazziTaskProvider
+        }
 
       // e.g. clearRoborazziDebug
       project.tasks.register("clearRoborazzi$variantSlug") {
         it.doLast {
-          val outputDirFile = outputDir.get().asFile
+          val outputDirFile = variantOutputDir.get().asFile
           if (outputDirFile.exists()) {
             outputDirFile.walkTopDown().forEach { file ->
               if (KnownImageFileExtensions.contains(file.extension)) {
@@ -183,7 +246,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
             }
             outputDirFile.mkdirs()
           }
-          val intermediateDirFile = intermediateDirForEachVariant.get().asFile
+          val intermediateDirFile = variantIntermediateDir.get().asFile
           if (intermediateDirFile.exists()) {
             intermediateDirFile.walkTopDown().forEach { file ->
               if (KnownImageFileExtensions.contains(file.extension)) {
@@ -267,7 +330,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
       val projectAbsolutePathProvider = project.providers.provider {
         project.projectDir.absolutePath
       }
-      val outputDirRelativePathFromProjectProvider = outputDir.map { project.relativePath(it) }
+      val outputDirRelativePathFromProjectProvider = variantOutputDir.map { project.relativePath(it) }
 
       val resultDir = project.layout.buildDirectory.dir(RoborazziReportConst.getResultDirPathFromBuildDir(variantName))
       val resultDirFileTree =
@@ -316,12 +379,12 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 return@doLast
               }
               val startCopy = System.currentTimeMillis()
-              intermediateDir.get().asFile.mkdirs()
-              intermediateDir.get().asFile.copyRecursively(
-                target = outputDir.get().asFile,
+              variantIntermediateDir.get().asFile.mkdirs()
+              variantIntermediateDir.get().asFile.copyRecursively(
+                target = variantOutputDir.get().asFile,
                 overwrite = true
               )
-              finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask Copy files from ${intermediateDir.get()} to ${outputDir.get()} end ${System.currentTimeMillis() - startCopy}ms")
+              finalizeTestTask.infoln("Roborazzi: finalizeTestRoborazziTask Copy files from ${variantIntermediateDir.get()} to ${variantOutputDir.get()} end ${System.currentTimeMillis() - startCopy}ms")
             }
           }
         })
@@ -333,13 +396,13 @@ abstract class RoborazziPlugin : Plugin<Project> {
               if (!isImageInputUsed) {
                 // Note: this is not files in outputDir,
                 // but empty input when running in record mode.
-                outputDir.map { it.files(/* this means empty files*/) }
+                variantOutputDir.map { it.files(/* this means empty files*/) }
               } else if (restoreOutputDirRoborazziTaskProvider.isPresent) {
                 // Previous outputs are an input when running in compare or verify mode.
                 // However, during record runs the output dir might not exist yet, so we use
                 // files() to express that it is optional.
                 // See also: https://github.com/gradle/gradle/issues/2016
-                restoreOutputDirRoborazziTaskProvider.map {
+                restoreTaskProviderForVariant.map {
                   if (!it.outputDir.get().asFile.exists()) {
                     it.outputDir.get().asFile.mkdirs()
                   }
@@ -347,7 +410,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
                   it.outputDir.files(".")
                 }
               } else {
-                outputDir.map {
+                variantOutputDir.map {
                   if (!it.asFile.exists()) {
                     it.asFile.mkdirs()
                   }
@@ -374,13 +437,13 @@ abstract class RoborazziPlugin : Plugin<Project> {
             .withPropertyName("roborazziImageInput")
             .withPathSensitivity(PathSensitivity.RELATIVE)
           test.outputs.dirs(
-            compareOutputDirProvider.flatMap { compareOutputDir: Directory ->
+            variantCompareOutputDir.flatMap { compareOutputDir: Directory ->
               isCompareOrVerifyRunProvider.flatMap { isCompareOrVerifyRun ->
                 imageInputProvider
                   .map { imageInput: FileCollection ->
                     if (!isCompareOrVerifyRun) {
                       // If it is not compare or verify, we don't need to output anything for comparison
-                      outputDir.files(/* empty files */)
+                      compareOutputDir.files(/* empty files */)
                     } else if (imageInput.files.any {
                         // Check if the compare output directory is the same as the input directory
                         if (it.isDirectory) {
@@ -389,7 +452,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
                           it.parentFile.absolutePath == compareOutputDir.asFile.absolutePath
                         }
                       }) {
-                      outputDir.files(/* empty files */)
+                      compareOutputDir.files(/* empty files */)
                     } else {
                       if (!compareOutputDir.asFile.exists()) {
                         compareOutputDir.asFile.mkdirs()
@@ -402,7 +465,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
               test.infoln("Roborazzi: Set output dir ${it} to test task")
               it
             }).withPropertyName("roborazziCompareOutput")
-          test.outputs.dir(intermediateDirForEachVariant.map {
+          test.outputs.dir(variantIntermediateDir.map {
             test.infoln("Roborazzi: Set output dir $it to test task")
             it
           }).withPropertyName("roborazziIntermediateDir")
@@ -465,9 +528,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
             // Other properties
             test.systemProperties["roborazzi.output.dir"] =
               outputDirRelativePathFromProjectProvider.get()
-            if (compareOutputDirProvider.isPresent) {
+            if (variantCompareOutputDir.isPresent) {
               test.systemProperties["roborazzi.compare.output.dir"] =
-                compareOutputDirProvider.get()
+                variantCompareOutputDir.get()
             }
             test.systemProperties["roborazzi.result.dir"] =
               resultDirRelativePath.get()
@@ -518,20 +581,20 @@ abstract class RoborazziPlugin : Plugin<Project> {
               cleanupOldScreenshotsIfNeeded(
                 test = test,
                 roborazziProperties = roborazziProperties,
-                outputDir = outputDir,
-                intermediateDir = intermediateDir,
+                outputDir = variantOutputDir,
+                intermediateDir = variantIntermediateDir,
                 roborazziResults = roborazziResults,
               )
 
               // Copy all files from outputDir to intermediateDir
               // so that we can use Gradle's output caching
-              test.infoln("Roborazzi: test.doLast Copy files from ${outputDir.get()} to ${intermediateDir.get()}")
+              test.infoln("Roborazzi: test.doLast Copy files from ${variantOutputDir.get()} to ${variantIntermediateDir.get()}")
               // outputDir.get().asFileTree.forEach {
               //   println("Copy file ${finalizeTask.absolutePath} to ${intermediateDir.get()}")
               // }
-              outputDir.get().asFile.mkdirs()
-              outputDir.get().asFile.copyRecursively(
-                target = intermediateDir.get().asFile,
+              variantOutputDir.get().asFile.mkdirs()
+              variantOutputDir.get().asFile.copyRecursively(
+                target = variantIntermediateDir.get().asFile,
                 overwrite = true
               )
             }
@@ -655,8 +718,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
   private fun cleanupOldScreenshotsIfNeeded(
     test: AbstractTestTask,
     roborazziProperties: Map<String, Any?>,
-    outputDir: DirectoryProperty,
-    intermediateDir: DirectoryProperty,
+    outputDir: Provider<Directory>,
+    intermediateDir: Provider<Directory>,
     roborazziResults: CaptureResults,
   ) {
     val isCleanupRun = roborazziProperties["roborazzi.cleanupOldScreenshots"] == "true"

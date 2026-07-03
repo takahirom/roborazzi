@@ -95,6 +95,12 @@ roborazzi {
 }
 ```
 
+If the caching problems appear when several Roborazzi test tasks run in a single
+Gradle invocation (for example `check` or Kotlin Multiplatform's `allTests`), the tasks
+may be racing over the shared output directory. In that case you can enable the
+experimental `separateOutputDirs` option so each variant/target gets its own directory.
+See [Separate output directories per variant/target](build_setup.md#separate-output-directories-per-variant-target-experimental).
+
 ### Q: Why do my screenshot tests fail inconsistently across different operating systems like MacOS, Ubuntu, and Windows?
 
 **A:** This is a known issue caused by variations in how graphics libraries render components on different platforms.
