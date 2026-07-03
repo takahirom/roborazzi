@@ -79,118 +79,125 @@ fun processOutputImageAndReport(
       )
     }
 
-    // Only used by CaptureResult.Changed
-    var diffPercentage: Float? = null
+    try {
+      // Only used by CaptureResult.Changed
+      var diffPercentage: Float? = null
 
-    val compareOptions = roborazziOptions.compareOptions
-    val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
-      val comparisonResult: ImageComparator.ComparisonResult =
-        newRoboCanvas.differ(
-          other = goldenRoboCanvas,
-          resizeScale = resizeScale,
-          imageComparator = compareOptions.imageComparator
-        )
-      diffPercentage = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
-      val changed = !compareOptions.resultValidator(comparisonResult)
-      roborazziReportLog("${goldenFilePath.name} The differ result :$comparisonResult changed:$changed")
-      changed
-    } else {
-      roborazziReportLog("${goldenFilePath.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
-      true
-    }
-
-    val result: CaptureResult = if (changed) {
-      val comparisonFilePath = resolveOutputPath(
-        compareOptions.outputDirectoryPath,
-        goldenFilePath.nameWithoutExtension + "_compare." + goldenFilePath.extension
-      )
-      val comparisonCanvas = comparisonCanvasFactory(
-        goldenRoboCanvas = goldenRoboCanvas,
-        newRoboImage = newRoboCanvas,
-        resizeScale = resizeScale,
-        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
-      )
-      comparisonCanvas
-        .save(
-          path = comparisonFilePath,
-          resizeScale = resizeScale,
-          contextData = contextData,
-          imageIoFormat = recordOptions.imageIoFormat,
-        )
-      roborazziDebugLog {
-        "processOutputImageAndReport(): compareCanvas is saved " +
-          "compareFile:$comparisonFilePath"
-      }
-      comparisonCanvas.release()
-
-      val actualFilePath = if (taskType.isRecording()) {
-        // If record option is enabled, we should save the actual file as the golden file.
-        goldenFilePath
+      val compareOptions = roborazziOptions.compareOptions
+      val changed = if (height == goldenRoboCanvas.height && width == goldenRoboCanvas.width) {
+        val comparisonResult: ImageComparator.ComparisonResult =
+          newRoboCanvas.differ(
+            other = goldenRoboCanvas,
+            resizeScale = resizeScale,
+            imageComparator = compareOptions.imageComparator
+          )
+        diffPercentage = comparisonResult.pixelDifferences.toFloat() / comparisonResult.pixelCount
+        val changed = !compareOptions.resultValidator(comparisonResult)
+        roborazziReportLog("${goldenFilePath.name} The differ result :$comparisonResult changed:$changed")
+        changed
       } else {
-        resolveOutputPath(
+        roborazziReportLog("${goldenFilePath.name} The image size is changed. actual = (${goldenRoboCanvas.width}, ${goldenRoboCanvas.height}), golden = (${newRoboCanvas.croppedWidth}, ${newRoboCanvas.croppedHeight})")
+        true
+      }
+
+      val result: CaptureResult = if (changed) {
+        val comparisonFilePath = resolveOutputPath(
           compareOptions.outputDirectoryPath,
-          goldenFilePath.nameWithoutExtension + "_actual." + goldenFilePath.extension
+          goldenFilePath.nameWithoutExtension + "_compare." + goldenFilePath.extension
         )
-      }
-      newRoboCanvas
-        .save(
-          path = actualFilePath,
+        val comparisonCanvas = comparisonCanvasFactory(
+          goldenRoboCanvas = goldenRoboCanvas,
+          newRoboImage = newRoboCanvas,
           resizeScale = resizeScale,
-          contextData = contextData,
-          imageIoFormat = recordOptions.imageIoFormat,
+          bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType()
         )
-      val aiOptions = compareOptions.aiAssertionOptions
-      val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
-        aiOptions.aiAssertionModel.assert(
-          referenceImageFilePath = goldenFilePath,
-          comparisonImageFilePath = comparisonFilePath,
-          actualImageFilePath = actualFilePath,
-          aiAssertionOptions = aiOptions
-        )
+        comparisonCanvas
+          .save(
+            path = comparisonFilePath,
+            resizeScale = resizeScale,
+            contextData = contextData,
+            imageIoFormat = recordOptions.imageIoFormat,
+          )
+        roborazziDebugLog {
+          "processOutputImageAndReport(): compareCanvas is saved " +
+            "compareFile:$comparisonFilePath"
+        }
+        comparisonCanvas.release()
+
+        val actualFilePath = if (taskType.isRecording()) {
+          // If record option is enabled, we should save the actual file as the golden file.
+          goldenFilePath
+        } else {
+          resolveOutputPath(
+            compareOptions.outputDirectoryPath,
+            goldenFilePath.nameWithoutExtension + "_actual." + goldenFilePath.extension
+          )
+        }
+        newRoboCanvas
+          .save(
+            path = actualFilePath,
+            resizeScale = resizeScale,
+            contextData = contextData,
+            imageIoFormat = recordOptions.imageIoFormat,
+          )
+        val aiOptions = compareOptions.aiAssertionOptions
+        val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
+          aiOptions.aiAssertionModel.assert(
+            referenceImageFilePath = goldenFilePath,
+            comparisonImageFilePath = comparisonFilePath,
+            actualImageFilePath = actualFilePath,
+            aiAssertionOptions = aiOptions
+          )
+        } else {
+          null
+        }
+        roborazziDebugLog {
+          "processOutputImageAndReport(): actualCanvas is saved " +
+            "actualFile:$actualFilePath"
+        }
+        if (roborazziFileExists(goldenFilePath)) {
+          CaptureResult.Changed(
+            compareFile = comparisonFilePath,
+            actualFile = actualFilePath,
+            goldenFile = goldenFilePath,
+            timestampNs = roborazziCurrentTimeNs(),
+            diffPercentage = diffPercentage,
+            aiAssertionResults = aiResult,
+            contextData = contextData,
+          )
+        } else {
+          CaptureResult.Added(
+            compareFile = comparisonFilePath,
+            actualFile = actualFilePath,
+            goldenFile = goldenFilePath,
+            timestampNs = roborazziCurrentTimeNs(),
+            aiAssertionResults = aiResult,
+            contextData = contextData,
+          )
+        }
       } else {
-        null
+        CaptureResult.Unchanged(
+          goldenFile = goldenFilePath,
+          timestampNs = roborazziCurrentTimeNs(),
+          contextData = contextData,
+        )
       }
       roborazziDebugLog {
-        "processOutputImageAndReport(): actualCanvas is saved " +
-          "actualFile:$actualFilePath"
+        "processOutputImageAndReport: \n" +
+          "  goldenFile: $goldenFilePath\n" +
+          "  changed: $changed\n" +
+          "  result: $result\n"
       }
-      if (roborazziFileExists(goldenFilePath)) {
-        CaptureResult.Changed(
-          compareFile = comparisonFilePath,
-          actualFile = actualFilePath,
-          goldenFile = goldenFilePath,
-          timestampNs = roborazziCurrentTimeNs(),
-          diffPercentage = diffPercentage,
-          aiAssertionResults = aiResult,
-          contextData = contextData,
-        )
-      } else {
-        CaptureResult.Added(
-          compareFile = comparisonFilePath,
-          actualFile = actualFilePath,
-          goldenFile = goldenFilePath,
-          timestampNs = roborazziCurrentTimeNs(),
-          aiAssertionResults = aiResult,
-          contextData = contextData,
-        )
-      }
-    } else {
-      CaptureResult.Unchanged(
-        goldenFile = goldenFilePath,
-        timestampNs = roborazziCurrentTimeNs(),
-        contextData = contextData,
+      roborazziOptions.reportOptions.captureResultReporter.report(
+        captureResult = result,
+        roborazziTaskType = taskType
       )
+    } finally {
+      // The golden canvas holds a native image resource on platforms
+      // without garbage collection (e.g. iOS CoreGraphics contexts), so it
+      // must be released explicitly once comparison/reporting is done.
+      goldenRoboCanvas.release()
     }
-    roborazziDebugLog {
-      "processOutputImageAndReport: \n" +
-        "  goldenFile: $goldenFilePath\n" +
-        "  changed: $changed\n" +
-        "  result: $result\n"
-    }
-    roborazziOptions.reportOptions.captureResultReporter.report(
-      captureResult = result,
-      roborazziTaskType = taskType
-    )
   } else {
     // roborazzi.record is checked before
     newRoboCanvas.save(
