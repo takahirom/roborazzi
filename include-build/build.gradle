@@ -5,13 +5,19 @@ plugins {
   id 'com.android.library' version libs.versions.agp apply false
   id 'com.android.kotlin.multiplatform.library' version libs.versions.agp apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
-  id "org.jetbrains.kotlinx.binary-compatibility-validator" version libs.versions.binaryCompatibilityValidator
+  id "org.jetbrains.kotlinx.binary-compatibility-validator" version libs.versions.binaryCompatibilityValidator apply false
 }
 
-apiValidation {
-  // JVM ABI validation only; do not enable experimental klib (native/JS) validation.
-  klib {
-    enabled = false
+// Applying BCV inside the integration-test composite build splits the Kotlin
+// Gradle plugin across classloaders and breaks applying 'org.jetbrains.kotlin.android'.
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  apply plugin: "org.jetbrains.kotlinx.binary-compatibility-validator"
+
+  apiValidation {
+    // JVM ABI validation only; do not enable experimental klib (native/JS) validation.
+    klib {
+      enabled = false
+    }
   }
 }
 
