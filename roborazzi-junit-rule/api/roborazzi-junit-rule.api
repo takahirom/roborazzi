@@ -1,0 +1,114 @@
+public final class com/github/takahirom/roborazzi/RoborazziRule : org/junit/rules/TestWatcher {
+	public fun <init> (Landroidx/compose/ui/test/junit4/ComposeTestRule;Landroidx/compose/ui/test/SemanticsNodeInteraction;Lcom/github/takahirom/roborazzi/RoborazziRule$Options;)V
+	public synthetic fun <init> (Landroidx/compose/ui/test/junit4/ComposeTestRule;Landroidx/compose/ui/test/SemanticsNodeInteraction;Lcom/github/takahirom/roborazzi/RoborazziRule$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Landroidx/test/espresso/ViewInteraction;Lcom/github/takahirom/roborazzi/RoborazziRule$Options;)V
+	public synthetic fun <init> (Landroidx/test/espresso/ViewInteraction;Lcom/github/takahirom/roborazzi/RoborazziRule$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziRule$Options;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziRule$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun apply (Lorg/junit/runners/model/Statement;Lorg/junit/runner/Description;)Lorg/junit/runners/model/Statement;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy {
+	public abstract fun runAccessibilityChecks (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureRoot;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy$None : com/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy$None;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun runAccessibilityChecks (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureRoot;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziRule$CaptureRoot {
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRule$CaptureRoot$Compose : com/github/takahirom/roborazzi/RoborazziRule$CaptureRoot {
+	public fun <init> (Landroidx/compose/ui/test/junit4/ComposeTestRule;Landroidx/compose/ui/test/SemanticsNodeInteraction;)V
+	public final fun getComposeRule ()Landroidx/compose/ui/test/junit4/ComposeTestRule;
+	public final fun getSemanticsNodeInteraction ()Landroidx/compose/ui/test/SemanticsNodeInteraction;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRule$CaptureRoot$None : com/github/takahirom/roborazzi/RoborazziRule$CaptureRoot {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureRoot$None;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRule$CaptureRoot$View : com/github/takahirom/roborazzi/RoborazziRule$CaptureRoot {
+	public fun <init> (Landroidx/test/espresso/ViewInteraction;)V
+	public final fun getViewInteraction ()Landroidx/test/espresso/ViewInteraction;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziRule$CaptureType {
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRule$CaptureType$AllImage : com/github/takahirom/roborazzi/RoborazziRule$CaptureType {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$AllImage;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$AllImage;ZILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$AllImage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOnlyFail ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRule$CaptureType$Gif : com/github/takahirom/roborazzi/RoborazziRule$CaptureType {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$Gif;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$Gif;ZILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$Gif;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOnlyFail ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRule$CaptureType$LastImage : com/github/takahirom/roborazzi/RoborazziRule$CaptureType {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$LastImage;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$LastImage;ZILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$LastImage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOnlyFail ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRule$CaptureType$None : com/github/takahirom/roborazzi/RoborazziRule$CaptureType {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType$None;
+}
+
+public abstract interface annotation class com/github/takahirom/roborazzi/RoborazziRule$Ignore : java/lang/annotation/Annotation {
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRule$Options {
+	public fun <init> ()V
+	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziAccessibilityOptions;Lcom/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziAccessibilityOptions;Lcom/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlin/jvm/functions/Function3;
+	public final fun component4 ()Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public final fun component5 ()Lcom/github/takahirom/roborazzi/RoborazziAccessibilityOptions;
+	public final fun component6 ()Lcom/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy;
+	public final fun copy (Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziAccessibilityOptions;Lcom/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy;)Lcom/github/takahirom/roborazzi/RoborazziRule$Options;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziRule$Options;Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziAccessibilityOptions;Lcom/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziRule$Options;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccessibilityCheckStrategy ()Lcom/github/takahirom/roborazzi/RoborazziRule$AccessibilityCheckStrategy;
+	public final fun getCaptureType ()Lcom/github/takahirom/roborazzi/RoborazziRule$CaptureType;
+	public final fun getOutputDirectoryPath ()Ljava/lang/String;
+	public final fun getOutputFileProvider ()Lkotlin/jvm/functions/Function3;
+	public final fun getRoborazziAccessibilityOptions ()Lcom/github/takahirom/roborazzi/RoborazziAccessibilityOptions;
+	public final fun getRoborazziOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

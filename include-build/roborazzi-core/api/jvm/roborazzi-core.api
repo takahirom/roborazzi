@@ -1,0 +1,883 @@
+public final class com/github/takahirom/roborazzi/AiAssertionApiException : java/lang/Exception {
+	public fun <init> (ILjava/lang/String;)V
+	public final fun getStatusCode ()I
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionOptions {
+	public fun <init> (Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel;Ljava/util/List;Lcom/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel;Ljava/util/List;Lcom/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Lcom/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Lkotlin/jvm/functions/Function1;
+	public final fun copy (Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel;Ljava/util/List;Lcom/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/github/takahirom/roborazzi/AiAssertionOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/AiAssertionOptions;Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel;Ljava/util/List;Lcom/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/AiAssertionOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAiAssertionModel ()Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel;
+	public final fun getAiAssertions ()Ljava/util/List;
+	public final fun getAssertionImageType ()Lcom/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType;
+	public final fun getInputPrompt ()Lkotlin/jvm/functions/Function1;
+	public final fun getPromptTemplate ()Ljava/lang/String;
+	public final fun getSystemPrompt ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionOptions$AiAssertion {
+	public fun <init> (Ljava/lang/String;ZLjava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLjava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun copy (Ljava/lang/String;ZLjava/lang/Integer;)Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertion;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertion;Ljava/lang/String;ZLjava/lang/Integer;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAssertionPrompt ()Ljava/lang/String;
+	public final fun getFailIfNotFulfilled ()Z
+	public final fun getRequiredFulfillmentPercent ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel {
+	public static final field Companion Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel$Companion;
+	public static final field DefaultMaxOutputTokens I
+	public static final field DefaultTemperature F
+	public abstract fun assert (Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel$TargetImages;Lcom/github/takahirom/roborazzi/AiAssertionOptions;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public abstract fun assert (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/github/takahirom/roborazzi/AiAssertionOptions;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel$Companion {
+	public static final field DefaultMaxOutputTokens I
+	public static final field DefaultTemperature F
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel$TargetImage {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getFilePath ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel$TargetImages {
+	public fun <init> (Ljava/util/List;)V
+	public final fun getImages ()Ljava/util/List;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType {
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType$Actual : com/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType {
+	public fun <init> ()V
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType$Comparison : com/github/takahirom/roborazzi/AiAssertionOptions$AssertionImageType {
+	public fun <init> ()V
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionResult {
+	public static final field Companion Lcom/github/takahirom/roborazzi/AiAssertionResult$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;ZILjava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Z
+	public final fun component4 ()I
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;ZILjava/lang/String;)Lcom/github/takahirom/roborazzi/AiAssertionResult;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/AiAssertionResult;Ljava/lang/String;Ljava/lang/Integer;ZILjava/lang/String;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/AiAssertionResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAssertionPrompt ()Ljava/lang/String;
+	public final fun getExplanation ()Ljava/lang/String;
+	public final fun getFailIfNotFulfilled ()Z
+	public final fun getFulfillmentPercent ()I
+	public final fun getRequiredFulfillmentPercent ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/github/takahirom/roborazzi/AiAssertionResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/AiAssertionResult$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/github/takahirom/roborazzi/AiAssertionResult;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/github/takahirom/roborazzi/AiAssertionResult;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionResult$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionResults {
+	public static final field Companion Lcom/github/takahirom/roborazzi/AiAssertionResults$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/AiAssertionResults;Ljava/util/List;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAiAssertionResults ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/github/takahirom/roborazzi/AiAssertionResults$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/AiAssertionResults$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/github/takahirom/roborazzi/AiAssertionResults;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/AiAssertionResults$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class com/github/takahirom/roborazzi/AnnotationFilter : java/io/Serializable {
+	public static final field Filter Lcom/github/takahirom/roborazzi/AnnotationFilter$Filter;
+}
+
+public final class com/github/takahirom/roborazzi/AnnotationFilter$Exclude : com/github/takahirom/roborazzi/AnnotationFilter {
+	public fun <init> ([Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/List;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/AnnotationFilter$Filter {
+	public final fun getRoboPreviewExclude ()Lcom/github/takahirom/roborazzi/AnnotationFilter$Exclude;
+	public final fun getRoboPreviewInclude ()Lcom/github/takahirom/roborazzi/AnnotationFilter$Include;
+}
+
+public final class com/github/takahirom/roborazzi/AnnotationFilter$Include : com/github/takahirom/roborazzi/AnnotationFilter {
+	public fun <init> ([Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/List;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/AnySerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/AnySerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public abstract interface class com/github/takahirom/roborazzi/AwtImageLoader {
+	public abstract fun load (Ljava/io/File;)Ljava/awt/image/BufferedImage;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/AwtImageWriter {
+	public abstract fun write (Ljava/io/File;Ljava/util/Map;Ljava/awt/image/BufferedImage;)V
+}
+
+public final class com/github/takahirom/roborazzi/CanScreenshotKt {
+	public static final fun canScreenshot ()Z
+}
+
+public abstract interface class com/github/takahirom/roborazzi/CanvasFactoryFromFile {
+	public abstract fun invoke (Ljava/io/File;I)Lcom/github/takahirom/roborazzi/RoboCanvas;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/CaptureResult {
+	public static final field Companion Lcom/github/takahirom/roborazzi/CaptureResult$Companion;
+	public abstract fun getActualFile ()Ljava/lang/String;
+	public fun getAiAssertionResultsOrNull ()Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public abstract fun getCompareFile ()Ljava/lang/String;
+	public abstract fun getContextData ()Ljava/util/Map;
+	public fun getContextDataOrNull ()Ljava/util/Map;
+	public abstract fun getGoldenFile ()Ljava/lang/String;
+	public fun getReportFile ()Ljava/lang/String;
+	public abstract fun getTimestampNs ()J
+	public abstract fun getType ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$Added : com/github/takahirom/roborazzi/CaptureResult {
+	public static final field Companion Lcom/github/takahirom/roborazzi/CaptureResult$Added$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLcom/github/takahirom/roborazzi/AiAssertionResults;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()J
+	public final fun component5 ()Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public final fun component6 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLcom/github/takahirom/roborazzi/AiAssertionResults;Ljava/util/Map;)Lcom/github/takahirom/roborazzi/CaptureResult$Added;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/CaptureResult$Added;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLcom/github/takahirom/roborazzi/AiAssertionResults;Ljava/util/Map;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/CaptureResult$Added;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getActualFile ()Ljava/lang/String;
+	public final fun getAiAssertionResults ()Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public fun getAiAssertionResultsOrNull ()Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public fun getCompareFile ()Ljava/lang/String;
+	public fun getContextData ()Ljava/util/Map;
+	public fun getContextDataOrNull ()Ljava/util/Map;
+	public fun getGoldenFile ()Ljava/lang/String;
+	public fun getReportFile ()Ljava/lang/String;
+	public fun getTimestampNs ()J
+	public fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/github/takahirom/roborazzi/CaptureResult$Added$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/CaptureResult$Added$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/github/takahirom/roborazzi/CaptureResult$Added;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/github/takahirom/roborazzi/CaptureResult$Added;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$Added$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$CaptureResultSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/CaptureResult$CaptureResultSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/github/takahirom/roborazzi/CaptureResult;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/github/takahirom/roborazzi/CaptureResult;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$Changed : com/github/takahirom/roborazzi/CaptureResult {
+	public static final field Companion Lcom/github/takahirom/roborazzi/CaptureResult$Changed$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/lang/Float;Lcom/github/takahirom/roborazzi/AiAssertionResults;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()J
+	public final fun component5 ()Ljava/lang/Float;
+	public final fun component6 ()Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public final fun component7 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/lang/Float;Lcom/github/takahirom/roborazzi/AiAssertionResults;Ljava/util/Map;)Lcom/github/takahirom/roborazzi/CaptureResult$Changed;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/CaptureResult$Changed;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JLjava/lang/Float;Lcom/github/takahirom/roborazzi/AiAssertionResults;Ljava/util/Map;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/CaptureResult$Changed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getActualFile ()Ljava/lang/String;
+	public final fun getAiAssertionResults ()Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public fun getAiAssertionResultsOrNull ()Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public fun getCompareFile ()Ljava/lang/String;
+	public fun getContextData ()Ljava/util/Map;
+	public fun getContextDataOrNull ()Ljava/util/Map;
+	public final fun getDiffPercentage ()Ljava/lang/Float;
+	public fun getGoldenFile ()Ljava/lang/String;
+	public fun getReportFile ()Ljava/lang/String;
+	public fun getTimestampNs ()J
+	public fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/github/takahirom/roborazzi/CaptureResult$Changed$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/CaptureResult$Changed$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/github/takahirom/roborazzi/CaptureResult$Changed;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/github/takahirom/roborazzi/CaptureResult$Changed;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$Changed$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$Companion {
+	public final fun fromJsonFile (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/CaptureResult;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$DefaultImpls {
+	public static fun getAiAssertionResultsOrNull (Lcom/github/takahirom/roborazzi/CaptureResult;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public static fun getContextDataOrNull (Lcom/github/takahirom/roborazzi/CaptureResult;)Ljava/util/Map;
+	public static fun getReportFile (Lcom/github/takahirom/roborazzi/CaptureResult;)Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$Recorded : com/github/takahirom/roborazzi/CaptureResult {
+	public static final field Companion Lcom/github/takahirom/roborazzi/CaptureResult$Recorded$Companion;
+	public fun <init> (Ljava/lang/String;JLjava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;JLjava/util/Map;)Lcom/github/takahirom/roborazzi/CaptureResult$Recorded;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/CaptureResult$Recorded;Ljava/lang/String;JLjava/util/Map;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/CaptureResult$Recorded;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getActualFile ()Ljava/lang/String;
+	public fun getAiAssertionResultsOrNull ()Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public fun getCompareFile ()Ljava/lang/String;
+	public fun getContextData ()Ljava/util/Map;
+	public fun getContextDataOrNull ()Ljava/util/Map;
+	public fun getGoldenFile ()Ljava/lang/String;
+	public fun getReportFile ()Ljava/lang/String;
+	public fun getTimestampNs ()J
+	public fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/github/takahirom/roborazzi/CaptureResult$Recorded$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/CaptureResult$Recorded$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/github/takahirom/roborazzi/CaptureResult$Recorded;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/github/takahirom/roborazzi/CaptureResult$Recorded;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$Recorded$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$Unchanged : com/github/takahirom/roborazzi/CaptureResult {
+	public static final field Companion Lcom/github/takahirom/roborazzi/CaptureResult$Unchanged$Companion;
+	public fun <init> (Ljava/lang/String;JLjava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;JLjava/util/Map;)Lcom/github/takahirom/roborazzi/CaptureResult$Unchanged;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/CaptureResult$Unchanged;Ljava/lang/String;JLjava/util/Map;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/CaptureResult$Unchanged;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getActualFile ()Ljava/lang/String;
+	public fun getAiAssertionResultsOrNull ()Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public fun getCompareFile ()Ljava/lang/String;
+	public fun getContextData ()Ljava/util/Map;
+	public fun getContextDataOrNull ()Ljava/util/Map;
+	public fun getGoldenFile ()Ljava/lang/String;
+	public fun getReportFile ()Ljava/lang/String;
+	public fun getTimestampNs ()J
+	public fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/github/takahirom/roborazzi/CaptureResult$Unchanged$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/CaptureResult$Unchanged$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/github/takahirom/roborazzi/CaptureResult$Unchanged;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/github/takahirom/roborazzi/CaptureResult$Unchanged;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResult$Unchanged$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResults {
+	public static final field Companion Lcom/github/takahirom/roborazzi/CaptureResults$Companion;
+	public fun <init> (Lcom/github/takahirom/roborazzi/ResultSummary;Ljava/util/List;)V
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/ResultSummary;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lcom/github/takahirom/roborazzi/ResultSummary;Ljava/util/List;)Lcom/github/takahirom/roborazzi/CaptureResults;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/CaptureResults;Lcom/github/takahirom/roborazzi/ResultSummary;Ljava/util/List;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/CaptureResults;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCaptureResults ()Ljava/util/List;
+	public final fun getResultSummary ()Lcom/github/takahirom/roborazzi/ResultSummary;
+	public fun hashCode ()I
+	public final fun toHtml (Ljava/lang/String;)Ljava/lang/String;
+	public final fun toJson ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/github/takahirom/roborazzi/CaptureResults$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/CaptureResults$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/github/takahirom/roborazzi/CaptureResults;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/github/takahirom/roborazzi/CaptureResults;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResults$Companion {
+	public final fun from (Ljava/util/List;)Lcom/github/takahirom/roborazzi/CaptureResults;
+	public final fun fromJson (Lkotlinx/serialization/json/JsonObject;)Lcom/github/takahirom/roborazzi/CaptureResults;
+	public final fun fromJsonFile (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/CaptureResults;
+	public final fun getJson ()Lkotlinx/serialization/json/Json;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResults$Tab {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getContents ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/CaptureResultsKt {
+	public static final fun toSortedMap (Ljava/util/Map;Ljava/util/Comparator;)Ljava/util/Map;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/ComparisonCanvasFactory {
+	public abstract fun invoke (Lcom/github/takahirom/roborazzi/RoboCanvas;Lcom/github/takahirom/roborazzi/RoboCanvas;DI)Lcom/github/takahirom/roborazzi/RoboCanvas;
+}
+
+public final class com/github/takahirom/roborazzi/DebugLogKt {
+	public static final fun debugLog (Lkotlin/jvm/functions/Function0;)V
+	public static final fun roborazziDebugLog (Lkotlin/jvm/functions/Function0;)V
+}
+
+public final class com/github/takahirom/roborazzi/DefaultCaptureTypeKt {
+	public static final fun defaultCaptureType ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;
+}
+
+public final class com/github/takahirom/roborazzi/DefaultFileNameGenerator {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator;
+	public final fun generateCountableOutputNameWithDescription (Lorg/junit/runner/Description;)Ljava/lang/String;
+	public final fun generateFilePath (Ljava/lang/String;)Ljava/lang/String;
+	public static synthetic fun generateFilePath$default (Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
+	public final fun getJupiterTestAnnotationOrNull ()Ljava/lang/Class;
+	public final fun reset ()V
+}
+
+public final class com/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy : java/lang/Enum {
+	public static final field Companion Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy$Companion;
+	public static final field EscapedTestPackageAndClassAndMethod Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
+	public static final field TestClassAndMethod Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
+	public static final field TestPackageAndClassAndMethod Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
+	public final fun generateOutputName (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getOptionName ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
+}
+
+public final class com/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy$Companion {
+	public final fun fromOptionName (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/EmptyCanvasFactory {
+	public abstract fun invoke (IIZI)Lcom/github/takahirom/roborazzi/RoboCanvas;
+}
+
+public abstract interface annotation class com/github/takahirom/roborazzi/ExperimentalRoborazziApi : java/lang/annotation/Annotation {
+}
+
+public final class com/github/takahirom/roborazzi/FileWithRecordFilePathStrategyKt {
+	public static final fun fileWithRecordFilePathStrategy (Ljava/lang/String;)Ljava/io/File;
+}
+
+public final class com/github/takahirom/roborazzi/GetReportFileNameKt {
+	public static final fun getReportFileName (Ljava/lang/String;JLjava/lang/String;)Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/ImageIoFormat {
+}
+
+public final class com/github/takahirom/roborazzi/ImageIoFormat_commonJvmKt {
+	public static final fun ImageIoFormat ()Lcom/github/takahirom/roborazzi/ImageIoFormat;
+	public static final fun LosslessWebPImageIoFormat ()Lcom/github/takahirom/roborazzi/ImageIoFormat;
+	public static final fun getWriter (Ljava/awt/image/RenderedImage;Ljava/lang/String;)Ljavax/imageio/ImageWriter;
+	public static final fun writeMetadata (Ljavax/imageio/ImageWriter;Ljava/util/Map;Ljava/awt/image/BufferedImage;)Ljavax/imageio/metadata/IIOMetadata;
+}
+
+public abstract interface annotation class com/github/takahirom/roborazzi/InternalRoborazziApi : java/lang/annotation/Annotation {
+}
+
+public final class com/github/takahirom/roborazzi/JvmImageIoFormat : com/github/takahirom/roborazzi/ImageIoFormat {
+	public fun <init> ()V
+	public fun <init> (Lcom/github/takahirom/roborazzi/AwtImageWriter;Lcom/github/takahirom/roborazzi/AwtImageLoader;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/AwtImageWriter;Lcom/github/takahirom/roborazzi/AwtImageLoader;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/AwtImageWriter;
+	public final fun component2 ()Lcom/github/takahirom/roborazzi/AwtImageLoader;
+	public final fun copy (Lcom/github/takahirom/roborazzi/AwtImageWriter;Lcom/github/takahirom/roborazzi/AwtImageLoader;)Lcom/github/takahirom/roborazzi/JvmImageIoFormat;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/JvmImageIoFormat;Lcom/github/takahirom/roborazzi/AwtImageWriter;Lcom/github/takahirom/roborazzi/AwtImageLoader;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/JvmImageIoFormat;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAwtImageLoader ()Lcom/github/takahirom/roborazzi/AwtImageLoader;
+	public final fun getAwtImageWriter ()Lcom/github/takahirom/roborazzi/AwtImageWriter;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/KotlinxIo {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/KotlinxIo;
+	public final fun readText (Ljava/lang/String;)Ljava/lang/String;
+	public final fun writeText (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/github/takahirom/roborazzi/KotlinxIoKt {
+	public static final fun getAbsolutePath (Lkotlinx/io/files/Path;)Ljava/lang/String;
+	public static final fun getName (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun getNameWithoutExtension (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun relativeTo (Lkotlinx/io/files/Path;Lkotlinx/io/files/Path;)Lkotlinx/io/files/Path;
+}
+
+public final class com/github/takahirom/roborazzi/ProcessOutputImageAndReportKt {
+	public static final fun processOutputImageAndReport (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/EmptyCanvasFactory;Lcom/github/takahirom/roborazzi/CanvasFactoryFromFile;Lcom/github/takahirom/roborazzi/ComparisonCanvasFactory;)V
+}
+
+public final class com/github/takahirom/roborazzi/ReportLogKt {
+	public static final fun roborazziReportLog (Ljava/lang/String;)V
+}
+
+public final class com/github/takahirom/roborazzi/ReportLog_commonJvmKt {
+	public static final fun roborazziErrorLog (Ljava/lang/String;)V
+}
+
+public final class com/github/takahirom/roborazzi/ResultSummary {
+	public static final field Companion Lcom/github/takahirom/roborazzi/ResultSummary$Companion;
+	public fun <init> (IIIII)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun component5 ()I
+	public final fun copy (IIIII)Lcom/github/takahirom/roborazzi/ResultSummary;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/ResultSummary;IIIIIILjava/lang/Object;)Lcom/github/takahirom/roborazzi/ResultSummary;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdded ()I
+	public final fun getChanged ()I
+	public final fun getRecorded ()I
+	public final fun getTotal ()I
+	public final fun getUnchanged ()I
+	public fun hashCode ()I
+	public final fun toHtml ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/github/takahirom/roborazzi/ResultSummary$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/ResultSummary$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/github/takahirom/roborazzi/ResultSummary;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/github/takahirom/roborazzi/ResultSummary;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/github/takahirom/roborazzi/ResultSummary$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoboCanvas {
+	public abstract fun differ (Lcom/github/takahirom/roborazzi/RoboCanvas;DLcom/dropbox/differ/ImageComparator;)Lcom/dropbox/differ/ImageComparator$ComparisonResult;
+	public abstract fun getCroppedHeight ()I
+	public abstract fun getCroppedWidth ()I
+	public abstract fun getHeight ()I
+	public abstract fun getWidth ()I
+	public abstract fun release ()V
+	public abstract fun save (Ljava/lang/String;DLjava/util/Map;Lcom/github/takahirom/roborazzi/ImageIoFormat;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoboOutputNameKt {
+	public static final fun roboOutputName ()Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziAccessibilityOptions {
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziAccessibilityOptions$None : com/github/takahirom/roborazzi/RoborazziAccessibilityOptions {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziAccessibilityOptions$None;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziContextImpl {
+	public fun <init> ()V
+	public final fun clearImageExtension ()V
+	public final fun clearRuleOverrideAccessibilityOptions ()V
+	public final fun clearRuleOverrideDescription ()V
+	public final fun clearRuleOverrideFileProvider ()V
+	public final fun clearRuleOverrideOutputDirectory ()V
+	public final fun clearRuleOverrideRoborazziOptions ()V
+	public final fun getDescription ()Lorg/junit/runner/Description;
+	public final fun getFileProvider ()Lkotlin/jvm/functions/Function3;
+	public final fun getImageExtension ()Ljava/lang/String;
+	public final fun getOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public final fun getOutputDirectory ()Ljava/lang/String;
+	public final fun getRoborazziAccessibilityOptions ()Lcom/github/takahirom/roborazzi/RoborazziAccessibilityOptions;
+	public final fun setImageExtension (Ljava/lang/String;)V
+	public final fun setRuleOverrideAccessibilityOptions (Lcom/github/takahirom/roborazzi/RoborazziAccessibilityOptions;)V
+	public final fun setRuleOverrideDescription (Lorg/junit/runner/Description;)V
+	public final fun setRuleOverrideFileProvider (Lkotlin/jvm/functions/Function3;)V
+	public final fun setRuleOverrideOutputDirectory (Ljava/lang/String;)V
+	public final fun setRuleOverrideRoborazziOptions (Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziContextKt {
+	public static final fun getRoborazziContext ()Lcom/github/takahirom/roborazzi/RoborazziContextImpl;
+	public static final fun provideRoborazziContext ()Lcom/github/takahirom/roborazzi/RoborazziContextImpl;
+	public static final fun setRoborazziContext (Lcom/github/takahirom/roborazzi/RoborazziContextImpl;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions {
+	public fun <init> ()V
+	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun addedAiAssertion (Ljava/lang/String;I)Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public final fun addedAiAssertions ([Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertion;)Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;
+	public final fun component4 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;
+	public final fun component5 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;
+	public final fun component6 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
+	public final fun copy (Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;)Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCaptureType ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;
+	public final fun getCompareOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;
+	public final fun getContextData ()Ljava/util/Map;
+	public final fun getRecordOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
+	public final fun getReportOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;
+	public final fun getTaskType ()Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter {
+	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter$Companion;
+	public abstract fun report (Lcom/github/takahirom/roborazzi/CaptureResult;Lcom/github/takahirom/roborazzi/RoborazziTaskType;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter$AiCaptureResultReporter : com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter {
+	public fun <init> ()V
+	public fun report (Lcom/github/takahirom/roborazzi/CaptureResult;Lcom/github/takahirom/roborazzi/RoborazziTaskType;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter$Companion {
+	public final fun invoke ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter$DefaultCaptureResultReporter : com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter {
+	public fun <init> ()V
+	public fun report (Lcom/github/takahirom/roborazzi/CaptureResult;Lcom/github/takahirom/roborazzi/RoborazziTaskType;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter$JsonOutputCaptureResultReporter : com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter {
+	public fun <init> ()V
+	public fun report (Lcom/github/takahirom/roborazzi/CaptureResult;Lcom/github/takahirom/roborazzi/RoborazziTaskType;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter$VerifyCaptureResultReporter : com/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter {
+	public fun <init> ()V
+	public fun report (Lcom/github/takahirom/roborazzi/CaptureResult;Lcom/github/takahirom/roborazzi/RoborazziTaskType;)V
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziOptions$CaptureType {
+	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType$Companion;
+	public abstract fun shouldTakeScreenshot ()Z
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CaptureType$Companion {
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CaptureType$Screenshot : com/github/takahirom/roborazzi/RoborazziOptions$CaptureType {
+	public fun <init> ()V
+	public fun shouldTakeScreenshot ()Z
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CompareOptions {
+	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Lcom/dropbox/differ/ImageComparator;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lcom/dropbox/differ/ImageComparator;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;FLcom/dropbox/differ/ImageComparator;)V
+	public synthetic fun <init> (Ljava/lang/String;FLcom/dropbox/differ/ImageComparator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lcom/dropbox/differ/ImageComparator;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle;Lcom/github/takahirom/roborazzi/AiAssertionOptions;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/dropbox/differ/ImageComparator;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle;Lcom/github/takahirom/roborazzi/AiAssertionOptions;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/dropbox/differ/ImageComparator;
+	public final fun component3 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle;
+	public final fun component4 ()Lcom/github/takahirom/roborazzi/AiAssertionOptions;
+	public final fun component5 ()Lkotlin/jvm/functions/Function1;
+	public final fun copy (Ljava/lang/String;Lcom/dropbox/differ/ImageComparator;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle;Lcom/github/takahirom/roborazzi/AiAssertionOptions;Lkotlin/jvm/functions/Function1;)Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Ljava/lang/String;Lcom/dropbox/differ/ImageComparator;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle;Lcom/github/takahirom/roborazzi/AiAssertionOptions;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAiAssertionOptions ()Lcom/github/takahirom/roborazzi/AiAssertionOptions;
+	public final fun getComparisonStyle ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle;
+	public final fun getImageComparator ()Lcom/dropbox/differ/ImageComparator;
+	public final fun getOutputDirectoryPath ()Ljava/lang/String;
+	public final fun getResultValidator ()Lkotlin/jvm/functions/Function1;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$Companion {
+	public final fun getDefaultImageComparator ()Lcom/dropbox/differ/SimpleImageComparator;
+	public final fun getDefaultResultValidator ()Lkotlin/jvm/functions/Function1;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle {
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle$Grid : com/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;Z)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun component3 ()Z
+	public final fun copy (Ljava/lang/Integer;Ljava/lang/Integer;Z)Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle$Grid;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle$Grid;Ljava/lang/Integer;Ljava/lang/Integer;ZILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle$Grid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBigLineSpaceDp ()Ljava/lang/Integer;
+	public final fun getHasLabel ()Z
+	public final fun getSmallLineSpaceDp ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle$Simple : com/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions$ComparisonStyle$Simple;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig : java/lang/Enum {
+	public static final field Argb8888 Lcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;
+	public static final field Rgb565 Lcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun toBufferedImageType ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$RecordOptions {
+	public fun <init> ()V
+	public fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;)V
+	public synthetic fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;)V
+	public synthetic fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()Z
+	public final fun component3 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;
+	public final fun component4 ()Lcom/github/takahirom/roborazzi/ImageIoFormat;
+	public final fun copy (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;)Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApplyDeviceCrop ()Z
+	public final fun getImageIoFormat ()Lcom/github/takahirom/roborazzi/ImageIoFormat;
+	public final fun getPixelBitConfig ()Lcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;
+	public final fun getResizeScale ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptions$ReportOptions {
+	public fun <init> ()V
+	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter;
+	public final fun copy (Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter;)Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCaptureResultReporter ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureResultReporter;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziOptionsKt {
+	public static final fun roborazziDefaultNamingStrategy ()Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
+	public static final fun roborazziRecordFilePathStrategy ()Lcom/github/takahirom/roborazzi/RoborazziRecordFilePathStrategy;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziPropertiesKt {
+	public static final field DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH Ljava/lang/String;
+	public static final fun getROBORAZZI_DEBUG ()Z
+	public static final fun roborazziCompareEnabled ()Z
+	public static final fun roborazziDefaultResizeScale ()D
+	public static final fun roborazziEnableContextData ()Z
+	public static final fun roborazziEnabled ()Z
+	public static final fun roborazziRecordingEnabled ()Z
+	public static final fun roborazziSystemPropertyCompareOutputDirectory ()Ljava/lang/String;
+	public static final fun roborazziSystemPropertyImageExtension ()Ljava/lang/String;
+	public static final fun roborazziSystemPropertyOutputDirectory ()Ljava/lang/String;
+	public static final fun roborazziSystemPropertyProjectPath ()Ljava/lang/String;
+	public static final fun roborazziSystemPropertyResultDirectory ()Ljava/lang/String;
+	public static final fun roborazziSystemPropertyTaskType ()Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public static final fun roborazziVerifyEnabled ()Z
+	public static final fun setROBORAZZI_DEBUG (Z)V
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziRecordFilePathStrategy {
+	public abstract fun getPropertyValue ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRecordFilePathStrategy$RelativePathFromCurrentDirectory : com/github/takahirom/roborazzi/RoborazziRecordFilePathStrategy {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziRecordFilePathStrategy$RelativePathFromCurrentDirectory;
+	public fun getPropertyValue ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziRecordFilePathStrategy$RelativePathFromRoborazziContextOutputDirectory : com/github/takahirom/roborazzi/RoborazziRecordFilePathStrategy {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziRecordFilePathStrategy$RelativePathFromRoborazziContextOutputDirectory;
+	public fun getPropertyValue ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziReportConst {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziReportConst;
+	public final fun getReportFilePathFromBuildDir (Ljava/lang/String;)Ljava/lang/String;
+	public final fun getResultDirPathFromBuildDir (Ljava/lang/String;)Ljava/lang/String;
+	public final fun getResultsSummaryFilePathFromBuildDir (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziReportConst$DefaultContextData {
+	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziReportConst$DefaultContextData$Companion;
+	public abstract fun getKey ()Ljava/lang/String;
+	public abstract fun getTitle ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziReportConst$DefaultContextData$Companion {
+	public final fun keyToTitle (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziReportConst$DefaultContextData$DescriptionClass : com/github/takahirom/roborazzi/RoborazziReportConst$DefaultContextData {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziReportConst$DefaultContextData$DescriptionClass;
+	public fun getKey ()Ljava/lang/String;
+	public fun getTitle ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziTaskType : java/lang/Enum {
+	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziTaskType$Companion;
+	public static final field Compare Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public static final field CompareAndRecord Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public static final field None Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public static final field Record Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public static final field Verify Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public static final field VerifyAndRecord Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public final fun convertVerifyingToComparing ()Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun isComparing ()Z
+	public final fun isEnabled ()Z
+	public final fun isRecording ()Z
+	public final fun isVerifying ()Z
+	public final fun isVerifyingAndRecording ()Z
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziTaskType$Companion {
+	public final fun getOrderOfTaskName (Ljava/lang/String;)I
+	public final fun of (ZZZ)Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+}
+
+public final class com/github/takahirom/roborazzi/SystemPropertyKt {
+	public static final fun getSystemProperty (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/SystemProperty_commonJvmKt {
+	public static final fun getSystemProperty (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/ThresholdValidatorKt {
+	public static final fun ThresholdValidator (F)Lkotlin/jvm/functions/Function1;
+}
+

@@ -11,8 +11,28 @@ plugins {
 
   id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
+  id "org.jetbrains.kotlinx.binary-compatibility-validator" version libs.versions.binaryCompatibilityValidator
   // Just for Gradle Build, included build will be applied
   id("io.github.takahirom.roborazzi") version "1.0.0" apply false
+}
+
+apiValidation {
+  // Non-published modules: samples and the IntelliJ IDEA plugin are not part
+  // of the public JVM API surface, so exclude them from BCV.
+  ignoredProjects += [
+    "sample-android",
+    "sample-android-multiplatform",
+    "sample-android-without-compose",
+    "sample-compose-desktop-multiplatform",
+    "sample-compose-desktop-jvm",
+    "sample-generate-preview-tests",
+    "sample-generate-preview-tests-multiplatform",
+    "roborazzi-idea-plugin",
+  ]
+  // JVM ABI validation only; do not enable experimental klib (native/JS) validation.
+  klib {
+    enabled = false
+  }
 }
 
 allprojects {

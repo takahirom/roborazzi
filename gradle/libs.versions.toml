@@ -21,6 +21,7 @@ kotlinComposeCompiler = "2.2.21"
 # consumer's higher version.
 kotlinStdlibPin = "2.0.21"
 mavenPublish = "0.34.0"
+binaryCompatibilityValidator = "0.18.1"
 composeMultiplatform = "1.10.3"
 robolectric = "4.14.1"
 generativeaiGoogle = "0.9.0-1.0.1"

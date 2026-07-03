@@ -1,0 +1,14 @@
+public abstract interface annotation class com/github/takahirom/roborazzi/annotations/ManualClockOptions : java/lang/annotation/Annotation {
+	public abstract fun advanceTimeMillis ()J
+}
+
+public abstract interface annotation class com/github/takahirom/roborazzi/annotations/RoboComposePreviewOptions : java/lang/annotation/Annotation {
+	public abstract fun manualClockOptions ()[Lcom/github/takahirom/roborazzi/annotations/ManualClockOptions;
+}
+
+public abstract interface annotation class com/github/takahirom/roborazzi/annotations/RoboPreviewExclude : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class com/github/takahirom/roborazzi/annotations/RoboPreviewInclude : java/lang/annotation/Annotation {
+}
+

@@ -1,0 +1,16 @@
+public final class com/github/takahirom/roborazzi/OpenAiAiAssertionModel : com/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Float;Ljava/lang/Integer;Ljava/lang/Integer;Lcom/github/takahirom/roborazzi/OpenAiAiAssertionModel$ApiType;Lkotlin/jvm/functions/Function1;Lio/ktor/client/HttpClient;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Float;Ljava/lang/Integer;Ljava/lang/Integer;Lcom/github/takahirom/roborazzi/OpenAiAiAssertionModel$ApiType;Lkotlin/jvm/functions/Function1;Lio/ktor/client/HttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun assert (Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertionModel$TargetImages;Lcom/github/takahirom/roborazzi/AiAssertionOptions;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+	public fun assert (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/github/takahirom/roborazzi/AiAssertionOptions;)Lcom/github/takahirom/roborazzi/AiAssertionResults;
+}
+
+public final class com/github/takahirom/roborazzi/OpenAiAiAssertionModel$ApiType : java/lang/Enum {
+	public static final field Gemini Lcom/github/takahirom/roborazzi/OpenAiAiAssertionModel$ApiType;
+	public static final field Ollama Lcom/github/takahirom/roborazzi/OpenAiAiAssertionModel$ApiType;
+	public static final field OpenAI Lcom/github/takahirom/roborazzi/OpenAiAiAssertionModel$ApiType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/OpenAiAiAssertionModel$ApiType;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/OpenAiAiAssertionModel$ApiType;
+}
+

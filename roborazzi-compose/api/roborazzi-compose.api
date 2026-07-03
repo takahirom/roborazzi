@@ -1,0 +1,162 @@
+public final class com/github/takahirom/roborazzi/RegisterActivityToRobolectricKt {
+	public static final fun registerRoborazziActivityToRobolectricIfNeeded ()V
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziComposeActivityScenarioCreatorOption : com/github/takahirom/roborazzi/RoborazziComposeOption {
+	public abstract fun createScenario (Lkotlin/jvm/functions/Function0;)Landroidx/test/core/app/ActivityScenario;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziComposeActivityScenarioOption : com/github/takahirom/roborazzi/RoborazziComposeOption {
+	public abstract fun configureWithActivityScenario (Landroidx/test/core/app/ActivityScenario;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeActivityThemeOption : com/github/takahirom/roborazzi/RoborazziComposeActivityScenarioCreatorOption {
+	public static final field $stable I
+	public fun <init> (I)V
+	public final fun copy (I)Lcom/github/takahirom/roborazzi/RoborazziComposeActivityThemeOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposeActivityThemeOption;IILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeActivityThemeOption;
+	public fun createScenario (Lkotlin/jvm/functions/Function0;)Landroidx/test/core/app/ActivityScenario;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeBackgroundOption : com/github/takahirom/roborazzi/RoborazziComposeActivityScenarioOption {
+	public static final field $stable I
+	public fun <init> (ZJ)V
+	public fun configureWithActivityScenario (Landroidx/test/core/app/ActivityScenario;)V
+	public final fun copy (ZJ)Lcom/github/takahirom/roborazzi/RoborazziComposeBackgroundOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposeBackgroundOption;ZJILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeBackgroundOption;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziComposeCaptureOption : com/github/takahirom/roborazzi/RoborazziComposeOption {
+	public abstract fun afterCapture ()V
+	public abstract fun beforeCapture ()V
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziComposeComposableOption : com/github/takahirom/roborazzi/RoborazziComposeOption {
+	public abstract fun configureWithComposable (Lkotlin/jvm/functions/Function2;)Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeFontScaleOption : com/github/takahirom/roborazzi/RoborazziComposeSetupOption {
+	public static final field $stable I
+	public fun <init> (F)V
+	public fun configure (Lcom/github/takahirom/roborazzi/RoborazziComposeSetupOption$ConfigBuilder;)V
+	public final fun copy (F)Lcom/github/takahirom/roborazzi/RoborazziComposeFontScaleOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposeFontScaleOption;FILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeFontScaleOption;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeInspectionModeOption : com/github/takahirom/roborazzi/RoborazziComposeComposableOption {
+	public static final field $stable I
+	public fun <init> (Z)V
+	public fun configureWithComposable (Lkotlin/jvm/functions/Function2;)Lkotlin/jvm/functions/Function2;
+	public final fun copy (Z)Lcom/github/takahirom/roborazzi/RoborazziComposeInspectionModeOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposeInspectionModeOption;ZILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeInspectionModeOption;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeKt {
+	public static final fun captureRoboImage (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lkotlin/jvm/functions/Function2;)V
+	public static final fun captureRoboImage (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function2;)V
+	public static final fun captureRoboImage (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lkotlin/jvm/functions/Function2;)V
+	public static final fun captureRoboImage (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function2;)V
+	public static synthetic fun captureRoboImage$default (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+	public static synthetic fun captureRoboImage$default (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeLocaleOption : com/github/takahirom/roborazzi/RoborazziComposeSetupOption {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;)V
+	public fun configure (Lcom/github/takahirom/roborazzi/RoborazziComposeSetupOption$ConfigBuilder;)V
+	public final fun copy (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoborazziComposeLocaleOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposeLocaleOption;Ljava/lang/String;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeLocaleOption;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziComposeOption {
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeOptions {
+	public static final field $stable I
+	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Companion;
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun afterCapture ()V
+	public final fun beforeCapture ()V
+	public final fun builder ()Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public final fun configured (Landroidx/test/core/app/ActivityScenario;Lkotlin/jvm/functions/Function2;)Lkotlin/jvm/functions/Function2;
+	public final fun createScenario (Lkotlin/jvm/functions/Function0;)Landroidx/test/core/app/ActivityScenario;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeOptions$Builder {
+	public static final field $stable I
+	public fun <init> ()V
+	public final fun addOption (Lcom/github/takahirom/roborazzi/RoborazziComposeOption;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public final fun build ()Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeOptions$Companion {
+	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;
+	public static synthetic fun invoke$default (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Companion;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeOptionsKt {
+	public static final fun activityTheme (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;I)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static final fun background (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;ZJ)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static synthetic fun background$default (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;ZJILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static final fun fontScale (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;F)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static final fun inspectionMode (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;Z)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static final fun locale (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static final fun size (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;II)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static synthetic fun size$default (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;IIILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+	public static final fun uiMode (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;I)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
+}
+
+public abstract interface class com/github/takahirom/roborazzi/RoborazziComposeSetupOption : com/github/takahirom/roborazzi/RoborazziComposeOption {
+	public abstract fun configure (Lcom/github/takahirom/roborazzi/RoborazziComposeSetupOption$ConfigBuilder;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeSetupOption$ConfigBuilder {
+	public static final field $stable I
+	public fun <init> ()V
+	public final fun addRobolectricQualifier (Ljava/lang/String;)V
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeSizeOption : com/github/takahirom/roborazzi/RoborazziComposeComposableOption, com/github/takahirom/roborazzi/RoborazziComposeSetupOption {
+	public static final field $stable I
+	public fun <init> (II)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public fun configure (Lcom/github/takahirom/roborazzi/RoborazziComposeSetupOption$ConfigBuilder;)V
+	public fun configureWithComposable (Lkotlin/jvm/functions/Function2;)Lkotlin/jvm/functions/Function2;
+	public final fun copy (II)Lcom/github/takahirom/roborazzi/RoborazziComposeSizeOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposeSizeOption;IIILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeSizeOption;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeightDp ()I
+	public final fun getWidthDp ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziComposeUiModeOption : com/github/takahirom/roborazzi/RoborazziComposeSetupOption {
+	public static final field $stable I
+	public fun <init> (I)V
+	public fun configure (Lcom/github/takahirom/roborazzi/RoborazziComposeSetupOption$ConfigBuilder;)V
+	public final fun copy (I)Lcom/github/takahirom/roborazzi/RoborazziComposeUiModeOption;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziComposeUiModeOption;IILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziComposeUiModeOption;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
