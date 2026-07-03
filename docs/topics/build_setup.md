@@ -253,6 +253,31 @@ roborazzi {
 > roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory
 > ```
 
+#### Separate output directories per variant/target (Experimental)
+
+By default, every Roborazzi task shares a single output directory (`build/outputs/roborazzi`) and a single intermediate directory (`build/intermediates/roborazzi`). When multiple Roborazzi test tasks run in a single Gradle invocation (for example `check`, or Kotlin Multiplatform's `allTests`), their directory reads and writes can race with each other. On Gradle 9 this can hard-fail with `Cannot access input property 'roborazziImageInput'` (see [#830](https://github.com/takahirom/roborazzi/issues/830)).
+
+Enabling `separateOutputDirs` gives each task slug its own subdirectory, so the tasks never share a directory:
+
+```kotlin
+roborazzi {
+  // Experimental
+  separateOutputDirs.set(true)
+}
+```
+
+The unit of separation is the `recordRoborazzi<Slug>` slug:
+
+- Android: the variant name, e.g. `build/outputs/roborazzi/debug/`, `build/outputs/roborazzi/release/`.
+- Kotlin Multiplatform: the target (× test run) name, e.g. `build/outputs/roborazzi/desktop/`.
+
+The intermediate directory is separated the same way (e.g. `build/intermediates/roborazzi/debug/`). If you set a custom `outputDir`, the per-slug subdirectory is created under it.
+
+> [!IMPORTANT]
+> Enabling this option changes where golden images are stored. Existing users must re-record (or manually move) their goldens into the new per-slug subdirectory, otherwise verification will not find them. This is opt-in and defaults to `false`, so existing behavior is unchanged unless you enable it.
+>
+> This also partially addresses requests for per-flavor/variant subdirectories ([#804](https://github.com/takahirom/roborazzi/issues/804), [#731](https://github.com/takahirom/roborazzi/issues/731)).
+
 ### Add dependencies
 
 | Description     | Dependencies                                                                         |

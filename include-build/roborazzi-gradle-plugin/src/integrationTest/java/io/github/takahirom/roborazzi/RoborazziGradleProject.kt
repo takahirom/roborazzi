@@ -123,6 +123,24 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     )
   }
 
+  fun recordRelease(): BuildResult {
+    val task = "recordRoborazziRelease"
+    return runTask(task)
+  }
+
+  // Records both the debug and release variants in a single Gradle invocation.
+  // Used to exercise the multi-task scenario from
+  // https://github.com/takahirom/roborazzi/issues/830 where multiple Roborazzi
+  // test tasks run at once.
+  fun recordDebugAndRelease(): BuildResult {
+    buildGradle.addIncludeBuild()
+    return rootProject.runTask(
+      "app:recordRoborazziDebug",
+      BuildType.Build,
+      arrayOf("app:recordRoborazziRelease")
+    )
+  }
+
   fun unitTest(): BuildResult {
     val task = "testDebugUnitTest"
     return runTask(task)
@@ -239,6 +257,7 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     var removeOutputDirBeforeTestTypeTask = false
     var customOutputDirPath: String? = null
     var customCompareOutputDirPath: String? = null
+    var separateOutputDirs = false
 
     init {
       addIncludeBuild()
@@ -356,7 +375,17 @@ dependencies {
                 outputDir.set(file("$customCompareOutputDirPath"))
               }
             }
-            
+
+          """.trimIndent()
+        )
+      }
+      if (separateOutputDirs) {
+        buildFile.appendText(
+          """
+            roborazzi {
+              separateOutputDirs.set(true)
+            }
+
           """.trimIndent()
         )
       }

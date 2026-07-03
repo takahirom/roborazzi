@@ -708,4 +708,67 @@ class RoborazziGradleProjectTest {
       secondProjectDir.delete()
     }
   }
+
+  @Test
+  fun separateOutputDirsRecordsIntoSlugSubdirectory() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.separateOutputDirs = true
+      record()
+
+      checkResultsSummaryFileExists()
+      // With separateOutputDirs enabled, goldens land under the per-slug subdirectory.
+      checkRecordedFileExists("app/$defaultRoborazziOutputDir/debug/$className.testCapture.png")
+      // And not in the shared (non-slug) directory.
+      checkRecordedFileNotExists("$screenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("app/$defaultRoborazziOutputDir/debug/$className.testCapture_compare.png")
+      checkRecordedFileNotExists("app/$defaultRoborazziOutputDir/debug/$className.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun separateOutputDirsRecordThenVerifyIsGreen() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.separateOutputDirs = true
+      record()
+      checkRecordedFileExists("app/$defaultRoborazziOutputDir/debug/$className.testCapture.png")
+
+      // Verifying against the just-recorded goldens should succeed.
+      verify()
+
+      checkRecordedFileNotExists("app/$defaultRoborazziOutputDir/debug/$className.testCapture_compare.png")
+      checkRecordedFileNotExists("app/$defaultRoborazziOutputDir/debug/$className.testCapture_actual.png")
+    }
+  }
+
+  @Test
+  fun separateOutputDirsKeepsMultipleVariantDirsSeparate() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.separateOutputDirs = true
+      // Record both the debug and release variants in a single Gradle invocation
+      // (the #830 scenario). With separateOutputDirs enabled each variant writes to
+      // its own subdirectory, so they never share a directory.
+      val output = recordDebugAndRelease().output
+      assert(output.contains("BUILD SUCCESSFUL")) {
+        "Recording both variants should succeed. Output:\n$output"
+      }
+
+      checkRecordedFileExists("app/$defaultRoborazziOutputDir/debug/$className.testCapture.png")
+      checkRecordedFileExists("app/$defaultRoborazziOutputDir/release/$className.testCapture.png")
+    }
+  }
+
+  @Test
+  fun separateOutputDirsWithCustomOutputDir() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      val customDirFromGradle = "src/screenshots/roborazzi_customdir_from_gradle"
+      buildGradle.customOutputDirPath = customDirFromGradle
+      buildGradle.separateOutputDirs = true
+      record()
+
+      checkResultsSummaryFileExists()
+      // The per-slug subdirectory is created under the custom outputDir.
+      checkRecordedFileExists("app/$customDirFromGradle/debug/$className.testCapture.png")
+      checkRecordedFileNotExists("app/$customDirFromGradle/$className.testCapture.png")
+    }
+  }
 }

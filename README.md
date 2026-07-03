@@ -332,6 +332,31 @@ roborazzi {
 > roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory
 > ```
 
+#### Separate output directories per variant/target (Experimental)
+
+By default, every Roborazzi task shares a single output directory (`build/outputs/roborazzi`) and a single intermediate directory (`build/intermediates/roborazzi`). When multiple Roborazzi test tasks run in a single Gradle invocation (for example `check`, or Kotlin Multiplatform's `allTests`), their directory reads and writes can race with each other. On Gradle 9 this can hard-fail with `Cannot access input property 'roborazziImageInput'` (see [#830](https://github.com/takahirom/roborazzi/issues/830)).
+
+Enabling `separateOutputDirs` gives each task slug its own subdirectory, so the tasks never share a directory:
+
+```kotlin
+roborazzi {
+  // Experimental
+  separateOutputDirs.set(true)
+}
+```
+
+The unit of separation is the `recordRoborazzi<Slug>` slug:
+
+- Android: the variant name, e.g. `build/outputs/roborazzi/debug/`, `build/outputs/roborazzi/release/`.
+- Kotlin Multiplatform: the target (× test run) name, e.g. `build/outputs/roborazzi/desktop/`.
+
+The intermediate directory is separated the same way (e.g. `build/intermediates/roborazzi/debug/`). If you set a custom `outputDir`, the per-slug subdirectory is created under it.
+
+> [!IMPORTANT]
+> Enabling this option changes where golden images are stored. Existing users must re-record (or manually move) their goldens into the new per-slug subdirectory, otherwise verification will not find them. This is opt-in and defaults to `false`, so existing behavior is unchanged unless you enable it.
+>
+> This also partially addresses requests for per-flavor/variant subdirectories ([#804](https://github.com/takahirom/roborazzi/issues/804), [#731](https://github.com/takahirom/roborazzi/issues/731)).
+
 ### Add dependencies
 
 | Description     | Dependencies                                                                         |
@@ -1008,6 +1033,10 @@ roborazzi {
     testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
     // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
     generatedTestClassCount = 4
+    // Filter previews by annotation. Defaults to AnnotationFilter.Filter.RoboPreviewExclude
+    // (previews annotated with @RoboPreviewExclude are skipped). Override to switch to opt-in mode
+    // where only previews annotated with @RoboPreviewInclude are captured.
+    annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
   }
 }
 ```
@@ -1056,6 +1085,33 @@ roborazzi {
 > generateComposePreviewRobolectricTests.enable.set(true)
 > generateComposePreviewRobolectricTests.packages.set(["com.example"])
 > ```
+
+### Filtering previews by annotation
+
+`annotationFilter` controls which previews are captured (requires the `roborazzi-annotations` dependency).
+By default it is `AnnotationFilter.Filter.RoboPreviewExclude`, so previews annotated with
+`@RoboPreviewExclude` are skipped. Set it to `RoboPreviewInclude` to capture **only** previews
+annotated with `@RoboPreviewInclude`:
+
+```kotlin
+roborazzi {
+  @OptIn(ExperimentalRoborazziApi::class)
+  generateComposePreviewRobolectricTests {
+    enable = true
+    packages = listOf("com.example")
+    annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
+  }
+}
+```
+
+To filter by your own annotations, pass their fully qualified class names
+(use the JVM binary name with `$` for nested classes, e.g. `com.example.Outer$Inner`):
+
+```kotlin
+// Set either one, not both
+annotationFilter = AnnotationFilter.Exclude("com.example.MyExcludeAnnotation")
+annotationFilter = AnnotationFilter.Include("com.example.MyIncludeAnnotation")
+```
 
 ## Annotation-based Capture Control
 
@@ -1608,6 +1664,12 @@ roborazzi {
     outputDir = "src/your/screenshot/folder"
 }
 ```
+
+If the caching problems appear when several Roborazzi test tasks run in a single
+Gradle invocation (for example `check` or Kotlin Multiplatform's `allTests`), the tasks
+may be racing over the shared output directory. In that case you can enable the
+experimental `separateOutputDirs` option so each variant/target gets its own directory.
+See [Separate output directories per variant/target](build_setup.md#separate-output-directories-per-variant-target-experimental).
 
 ### Q: Why do my screenshot tests fail inconsistently across different operating systems like MacOS, Ubuntu, and Windows?
 
