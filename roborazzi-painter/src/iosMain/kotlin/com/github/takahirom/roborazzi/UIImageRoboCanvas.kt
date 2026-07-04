@@ -378,10 +378,10 @@ class UIImageRoboCanvas private constructor(
     /** Writes a straight (un-premultiplied) [color] at ([x], [y]) into [out]. */
     private fun setPixel(out: ByteArray, totalWidth: Int, x: Int, y: Int, color: Color) {
       val base = (y * totalWidth + x) * 4
-      out[base] = (color.r * 255f).toInt().toByte()
-      out[base + 1] = (color.g * 255f).toInt().toByte()
-      out[base + 2] = (color.b * 255f).toInt().toByte()
-      out[base + 3] = (color.a * 255f).toInt().toByte()
+      out[base] = (color.r * 255f).roundToInt().coerceIn(0, 255).toByte()
+      out[base + 1] = (color.g * 255f).roundToInt().coerceIn(0, 255).toByte()
+      out[base + 2] = (color.b * 255f).roundToInt().coerceIn(0, 255).toByte()
+      out[base + 3] = (color.a * 255f).roundToInt().coerceIn(0, 255).toByte()
     }
 
     /**

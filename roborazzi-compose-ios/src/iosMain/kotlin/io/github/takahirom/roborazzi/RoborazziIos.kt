@@ -120,13 +120,16 @@ fun SemanticsNodeInteraction.captureRoboImage(
       comparisonCanvasFactory = { goldenCanvas, actualCanvas, _, _ ->
         val grid = roborazziOptions.compareOptions.comparisonStyle
           as? RoborazziOptions.CompareOptions.ComparisonStyle.Grid
+        // Pass the tier spacings through unchanged: a null spacing means the
+        // caller disabled that grid tier (matching AwtRoboCanvas, which skips a
+        // tier whose spacing is null), so it must not be replaced with a default.
         UIImageRoboCanvas.generateCompareCanvas(
           goldenCanvas = goldenCanvas as UIImageRoboCanvas,
           newCanvas = actualCanvas as UIImageRoboCanvas,
           useGrid = grid != null,
           oneDpPx = oneDpPx,
-          bigLineSpaceDp = grid?.bigLineSpaceDp ?: 16,
-          smallLineSpaceDp = grid?.smallLineSpaceDp ?: 4,
+          bigLineSpaceDp = grid?.bigLineSpaceDp,
+          smallLineSpaceDp = grid?.smallLineSpaceDp,
           hasLabel = grid?.hasLabel ?: true,
         )
       },

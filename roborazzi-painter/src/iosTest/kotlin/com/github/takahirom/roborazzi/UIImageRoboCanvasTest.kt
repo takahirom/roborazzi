@@ -197,6 +197,42 @@ class UIImageRoboCanvasTest {
     compare.release()
   }
 
+  @Test
+  fun gridTierSpacingNullSkipsThatTier() {
+    val golden = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(width, height, buildOpaqueBytes())
+    val newCanvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(width, height, buildOpaqueBytes())
+    val oneDpPx = 2f
+
+    // With the default tiers enabled, the top-left corner is in the margin and
+    // is painted by a grid line (both x=0 and y=0 lines).
+    val withGrid = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = newCanvas,
+      useGrid = true,
+      oneDpPx = oneDpPx,
+      hasLabel = false,
+    )
+    assertTrue(withGrid.getPixel(0, 0).a > 0f, "default grid tiers should paint the corner grid line")
+
+    // With both tiers disabled (null), no grid line is drawn, so the margin
+    // corner stays transparent. A null spacing must not fall back to a default.
+    val noGrid = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = newCanvas,
+      useGrid = true,
+      oneDpPx = oneDpPx,
+      bigLineSpaceDp = null,
+      smallLineSpaceDp = null,
+      hasLabel = false,
+    )
+    assertEquals(0f, noGrid.getPixel(0, 0).a, "disabling both grid tiers should leave the margin transparent")
+
+    golden.release()
+    newCanvas.release()
+    withGrid.release()
+    noGrid.release()
+  }
+
   // PNG-only on iOS; ImageIoFormat() is not implemented, so provide a stub that
   // save() ignores.
   private fun pngFormat(): ImageIoFormat = object : ImageIoFormat {}
