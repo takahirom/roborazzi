@@ -13,11 +13,17 @@ import java.io.File
  * @param settleTimeoutMillis After [block] finishes, recording continues until the UI stops
  * changing, up to this amount of additional virtual time. This allows capturing animations
  * that are still running when the block ends.
+ * @param backgroundColor ARGB color (see [android.graphics.Color]) used to fill the fixed
+ * recording viewport. Because Roborazzi crops each frame to its content, frames of an animation
+ * that changes size have different dimensions; every frame is composited (anchored at the
+ * top-left) onto a viewport of the maximum frame size filled with this color, so the output has
+ * uniform dimensions with no undefined (black) margins. Defaults to white.
  */
 @ExperimentalRoborazziApi
 data class RoboAnimationOptions(
   val fps: Int = 10,
   val settleTimeoutMillis: Long = 3_000,
+  val backgroundColor: Int = android.graphics.Color.WHITE,
 ) {
   init {
     require(fps in 1..100) { "fps must be in 1..100 but was $fps" }
@@ -138,7 +144,7 @@ fun SemanticsNodeInteraction.captureRoboAnimation(
       composeRule.waitForIdle()
     }
   }
-  saveAnimatedGif(file, canvases, animationOptions.fps, roborazziOptions)
+  saveAnimatedGif(file, canvases, animationOptions, roborazziOptions)
   canvases.forEach { it.release() }
   canvases.clear()
   result.getOrThrow()
@@ -172,21 +178,30 @@ private fun recordUntilSettled(
 private fun saveAnimatedGif(
   file: File,
   canvases: List<AwtRoboCanvas>,
-  fps: Int,
+  animationOptions: RoboAnimationOptions,
   roborazziOptions: RoborazziOptions,
 ) {
   file.parentFile?.mkdirs()
   val encoder = AnimatedGifEncoder()
   encoder.setRepeat(0)
   encoder.start(file.outputStream())
-  encoder.setFrameRate(fps.toFloat())
+  encoder.setFrameRate(animationOptions.fps.toFloat())
   if (canvases.isNotEmpty()) {
+    val resizeScale = roborazziOptions.recordOptions.resizeScale
+    // Roborazzi crops each frame to its content, so frames of an animation that changes size
+    // have different dimensions. Pin a constant viewport of the maximum frame size filled with
+    // backgroundColor; the encoder composites every frame onto it (anchored top-left) so all
+    // encoded frames have identical dimensions and leave no undefined area that decoders would
+    // otherwise render as black margins.
+    fun scaledDimension(value: Int): Int =
+      if (resizeScale == 1.0) value else (value * resizeScale).toInt()
     encoder.setSize(
-      canvases.maxOf { it.croppedWidth },
-      canvases.maxOf { it.croppedHeight }
+      canvases.maxOf { scaledDimension(it.croppedWidth) },
+      canvases.maxOf { scaledDimension(it.croppedHeight) }
     )
+    encoder.setBackground(animationOptions.backgroundColor)
     canvases.forEach { canvas ->
-      encoder.addFrame(canvas, roborazziOptions.recordOptions.resizeScale)
+      encoder.addFrame(canvas, resizeScale)
     }
   }
   encoder.finish()
