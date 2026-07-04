@@ -78,6 +78,15 @@ import kotlinx.cinterop.useContents
  * - When exposing pixels for comparison ([DifferCGImage]) the premultiplied
  *   bytes are un-premultiplied so the values match what the JVM
  *   `DifferBufferedImage` sees (BufferedImage.getRGB returns straight alpha).
+ *
+ * Precision note: because storage is premultiplied, translucent pixels lose
+ * color precision proportional to `255 / alpha` (fully opaque pixels round-trip
+ * losslessly; the loss grows as alpha drops — e.g. up to ~64 per channel at
+ * alpha=2, and ~1 at alpha>=127). The loss is deterministic, so comparisons of
+ * identically-produced images are unaffected; only cross-source comparisons of
+ * low-alpha content may need a small threshold. The JVM `AwtRoboCanvas` stores
+ * straight ARGB and has no such loss. See UIImageRoboCanvasTest for the pinned
+ * deviation envelope.
  */
 @ExperimentalRoborazziApi
 class UIImageRoboCanvas private constructor(
