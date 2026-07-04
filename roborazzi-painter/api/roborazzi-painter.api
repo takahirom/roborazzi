@@ -2,6 +2,7 @@ public final class com/github/takahirom/roborazzi/AnimatedGifEncoder {
 	public fun <init> ()V
 	public final fun addFrame (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;D)Z
 	public final fun finish ()Z
+	public final fun setBackground (Ljava/lang/Integer;)V
 	public final fun setDelay (I)V
 	public final fun setDispose (I)V
 	public final fun setFrameRate (F)V
