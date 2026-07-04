@@ -87,11 +87,11 @@ The currently implemented features for iOS support are as follows:
 | resizing image (resizeScale) | supported |
 | context data | supported |
 | custom reporter | supported |
-| ComparisonStyle | 🆖 (only reference / diff / new; Grid is not supported) |
-| RoborazziRecordFilePathStrategy | 🆖 (filePath is required) |
+| ComparisonStyle | supported (Simple and Grid; Grid falls back to Simple when the density is unavailable) |
+| RoborazziRecordFilePathStrategy | 🆖 (filePath is required; a relative path always resolves against the output directory) |
 | automatic file naming | 🆖 (filePath is required) |
-| image format | PNG only (WebP is TODO) |
-| pixelBitConfig | n/a (not consulted on iOS) |
+| image format | PNG only (WebP encoding is not supported on iOS) |
+| pixelBitConfig | 🆖 (Rgb565 falls back to Argb8888 with a warning; CoreGraphics has no 5-6-5 format) |
 | dump | n/a (Robolectric-only concept) |
 | applyDeviceCrop | n/a (Robolectric-only concept) |
 

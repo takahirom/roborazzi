@@ -36,12 +36,28 @@ import platform.CoreGraphics.CGImageGetWidth
 import platform.CoreGraphics.CGImageRef
 import platform.CoreGraphics.CGImageRelease
 import platform.CoreGraphics.CGRectMake
+import platform.CoreGraphics.CGContextFillRect
+import platform.CoreGraphics.CGContextScaleCTM
+import platform.CoreGraphics.CGContextSetRGBFillColor
+import platform.CoreGraphics.CGContextTranslateCTM
+import platform.CoreGraphics.CGPointMake
 import platform.CoreGraphics.kCGBitmapByteOrder32Little
 import platform.CoreGraphics.kCGColorSpaceSRGB
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSString
 import platform.Foundation.writeToFile
+import platform.UIKit.NSFontAttributeName
+import platform.UIKit.NSForegroundColorAttributeName
+import platform.UIKit.UIColor
+import platform.UIKit.UIFont
+import platform.UIKit.UIGraphicsPopContext
+import platform.UIKit.UIGraphicsPushContext
 import platform.UIKit.UIImage
 import platform.UIKit.UIImagePNGRepresentation
+import platform.UIKit.drawAtPoint
+import platform.UIKit.sizeWithAttributes
+import kotlin.math.roundToInt
+import kotlinx.cinterop.useContents
 
 /**
  * iOS implementation of [RoboCanvas] backed by a CoreGraphics bitmap context.
@@ -319,53 +335,243 @@ class UIImageRoboCanvas private constructor(
     }
 
     /**
-     * Produces a side-by-side comparison canvas laid out as
-     * `reference | diff | new`. Differing pixels in the middle (diff) section
-     * are highlighted in red. This mirrors the JVM "Simple" comparison style;
-     * grid lines and text labels (ComparisonStyle.Grid) are out of scope.
+     * Produces a comparison canvas laid out as `reference | diff | new`.
+     * Differing pixels in the middle (diff) section are highlighted in red.
+     *
+     * When [useGrid] is true and a valid [oneDpPx] density is available this
+     * mirrors the JVM `ComparisonStyle.Grid` output: the three sections are
+     * inset by a 16dp margin, overlaid with 4dp / 16dp grid lines and, when
+     * [hasLabel] is set, "Reference" / "Diff" / "New" text labels. Otherwise it
+     * renders the JVM "Simple" style (three sections, no margins/grid/labels).
+     * This matches AwtRoboCanvas, which also falls back to Simple when the
+     * density is unknown.
      */
     fun generateCompareCanvas(
       goldenCanvas: UIImageRoboCanvas,
       newCanvas: UIImageRoboCanvas,
+      useGrid: Boolean = false,
+      oneDpPx: Float? = null,
+      bigLineSpaceDp: Int? = 16,
+      smallLineSpaceDp: Int? = 4,
+      hasLabel: Boolean = true,
     ): UIImageRoboCanvas {
-      val goldenWidth = goldenCanvas.width
-      val goldenHeight = goldenCanvas.height
-      val newWidth = newCanvas.width
-      val newHeight = newCanvas.height
-      val sectionWidth = maxOf(goldenWidth, newWidth)
-      val height = maxOf(goldenHeight, newHeight)
+      val sectionWidth = maxOf(goldenCanvas.width, newCanvas.width)
+      val contentHeight = maxOf(goldenCanvas.height, newCanvas.height)
+      return if (useGrid && oneDpPx != null && oneDpPx > 0f) {
+        renderGridCanvas(
+          goldenCanvas = goldenCanvas,
+          newCanvas = newCanvas,
+          sectionWidth = sectionWidth,
+          contentHeight = contentHeight,
+          oneDpPx = oneDpPx,
+          bigLineSpaceDp = bigLineSpaceDp,
+          smallLineSpaceDp = smallLineSpaceDp,
+          hasLabel = hasLabel,
+        )
+      } else {
+        renderSimpleCanvas(goldenCanvas, newCanvas, sectionWidth, contentHeight)
+      }
+    }
+
+    private val diffRed = Color(255, 0, 0, 255)
+
+    /** Writes a straight (un-premultiplied) [color] at ([x], [y]) into [out]. */
+    private fun setPixel(out: ByteArray, totalWidth: Int, x: Int, y: Int, color: Color) {
+      val base = (y * totalWidth + x) * 4
+      out[base] = (color.r * 255f).toInt().toByte()
+      out[base + 1] = (color.g * 255f).toInt().toByte()
+      out[base + 2] = (color.b * 255f).toInt().toByte()
+      out[base + 3] = (color.a * 255f).toInt().toByte()
+    }
+
+    /**
+     * Straight-alpha "source over destination" blend of an ([sr], [sg], [sb])
+     * color with fractional alpha [sa] (all 0..1) onto the pixel at ([x], [y]).
+     * Used to overlay semi-transparent grid lines and labels.
+     */
+    private fun blendPixel(
+      out: ByteArray,
+      totalWidth: Int,
+      x: Int,
+      y: Int,
+      sr: Float,
+      sg: Float,
+      sb: Float,
+      sa: Float,
+    ) {
+      if (sa <= 0f) return
+      val base = (y * totalWidth + x) * 4
+      val dr = (out[base].toInt() and 0xFF) / 255f
+      val dg = (out[base + 1].toInt() and 0xFF) / 255f
+      val db = (out[base + 2].toInt() and 0xFF) / 255f
+      val da = (out[base + 3].toInt() and 0xFF) / 255f
+      val outA = sa + da * (1f - sa)
+      if (outA <= 0f) return
+      val outR = (sr * sa + dr * da * (1f - sa)) / outA
+      val outG = (sg * sa + dg * da * (1f - sa)) / outA
+      val outB = (sb * sa + db * da * (1f - sa)) / outA
+      out[base] = (outR * 255f).roundToInt().coerceIn(0, 255).toByte()
+      out[base + 1] = (outG * 255f).roundToInt().coerceIn(0, 255).toByte()
+      out[base + 2] = (outB * 255f).roundToInt().coerceIn(0, 255).toByte()
+      out[base + 3] = (outA * 255f).roundToInt().coerceIn(0, 255).toByte()
+    }
+
+    private fun compositeSections(
+      out: ByteArray,
+      totalWidth: Int,
+      goldenCanvas: UIImageRoboCanvas,
+      newCanvas: UIImageRoboCanvas,
+      sectionWidth: Int,
+      offsetX: Int,
+      offsetY: Int,
+    ) {
+      val height = maxOf(goldenCanvas.height, newCanvas.height)
+      for (y in 0 until height) {
+        for (x in 0 until sectionWidth) {
+          val golden = if (x < goldenCanvas.width && y < goldenCanvas.height) {
+            goldenCanvas.getPixel(x, y)
+          } else null
+          val new = if (x < newCanvas.width && y < newCanvas.height) {
+            newCanvas.getPixel(x, y)
+          } else null
+          if (golden != null) setPixel(out, totalWidth, offsetX + x, offsetY + y, golden)
+          if (new != null) {
+            setPixel(out, totalWidth, offsetX + sectionWidth * 2 + x, offsetY + y, new)
+          }
+          // Diff section: red where pixels differ (or exist in only one image).
+          if (golden != new) {
+            setPixel(out, totalWidth, offsetX + sectionWidth + x, offsetY + y, diffRed)
+          }
+        }
+      }
+    }
+
+    private fun renderSimpleCanvas(
+      goldenCanvas: UIImageRoboCanvas,
+      newCanvas: UIImageRoboCanvas,
+      sectionWidth: Int,
+      height: Int,
+    ): UIImageRoboCanvas {
       val totalWidth = sectionWidth * 3
       require(totalWidth.toLong() * height * 4 <= Int.MAX_VALUE) {
         "Comparison canvas ${totalWidth}x$height exceeds the supported pixel buffer size"
       }
-
       val out = ByteArray(totalWidth * height * 4)
-      fun setPixel(x: Int, y: Int, color: Color) {
-        val base = (y * totalWidth + x) * 4
-        out[base] = (color.r * 255f).toInt().toByte()
-        out[base + 1] = (color.g * 255f).toInt().toByte()
-        out[base + 2] = (color.b * 255f).toInt().toByte()
-        out[base + 3] = (color.a * 255f).toInt().toByte()
-      }
+      compositeSections(out, totalWidth, goldenCanvas, newCanvas, sectionWidth, 0, 0)
+      return fromUnpremultipliedRgbaBytes(totalWidth, height, out)
+    }
 
-      val red = Color(255, 0, 0, 255)
-      for (y in 0 until height) {
-        for (x in 0 until sectionWidth) {
-          val inGolden = x < goldenWidth && y < goldenHeight
-          val inNew = x < newWidth && y < newHeight
-          val golden = if (inGolden) goldenCanvas.getPixel(x, y) else null
-          val new = if (inNew) newCanvas.getPixel(x, y) else null
-          // Reference section
-          if (golden != null) setPixel(x, y, golden)
-          // New section
-          if (new != null) setPixel(x + sectionWidth * 2, y, new)
-          // Diff section: red where pixels differ (or exist in only one image).
-          if (golden != new) {
-            setPixel(x + sectionWidth, y, red)
+    private fun renderGridCanvas(
+      goldenCanvas: UIImageRoboCanvas,
+      newCanvas: UIImageRoboCanvas,
+      sectionWidth: Int,
+      contentHeight: Int,
+      oneDpPx: Float,
+      bigLineSpaceDp: Int?,
+      smallLineSpaceDp: Int?,
+      hasLabel: Boolean,
+    ): UIImageRoboCanvas {
+      val margin = (16 * oneDpPx).toInt().coerceAtLeast(1)
+      val totalWidth = sectionWidth * 3 + margin * 2
+      val totalHeight = contentHeight + margin * 2
+      require(totalWidth.toLong() * totalHeight * 4 <= Int.MAX_VALUE) {
+        "Comparison canvas ${totalWidth}x$totalHeight exceeds the supported pixel buffer size"
+      }
+      val out = ByteArray(totalWidth * totalHeight * 4)
+      compositeSections(
+        out, totalWidth, goldenCanvas, newCanvas, sectionWidth,
+        offsetX = margin, offsetY = margin,
+      )
+
+      // Grid lines, matching the JVM colors: small = #33777777, big = #99777777.
+      val lineGray = 0x77 / 255f
+      smallLineSpaceDp?.let { drawGrid(out, totalWidth, totalHeight, it, oneDpPx, lineGray, 0x33 / 255f) }
+      bigLineSpaceDp?.let { drawGrid(out, totalWidth, totalHeight, it, oneDpPx, lineGray, 0x99 / 255f) }
+
+      if (hasLabel) {
+        val fontSize = (12 * oneDpPx).toInt().coerceAtLeast(1)
+        drawLabel(out, totalWidth, totalHeight, "Reference", margin, margin, fontSize, oneDpPx)
+        drawLabel(out, totalWidth, totalHeight, "Diff", margin + sectionWidth, margin, fontSize, oneDpPx)
+        drawLabel(out, totalWidth, totalHeight, "New", margin + sectionWidth * 2, margin, fontSize, oneDpPx)
+      }
+      return fromUnpremultipliedRgbaBytes(totalWidth, totalHeight, out)
+    }
+
+    private fun drawGrid(
+      out: ByteArray,
+      totalWidth: Int,
+      totalHeight: Int,
+      spaceDp: Int,
+      oneDpPx: Float,
+      gray: Float,
+      alpha: Float,
+    ) {
+      val step = (spaceDp * oneDpPx).toInt().coerceAtLeast(1)
+      var y = 0
+      while (y < totalHeight) {
+        for (x in 0 until totalWidth) blendPixel(out, totalWidth, x, y, gray, gray, gray, alpha)
+        y += step
+      }
+      var x = 0
+      while (x < totalWidth) {
+        for (yy in 0 until totalHeight) blendPixel(out, totalWidth, x, yy, gray, gray, gray, alpha)
+        x += step
+      }
+    }
+
+    /**
+     * Renders [text] with a translucent background rectangle into a temporary
+     * canvas via UIKit text drawing, then alpha-composites it onto [out] at
+     * ([destX], [destY]). The temporary context is flipped so UIKit draws the
+     * glyphs upright relative to the top-first pixel buffer.
+     */
+    private fun drawLabel(
+      out: ByteArray,
+      totalWidth: Int,
+      totalHeight: Int,
+      text: String,
+      destX: Int,
+      destY: Int,
+      fontSize: Int,
+      oneDpPx: Float,
+    ) {
+      val font = UIFont.boldSystemFontOfSize(fontSize.toDouble())
+      val attributes = mapOf<Any?, Any>(
+        NSFontAttributeName to font,
+        NSForegroundColorAttributeName to UIColor.blackColor,
+      )
+      val nsText = text as NSString
+      val (textWidth, textHeight) = nsText.sizeWithAttributes(attributes).useContents {
+        width to height
+      }
+      val pad = (4 * oneDpPx).toInt().coerceAtLeast(1)
+      val boxWidth = (textWidth.toInt() + pad * 2).coerceAtLeast(1)
+      val boxHeight = (textHeight.toInt() + pad * 2).coerceAtLeast(1)
+      val label = create(boxWidth, boxHeight)
+      try {
+        // Translucent background rectangle (#55999999), matching the JVM label.
+        CGContextSetRGBFillColor(label.context, 0x99 / 255.0, 0x99 / 255.0, 0x99 / 255.0, 0x55 / 255.0)
+        CGContextFillRect(label.context, CGRectMake(0.0, 0.0, boxWidth.toDouble(), boxHeight.toDouble()))
+        // Flip so UIKit's top-left text origin matches the top-first buffer.
+        CGContextTranslateCTM(label.context, 0.0, boxHeight.toDouble())
+        CGContextScaleCTM(label.context, 1.0, -1.0)
+        UIGraphicsPushContext(label.context)
+        nsText.drawAtPoint(CGPointMake(pad.toDouble(), pad.toDouble()), attributes)
+        UIGraphicsPopContext()
+
+        for (ly in 0 until boxHeight) {
+          val oy = destY + ly
+          if (oy >= totalHeight) break
+          for (lx in 0 until boxWidth) {
+            val ox = destX + lx
+            if (ox >= totalWidth) break
+            val p = label.getPixel(lx, ly)
+            blendPixel(out, totalWidth, ox, oy, p.r, p.g, p.b, p.a)
           }
         }
+      } finally {
+        label.release()
       }
-      return fromUnpremultipliedRgbaBytes(totalWidth, height, out)
     }
   }
 }
