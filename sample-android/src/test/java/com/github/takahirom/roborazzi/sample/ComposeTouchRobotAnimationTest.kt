@@ -25,12 +25,14 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoboAnimationOptions
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboAnimation
+import com.github.takahirom.roborazzi.provideRoborazziContext
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import me.saket.touchrobot.rememberTouchRobot
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import kotlin.math.abs
@@ -52,6 +54,10 @@ class ComposeTouchRobotAnimationTest {
 
   @Test
   fun captureTouchRobotSwipe() {
+    // captureRoboAnimation records only in record mode and no-ops otherwise, so the gesture that
+    // drives the box never progresses in compare/verify mode. Skip the test then instead of
+    // asserting on an un-driven gesture (which fails) or leaving it suspended (which hangs).
+    assumeTrue(provideRoborazziContext().options.taskType.isRecording())
     // Track how far the draggable box actually moved so we can assert the gesture progressed;
     // otherwise a stalled gesture would still produce a GIF (of identical frames) and pass.
     var latestOffsetX = 0f
