@@ -8,7 +8,7 @@ permissions: {}
 jobs:
   compare-screenshot-test:
     runs-on: macos-latest
-    timeout-minutes: 75
+    timeout-minutes: 50
 
     permissions:
       contents: read # for clone
@@ -37,8 +37,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
+      # Bounded, fail-fast wait: for stacked PRs the base is another feature
+      # branch, and a force-push there supersedes/cancels its StoreScreenshot
+      # run, so this check can stay unsatisfiable indefinitely. Without a bound
+      # the step would consume the whole job timeout (~50 min). Cap it at 30 min
+      # and let the job fail on timeout so it can simply be re-run once the
+      # base's StoreScreenshot has settled. We do NOT continue on error:
+      # proceeding would compare against a stale/missing base artifact and post
+      # a huge misleading diff comment on the PR.
       - name: Wait for base unit-test to succeed before downloading base branch screenshot artifact
         uses: lewagon/wait-on-check-action@ccfb013c15c8afb7bf2b7c028fb74dc5a068cccc # v1.3.4
+        timeout-minutes: 30
+        continue-on-error: false
         with:
           ref: ${{ steps.get_base_branch_head.outputs.sha }}
           check-name: 'store-screenshot-test'
