@@ -117,7 +117,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         UIImageRoboCanvas.fromFile(path)
           ?: error("Failed to load golden image from $path")
       },
-      comparisonCanvasFactory = { goldenCanvas, actualCanvas, _, _ ->
+      comparisonCanvasFactory = { goldenCanvas, actualCanvas, resizeScale, _ ->
         val grid = roborazziOptions.compareOptions.comparisonStyle
           as? RoborazziOptions.CompareOptions.ComparisonStyle.Grid
         // Pass the tier spacings through unchanged: a null spacing means the
@@ -126,6 +126,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
         UIImageRoboCanvas.generateCompareCanvas(
           goldenCanvas = goldenCanvas as UIImageRoboCanvas,
           newCanvas = actualCanvas as UIImageRoboCanvas,
+          // The actual canvas is full size; scale it to match the golden that
+          // was saved at resizeScale so the compare sections stay aligned.
+          newCanvasResize = resizeScale,
           useGrid = grid != null,
           oneDpPx = oneDpPx,
           bigLineSpaceDp = grid?.bigLineSpaceDp,

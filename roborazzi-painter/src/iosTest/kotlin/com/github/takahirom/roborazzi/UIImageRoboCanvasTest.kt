@@ -233,6 +233,49 @@ class UIImageRoboCanvasTest {
     noGrid.release()
   }
 
+  @Test
+  fun compareCanvasScalesActualByResizeScale() {
+    // The golden is saved at resizeScale, but the captured actual is full size.
+    // generateCompareCanvas must scale the actual by newCanvasResize so the
+    // sections line up, otherwise the compare image is 3x the full width and the
+    // diff is misaligned.
+    fun solid(w: Int, h: Int): ByteArray {
+      val bytes = ByteArray(w * h * 4)
+      for (i in 0 until w * h) {
+        bytes[i * 4] = 100.toByte()
+        bytes[i * 4 + 1] = 110.toByte()
+        bytes[i * 4 + 2] = 120.toByte()
+        bytes[i * 4 + 3] = 255.toByte()
+      }
+      return bytes
+    }
+    val gw = 80
+    val gh = 60
+    val golden = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(gw, gh, solid(gw, gh))
+    // Full-size actual (2x) of the same solid color; recorded with resizeScale=0.5.
+    val actualFull = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(gw * 2, gh * 2, solid(gw * 2, gh * 2))
+
+    val compare = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = actualFull,
+      newCanvasResize = 0.5,
+    )
+    // Scaled actual is gw x gh, matching the golden, so the simple layout is
+    // three gw-wide sections. Without scaling this would be 3 * (gw*2).
+    assertEquals(gw * 3, compare.width, "actual should be scaled to match the golden section width")
+    assertEquals(gh, compare.height)
+    // Same solid color on both sides -> no diff highlight in the diff section.
+    val red = com.dropbox.differ.Color(255, 0, 0, 255)
+    assertTrue(
+      compare.getPixel(gw + gw / 2, gh / 2) != red,
+      "an unchanged (post-scale) pixel must not be marked red",
+    )
+
+    golden.release()
+    actualFull.release()
+    compare.release()
+  }
+
   // PNG-only on iOS; ImageIoFormat() is not implemented, so provide a stub that
   // save() ignores.
   private fun pngFormat(): ImageIoFormat = object : ImageIoFormat {}

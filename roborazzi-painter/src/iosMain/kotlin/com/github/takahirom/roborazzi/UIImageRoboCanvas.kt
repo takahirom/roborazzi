@@ -349,27 +349,37 @@ class UIImageRoboCanvas private constructor(
     fun generateCompareCanvas(
       goldenCanvas: UIImageRoboCanvas,
       newCanvas: UIImageRoboCanvas,
+      newCanvasResize: Double = 1.0,
       useGrid: Boolean = false,
       oneDpPx: Float? = null,
       bigLineSpaceDp: Int? = 16,
       smallLineSpaceDp: Int? = 4,
       hasLabel: Boolean = true,
     ): UIImageRoboCanvas {
-      val sectionWidth = maxOf(goldenCanvas.width, newCanvas.width)
-      val contentHeight = maxOf(goldenCanvas.height, newCanvas.height)
-      return if (useGrid && oneDpPx != null && oneDpPx > 0f) {
-        renderGridCanvas(
-          goldenCanvas = goldenCanvas,
-          newCanvas = newCanvas,
-          sectionWidth = sectionWidth,
-          contentHeight = contentHeight,
-          oneDpPx = oneDpPx,
-          bigLineSpaceDp = bigLineSpaceDp,
-          smallLineSpaceDp = smallLineSpaceDp,
-          hasLabel = hasLabel,
-        )
-      } else {
-        renderSimpleCanvas(goldenCanvas, newCanvas, sectionWidth, contentHeight)
+      // The golden is stored already scaled by resizeScale while the captured
+      // actual is full size, so scale the actual down to match before composing
+      // (the common pipeline compares the scaled actual). Mirrors AwtRoboCanvas,
+      // which scales newImage by newCanvasResize.
+      val scaledNew = if (newCanvasResize == 1.0) newCanvas else newCanvas.scaled(newCanvasResize)
+      try {
+        val sectionWidth = maxOf(goldenCanvas.width, scaledNew.width)
+        val contentHeight = maxOf(goldenCanvas.height, scaledNew.height)
+        return if (useGrid && oneDpPx != null && oneDpPx > 0f) {
+          renderGridCanvas(
+            goldenCanvas = goldenCanvas,
+            newCanvas = scaledNew,
+            sectionWidth = sectionWidth,
+            contentHeight = contentHeight,
+            oneDpPx = oneDpPx,
+            bigLineSpaceDp = bigLineSpaceDp,
+            smallLineSpaceDp = smallLineSpaceDp,
+            hasLabel = hasLabel,
+          )
+        } else {
+          renderSimpleCanvas(goldenCanvas, scaledNew, sectionWidth, contentHeight)
+        }
+      } finally {
+        if (scaledNew !== newCanvas) scaledNew.release()
       }
     }
 
