@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziTaskType
+import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -135,7 +136,18 @@ class IosTest {
   }
 }
 
+// Mirrors the production iOS path resolution: a relative Roborazzi path (e.g. a
+// project-relative roborazzi.result.dir) resolves against the absolute
+// roborazzi.project.path when set, falling back to the process working
+// directory. This keeps the test looking where the common pipeline actually
+// writes the report JSON / outputs.
 private fun resolveAbsolutePath(path: String): String {
   if (path.startsWith("/")) return path
-  return "${NSFileManager.defaultManager.currentDirectoryPath}/$path"
+  val projectPath = roborazziSystemPropertyProjectPath()
+  val base = if (projectPath == ".") {
+    NSFileManager.defaultManager.currentDirectoryPath
+  } else {
+    projectPath
+  }
+  return "$base/$path"
 }
