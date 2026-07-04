@@ -390,13 +390,17 @@ class AnimatedGifEncoder {
         // create new image with right size/format
         val temp = BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR)
         val g = temp.createGraphics()
-        // Fill the fixed frame size with the background color first so areas not covered by a
-        // smaller frame are not left as the default black; then draw the frame anchored top-left.
-        background?.let {
-          g.color = it
-          g.fillRect(0, 0, width, height)
+        try {
+          // Fill the fixed frame size with the background color first so areas not covered by a
+          // smaller frame are not left as the default black; then draw the frame anchored top-left.
+          background?.let {
+            g.color = it
+            g.fillRect(0, 0, width, height)
+          }
+          g.drawImage(image, 0, 0, null)
+        } finally {
+          g.dispose()
         }
-        g.drawImage(image, 0, 0, null)
         image = temp
       }
       pixels = (image!!.raster.dataBuffer as DataBufferByte).data

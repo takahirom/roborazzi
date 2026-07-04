@@ -4,6 +4,7 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import com.dropbox.differ.ImageComparator
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 /**
  * Options for [captureRoboAnimation].
@@ -27,9 +28,42 @@ data class RoboAnimationOptions(
 ) {
   init {
     require(fps in 1..100) { "fps must be in 1..100 but was $fps" }
+    require(settleTimeoutMillis >= 0) {
+      "settleTimeoutMillis must be >= 0 but was $settleTimeoutMillis"
+    }
   }
 
   val frameStepMillis: Long get() = 1_000L / fps
+}
+
+/**
+ * Set once the Robolectric [org.robolectric.shadows.ShadowLooper] class is found to be missing so
+ * that [idleMainLooperFor] stops attempting (and logging) on every subsequent frame.
+ */
+private var mainLooperIdlingUnavailable = false
+
+/**
+ * Advances the Robolectric main Looper's virtual clock by [stepMillis] in lockstep with the
+ * Compose main clock. Coroutine `delay()` calls made from a `LaunchedEffect` (e.g. suspend-based
+ * input-gesture drivers) are scheduled on the AndroidUiDispatcher, which is backed by the main
+ * Looper's message queue. Under Robolectric's PAUSED looper those delayed messages only run when
+ * the Looper's clock advances, and [androidx.compose.ui.test.MainTestClock.advanceTimeBy] does not
+ * advance it. Idling the Looper here lets such coroutines make progress while frames are recorded.
+ *
+ * No-op when Robolectric is not on the classpath; the failure is logged once (via
+ * [roborazziDebugLog]) and no further attempts are made.
+ */
+private fun idleMainLooperFor(stepMillis: Long) {
+  if (mainLooperIdlingUnavailable) return
+  try {
+    org.robolectric.shadows.ShadowLooper.shadowMainLooper()
+      .idleFor(stepMillis, TimeUnit.MILLISECONDS)
+  } catch (e: NoClassDefFoundError) {
+    mainLooperIdlingUnavailable = true
+    roborazziDebugLog {
+      "Robolectric ShadowLooper is unavailable; skipping main looper idling while recording: $e"
+    }
+  }
 }
 
 /**
@@ -53,6 +87,7 @@ class RoboAnimationRecorderScope internal constructor(
     while (remainingMillis > 0) {
       val stepMillis = minOf(frameStepMillis, remainingMillis)
       composeRule.mainClock.advanceTimeBy(stepMillis)
+      idleMainLooperFor(stepMillis)
       composeRule.waitForIdle()
       captureFrame()
       remainingMillis -= stepMillis
@@ -144,10 +179,23 @@ fun SemanticsNodeInteraction.captureRoboAnimation(
       composeRule.waitForIdle()
     }
   }
-  saveAnimatedGif(file, canvases, animationOptions, roborazziOptions)
-  canvases.forEach { it.release() }
-  canvases.clear()
-  result.getOrThrow()
+  try {
+    val failure = result.exceptionOrNull()
+    if (failure != null) {
+      // The block failed. Attempt a best-effort save so any frames captured before the failure
+      // are still written, but never let a save failure mask the original one: attach it as a
+      // suppressed exception and always rethrow the original first-class failure.
+      runCatching { saveAnimatedGif(file, canvases, animationOptions, roborazziOptions) }
+        .exceptionOrNull()?.let { failure.addSuppressed(it) }
+      throw failure
+    }
+    // The block succeeded, so a save failure is a real failure and should surface normally.
+    saveAnimatedGif(file, canvases, animationOptions, roborazziOptions)
+  } finally {
+    // Release canvases even if saving throws so failures don't leak AwtRoboCanvas instances.
+    canvases.forEach { it.release() }
+    canvases.clear()
+  }
 }
 
 private fun recordUntilSettled(
@@ -160,6 +208,7 @@ private fun recordUntilSettled(
   var settleElapsedMillis = 0L
   while (settleElapsedMillis < animationOptions.settleTimeoutMillis) {
     composeRule.mainClock.advanceTimeBy(animationOptions.frameStepMillis)
+    idleMainLooperFor(animationOptions.frameStepMillis)
     composeRule.waitForIdle()
     captureFrame()
     settleElapsedMillis += animationOptions.frameStepMillis
@@ -184,25 +233,36 @@ private fun saveAnimatedGif(
   file.parentFile?.mkdirs()
   val encoder = AnimatedGifEncoder()
   encoder.setRepeat(0)
-  encoder.start(file.outputStream())
-  encoder.setFrameRate(animationOptions.fps.toFloat())
-  if (canvases.isNotEmpty()) {
-    val resizeScale = roborazziOptions.recordOptions.resizeScale
-    // Roborazzi crops each frame to its content, so frames of an animation that changes size
-    // have different dimensions. Pin a constant viewport of the maximum frame size filled with
-    // backgroundColor; the encoder composites every frame onto it (anchored top-left) so all
-    // encoded frames have identical dimensions and leave no undefined area that decoders would
-    // otherwise render as black margins.
-    fun scaledDimension(value: Int): Int =
-      if (resizeScale == 1.0) value else (value * resizeScale).toInt()
-    encoder.setSize(
-      canvases.maxOf { scaledDimension(it.croppedWidth) },
-      canvases.maxOf { scaledDimension(it.croppedHeight) }
-    )
-    encoder.setBackground(animationOptions.backgroundColor)
-    canvases.forEach { canvas ->
-      encoder.addFrame(canvas, resizeScale)
+  // AnimatedGifEncoder.finish() flushes but does not close a stream passed to start(), so close
+  // it here (after finish()) to avoid leaking the file handle.
+  file.outputStream().use { outputStream ->
+    check(encoder.start(outputStream)) { "Failed to start GIF encoding for $file" }
+    encoder.setFrameRate(animationOptions.fps.toFloat())
+    if (canvases.isNotEmpty()) {
+      val resizeScale = roborazziOptions.recordOptions.resizeScale
+      encoder.setSize(
+        canvases.maxOf { scaledDimension(it.croppedWidth, resizeScale) },
+        canvases.maxOf { scaledDimension(it.croppedHeight, resizeScale) }
+      )
+      encoder.setBackground(animationOptions.backgroundColor)
+      canvases.forEach { canvas ->
+        check(encoder.addFrame(canvas, resizeScale)) { "Failed to add a frame to GIF for $file" }
+      }
     }
+    check(encoder.finish()) { "Failed to finish GIF encoding for $file" }
   }
-  encoder.finish()
 }
+
+/**
+ * Scales a frame dimension by [resizeScale] for the fixed recording viewport.
+ *
+ * Roborazzi crops each frame to its content, so frames of an animation that changes size have
+ * different dimensions. The maximum scaled dimension across all frames pins a constant viewport
+ * filled with the background color; the encoder composites every frame onto it (anchored
+ * top-left) so all encoded frames have identical dimensions and leave no undefined area that
+ * decoders would otherwise render as black margins. The result is coerced to at least 1 (matching
+ * the truncation in [AwtRoboCanvas]'s scaling) so a tiny frame with a small [resizeScale] never
+ * yields a zero-sized, invalid viewport.
+ */
+private fun scaledDimension(value: Int, resizeScale: Double): Int =
+  (if (resizeScale == 1.0) value else (value * resizeScale).toInt()).coerceAtLeast(1)
