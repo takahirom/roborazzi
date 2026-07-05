@@ -32,6 +32,7 @@ jobs:
           ./gradlew javaDocReleaseGeneration
           ./gradlew apiCheck --stacktrace
           ./gradlew test --stacktrace -x testReleaseUnitTest
+          ./gradlew :roborazzi-painter:iosSimulatorArm64Test --stacktrace
 
       - name: include build tests
         id: include-build-test
