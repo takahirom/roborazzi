@@ -18,6 +18,11 @@ fun processOutputImageAndReport(
   canvasFactoryFromFile: CanvasFactoryFromFile,
   comparisonCanvasFactory: ComparisonCanvasFactory,
 ) {
+  // Validate the golden file name BEFORE building the context data so the
+  // reserved-suffix check happens first, matching the observable ordering of the
+  // former monolithic implementation. The common impl re-checks afterwards,
+  // which is harmless.
+  validateGoldenFileNameOrThrow(goldenFile.absolutePath)
   processOutputImageAndReport(
     newRoboCanvas = newRoboCanvas,
     goldenFilePath = goldenFile.absolutePath,
