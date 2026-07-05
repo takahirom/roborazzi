@@ -33,6 +33,25 @@ fun interface ComparisonCanvasFactory {
   ): RoboCanvas
 }
 
+/**
+ * Golden file name suffixes reserved by Roborazzi for the generated `_compare`
+ * and `_actual` images. A user-supplied golden file must not end with any of
+ * these.
+ */
+internal val roborazziReservedGoldenFileSuffixes: List<String> = listOf("_compare", "_actual")
+
+/**
+ * Throws [IllegalArgumentException] when [goldenFilePath]'s name ends with a
+ * suffix reserved by Roborazzi (see [roborazziReservedGoldenFileSuffixes]).
+ */
+internal fun validateGoldenFileNameOrThrow(goldenFilePath: String) {
+  roborazziReservedGoldenFileSuffixes.forEach {
+    if (goldenFilePath.nameWithoutExtension.endsWith(it)) {
+      throw IllegalArgumentException("The file name should not end with $it because it is reserved for Roborazzi")
+    }
+  }
+}
+
 @InternalRoborazziApi
 fun processOutputImageAndReport(
   newRoboCanvas: RoboCanvas,
@@ -57,12 +76,7 @@ fun processOutputImageAndReport(
         "Please ensure proper setup in gradle.properties or via Gradle tasks for optimal functionality."
     )
   }
-  val forbiddenFileSuffixes = listOf("_compare", "_actual")
-  forbiddenFileSuffixes.forEach {
-    if (goldenFilePath.nameWithoutExtension.endsWith(it)) {
-      throw IllegalArgumentException("The file name should not end with $it because it is reserved for Roborazzi")
-    }
-  }
+  validateGoldenFileNameOrThrow(goldenFilePath)
   val recordOptions = roborazziOptions.recordOptions
   val resizeScale = recordOptions.resizeScale
   if (taskType.isVerifying() || taskType.isComparing()) {

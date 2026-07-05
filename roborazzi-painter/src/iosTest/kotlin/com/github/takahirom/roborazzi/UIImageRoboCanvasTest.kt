@@ -179,11 +179,13 @@ class UIImageRoboCanvasTest {
     )
 
     // The "Reference" label renders black glyph pixels over its translucent
-    // background near the top-left of the first section. Assert at least one
-    // dark, mostly-opaque pixel exists there (grid lines are lighter gray).
+    // background in the TOP MARGIN above the first section (its box bottom edge
+    // is anchored at y = margin, matching the JVM). Assert at least one dark,
+    // mostly-opaque pixel exists in the margin band above the section (grid lines
+    // are lighter gray), and none of the label glyph pixels sit at or below the
+    // section's top edge.
     var labelPixelFound = false
-    val bandBottom = minOf(margin + (12 * oneDpPx).toInt() + margin * 2, compare.height)
-    for (y in margin until bandBottom) {
+    for (y in 0 until margin) {
       for (x in margin until minOf(margin + gw, compare.width)) {
         val p = compare.getPixel(x, y)
         if (p.a > 0.5f && p.r < 0.3f && p.g < 0.3f && p.b < 0.3f) {
@@ -191,7 +193,148 @@ class UIImageRoboCanvasTest {
         }
       }
     }
-    assertTrue(labelPixelFound, "grid comparison should render dark label glyph pixels")
+    assertTrue(labelPixelFound, "grid comparison should render dark label glyph pixels in the top margin")
+
+    golden.release()
+    newCanvas.release()
+    compare.release()
+  }
+
+  @Test
+  fun gridLabelsSitAboveSectionsNotOverThem() {
+    // Regression: the labels ("Reference"/"Diff"/"New") must sit in the top
+    // margin, with their box bottom edge anchored at y = margin (JVM parity),
+    // and must NOT paint over the section content below. Grid tiers are disabled
+    // so the only non-golden pixels come from labels.
+    fun solid(w: Int, h: Int, r: Int, g: Int, b: Int): ByteArray {
+      val bytes = ByteArray(w * h * 4)
+      for (i in 0 until w * h) {
+        bytes[i * 4] = r.toByte()
+        bytes[i * 4 + 1] = g.toByte()
+        bytes[i * 4 + 2] = b.toByte()
+        bytes[i * 4 + 3] = 255.toByte()
+      }
+      return bytes
+    }
+    val gw = 160
+    val gh = 120
+    val goldenColor = Triple(10, 20, 30)
+    val golden = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(
+      gw, gh, solid(gw, gh, goldenColor.first, goldenColor.second, goldenColor.third)
+    )
+    val newCanvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(
+      gw, gh, solid(gw, gh, goldenColor.first, goldenColor.second, goldenColor.third)
+    )
+
+    val oneDpPx = 2f
+    val margin = (16 * oneDpPx).toInt()
+    val compare = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = newCanvas,
+      useGrid = true,
+      oneDpPx = oneDpPx,
+      bigLineSpaceDp = null,
+      smallLineSpaceDp = null,
+      hasLabel = true,
+    )
+
+    // 1) Label pixels must exist ABOVE the section top edge (y < margin), under
+    //    the "Reference" label x-range. With grid disabled the margin band is
+    //    otherwise fully transparent, so any non-transparent pixel here is label.
+    var labelAboveMargin = false
+    for (y in 0 until margin) {
+      for (x in margin until minOf(margin + gw, compare.width)) {
+        if (compare.getPixel(x, y).a > 0f) {
+          labelAboveMargin = true
+        }
+      }
+    }
+    assertTrue(labelAboveMargin, "labels must be painted in the top margin above the sections")
+
+    // 2) The top-left of the reference section (its very first content row, at
+    //    y = margin, under the label x-range) must retain the golden solid color
+    //    and NOT be blended with the label background. Before the fix the label
+    //    was drawn downward from y = margin, covering exactly this pixel.
+    val goldenPixel = com.dropbox.differ.Color(
+      goldenColor.first, goldenColor.second, goldenColor.third, 255
+    )
+    assertEquals(
+      goldenPixel,
+      compare.getPixel(margin + 2, margin),
+      "the reference section's top edge must keep the golden color, not the label background",
+    )
+
+    golden.release()
+    newCanvas.release()
+    compare.release()
+  }
+
+  @Test
+  fun gridSectionsCoverGridLinesWithExactSourceColors() {
+    // JVM parity (draw order): the grid lines and labels are drawn FIRST and the
+    // three sections are composited ON TOP, so grid lines never cross the section
+    // content. Inside a section's content area a pixel must equal its source
+    // canvas color EXACTLY (no grid-line tint), even where a grid line falls,
+    // while the margins still show the grid lines.
+    fun solid(w: Int, h: Int, r: Int, g: Int, b: Int): ByteArray {
+      val bytes = ByteArray(w * h * 4)
+      for (i in 0 until w * h) {
+        bytes[i * 4] = r.toByte()
+        bytes[i * 4 + 1] = g.toByte()
+        bytes[i * 4 + 2] = b.toByte()
+        bytes[i * 4 + 3] = 255.toByte()
+      }
+      return bytes
+    }
+    val gw = 160
+    val gh = 120
+    val goldenColor = Triple(10, 20, 30)
+    val newColor = Triple(200, 150, 100)
+    val golden = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(
+      gw, gh, solid(gw, gh, goldenColor.first, goldenColor.second, goldenColor.third)
+    )
+    val newCanvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(
+      gw, gh, solid(gw, gh, newColor.first, newColor.second, newColor.third)
+    )
+
+    val oneDpPx = 2f
+    val margin = (16 * oneDpPx).toInt() // 32
+    val compare = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = newCanvas,
+      useGrid = true,
+      oneDpPx = oneDpPx,
+    )
+
+    // (40, 40) sits inside the reference section content (below the top label
+    // band) and lands exactly on grid lines (both x and y are multiples of the
+    // 4dp*2 = 8px small-grid step). It must still be the pure golden color.
+    val goldenPixel = com.dropbox.differ.Color(
+      goldenColor.first, goldenColor.second, goldenColor.third, 255
+    )
+    assertEquals(
+      goldenPixel,
+      compare.getPixel(margin + 8, margin + 8),
+      "reference section content on a grid line must keep the exact golden color",
+    )
+
+    // A point inside the "new" section (third section) on a grid line must be the
+    // pure new color.
+    val newPixel = com.dropbox.differ.Color(
+      newColor.first, newColor.second, newColor.third, 255
+    )
+    assertEquals(
+      newPixel,
+      compare.getPixel(margin + gw * 2 + 8, margin + 8),
+      "new section content on a grid line must keep the exact new color",
+    )
+
+    // Grid lines ARE present in the margin: the top-left corner (x=0, y=0) is in
+    // the margin and lies on both grid axes, so it must be a non-transparent,
+    // gray-ish grid pixel (not either section color).
+    val corner = compare.getPixel(0, 0)
+    assertTrue(corner.a > 0f, "grid line must be painted in the margin corner")
+    assertTrue(corner != goldenPixel && corner != newPixel, "margin grid pixel must not be a section color")
 
     golden.release()
     newCanvas.release()
