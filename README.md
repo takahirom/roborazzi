@@ -1331,23 +1331,29 @@ class IosTest {
       setContent {
         MaterialTheme {
           Column {
-            Button(
-              modifier = Modifier.alpha(alpha),
-              onClick = { }) {
+            Button(onClick = { }) {
               Text("Hello World")
             }
             Box(
               modifier = Modifier
-                .background(Color.Red.copy(alpha = alpha), MaterialTheme.shapes.small)
+                .background(Color.Red.copy(alpha = 0.5f), MaterialTheme.shapes.small)
                 .size(100.dp),
             )
           }
         }
       }
-      onRoot().captureRoboImage(this, filePath = "ios.png")
+      // iOS uses the same RoborazziOptions as the other targets. For example,
+      // allow up to 1% of pixels to differ before a comparison fails.
+      val roborazziOptions = RoborazziOptions(
+        compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0.01F),
+      )
+      // Unlike the JVM, iOS has no automatic file-name generation, so filePath
+      // is required for every capture.
+      onRoot().captureRoboImage(this, filePath = "ios.png", roborazziOptions = roborazziOptions)
       onNodeWithText("Hello World").captureRoboImage(
         this,
-        filePath = "ios_button.png"
+        filePath = "ios_button.png",
+        roborazziOptions = roborazziOptions,
       )
     }
   }
@@ -1392,8 +1398,12 @@ The currently implemented features for iOS support are as follows:
 
 > **Note on translucent pixels:** the iOS canvas stores pixels premultiplied (a CoreGraphics constraint), so translucent colors lose precision proportional to `255 / alpha` (opaque pixels are lossless). The loss is deterministic, so comparing identically-produced images is unaffected; only cross-source comparisons of low-alpha content may need a small threshold.
 
-We are migrating JVM implementation to Multiplatform implementation. So, some features are not supported yet.
-We are looking for contributors to help us implement these features.
+iOS runs on the same shared pipeline as the JVM and Compose Desktop targets
+(`RoborazziOptions` → `processOutputImageAndReport` → `RoboCanvas`), so the image
+comparator, threshold / `resultValidator`, `resizeScale`, context data, custom
+reporters, and the `reference | diff | new` comparison output (including
+`ComparisonStyle.Grid`) all behave the same way. A few platform-specific
+features remain unsupported (see the table above); contributions are welcome.
 
 ### Experimental feature: Compose Desktop support
 
