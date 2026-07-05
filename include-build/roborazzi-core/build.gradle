@@ -69,6 +69,15 @@ kotlin {
       dependencies {}
     }
 
+    iosTest {
+      dependencies {
+        implementation libs.kotlin.test
+        // commonMain declares serialization as compileOnly; the native test
+        // executable needs the runtime on its link path.
+        implementation libs.kotlinx.serialization.json
+      }
+    }
+
     androidMain {
       dependsOn(commonJvmMain)
       dependencies {
