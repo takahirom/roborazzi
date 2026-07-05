@@ -246,10 +246,16 @@ data class RoborazziOptions(
 
   @ExperimentalRoborazziApi
   fun addedAiAssertions(vararg assertions: AiAssertionOptions.AiAssertion): RoborazziOptions {
+    val aiAssertionOptions = checkNotNull(compareOptions.aiAssertionOptions) {
+      "aiAssertionOptions is not set. Please configure an aiAssertionModel in " +
+        "CompareOptions (e.g. compareOptions = RoborazziOptions.CompareOptions(" +
+        "aiAssertionOptions = AiAssertionOptions(aiAssertionModel = ...))) before " +
+        "calling addedAiAssertion()/addedAiAssertions()."
+    }
     return copy(
       compareOptions = compareOptions.copy(
-        aiAssertionOptions = compareOptions.aiAssertionOptions!!.copy(
-          aiAssertions = compareOptions.aiAssertionOptions.aiAssertions + assertions
+        aiAssertionOptions = aiAssertionOptions.copy(
+          aiAssertions = aiAssertionOptions.aiAssertions + assertions
         )
       )
     )
