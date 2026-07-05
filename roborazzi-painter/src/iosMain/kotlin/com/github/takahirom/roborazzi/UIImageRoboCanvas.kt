@@ -542,8 +542,14 @@ class UIImageRoboCanvas private constructor(
     /**
      * Renders [text] with a translucent background rectangle into a temporary
      * canvas via UIKit text drawing, then alpha-composites it onto [out] at
-     * ([destX], [destY]). The temporary context is flipped so UIKit draws the
-     * glyphs upright relative to the top-first pixel buffer.
+     * ([destX], [bottomY]). [bottomY] is the label box's BOTTOM edge (a baseline
+     * anchor), matching the JVM `drawStringWithBackgroundRect`, which treats
+     * `y = margin` as the baseline and draws the box upward so its bottom lands
+     * at the image top edge. The box top is `bottomY - boxHeight`, clamped to 0
+     * so the label never extends off the top of the canvas (the JVM clips at the
+     * canvas edge; clamping to 0 is the closest parity). The temporary context is
+     * flipped so UIKit draws the glyphs upright relative to the top-first pixel
+     * buffer.
      */
     private fun drawLabel(
       out: ByteArray,
@@ -551,7 +557,7 @@ class UIImageRoboCanvas private constructor(
       totalHeight: Int,
       text: String,
       destX: Int,
-      destY: Int,
+      bottomY: Int,
       fontSize: Int,
       oneDpPx: Float,
     ) {
@@ -579,8 +585,14 @@ class UIImageRoboCanvas private constructor(
         nsText.drawAtPoint(CGPointMake(pad.toDouble(), pad.toDouble()), attributes)
         UIGraphicsPopContext()
 
+        // Anchor the box's bottom edge at bottomY, drawing upward. When the box
+        // is taller than the space above bottomY, the top rows fall at negative
+        // y and are clipped at the canvas top edge (matching how the JVM clips a
+        // box whose top lands above y=0), keeping the bottom pinned at bottomY.
+        val topY = bottomY - boxHeight
         for (ly in 0 until boxHeight) {
-          val oy = destY + ly
+          val oy = topY + ly
+          if (oy < 0) continue
           if (oy >= totalHeight) break
           for (lx in 0 until boxWidth) {
             val ox = destX + lx
