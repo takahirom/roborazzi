@@ -82,7 +82,10 @@ fun processOutputImageAndReport(
   if (taskType.isVerifying() || taskType.isComparing()) {
     val width = (newRoboCanvas.croppedWidth * resizeScale).toInt()
     val height = (newRoboCanvas.croppedHeight * resizeScale).toInt()
-    val goldenRoboCanvas = if (roborazziFileExists(goldenFilePath)) {
+    // Capture this before any write. For recording task types the actual image is
+    // saved to the golden file, so checking existence later would always be true.
+    val isGoldenFilePresent = roborazziFileExists(goldenFilePath)
+    val goldenRoboCanvas = if (isGoldenFilePresent) {
       canvasFactoryFromFile(goldenFilePath, recordOptions.pixelBitConfig.toBufferedImageType())
     } else {
       emptyCanvasFactory(
@@ -169,7 +172,7 @@ fun processOutputImageAndReport(
           "processOutputImageAndReport(): actualCanvas is saved " +
             "actualFile:$actualFilePath"
         }
-        if (roborazziFileExists(goldenFilePath)) {
+        if (isGoldenFilePresent) {
           CaptureResult.Changed(
             compareFile = comparisonFilePath,
             actualFile = actualFilePath,
