@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziTaskType
+import com.github.takahirom.roborazzi.UIImageRoboCanvas
 import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
 import kotlin.test.Test
@@ -133,6 +134,67 @@ class IosTest {
         roborazziOptions = options(RoborazziTaskType.Verify, compareDir),
       )
     }
+  }
+
+  /**
+   * Forces a changed comparison so the default [RoborazziOptions.CompareOptions]
+   * grid style produces a `_compare` image, then checks it was rendered through
+   * the grid path (three sections plus 16dp margins), which only happens when a
+   * positive density is resolved from the captured node at runtime.
+   */
+  @OptIn(ExperimentalTestApi::class, ExperimentalForeignApi::class)
+  @Test
+  fun gridComparisonImageIsWiderThanThreeSections() {
+    val baseDir = resolveAbsolutePath(
+      NSTemporaryDirectory() + "roborazzi-ios-grid-${NSProcessInfo.processInfo.systemUptime}"
+    ).trimEnd('/')
+    val goldenPath = "$baseDir/ios_grid.png"
+    val compareDir = "$baseDir/compare"
+
+    runComposeUiTest {
+      setContent {
+        MaterialTheme {
+          Box(modifier = Modifier.background(Color.Red).size(50.dp))
+        }
+      }
+      onRoot().captureRoboImage(
+        composeUiTest = this,
+        filePath = goldenPath,
+        roborazziOptions = options(RoborazziTaskType.Record, compareDir),
+      )
+    }
+
+    runComposeUiTest {
+      setContent {
+        MaterialTheme {
+          // Different color -> the comparison is "changed" and a grid
+          // _compare image is written.
+          Box(modifier = Modifier.background(Color.Blue).size(50.dp))
+        }
+      }
+      onRoot().captureRoboImage(
+        composeUiTest = this,
+        filePath = goldenPath,
+        roborazziOptions = options(RoborazziTaskType.Compare, compareDir),
+      )
+    }
+
+    val comparePath = "$compareDir/ios_grid_compare.png"
+    assertTrue(
+      NSFileManager.defaultManager.fileExistsAtPath(comparePath),
+      "A _compare image should be written for a changed comparison at $comparePath",
+    )
+    val golden = UIImageRoboCanvas.fromFile(goldenPath)
+    val compare = UIImageRoboCanvas.fromFile(comparePath)
+    assertTrue(golden != null && compare != null, "golden and compare images should load")
+    // Grid = 3 sections + 2 * 16dp margin, so it is strictly wider than 3
+    // sections; the Simple fallback (no margin) would be exactly 3 sections.
+    assertTrue(
+      compare.width > golden.width * 3,
+      "grid comparison (width=${compare.width}) should exceed 3x golden width (${golden.width * 3})",
+    )
+    golden.release()
+    compare.release()
   }
 }
 

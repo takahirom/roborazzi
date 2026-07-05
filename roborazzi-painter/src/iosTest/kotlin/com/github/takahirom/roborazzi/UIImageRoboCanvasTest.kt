@@ -126,6 +126,156 @@ class UIImageRoboCanvasTest {
     compare.release()
   }
 
+  @Test
+  fun gridComparisonCanvasHasMarginsGridAndLabels() {
+    // A realistically sized image so the top-left labels stay within their
+    // section (a few-pixel image would let a label overflow across sections).
+    val gw = 160
+    val gh = 120
+    fun buffer(mutate: (x: Int, y: Int) -> Triple<Int, Int, Int>): ByteArray {
+      val bytes = ByteArray(gw * gh * 4)
+      for (y in 0 until gh) {
+        for (x in 0 until gw) {
+          val base = (y * gw + x) * 4
+          val (r, g, b) = mutate(x, y)
+          bytes[base] = r.toByte()
+          bytes[base + 1] = g.toByte()
+          bytes[base + 2] = b.toByte()
+          bytes[base + 3] = 255.toByte()
+        }
+      }
+      return bytes
+    }
+    val base: (Int, Int) -> Triple<Int, Int, Int> = { _, _ -> Triple(10, 20, 30) }
+    val golden = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(gw, gh, buffer(base))
+    // Change a single pixel low in the image, away from the top label band.
+    val changedAt = 100 to 100
+    val newCanvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(gw, gh, buffer { x, y ->
+      if ((x to y) == changedAt) Triple(255, 255, 255) else base(x, y)
+    })
+
+    val oneDpPx = 2f
+    val margin = (16 * oneDpPx).toInt()
+    val compare = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = newCanvas,
+      useGrid = true,
+      oneDpPx = oneDpPx,
+    )
+
+    // Grid layout adds a 16dp margin on every side around the three sections.
+    assertEquals(gw * 3 + margin * 2, compare.width, "grid width should include side margins")
+    assertEquals(gh + margin * 2, compare.height, "grid height should include top/bottom margins")
+
+    // The changed pixel maps into the diff section (offset margin + section
+    // width) and is below the label band and off the grid lines, so it stays
+    // pure red.
+    val red = com.dropbox.differ.Color(255, 0, 0, 255)
+    assertEquals(
+      red,
+      compare.getPixel(margin + gw + changedAt.first, margin + changedAt.second),
+      "changed pixel should be red in the diff section",
+    )
+
+    // The "Reference" label renders black glyph pixels over its translucent
+    // background near the top-left of the first section. Assert at least one
+    // dark, mostly-opaque pixel exists there (grid lines are lighter gray).
+    var labelPixelFound = false
+    val bandBottom = minOf(margin + (12 * oneDpPx).toInt() + margin * 2, compare.height)
+    for (y in margin until bandBottom) {
+      for (x in margin until minOf(margin + gw, compare.width)) {
+        val p = compare.getPixel(x, y)
+        if (p.a > 0.5f && p.r < 0.3f && p.g < 0.3f && p.b < 0.3f) {
+          labelPixelFound = true
+        }
+      }
+    }
+    assertTrue(labelPixelFound, "grid comparison should render dark label glyph pixels")
+
+    golden.release()
+    newCanvas.release()
+    compare.release()
+  }
+
+  @Test
+  fun gridTierSpacingNullSkipsThatTier() {
+    val golden = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(width, height, buildOpaqueBytes())
+    val newCanvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(width, height, buildOpaqueBytes())
+    val oneDpPx = 2f
+
+    // With the default tiers enabled, the top-left corner is in the margin and
+    // is painted by a grid line (both x=0 and y=0 lines).
+    val withGrid = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = newCanvas,
+      useGrid = true,
+      oneDpPx = oneDpPx,
+      hasLabel = false,
+    )
+    assertTrue(withGrid.getPixel(0, 0).a > 0f, "default grid tiers should paint the corner grid line")
+
+    // With both tiers disabled (null), no grid line is drawn, so the margin
+    // corner stays transparent. A null spacing must not fall back to a default.
+    val noGrid = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = newCanvas,
+      useGrid = true,
+      oneDpPx = oneDpPx,
+      bigLineSpaceDp = null,
+      smallLineSpaceDp = null,
+      hasLabel = false,
+    )
+    assertEquals(0f, noGrid.getPixel(0, 0).a, "disabling both grid tiers should leave the margin transparent")
+
+    golden.release()
+    newCanvas.release()
+    withGrid.release()
+    noGrid.release()
+  }
+
+  @Test
+  fun compareCanvasScalesActualByResizeScale() {
+    // The golden is saved at resizeScale, but the captured actual is full size.
+    // generateCompareCanvas must scale the actual by newCanvasResize so the
+    // sections line up, otherwise the compare image is 3x the full width and the
+    // diff is misaligned.
+    fun solid(w: Int, h: Int): ByteArray {
+      val bytes = ByteArray(w * h * 4)
+      for (i in 0 until w * h) {
+        bytes[i * 4] = 100.toByte()
+        bytes[i * 4 + 1] = 110.toByte()
+        bytes[i * 4 + 2] = 120.toByte()
+        bytes[i * 4 + 3] = 255.toByte()
+      }
+      return bytes
+    }
+    val gw = 80
+    val gh = 60
+    val golden = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(gw, gh, solid(gw, gh))
+    // Full-size actual (2x) of the same solid color; recorded with resizeScale=0.5.
+    val actualFull = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(gw * 2, gh * 2, solid(gw * 2, gh * 2))
+
+    val compare = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = actualFull,
+      newCanvasResize = 0.5,
+    )
+    // Scaled actual is gw x gh, matching the golden, so the simple layout is
+    // three gw-wide sections. Without scaling this would be 3 * (gw*2).
+    assertEquals(gw * 3, compare.width, "actual should be scaled to match the golden section width")
+    assertEquals(gh, compare.height)
+    // Same solid color on both sides -> no diff highlight in the diff section.
+    val red = com.dropbox.differ.Color(255, 0, 0, 255)
+    assertTrue(
+      compare.getPixel(gw + gw / 2, gh / 2) != red,
+      "an unchanged (post-scale) pixel must not be marked red",
+    )
+
+    golden.release()
+    actualFull.release()
+    compare.release()
+  }
+
   // PNG-only on iOS; ImageIoFormat() is not implemented, so provide a stub that
   // save() ignores.
   private fun pngFormat(): ImageIoFormat = object : ImageIoFormat {}

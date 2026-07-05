@@ -11,8 +11,11 @@ object IosImageIoFormat : ImageIoFormat
 @ExperimentalRoborazziApi
 @Suppress("FunctionName")
 actual fun LosslessWebPImageIoFormat(): ImageIoFormat {
-  // WebP encoding is not implemented for iOS yet.
-  TODO("Lossless WebP output is not supported on iOS")
+  // iOS system frameworks can decode WebP (iOS 14+) but cannot encode it:
+  // ImageIO's CGImageDestination exposes no WebP writer on iOS (WebP encoding
+  // was only added to ImageIO on macOS), and bundling libwebp is out of scope.
+  // Fail with a clear message instead of a bare TODO.
+  error("WebP encoding is not supported on iOS; use PNG (the default ImageIoFormat()).")
 }
 
 @ExperimentalRoborazziApi
