@@ -270,6 +270,78 @@ class UIImageRoboCanvasTest {
   }
 
   @Test
+  fun gridSectionsCoverGridLinesWithExactSourceColors() {
+    // JVM parity (draw order): the grid lines and labels are drawn FIRST and the
+    // three sections are composited ON TOP, so grid lines never cross the section
+    // content. Inside a section's content area a pixel must equal its source
+    // canvas color EXACTLY (no grid-line tint), even where a grid line falls,
+    // while the margins still show the grid lines.
+    fun solid(w: Int, h: Int, r: Int, g: Int, b: Int): ByteArray {
+      val bytes = ByteArray(w * h * 4)
+      for (i in 0 until w * h) {
+        bytes[i * 4] = r.toByte()
+        bytes[i * 4 + 1] = g.toByte()
+        bytes[i * 4 + 2] = b.toByte()
+        bytes[i * 4 + 3] = 255.toByte()
+      }
+      return bytes
+    }
+    val gw = 160
+    val gh = 120
+    val goldenColor = Triple(10, 20, 30)
+    val newColor = Triple(200, 150, 100)
+    val golden = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(
+      gw, gh, solid(gw, gh, goldenColor.first, goldenColor.second, goldenColor.third)
+    )
+    val newCanvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(
+      gw, gh, solid(gw, gh, newColor.first, newColor.second, newColor.third)
+    )
+
+    val oneDpPx = 2f
+    val margin = (16 * oneDpPx).toInt() // 32
+    val compare = UIImageRoboCanvas.generateCompareCanvas(
+      goldenCanvas = golden,
+      newCanvas = newCanvas,
+      useGrid = true,
+      oneDpPx = oneDpPx,
+    )
+
+    // (40, 40) sits inside the reference section content (below the top label
+    // band) and lands exactly on grid lines (both x and y are multiples of the
+    // 4dp*2 = 8px small-grid step). It must still be the pure golden color.
+    val goldenPixel = com.dropbox.differ.Color(
+      goldenColor.first, goldenColor.second, goldenColor.third, 255
+    )
+    assertEquals(
+      goldenPixel,
+      compare.getPixel(margin + 8, margin + 8),
+      "reference section content on a grid line must keep the exact golden color",
+    )
+
+    // A point inside the "new" section (third section) on a grid line must be the
+    // pure new color.
+    val newPixel = com.dropbox.differ.Color(
+      newColor.first, newColor.second, newColor.third, 255
+    )
+    assertEquals(
+      newPixel,
+      compare.getPixel(margin + gw * 2 + 8, margin + 8),
+      "new section content on a grid line must keep the exact new color",
+    )
+
+    // Grid lines ARE present in the margin: the top-left corner (x=0, y=0) is in
+    // the margin and lies on both grid axes, so it must be a non-transparent,
+    // gray-ish grid pixel (not either section color).
+    val corner = compare.getPixel(0, 0)
+    assertTrue(corner.a > 0f, "grid line must be painted in the margin corner")
+    assertTrue(corner != goldenPixel && corner != newPixel, "margin grid pixel must not be a section color")
+
+    golden.release()
+    newCanvas.release()
+    compare.release()
+  }
+
+  @Test
   fun gridTierSpacingNullSkipsThatTier() {
     val golden = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(width, height, buildOpaqueBytes())
     val newCanvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(width, height, buildOpaqueBytes())
