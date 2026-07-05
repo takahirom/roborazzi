@@ -96,6 +96,8 @@ The currently implemented features for iOS support are as follows:
 | applyDeviceCrop | n/a (Robolectric-only concept) |
 
 
+> **Note on translucent pixels:** the iOS canvas stores pixels premultiplied (a CoreGraphics constraint), so translucent colors lose precision proportional to `255 / alpha` (opaque pixels are lossless). The loss is deterministic, so comparing identically-produced images is unaffected; only cross-source comparisons of low-alpha content may need a small threshold.
+
 We are migrating JVM implementation to Multiplatform implementation. So, some features are not supported yet.
 We are looking for contributors to help us implement these features.
 

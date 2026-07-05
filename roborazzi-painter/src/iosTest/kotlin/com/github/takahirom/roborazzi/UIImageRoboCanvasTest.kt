@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 import com.dropbox.differ.SimpleImageComparator
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSTemporaryDirectory
+import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -274,6 +275,107 @@ class UIImageRoboCanvasTest {
     golden.release()
     actualFull.release()
     compare.release()
+  }
+
+  private fun channelDeviation(expected: Int, actual01: Float): Int {
+    val actual = (actual01 * 255f).roundToInt()
+    return kotlin.math.abs(expected - actual)
+  }
+
+  /**
+   * Builds a 256x1 buffer where pixel x is the straight color (x, x, x, [alpha])
+   * and returns the max per-channel deviation after each round-trip path:
+   *   Pair(first = buffer -> canvas -> getPixel,
+   *        second = buffer -> save(PNG) -> fromFile -> getPixel)
+   */
+  private fun roundTripDeviations(alpha: Int): Pair<Int, Int> {
+    val w = 256
+    val h = 1
+    val bytes = ByteArray(w * h * 4)
+    for (x in 0 until w) {
+      val base = x * 4
+      bytes[base] = x.toByte()
+      bytes[base + 1] = x.toByte()
+      bytes[base + 2] = x.toByte()
+      bytes[base + 3] = alpha.toByte()
+    }
+    val canvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(w, h, bytes)
+    var devA = 0
+    for (x in 0 until w) {
+      val p = canvas.getPixel(x, 0)
+      devA = maxOf(devA, channelDeviation(x, p.r), channelDeviation(x, p.g), channelDeviation(x, p.b))
+    }
+    val path = tempPath("translucent-$alpha-${getTimeSuffix()}.png")
+    canvas.save(path, 1.0, emptyMap(), pngFormat())
+    val reloaded = UIImageRoboCanvas.fromFile(path)
+    assertTrue(reloaded != null, "reloaded translucent canvas should not be null")
+    var devB = 0
+    for (x in 0 until w) {
+      val p = reloaded.getPixel(x, 0)
+      devB = maxOf(devB, channelDeviation(x, p.r), channelDeviation(x, p.g), channelDeviation(x, p.b))
+    }
+    canvas.release()
+    reloaded.release()
+    return devA to devB
+  }
+
+  private val characterizationAlphas = intArrayOf(1, 2, 8, 32, 64, 127, 128, 254)
+
+  /**
+   * Characterizes (and pins as a regression net) the premultiplied-alpha
+   * precision loss. Because [UIImageRoboCanvas] must store premultiplied pixels
+   * (a CGBitmapContext constraint) and un-premultiplies on read, translucent
+   * channels are quantized by roughly 255/alpha. The observed max per-channel
+   * deviation for the sweep below is:
+   *
+   *   alpha:      1    2    8   32   64  127  128  254
+   *   maxDev:   127   64   16    4    2    1    1    1
+   *
+   * The PNG file round-trip loses exactly the same amount as the in-memory
+   * canvas (no extra loss from encode/decode), which the assertions also pin.
+   */
+  @Test
+  fun translucentPixelPrecisionIsBoundedAndPathIndependent() {
+    val expectedMaxDeviation = mapOf(
+      1 to 127, 2 to 64, 8 to 16, 32 to 4, 64 to 2, 127 to 1, 128 to 1, 254 to 1,
+    )
+    for (a in characterizationAlphas) {
+      val (devA, devB) = roundTripDeviations(a)
+      val bound = expectedMaxDeviation.getValue(a)
+      assertTrue(devA <= bound, "alpha=$a canvas round-trip deviation $devA exceeds observed bound $bound")
+      assertTrue(devB <= bound, "alpha=$a PNG round-trip deviation $devB exceeds observed bound $bound")
+      assertEquals(devA, devB, "alpha=$a: PNG round-trip must lose the same as the in-memory canvas")
+    }
+  }
+
+  /**
+   * The precision loss is deterministic, so two canvases produced from the same
+   * translucent buffer compare as identical. This is why real comparisons of
+   * identically-produced images do not flake despite the loss.
+   */
+  @Test
+  fun identicallyProducedTranslucentCanvasesCompareAsIdentical() {
+    val w = 256
+    val h = 1
+    val bytes = ByteArray(w * h * 4)
+    for (x in 0 until w) {
+      val base = x * 4
+      bytes[base] = x.toByte()
+      bytes[base + 1] = (255 - x).toByte()
+      bytes[base + 2] = ((x * 3) and 0xFF).toByte()
+      bytes[base + 3] = 2.toByte() // alpha=2: worst-case quantization
+    }
+    val a = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(w, h, bytes)
+    val b = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(w, h, bytes.copyOf())
+    val result = a.differ(b, resizeScale = 1.0, imageComparator = SimpleImageComparator())
+    assertEquals(
+      0,
+      result.pixelDifferences,
+      "identically-produced translucent canvases must compare as identical despite premultiplication loss",
+    )
+    assertEquals(w * h, result.pixelCount)
+    a.release()
+    b.release()
   }
 
   // PNG-only on iOS; ImageIoFormat() is not implemented, so provide a stub that
