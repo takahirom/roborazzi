@@ -1375,17 +1375,19 @@ The currently implemented features for iOS support are as follows:
 | Compare | supported |
 | Verify | supported |
 | Report | supported |
-| Dropbox/Differ comparison | 🆖  |
-| dump | 🆖  |
-| resizing image | 🆖  |
-| context data | 🆖  |
-| custom reporter | 🆖  |
-| RoborazziRecordFilePathStrategy  | 🆖  |
-| ComparisonStyle  | 🆖  |
-| resultValidator  | 🆖  |
-| resultValidator  | 🆖  |
-| applyDeviceCrop | 🆖 |
-| pixelBitConfig | 🆖 |
+| Dropbox/Differ comparison | supported |
+| threshold / resultValidator | supported |
+| diffPercentage | supported |
+| resizing image (resizeScale) | supported |
+| context data | supported |
+| custom reporter | supported |
+| ComparisonStyle | 🆖 (only reference / diff / new; Grid is not supported) |
+| RoborazziRecordFilePathStrategy | 🆖 (filePath is required) |
+| automatic file naming | 🆖 (filePath is required) |
+| image format | PNG only (WebP is TODO) |
+| pixelBitConfig | n/a (not consulted on iOS) |
+| dump | n/a (Robolectric-only concept) |
+| applyDeviceCrop | n/a (Robolectric-only concept) |
 
 
 We are migrating JVM implementation to Multiplatform implementation. So, some features are not supported yet.
