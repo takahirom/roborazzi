@@ -56,7 +56,7 @@ android {
 
 // This module exists to exercise the Compose Testing v2 APIs
 // (androidx.compose.ui.test.junit4.v2), which require Compose 1.11.0.
-// The rest of the repo is still on the catalog Compose version (1.7.x),
+// The rest of the repo is still on the catalog Compose version,
 // so the pins are isolated here to keep other modules' screenshots stable.
 val composeVersion = "1.11.0"
 dependencies {

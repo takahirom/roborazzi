@@ -1,6 +1,8 @@
 package com.github.takahirom.sample.composev2
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.takahirom.roborazzi.AndroidComposePreviewTester
 import com.github.takahirom.roborazzi.ComposePreviewTester
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
@@ -26,6 +28,14 @@ class V2CustomPreviewTester :
             }
           })
           .around(composeTestRule)
+      },
+      // Not required for the rules created above (reflection finds the scenario),
+      // but demonstrates the explicit escape hatch for custom rules whose scenario
+      // cannot be discovered via reflection.
+      activityScenarioProvider = { composeTestRule ->
+        @Suppress("UNCHECKED_CAST")
+        (composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<RoborazziActivity>, RoborazziActivity>)
+          .activityRule.scenario
       }
     )
   )
