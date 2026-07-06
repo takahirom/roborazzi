@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools">
+  <application>
+    <activity
+      android:name="androidx.activity.ComponentActivity"
+      android:theme="@style/Theme.Roborazzi"
+      tools:replace="android:theme" />
+  </application>
+</manifest>
