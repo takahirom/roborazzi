@@ -1008,35 +1008,43 @@ roborazzi {
     testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
     // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
     generatedTestClassCount = 4
+    // Filter previews by annotation. Defaults to AnnotationFilter.Filter.RoboPreviewExclude
+    // (previews annotated with @RoboPreviewExclude are skipped). Override to switch to opt-in mode
+    // where only previews annotated with @RoboPreviewInclude are captured.
+    annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
   }
 }
 ```
 
 #### Advanced: Custom ComposePreviewTester Implementation
 
-You can create a custom `ComposePreviewTester` to control the screenshot capture behavior, such as setting a custom image comparison threshold:
+You can create a custom `ComposePreviewTester` to control the screenshot capture behavior, such as setting a custom image comparison threshold.
+
+Note that `AndroidComposePreviewTester` is a final class, so you can't subclass it. Instead, use Kotlin class delegation and pass a custom `Capturer` to its constructor. Also, your tester class must have a parameterless constructor because the plugin instantiates it via reflection:
 
 ```kotlin
 import com.dropbox.differ.SimpleImageComparator
 import com.github.takahirom.roborazzi.*
+import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 
-@ExperimentalRoborazziApi
-class MyCustomComposePreviewTester(
-  private val defaultCapturer: AndroidComposePreviewTester.Capturer = AndroidComposePreviewTester.DefaultCapturer()
-) : AndroidComposePreviewTester(
-  capturer = { parameter ->
-    val customOptions = parameter.roborazziOptions.copy(
-      compareOptions = parameter.roborazziOptions.compareOptions.copy(
-        // Set custom comparison threshold (0.0 = exact match, 1.0 = ignore differences)
-        imageComparator = SimpleImageComparator(maxDistance = 0.01f)
+@OptIn(ExperimentalRoborazziApi::class)
+class MyCustomComposePreviewTester :
+  ComposePreviewTester<AndroidPreviewJUnit4TestParameter> by AndroidComposePreviewTester(
+    capturer = { parameter ->
+      val customOptions = parameter.roborazziOptions.copy(
+        compareOptions = parameter.roborazziOptions.compareOptions.copy(
+          // Set custom comparison threshold (0.0 = exact match, 1.0 = ignore differences)
+          imageComparator = SimpleImageComparator(maxDistance = 0.01f)
+        )
       )
-    )
-    defaultCapturer.capture(
-      parameter.copy(roborazziOptions = customOptions)
-    )
-  }
-)
+      AndroidComposePreviewTester.DefaultCapturer().capture(
+        parameter.copy(roborazziOptions = customOptions)
+      )
+    }
+  )
 ```
+
+If you need to customize more than the capture behavior, such as the scan options or the test lifecycle, you can override `options()` or `test()` in the delegating class.
 
 Then reference your custom tester in the Gradle configuration:
 
@@ -1056,6 +1064,33 @@ roborazzi {
 > generateComposePreviewRobolectricTests.enable.set(true)
 > generateComposePreviewRobolectricTests.packages.set(["com.example"])
 > ```
+
+### Filtering previews by annotation
+
+`annotationFilter` controls which previews are captured (requires the `roborazzi-annotations` dependency).
+By default it is `AnnotationFilter.Filter.RoboPreviewExclude`, so previews annotated with
+`@RoboPreviewExclude` are skipped. Set it to `RoboPreviewInclude` to capture **only** previews
+annotated with `@RoboPreviewInclude`:
+
+```kotlin
+roborazzi {
+  @OptIn(ExperimentalRoborazziApi::class)
+  generateComposePreviewRobolectricTests {
+    enable = true
+    packages = listOf("com.example")
+    annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
+  }
+}
+```
+
+To filter by your own annotations, pass their fully qualified class names
+(use the JVM binary name with `$` for nested classes, e.g. `com.example.Outer$Inner`):
+
+```kotlin
+// Set either one, not both
+annotationFilter = AnnotationFilter.Exclude("com.example.MyExcludeAnnotation")
+annotationFilter = AnnotationFilter.Include("com.example.MyIncludeAnnotation")
+```
 
 ## Annotation-based Capture Control
 
