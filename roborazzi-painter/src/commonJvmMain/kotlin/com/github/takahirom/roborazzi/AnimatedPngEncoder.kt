@@ -69,12 +69,17 @@ internal class AnimatedPngEncoder : AnimatedImageEncoder {
   }
 
   override fun setSize(width: Int, height: Int) {
+    check(encodedFrames.isEmpty()) { "setSize() must be called before addFrame()" }
+    require(width > 0 && height > 0) {
+      "width and height must be > 0 but were ${width}x$height"
+    }
     this.width = width
     this.height = height
     sizeSet = true
   }
 
   override fun addFrame(canvas: AwtRoboCanvas, resizeScale: Double) {
+    check(out != null) { "start() must be called before addFrame()" }
     val im = canvas.outputImage(resizeScale)
     if (!sizeSet) {
       setSize(im.width, im.height)
@@ -97,15 +102,20 @@ internal class AnimatedPngEncoder : AnimatedImageEncoder {
   }
 
   override fun finish() {
-    val output = out ?: return
+    val output = checkNotNull(out) { "start() must be called before finish()" }
     try {
       if (encodedFrames.isNotEmpty()) {
         writeApng(output)
       }
       output.flush()
     } finally {
+      // Reset all per-run state so the encoder instance is reusable for a new start()..finish()
+      // cycle and stale frames or dimensions never leak into a subsequent run.
       out = null
       encodedFrames.clear()
+      sizeSet = false
+      width = 0
+      height = 0
     }
   }
 
