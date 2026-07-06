@@ -22,10 +22,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
-import com.github.takahirom.roborazzi.RoboAnimationOptions
+import com.github.takahirom.roborazzi.RoboVideoOptions
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
-import com.github.takahirom.roborazzi.captureRoboAnimation
-import com.github.takahirom.roborazzi.captureScreenRoboAnimation
+import com.github.takahirom.roborazzi.recordRoboVideo
+import com.github.takahirom.roborazzi.recordScreenRoboVideo
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import org.junit.Rule
 import org.junit.Test
@@ -37,20 +37,20 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], qualifiers = RobolectricDeviceQualifiers.NexusOne)
-class ComposeAnimationCaptureTest {
+class ComposeVideoRecordingTest {
   @get:Rule
   val composeTestRule = createComposeRule()
 
   @Test
-  fun captureAnimationWithDelay() {
+  fun recordVideoWithDelay() {
     composeTestRule.setContent {
       AnimatedBoxContent()
     }
     composeTestRule.onNodeWithTag("root")
-      .captureRoboAnimation(
+      .recordRoboVideo(
         composeRule = composeTestRule,
-        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_animation_with_delay.gif",
-        animationOptions = RoboAnimationOptions(fps = 10),
+        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_video_with_delay.gif",
+        videoOptions = RoboVideoOptions(fps = 10),
       ) {
         composeTestRule.onNodeWithTag("toggle").performClick()
         delay(300)
@@ -60,16 +60,16 @@ class ComposeAnimationCaptureTest {
   }
 
   @Test
-  fun captureAnimationAsApng() {
+  fun recordVideoAsApng() {
     composeTestRule.setContent {
       AnimatedBoxContent()
     }
     composeTestRule.onNodeWithTag("root")
-      .captureRoboAnimation(
+      .recordRoboVideo(
         // A .png extension produces a lossless, full-color APNG instead of a GIF.
         composeRule = composeTestRule,
-        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_animation_apng.png",
-        animationOptions = RoboAnimationOptions(fps = 10),
+        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_video_apng.png",
+        videoOptions = RoboVideoOptions(fps = 10),
       ) {
         composeTestRule.onNodeWithTag("toggle").performClick()
         delay(300)
@@ -79,16 +79,16 @@ class ComposeAnimationCaptureTest {
   }
 
   @Test
-  fun captureAnimationScreen() {
+  fun recordVideoScreen() {
     composeTestRule.setContent {
       AnimatedBoxContent()
     }
     // Screen-level recording keeps every frame at the device size even as the box grows/shrinks,
     // unlike the node-scoped variant whose frame dimensions track the animating content.
-    captureScreenRoboAnimation(
+    recordScreenRoboVideo(
       composeRule = composeTestRule,
-      filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_animation_screen.gif",
-      animationOptions = RoboAnimationOptions(fps = 10),
+      filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_video_screen.gif",
+      videoOptions = RoboVideoOptions(fps = 10),
     ) {
       composeTestRule.onNodeWithTag("toggle").performClick()
       delay(300)
@@ -98,15 +98,15 @@ class ComposeAnimationCaptureTest {
   }
 
   @Test
-  fun captureAnimationSettlesWithoutDelay() {
+  fun recordVideoSettlesWithoutDelay() {
     composeTestRule.setContent {
       AnimatedBoxContent()
     }
     composeTestRule.onNodeWithTag("root")
-      .captureRoboAnimation(
+      .recordRoboVideo(
         composeRule = composeTestRule,
-        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_animation_settle.gif",
-        animationOptions = RoboAnimationOptions(fps = 10),
+        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_video_settle.gif",
+        videoOptions = RoboVideoOptions(fps = 10),
       ) {
         // No delay: the animation started by the click is recorded by the settle phase.
         composeTestRule.onNodeWithTag("toggle").performClick()
