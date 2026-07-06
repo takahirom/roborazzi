@@ -88,6 +88,10 @@ class ComposeTouchRobotAnimationTest {
 
   @Test
   fun captureTouchRobotSwipeScreen() {
+    // captureScreenRoboAnimation records only in record mode and no-ops otherwise, so the gesture
+    // that drives the box never progresses in compare/verify mode. Skip the test then instead of
+    // silently passing without exercising anything.
+    assumeTrue(provideRoborazziContext().options.taskType.isRecording())
     composeTestRule.setContent {
       DraggableBoxContent()
     }
