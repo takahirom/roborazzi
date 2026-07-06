@@ -36,11 +36,16 @@ internal fun resolveRoborazziAbsolutePath(
 }
 
 internal actual fun roborazziFileExists(path: String): Boolean {
-  return SystemFileSystem.exists(Path(path))
+  // Resolve project-relative paths the same way roborazziToAbsolutePath does for
+  // the write path, so existence checks and writes agree on the location.
+  return SystemFileSystem.exists(Path(roborazziToAbsolutePath(path)))
 }
 
 internal actual fun roborazziMakeDirectories(path: String) {
-  SystemFileSystem.createDirectories(Path(path))
+  // JsonOutputCaptureResultReporter creates the result directory from the RAW
+  // (possibly project-relative) path but writes to roborazziToAbsolutePath(...).
+  // Resolve here too so the directory is created where the JSON is written.
+  SystemFileSystem.createDirectories(Path(roborazziToAbsolutePath(path)))
 }
 
 internal actual fun roborazziCurrentTimeNs(): Long {

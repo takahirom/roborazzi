@@ -91,7 +91,7 @@ The currently implemented features for iOS support are as follows:
 | threshold / resultValidator | supported |
 | diffPercentage | supported |
 | resizing image (resizeScale) | supported |
-| context data | supported |
+| context data | supported (user-supplied only; the automatically-added default context data such as the test class name is JVM-only) |
 | custom reporter | supported |
 | ComparisonStyle | supported (Simple and Grid; Grid falls back to Simple when the density is unavailable) |
 | RoborazziRecordFilePathStrategy | 🆖 (filePath is required; a relative path always resolves against the output directory) |

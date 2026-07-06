@@ -12,6 +12,7 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.UIImageRoboCanvas
+import com.github.takahirom.roborazzi.applyContextDataPolicy
 import com.github.takahirom.roborazzi.processOutputImageAndReport
 import com.github.takahirom.roborazzi.roborazziReportLog
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
@@ -105,7 +106,11 @@ fun SemanticsNodeInteraction.captureRoboImage(
     processOutputImageAndReport(
       newRoboCanvas = newCanvas,
       goldenFilePath = resolveGoldenFilePath(filePath),
-      contextData = roborazziOptions.contextData,
+      // Honor the roborazzi.contextdata flag like the JVM facade does. The JVM
+      // facade additionally injects the test class name; that default is JVM-only
+      // (there is no provideRoborazziContext on iOS), so iOS records only the
+      // user-supplied contextData.
+      contextData = applyContextDataPolicy(roborazziOptions),
       roborazziOptions = roborazziOptions,
       emptyCanvasFactory = { w, h, _, _ ->
         UIImageRoboCanvas.create(w, h)
