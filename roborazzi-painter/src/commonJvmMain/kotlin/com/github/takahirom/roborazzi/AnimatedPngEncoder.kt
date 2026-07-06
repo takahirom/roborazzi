@@ -13,9 +13,13 @@ import javax.imageio.ImageIO
  * animation compare/verify mode.
  *
  * Each frame is composited onto a fixed viewport (see [setSize]/[setBackground]) and encoded to a
- * regular PNG in memory with [ImageIO]. Because every frame is encoded the same way at the same
- * dimensions, all frames share identical IHDR parameters. On [finish] the frames are assembled
- * into an APNG:
+ * regular PNG in memory with [ImageIO] eagerly in [addFrame]; the raw [BufferedImage] is dropped
+ * immediately and only the (much smaller) compressed PNG bytes are retained until [finish]. This
+ * keeps memory bounded by the encoded size rather than the raw bitmap size, similar to how the GIF
+ * encoder streams. The frame count needed for the `acTL` chunk is only known at [finish], which is
+ * why the encoded bytes (not the raw bitmaps) are held until then. Because every frame is encoded
+ * the same way at the same dimensions, all frames share identical IHDR parameters. On [finish] the
+ * frames are assembled into an APNG:
  *
  * - PNG signature + IHDR (from the first frame)
  * - `acTL` (frame count + number of plays, see [setRepeat])
@@ -39,7 +43,9 @@ internal class AnimatedPngEncoder : AnimatedImageEncoder {
   private var delayDen = 10 // default 10 fps
   // Number of times the animation plays; mirrors GIF's setRepeat semantics (0 = loop forever).
   private var numPlays = 0
-  private val frames = mutableListOf<BufferedImage>()
+  // Each frame is encoded to compressed PNG bytes as soon as it is added, so only the encoded
+  // payloads (not the raw bitmaps) accumulate here until finish().
+  private val encodedFrames = mutableListOf<EncodedPng>()
 
   override fun start(output: OutputStream) {
     out = output
@@ -87,24 +93,24 @@ internal class AnimatedPngEncoder : AnimatedImageEncoder {
     } finally {
       g.dispose()
     }
-    frames.add(composited)
+    // Encode to compressed PNG bytes now and drop the raw bitmap so it can be garbage collected.
+    encodedFrames.add(encodePng(composited))
   }
 
   override fun finish() {
     val output = out ?: return
     try {
-      if (frames.isNotEmpty()) {
+      if (encodedFrames.isNotEmpty()) {
         writeApng(output)
       }
       output.flush()
     } finally {
       out = null
-      frames.clear()
+      encodedFrames.clear()
     }
   }
 
   private fun writeApng(output: OutputStream) {
-    val encodedFrames = frames.map { encodePng(it) }
     val first = encodedFrames.first()
 
     output.write(PNG_SIGNATURE)
@@ -113,7 +119,7 @@ internal class AnimatedPngEncoder : AnimatedImageEncoder {
 
     // acTL: number of frames + number of plays (0 = infinite; N > 0 = play N times).
     val actl = ByteArray(8)
-    writeInt(actl, 0, frames.size)
+    writeInt(actl, 0, encodedFrames.size)
     writeInt(actl, 4, numPlays)
     writeChunk(output, "acTL", actl)
 
