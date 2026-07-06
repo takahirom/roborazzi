@@ -18,9 +18,7 @@ android {
   compileSdk = libs.versions.compileSdk.get().toInteger()
 
   defaultConfig {
-    // androidx.compose.ui:ui-test-junit4:1.11.0 requires minSdk 23, higher than the
-    // repo-wide catalog minSdk (21), so this module pins minSdk 23 for the v2 test rule.
-    minSdk = 23
+    minSdk = libs.versions.minSdk.get().toInteger()
     targetSdk = libs.versions.targetSdk.get().toInteger()
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -35,13 +33,6 @@ android {
   buildFeatures {
     viewBinding true
     buildConfig true
-  }
-  // Bumping ui-test-junit4 to 1.11.0 deprecates the v1 createAndroidComposeRule used by
-  // the existing tests in this module, so allWarningsAsErrors must be disabled here.
-  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    compilerOptions {
-      allWarningsAsErrors = false
-    }
   }
   testOptions {
     unitTests {
@@ -80,10 +71,8 @@ dependencies {
   implementation libs.androidx.compose.material3
   implementation libs.androidx.compose.ui
   implementation libs.androidx.compose.foundation
-  // Pinned to 1.11.0 (stable) to exercise the Compose Testing v2 rule
-  // (androidx.compose.ui.test.junit4.v2). The rest of the repo is still on 1.7.x.
-  testImplementation("androidx.compose.ui:ui-test-junit4:1.11.0")
-  debugImplementation("androidx.compose.ui:ui-test-manifest:1.11.0")
+  testImplementation libs.androidx.compose.ui.test.junit4
+  debugImplementation libs.androidx.compose.ui.test.manifest
   implementation libs.androidx.activity.compose
   testImplementation(libs.webp.imageio)
 

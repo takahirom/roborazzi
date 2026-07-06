@@ -1,13 +1,18 @@
-package com.github.takahirom.preview.tests
+package com.github.takahirom.sample.composev2
 
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import com.github.takahirom.roborazzi.*
+import com.github.takahirom.roborazzi.AndroidComposePreviewTester
+import com.github.takahirom.roborazzi.ComposePreviewTester
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.RoborazziActivity
+import com.github.takahirom.roborazzi.registerRoborazziActivityToRobolectricIfNeeded
 import org.junit.rules.RuleChain
 import org.junit.rules.TestWatcher
 
 @OptIn(ExperimentalRoborazziApi::class)
-class V2CustomPreviewTester : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> by AndroidComposePreviewTester() {
+class V2CustomPreviewTester :
+  ComposePreviewTester<AndroidPreviewJUnit4TestParameter> by AndroidComposePreviewTester() {
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
       // Use v2's createAndroidComposeRule - returns ComposeContentTestRule
@@ -22,11 +27,6 @@ class V2CustomPreviewTester : ComposePreviewTester<AndroidPreviewJUnit4TestParam
           })
           .around(composeTestRule)
       }
-    ),
-    // The plugin does not allow setting annotationFilter alongside a custom tester,
-    // so apply the default RoboPreviewExclude filter here to match the module's behavior.
-    scanOptions = super.options().scanOptions.copy(
-      annotationFilter = AnnotationFilter.Filter.RoboPreviewExclude
     )
   )
 }

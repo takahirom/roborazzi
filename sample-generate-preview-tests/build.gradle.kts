@@ -1,5 +1,6 @@
 @file:OptIn(ExperimentalRoborazziApi::class)
 
+import com.github.takahirom.roborazzi.AnnotationFilter.Filter
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 
 plugins {
@@ -15,10 +16,9 @@ roborazzi {
   generateComposePreviewRobolectricTests {
     enable = true
     packages = listOf("com.github.takahirom.preview.tests")
-    // Use the Compose Testing v2 rule for the generated tests.
-    // The annotation filter (RoboPreviewExclude) is applied inside V2CustomPreviewTester
-    // because the plugin does not allow setting annotationFilter alongside a custom tester.
-    testerQualifiedClassName = "com.github.takahirom.preview.tests.V2CustomPreviewTester"
+    annotationFilter = Filter.RoboPreviewExclude
+    //annotationFilter = Include("com.github.takahirom.roborazzi.annotations.RoboPreviewInclude")
+    //annotationFilter = Exclude("com.github.takahirom.roborazzi.annotations.RoboPreviewExclude")
   }
 }
 
@@ -59,23 +59,19 @@ android {
   }
 }
 
-// Pinned to 1.11.0 (stable) to exercise the Compose Testing v2 rule
-// (androidx.compose.ui.test.junit4.v2). The rest of the repo is still on 1.7.x.
-val composeVersion = "1.11.0"
 dependencies {
   implementation(project(":roborazzi-annotations"))
   implementation(libs.androidx.compose.material3)
-  implementation("androidx.compose.ui:ui:$composeVersion")
-  implementation("androidx.compose.ui:ui-tooling:$composeVersion")
-  implementation("androidx.compose.runtime:runtime:$composeVersion")
-  implementation("androidx.compose.foundation:foundation:$composeVersion")
+  implementation(libs.androidx.compose.ui)
+  implementation(libs.androidx.compose.ui.tooling)
+  implementation(libs.androidx.compose.runtime)
 
 // replaced by dependency substitution
   testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")
   testImplementation(libs.junit)
   testImplementation(libs.robolectric)
   testImplementation(libs.composable.preview.scanner)
-  testImplementation("androidx.compose.ui:ui-test-junit4:$composeVersion")
+  testImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.espresso.core)
 }
