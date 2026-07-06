@@ -5,12 +5,18 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import com.dropbox.differ.ImageComparator
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToLong
 
 /**
  * Options for [captureRoboAnimation].
  *
- * @param fps Frames per second of the recorded animation. The recording clock is advanced by
- * 1000 / fps milliseconds of virtual time per frame, so the output plays back in real time.
+ * @param fps Frames per second of the recorded animation. The frame step is 1000 / fps rounded to
+ * whole milliseconds ([frameStepMillis]); both the virtual-clock advance per recorded frame and
+ * the frame delay encoded in the output are exactly that step, so capture and playback share a
+ * single timeline. Note that GIF stores delays in centiseconds, so a step that is not a multiple
+ * of 10 ms (e.g. fps = 60 -> 17 ms) is rounded by the GIF format itself; prefer fps values whose
+ * step is a multiple of 10 ms (e.g. 10, 20, 25, 50) for exact GIF timing. APNG encodes the step
+ * exactly.
  * @param settleTimeoutMillis After [block] finishes, recording continues until the UI stops
  * changing, up to this amount of additional virtual time. This allows capturing animations
  * that are still running when the block ends.
@@ -33,7 +39,12 @@ data class RoboAnimationOptions(
     }
   }
 
-  val frameStepMillis: Long get() = 1_000L / fps
+  /**
+   * Virtual time advanced per recorded frame: 1000 / [fps] rounded to whole milliseconds (at
+   * least 1). This is the single source of truth for timing -- the encoded frame delay is this
+   * exact value, so the output plays back at the same speed the frames were captured.
+   */
+  internal val frameStepMillis: Long get() = (1_000.0 / fps).roundToLong().coerceAtLeast(1)
 }
 
 /**
@@ -348,7 +359,7 @@ private fun recordUntilSettled(
   }
 }
 
-@OptIn(ExperimentalRoborazziApi::class)
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 private fun saveAnimatedImage(
   file: File,
   canvases: List<AwtRoboCanvas>,
@@ -364,7 +375,9 @@ private fun saveAnimatedImage(
   // GIF encoder's boolean error returns are surfaced as IllegalStateException in its adapter).
   file.outputStream().use { outputStream ->
     encoder.start(outputStream)
-    encoder.setFrameRate(animationOptions.fps.toFloat())
+    // The encoded frame delay is exactly the virtual-clock step used while recording, so capture
+    // and playback share a single timeline (see RoboAnimationOptions.frameStepMillis).
+    encoder.setFrameDelayMillis(animationOptions.frameStepMillis)
     if (canvases.isNotEmpty()) {
       val resizeScale = roborazziOptions.recordOptions.resizeScale
       encoder.setSize(

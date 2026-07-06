@@ -27,20 +27,20 @@ import javax.imageio.ImageIO
  *   `fdAT` (sequence-number-prefixed copies of their PNG image data)
  * - `IEND`
  *
- * Frame delays are uniform and expressed exactly as the fraction 1 / fps seconds (see
- * [setFrameRate]), so collecting frames and writing on [finish] is sufficient.
+ * Frame delays are uniform and expressed exactly as the fraction millis / 1000 seconds (see
+ * [setFrameDelayMillis]), so collecting frames and writing on [finish] is sufficient.
  */
-@OptIn(ExperimentalRoborazziApi::class)
+@OptIn(InternalRoborazziApi::class)
 internal class AnimatedPngEncoder : AnimatedImageEncoder {
   private var out: OutputStream? = null
   private var width = 0
   private var height = 0
   private var sizeSet = false
   private var background: Color? = null
-  // Frame delay expressed exactly as the fraction delay_num / delay_den seconds. Storing the fps
-  // as the denominator (with a numerator of 1) avoids the rounding error of converting to whole
-  // milliseconds first: e.g. 10 fps is exactly 1/10 s rather than 100/1000 s of a rounded value.
-  private var delayDen = 10 // default 10 fps
+  // Frame delay expressed exactly as the fraction delay_num / delay_den seconds, with the caller's
+  // millisecond step as the numerator over a fixed denominator of 1000. This encodes the exact
+  // virtual-clock step used while recording, so capture and playback share a single timeline.
+  private var delayNumMillis = 100 // default 100 ms (10 fps)
   // Number of times the animation plays; mirrors GIF's setRepeat semantics (0 = loop forever).
   private var numPlays = 0
   // Each frame is encoded to compressed PNG bytes as soon as it is added, so only the encoded
@@ -59,10 +59,9 @@ internal class AnimatedPngEncoder : AnimatedImageEncoder {
     }
   }
 
-  override fun setFrameRate(fps: Float) {
-    if (fps != 0f) {
-      delayDen = Math.round(fps)
-    }
+  override fun setFrameDelayMillis(millis: Long) {
+    require(millis in 1..65_535) { "frame delay must be in 1..65535 ms but was $millis" }
+    delayNumMillis = millis.toInt()
   }
 
   override fun setBackground(argb: Int?) {
@@ -146,8 +145,8 @@ internal class AnimatedPngEncoder : AnimatedImageEncoder {
     writeInt(data, 8, height)
     writeInt(data, 12, 0) // x_offset
     writeInt(data, 16, 0) // y_offset
-    writeShort(data, 20, 1) // delay_num
-    writeShort(data, 22, delayDen) // delay_den; delay is delay_num / delay_den seconds
+    writeShort(data, 20, delayNumMillis) // delay_num; delay is delay_num / delay_den seconds
+    writeShort(data, 22, 1000) // delay_den = 1000, so the delay is exactly delay_num milliseconds
     data[24] = 0 // dispose_op = APNG_DISPOSE_OP_NONE
     data[25] = 0 // blend_op = APNG_BLEND_OP_SOURCE
     return data

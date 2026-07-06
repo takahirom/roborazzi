@@ -36,7 +36,6 @@ public final class com/github/takahirom/roborazzi/RoboAnimationOptions {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBackgroundColor ()I
 	public final fun getFps ()I
-	public final fun getFrameStepMillis ()J
 	public final fun getSettleTimeoutMillis ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
