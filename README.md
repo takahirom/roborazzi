@@ -1043,29 +1043,33 @@ roborazzi {
 
 #### Advanced: Custom ComposePreviewTester Implementation
 
-You can create a custom `ComposePreviewTester` to control the screenshot capture behavior, such as setting a custom image comparison threshold:
+You can create a custom `ComposePreviewTester` to control the screenshot capture behavior, such as setting a custom image comparison threshold.
+
+Note that `AndroidComposePreviewTester` is a final class, so you can't subclass it. Instead, use Kotlin class delegation and pass a custom `Capturer` to its constructor. Also, your tester class must have a parameterless constructor because the plugin instantiates it via reflection:
 
 ```kotlin
 import com.dropbox.differ.SimpleImageComparator
 import com.github.takahirom.roborazzi.*
+import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 
-@ExperimentalRoborazziApi
-class MyCustomComposePreviewTester(
-  private val defaultCapturer: AndroidComposePreviewTester.Capturer = AndroidComposePreviewTester.DefaultCapturer()
-) : AndroidComposePreviewTester(
-  capturer = { parameter ->
-    val customOptions = parameter.roborazziOptions.copy(
-      compareOptions = parameter.roborazziOptions.compareOptions.copy(
-        // Set custom comparison threshold (0.0 = exact match, 1.0 = ignore differences)
-        imageComparator = SimpleImageComparator(maxDistance = 0.01f)
+@OptIn(ExperimentalRoborazziApi::class)
+class MyCustomComposePreviewTester :
+  ComposePreviewTester<AndroidPreviewJUnit4TestParameter> by AndroidComposePreviewTester(
+    capturer = { parameter ->
+      val customOptions = parameter.roborazziOptions.copy(
+        compareOptions = parameter.roborazziOptions.compareOptions.copy(
+          // Set custom comparison threshold (0.0 = exact match, 1.0 = ignore differences)
+          imageComparator = SimpleImageComparator(maxDistance = 0.01f)
+        )
       )
-    )
-    defaultCapturer.capture(
-      parameter.copy(roborazziOptions = customOptions)
-    )
-  }
-)
+      AndroidComposePreviewTester.DefaultCapturer().capture(
+        parameter.copy(roborazziOptions = customOptions)
+      )
+    }
+  )
 ```
+
+If you need to customize more than the capture behavior, such as the scan options or the test lifecycle, you can override `options()` or `test()` in the delegating class.
 
 Then reference your custom tester in the Gradle configuration:
 
