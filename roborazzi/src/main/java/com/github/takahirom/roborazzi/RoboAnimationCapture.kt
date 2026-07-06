@@ -122,6 +122,10 @@ class RoboAnimationRecorderScope internal constructor(
  * After [block] returns, recording continues until the UI settles (see
  * [RoboAnimationOptions.settleTimeoutMillis]), so a block that only performs a click still
  * records the whole animation the click starts.
+ *
+ * Note: this API currently only supports recording. When the Roborazzi task is running in
+ * compare/verify mode, this function is a complete no-op: [block] is not executed and no image is
+ * recorded or verified.
  */
 @ExperimentalRoborazziApi
 fun SemanticsNodeInteraction.captureRoboAnimation(
@@ -202,6 +206,10 @@ fun SemanticsNodeInteraction.captureRoboAnimation(
  * After [block] returns, recording continues until the UI settles (see
  * [RoboAnimationOptions.settleTimeoutMillis]), so a block that only performs a click still
  * records the whole animation the click starts.
+ *
+ * Note: this API currently only supports recording. When the Roborazzi task is running in
+ * compare/verify mode, this function is a complete no-op: [block] is not executed and no image is
+ * recorded or verified.
  */
 @ExperimentalRoborazziApi
 fun captureScreenRoboAnimation(
