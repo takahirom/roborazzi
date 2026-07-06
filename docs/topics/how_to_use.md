@@ -522,7 +522,9 @@ whole animation the click starts.
 
 **Output format is chosen by the file extension:** `.gif` produces a GIF (256 colors; the
 default), and `.png` produces a lossless, full-color APNG (Animated PNG). Prefer `.png` when color
-fidelity matters.
+fidelity matters. Although the API is named "video", the currently supported output formats are
+only GIF and APNG (animated images); the name was chosen deliberately so real video formats
+(e.g. mp4) can be added later without renaming the API.
 
 #### Record the whole screen
 

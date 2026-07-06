@@ -113,7 +113,8 @@ class RoboVideoRecorderScope internal constructor(
  *
  * The output format is chosen by the [filePath]/[file] extension: `.gif` produces a GIF (256
  * colors; the default) and `.png` produces a lossless, full-color APNG (Animated PNG). Prefer
- * `.png` when color fidelity matters.
+ * `.png` when color fidelity matters. Only these animated-image formats are supported for now;
+ * the "video" name was chosen so real video formats (e.g. mp4) can be added without renaming.
  *
  * Unlike [captureRoboGif], which only records visually distinct states with a fixed 1-second
  * delay, this API pauses the Compose main clock and drives it frame by frame while recording,
@@ -201,7 +202,8 @@ fun SemanticsNodeInteraction.recordRoboVideo(
  *
  * The output format is chosen by the [filePath]/[file] extension: `.gif` produces a GIF (256
  * colors; the default) and `.png` produces a lossless, full-color APNG (Animated PNG). Prefer
- * `.png` when color fidelity matters.
+ * `.png` when color fidelity matters. Only these animated-image formats are supported for now;
+ * the "video" name was chosen so real video formats (e.g. mp4) can be added without renaming.
  *
  * ```kotlin
  * recordScreenRoboVideo(
