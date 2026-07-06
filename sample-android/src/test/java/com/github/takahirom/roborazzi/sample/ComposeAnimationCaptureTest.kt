@@ -59,6 +59,25 @@ class ComposeAnimationCaptureTest {
   }
 
   @Test
+  fun captureAnimationAsApng() {
+    composeTestRule.setContent {
+      AnimatedBoxContent()
+    }
+    composeTestRule.onNodeWithTag("root")
+      .captureRoboAnimation(
+        // A .png extension produces a lossless, full-color APNG instead of a GIF.
+        composeRule = composeTestRule,
+        filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_animation_apng.png",
+        animationOptions = RoboAnimationOptions(fps = 10),
+      ) {
+        composeTestRule.onNodeWithTag("toggle").performClick()
+        delay(300)
+        composeTestRule.onNodeWithTag("toggle").performClick()
+        delay(300)
+      }
+  }
+
+  @Test
   fun captureAnimationSettlesWithoutDelay() {
     composeTestRule.setContent {
       AnimatedBoxContent()

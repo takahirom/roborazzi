@@ -96,9 +96,13 @@ class RoboAnimationRecorderScope internal constructor(
 }
 
 /**
- * Records the animation of this node as an animated image (currently GIF) with a fixed frame
- * rate, so that the output plays back the UI in real time. This is useful for creating videos
- * of animations that designers can review.
+ * Records the animation of this node as an animated image with a fixed frame rate, so that the
+ * output plays back the UI in real time. This is useful for creating videos of animations that
+ * designers can review.
+ *
+ * The output format is chosen by the [filePath]/[file] extension: `.gif` produces a GIF (256
+ * colors; the default) and `.png` produces a lossless, full-color APNG (Animated PNG). Prefer
+ * `.png` when color fidelity matters.
  *
  * Unlike [captureRoboGif], which only records visually distinct states with a fixed 1-second
  * delay, this API pauses the Compose main clock and drives it frame by frame while recording,
@@ -185,12 +189,12 @@ fun SemanticsNodeInteraction.captureRoboAnimation(
       // The block failed. Attempt a best-effort save so any frames captured before the failure
       // are still written, but never let a save failure mask the original one: attach it as a
       // suppressed exception and always rethrow the original first-class failure.
-      runCatching { saveAnimatedGif(file, canvases, animationOptions, roborazziOptions) }
+      runCatching { saveAnimatedImage(file, canvases, animationOptions, roborazziOptions) }
         .exceptionOrNull()?.let { failure.addSuppressed(it) }
       throw failure
     }
     // The block succeeded, so a save failure is a real failure and should surface normally.
-    saveAnimatedGif(file, canvases, animationOptions, roborazziOptions)
+    saveAnimatedImage(file, canvases, animationOptions, roborazziOptions)
   } finally {
     // Release canvases even if saving throws so failures don't leak AwtRoboCanvas instances.
     canvases.forEach { it.release() }
@@ -224,19 +228,22 @@ private fun recordUntilSettled(
   }
 }
 
-private fun saveAnimatedGif(
+@OptIn(ExperimentalRoborazziApi::class)
+private fun saveAnimatedImage(
   file: File,
   canvases: List<AwtRoboCanvas>,
   animationOptions: RoboAnimationOptions,
   roborazziOptions: RoborazziOptions,
 ) {
   file.parentFile?.mkdirs()
-  val encoder = AnimatedGifEncoder()
+  // Pick the encoder from the file extension: .gif -> GIF (256 colors), .png -> lossless APNG.
+  val encoder = animatedImageEncoderFor(file)
   encoder.setRepeat(0)
-  // AnimatedGifEncoder.finish() flushes but does not close a stream passed to start(), so close
-  // it here (after finish()) to avoid leaking the file handle.
+  // The encoders flush but do not close a stream passed to start(), so close it here (after
+  // finish()) to avoid leaking the file handle. Encoders throw on an internal failure (e.g. the
+  // GIF encoder's boolean error returns are surfaced as IllegalStateException in its adapter).
   file.outputStream().use { outputStream ->
-    check(encoder.start(outputStream)) { "Failed to start GIF encoding for $file" }
+    encoder.start(outputStream)
     encoder.setFrameRate(animationOptions.fps.toFloat())
     if (canvases.isNotEmpty()) {
       val resizeScale = roborazziOptions.recordOptions.resizeScale
@@ -246,10 +253,10 @@ private fun saveAnimatedGif(
       )
       encoder.setBackground(animationOptions.backgroundColor)
       canvases.forEach { canvas ->
-        check(encoder.addFrame(canvas, resizeScale)) { "Failed to add a frame to GIF for $file" }
+        encoder.addFrame(canvas, resizeScale)
       }
     }
-    check(encoder.finish()) { "Failed to finish GIF encoding for $file" }
+    encoder.finish()
   }
 }
 
