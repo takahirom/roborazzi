@@ -17,6 +17,9 @@ val String.nameWithoutExtension: String
 val String.name: String
   get() = Path(this).name
 
+val String.extension: String
+  get() = Path(this).name.substringAfterLast(".", "")
+
 fun Path.relativeTo(base: Path): Path {
   if (this == base) return Path("")
 

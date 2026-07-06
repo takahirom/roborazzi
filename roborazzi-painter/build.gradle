@@ -50,5 +50,17 @@ kotlin {
         implementation(libs.kotlin.test.junit)
       }
     }
+    iosMain {
+      dependencies {
+        // compileOnly is not supported for Kotlin/Native; the serialization
+        // annotations referenced by roborazzi-core must resolve at link time.
+        implementation libs.kotlinx.serialization.json
+      }
+    }
+    iosTest {
+      dependencies {
+        implementation(libs.kotlin.test)
+      }
+    }
   }
 }

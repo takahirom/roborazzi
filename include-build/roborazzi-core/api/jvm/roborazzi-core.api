@@ -189,6 +189,10 @@ public abstract interface class com/github/takahirom/roborazzi/CanvasFactoryFrom
 	public abstract fun invoke (Ljava/io/File;I)Lcom/github/takahirom/roborazzi/RoboCanvas;
 }
 
+public abstract interface class com/github/takahirom/roborazzi/CanvasFactoryFromPath {
+	public abstract fun invoke (Ljava/lang/String;I)Lcom/github/takahirom/roborazzi/RoboCanvas;
+}
+
 public abstract interface class com/github/takahirom/roborazzi/CaptureResult {
 	public static final field Companion Lcom/github/takahirom/roborazzi/CaptureResult$Companion;
 	public abstract fun getActualFile ()Ljava/lang/String;
@@ -515,6 +519,7 @@ public final class com/github/takahirom/roborazzi/KotlinxIo {
 
 public final class com/github/takahirom/roborazzi/KotlinxIoKt {
 	public static final fun getAbsolutePath (Lkotlinx/io/files/Path;)Ljava/lang/String;
+	public static final fun getExtension (Ljava/lang/String;)Ljava/lang/String;
 	public static final fun getName (Ljava/lang/String;)Ljava/lang/String;
 	public static final fun getNameWithoutExtension (Ljava/lang/String;)Ljava/lang/String;
 	public static final fun relativeTo (Lkotlinx/io/files/Path;Lkotlinx/io/files/Path;)Lkotlinx/io/files/Path;
@@ -522,6 +527,10 @@ public final class com/github/takahirom/roborazzi/KotlinxIoKt {
 
 public final class com/github/takahirom/roborazzi/ProcessOutputImageAndReportKt {
 	public static final fun processOutputImageAndReport (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/EmptyCanvasFactory;Lcom/github/takahirom/roborazzi/CanvasFactoryFromFile;Lcom/github/takahirom/roborazzi/ComparisonCanvasFactory;)V
+}
+
+public final class com/github/takahirom/roborazzi/ProcessOutputImageAndReport_commonKt {
+	public static final fun processOutputImageAndReport (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/lang/String;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/EmptyCanvasFactory;Lcom/github/takahirom/roborazzi/CanvasFactoryFromPath;Lcom/github/takahirom/roborazzi/ComparisonCanvasFactory;)V
 }
 
 public final class com/github/takahirom/roborazzi/ReportLogKt {
@@ -792,6 +801,7 @@ public final class com/github/takahirom/roborazzi/RoborazziOptionsKt {
 
 public final class com/github/takahirom/roborazzi/RoborazziPropertiesKt {
 	public static final field DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH Ljava/lang/String;
+	public static final fun applyContextDataPolicy (Lcom/github/takahirom/roborazzi/RoborazziOptions;)Ljava/util/Map;
 	public static final fun getROBORAZZI_DEBUG ()Z
 	public static final fun roborazziCompareEnabled ()Z
 	public static final fun roborazziDefaultResizeScale ()D
