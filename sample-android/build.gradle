@@ -83,7 +83,7 @@ dependencies {
   // Pinned to 1.11.0 (stable) to exercise the Compose Testing v2 rule
   // (androidx.compose.ui.test.junit4.v2). The rest of the repo is still on 1.7.x.
   testImplementation("androidx.compose.ui:ui-test-junit4:1.11.0")
-  debugImplementation libs.androidx.compose.ui.test.manifest
+  debugImplementation("androidx.compose.ui:ui-test-manifest:1.11.0")
   implementation libs.androidx.activity.compose
   testImplementation(libs.webp.imageio)
 
