@@ -38,6 +38,7 @@ class AnimatedGifEncoder {
     = 0
   private var height = 0
   private var transparent: Color? = null // transparent color if given
+  private var background: Color? = null // background fill for undefined frame areas
   private var transIndex // transparent index in color table
     = 0
   private var repeat = -1 // no repeat
@@ -114,6 +115,20 @@ class AnimatedGifEncoder {
    */
   fun setTransparent(c: Color?) {
     transparent = c
+  }
+
+  /**
+   * Sets the background color used to fill areas of the fixed frame size that a smaller frame
+   * does not cover. Frames are composited onto this background anchored at the top-left, so
+   * frames smaller than the GIF logical screen no longer leave undefined areas that decoders
+   * render as black margins. May be set to null (default) to keep the legacy behavior of
+   * leaving those areas as the image type's default (black for TYPE_3BYTE_BGR).
+   *
+   * @param argb
+   * ARGB color value, or null for no explicit background fill.
+   */
+  fun setBackground(argb: Int?) {
+    background = argb?.let { Color(it, true) }
   }
 
   /**
@@ -375,7 +390,17 @@ class AnimatedGifEncoder {
         // create new image with right size/format
         val temp = BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR)
         val g = temp.createGraphics()
-        g.drawImage(image, 0, 0, null)
+        try {
+          // Fill the fixed frame size with the background color first so areas not covered by a
+          // smaller frame are not left as the default black; then draw the frame anchored top-left.
+          background?.let {
+            g.color = it
+            g.fillRect(0, 0, width, height)
+          }
+          g.drawImage(image, 0, 0, null)
+        } finally {
+          g.dispose()
+        }
         image = temp
       }
       pixels = (image!!.raster.dataBuffer as DataBufferByte).data
