@@ -1,10 +1,12 @@
 package com.github.takahirom.roborazzi
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
@@ -95,13 +97,14 @@ data class RoborazziComposePreviewDeviceOption(private val previewDevice: String
  *
  * The [ActivityScenario] driven by the rule is extracted at runtime via reflection
  * from the underlying `AndroidComposeTestRule.activityRule.scenario`.
- * - If the rule has no `activityRule` at all (e.g. a plain `createComposeRule()` or a
- *   custom [ComposeTestRule] implementation), Roborazzi falls back to creating its own
- *   default [ActivityScenario], which is the designed behavior for such rules.
+ * - If the rule has no `activityRule` at all (e.g. `createEmptyComposeRule()` or a
+ *   custom wrapper that does not expose `activityRule`), Roborazzi falls back to
+ *   creating its own default [ActivityScenario], which is the designed behavior for
+ *   such rules.
  * - If the rule exposes an `activityRule` but the scenario cannot be extracted from it,
  *   an [IllegalStateException] is thrown to avoid silently capturing a different
  *   activity than the one your rule is driving. In that case, pass the scenario
- *   explicitly via the [composeTestRule] overload that takes an [ActivityScenario].
+ *   explicitly via the [composeTestRule] overload that takes a scenario provider.
  */
 @ExperimentalRoborazziApi
 fun RoborazziComposeOptions.Builder.composeTestRule(
@@ -111,39 +114,73 @@ fun RoborazziComposeOptions.Builder.composeTestRule(
 }
 
 /**
+ * Kept for binary compatibility with the previous
+ * `AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>` signature.
+ * Hidden from source; new code resolves to the [ComposeTestRule] overload.
+ */
+@Deprecated(
+  message = "Use the ComposeTestRule overload instead.",
+  level = DeprecationLevel.HIDDEN
+)
+@ExperimentalRoborazziApi
+fun RoborazziComposeOptions.Builder.composeTestRule(
+  composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
+): RoborazziComposeOptions.Builder {
+  return addOption(RoborazziComposeTestRuleOption(composeTestRule))
+}
+
+/**
  * Explicit-scenario overload of [composeTestRule]. Use this when the [composeTestRule]
  * is a custom [ComposeTestRule] implementation whose backing [ActivityScenario] cannot
  * be discovered via reflection, or when you previously accessed
  * `composeTestRule.activityRule.scenario` directly on the concrete rule type.
- * The given [activityScenario] is used as-is (reflection is skipped), so the captured
- * screenshot targets the exact activity the rule is driving instead of a default
- * scenario created by Roborazzi.
+ *
+ * [activityScenarioProvider] is invoked lazily when the capture launches its activity
+ * (not when the option is built), so it is safe to read `activityRule.scenario` inside
+ * the provider even if the rule has not been applied yet at option-construction time.
+ * The provided scenario is used as-is (reflection is skipped), so the captured
+ * screenshot targets the exact activity the rule is driving. Note that Roborazzi
+ * closes the scenario it captures with after the capture completes (to avoid activity
+ * leaks), so the provided scenario will be closed as well.
  */
 @ExperimentalRoborazziApi
 fun RoborazziComposeOptions.Builder.composeTestRule(
   composeTestRule: ComposeTestRule,
-  activityScenario: ActivityScenario<out ComponentActivity>,
+  activityScenarioProvider: () -> ActivityScenario<out ComponentActivity>,
 ): RoborazziComposeOptions.Builder {
-  return addOption(RoborazziComposeTestRuleOption(composeTestRule, activityScenario))
+  return addOption(RoborazziComposeTestRuleOption(composeTestRule, activityScenarioProvider))
 }
 
 @ExperimentalRoborazziApi
 data class RoborazziComposeTestRuleOption(
   private val composeTestRule: ComposeTestRule,
-  private val activityScenario: ActivityScenario<out ComponentActivity>? = null,
+  private val activityScenarioProvider: (() -> ActivityScenario<out ComponentActivity>)? = null,
 ) :
   RoborazziComposeActivityScenarioCreatorOption,
   RoborazziComposeCaptureOption {
+  /**
+   * Kept for binary compatibility with the previous
+   * `AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>` signature.
+   * Hidden from source; new code resolves to the primary constructor.
+   */
+  @Deprecated(
+    message = "Use the ComposeTestRule constructor instead.",
+    level = DeprecationLevel.HIDDEN
+  )
+  constructor(
+    composeTestRule: AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>,
+  ) : this(composeTestRule, null)
+
   @OptIn(InternalRoborazziApi::class)
   override fun createScenario(chain: () -> ActivityScenario<out ComponentActivity>): ActivityScenario<out ComponentActivity> {
     // Highest priority: an explicitly supplied scenario skips reflection entirely.
-    activityScenario?.let { return it }
+    activityScenarioProvider?.let { return it() }
     val activityRuleMethod = try {
       composeTestRule.javaClass.getMethod("getActivityRule")
     } catch (_: NoSuchMethodException) {
-      // The rule has no activityRule (e.g. createComposeRule() or a custom
-      // ComposeTestRule). Falling back to the default scenario is the designed
-      // behavior here, so just leave a debug log.
+      // The rule has no activityRule (e.g. createEmptyComposeRule() or a custom
+      // wrapper that does not expose it). Falling back to the default scenario is
+      // the designed behavior here, so just leave a debug log.
       roborazziDebugLog {
         "composeTestRule: ${composeTestRule.javaClass.name} does not expose " +
           "getActivityRule(); creating a default ActivityScenario instead."
@@ -174,44 +211,44 @@ data class RoborazziComposeTestRuleOption(
 
   override fun afterCapture() {
   }
+}
 
-  companion object {
-    /**
-     * Extracts [ActivityScenario] from the given [ComposeTestRule] via reflection.
-     * Works with both v1 and v2 rule factories since both produce an
-     * `AndroidComposeTestRule` exposing `getActivityRule()` returning an
-     * `ActivityScenarioRule` with `getScenario()`.
-     *
-     * The rule is already known to expose [activityRuleMethod], so any failure past
-     * this point is unexpected: continuing with a freshly created scenario would
-     * silently capture a different activity than the one the rule is driving.
-     * Therefore this throws instead of falling back.
-     */
-    private fun extractActivityScenario(
-      rule: ComposeTestRule,
-      activityRuleMethod: java.lang.reflect.Method,
-    ): ActivityScenario<out ComponentActivity> {
-      val errorMessage = "Roborazzi: Could not extract the ActivityScenario from the given " +
-        "ComposeTestRule (${rule.javaClass.name}) even though it exposes getActivityRule(). " +
-        "Capturing would silently use a different activity than the one your rule is " +
-        "driving. Please pass the scenario explicitly via " +
-        "RoborazziComposeOptions.Builder.composeTestRule(composeTestRule, activityScenario)."
-      val scenario = try {
-        val activityRule = activityRuleMethod.invoke(rule)
-          ?: throw IllegalStateException(errorMessage)
-        activityRule.javaClass.getMethod("getScenario").invoke(activityRule)
-      } catch (e: IllegalStateException) {
-        throw e
-      } catch (e: Exception) {
-        throw IllegalStateException(errorMessage, e)
-      }
-      if (scenario !is ActivityScenario<*>) {
-        throw IllegalStateException(errorMessage)
-      }
-      @Suppress("UNCHECKED_CAST")
-      return scenario as ActivityScenario<out ComponentActivity>
-    }
+/**
+ * Extracts [ActivityScenario] from the given [ComposeTestRule] via reflection.
+ * Works with both v1 and v2 rule factories since both produce an
+ * `AndroidComposeTestRule` exposing `getActivityRule()` returning an
+ * `ActivityScenarioRule` with `getScenario()`.
+ *
+ * The rule is already known to expose [activityRuleMethod], so any failure past
+ * this point is unexpected: continuing with a freshly created scenario would
+ * silently capture a different activity than the one the rule is driving.
+ * Therefore this throws instead of falling back.
+ */
+private fun extractActivityScenario(
+  rule: ComposeTestRule,
+  activityRuleMethod: java.lang.reflect.Method,
+): ActivityScenario<out ComponentActivity> {
+  val errorMessage = "Roborazzi: Could not extract the ActivityScenario from the given " +
+    "ComposeTestRule (${rule.javaClass.name}) even though it exposes getActivityRule(). " +
+    "Capturing would silently use a different activity than the one your rule is " +
+    "driving. Please pass the scenario explicitly via " +
+    "RoborazziComposeOptions.Builder.composeTestRule(composeTestRule) { activityScenario }, " +
+    "or, for generated preview tests, via " +
+    "ComposePreviewTester.Options.JUnit4TestLifecycleOptions.activityScenarioProvider."
+  val scenario = try {
+    val activityRule = activityRuleMethod.invoke(rule)
+      ?: throw IllegalStateException(errorMessage)
+    activityRule.javaClass.getMethod("getScenario").invoke(activityRule)
+  } catch (e: IllegalStateException) {
+    throw e
+  } catch (e: Exception) {
+    throw IllegalStateException(errorMessage, e)
   }
+  if (scenario !is ActivityScenario<*>) {
+    throw IllegalStateException(errorMessage)
+  }
+  @Suppress("UNCHECKED_CAST")
+  return scenario as ActivityScenario<out ComponentActivity>
 }
 
 @ExperimentalRoborazziApi
@@ -290,6 +327,16 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
           )
         }
       },
+      /**
+       * Optional provider of the [ActivityScenario] backing the given rule, used when
+       * capturing previews. By default the scenario is extracted from the rule via
+       * reflection (`activityRule.scenario`), which works for the rules created by
+       * `createAndroidComposeRule` (both v1 and v2). Set this when [composeRuleFactory]
+       * returns a custom [ComposeContentTestRule] whose scenario cannot be discovered
+       * that way. The provider is invoked lazily for each capture, and the returned
+       * scenario is closed by Roborazzi after the capture completes.
+       */
+      val activityScenarioProvider: ((ComposeContentTestRule) -> ActivityScenario<out ComponentActivity>)? = null,
     ) : TestLifecycleOptions
 
     data class ScanOptions(
@@ -478,11 +525,21 @@ class AndroidComposePreviewTester(
         "  filePath: $filePath"
     }
 
+    val activityScenarioProvider =
+      (options().testLifecycleOptions as? ComposePreviewTester.Options.JUnit4TestLifecycleOptions)
+        ?.activityScenarioProvider
+
     @Suppress("USELESS_CAST")
     val roborazziComposeOptions =
       (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions().builder()
         .apply {
-          composeTestRule(junit4TestParameter.composeTestRule)
+          if (activityScenarioProvider != null) {
+            composeTestRule(junit4TestParameter.composeTestRule) {
+              activityScenarioProvider(junit4TestParameter.composeTestRule)
+            }
+          } else {
+            composeTestRule(junit4TestParameter.composeTestRule)
+          }
           optionVariation.manualClockOptions?.let {
             manualAdvance(
               junit4TestParameter.composeTestRule,
