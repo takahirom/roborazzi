@@ -91,4 +91,6 @@ dependencies {
   testImplementation libs.androidx.test.core.ktx
   testImplementation libs.robolectric
   testImplementation(libs.kim)
+  // Prototype: touch-robot gesture recording for captureRoboAnimation
+  testImplementation "me.saket.touchrobot:touchrobot-core:0.1.0"
 }
