@@ -846,17 +846,14 @@ class ComposeTest {
 
 ### Record a video of the UI (experimental)
 
-> **Note**
-> This API is experimental and marked with `@ExperimentalRoborazziApi`.
-
 `recordRoboVideo()` records how the UI evolves over virtual time -- animations, transitions,
-gestures and any other time-driven change -- and writes it out as an animated image you can play
-back in real time. Unlike `captureRoboGif()`, which only records visually distinct states with a
-fixed 1-second delay, `recordRoboVideo()` pauses the Compose main clock and drives it frame by
-frame, so intermediate animation frames are captured with faithful timing.
-
-Interactions run inside the recording block with the clock paused; call `delay()` in the scope to
-advance virtual time while frames are recorded, as if you were watching the animation play out.
+gestures and any other time-driven change -- as an animated image that plays back in real time.
+Unlike `captureRoboGif()`, which only records visually distinct states with a fixed 1-second
+delay, it pauses the Compose main clock and drives it frame by frame, so intermediate animation
+frames are captured with faithful timing. Interactions in the block run with the clock paused;
+call `delay()` in the scope to advance virtual time while frames are recorded. After the block
+returns, recording continues until the UI settles, so a block that only performs a click still
+records the whole animation the click starts.
 
 ```kotlin
 @OptIn(ExperimentalRoborazziApi::class)
@@ -879,85 +876,58 @@ fun recordVideo() {
 }
 ```
 
-After the block returns, recording continues until the UI settles (up to
-`RoboVideoOptions.settleTimeoutMillis`), so a block that only performs a click still records the
-whole animation the click starts.
+- `RoboVideoOptions`: `fps` (default `10`), `settleTimeoutMillis` (additional virtual time to
+  keep recording while the UI is still changing after the block ends; default `3000`), and
+  `backgroundColor` (ARGB fill for the fixed recording viewport when frames have different
+  sizes; default white).
+- **Output format is chosen by the file extension:** `.gif` produces a GIF (256 colors; the
+  default), `.png` a lossless, full-color APNG (Animated PNG) -- prefer `.png` when color
+  fidelity matters. Only these animated-image formats are supported for now; the "video" name
+  was chosen deliberately so real video formats (e.g. mp4) can be added later without renaming
+  the API.
+- GIF stores frame delays in centiseconds (10ms resolution), so prefer an `fps` whose frame step
+  (`1000 / fps`) is a multiple of 10ms (e.g. 10, 20, 25, 50) for exact GIF timing. APNG encodes
+  the step exactly.
+- The API is experimental (`@ExperimentalRoborazziApi`) and currently only supports recording:
+  when the Roborazzi task runs in compare/verify mode it is a complete no-op -- the block is not
+  executed and no image is recorded or verified.
 
-`RoboVideoOptions` lets you tune the recording:
-
-- `fps`: frames per second of the recorded video (default `10`).
-- `settleTimeoutMillis`: how much additional virtual time to keep recording after the block ends,
-  while the UI is still changing (default `3000`).
-- `backgroundColor`: ARGB color used to fill the fixed recording viewport when frames have
-  different sizes (default white).
-
-**Output format is chosen by the file extension:** `.gif` produces a GIF (256 colors; the
-default), and `.png` produces a lossless, full-color APNG (Animated PNG). Prefer `.png` when color
-fidelity matters. Although the API is named "video", the currently supported output formats are
-only GIF and APNG (animated images); the name was chosen deliberately so real video formats
-(e.g. mp4) can be added later without renaming the API.
-
-#### Record the whole screen
-
-`recordScreenRoboVideo()` records all window roots instead of a single node. It is the
-screen-level counterpart of `recordRoboVideo()`, mirroring how `captureScreenRoboImage()` relates
-to `captureRoboImage()`. Prefer it when you want a stable, device-sized viewport for every frame,
-or when you need to capture window overlays such as dialogs added mid-recording or touch/tap
-indicators, which live on separate window roots and are invisible to a node-scoped recording.
+`recordScreenRoboVideo()` records all window roots instead of a single node, mirroring how
+`captureScreenRoboImage()` relates to `captureRoboImage()`. Prefer it when you want a stable,
+device-sized viewport for every frame, or to capture window overlays such as dialogs added
+mid-recording or touch/tap indicators, which live on separate window roots and are invisible to a
+node-scoped recording. Usage is the same, just without node scoping:
 
 ```kotlin
-@OptIn(ExperimentalRoborazziApi::class)
-@Test
-fun recordVideoScreen() {
-  composeTestRule.setContent {
-    AnimatedBoxContent()
-  }
-  recordScreenRoboVideo(
-    composeRule = composeTestRule,
-    filePath = "build/outputs/roborazzi/video_screen.gif",
-    videoOptions = RoboVideoOptions(fps = 10),
-  ) {
-    composeTestRule.onNodeWithTag("toggle").performClick()
-    delay(300)
-    composeTestRule.onNodeWithTag("toggle").performClick()
-    delay(300)
-  }
+recordScreenRoboVideo(
+  composeRule = composeTestRule,
+  filePath = "build/outputs/roborazzi/video_screen.gif",
+  videoOptions = RoboVideoOptions(fps = 10),
+) {
+  composeTestRule.onNodeWithTag("toggle").performClick()
+  delay(300)
 }
 ```
 
-#### Recording a gesture
-
-Because `recordRoboVideo()` idles the Robolectric main Looper in lockstep with the Compose main
-clock, suspend-based gesture drivers make progress while frames are recorded. For example, you can
-drive a swipe with [saket/touch-robot](https://github.com/saket/touch-robot) from a
-`LaunchedEffect` and record it, using `recordScreenRoboVideo()` so the touch indicator overlay is
-captured too:
+Because the recorder idles the Robolectric main Looper in lockstep with the Compose main clock,
+suspend-based gesture drivers make progress while frames are recorded. For example, you can drive
+a swipe with [saket/touch-robot](https://github.com/saket/touch-robot) from a `LaunchedEffect`,
+use `recordScreenRoboVideo()` so the touch indicator overlay is captured, and just pump virtual
+time in the block:
 
 ```kotlin
-@OptIn(ExperimentalRoborazziApi::class)
-@Test
-fun recordSwipe() {
-  composeTestRule.setContent {
-    // A composable whose LaunchedEffect drives a touch-robot swipe on the root.
-    DraggableBoxContent()
-  }
-  recordScreenRoboVideo(
-    composeRule = composeTestRule,
-    filePath = "build/outputs/roborazzi/swipe.gif",
-    videoOptions = RoboVideoOptions(fps = 10),
-  ) {
-    // Pump virtual time so the LaunchedEffect gesture progresses while frames are captured.
-    delay(1000)
-  }
+composeTestRule.setContent {
+  // A composable whose LaunchedEffect drives a touch-robot swipe on the root.
+  DraggableBoxContent()
+}
+recordScreenRoboVideo(
+  composeRule = composeTestRule,
+  filePath = "build/outputs/roborazzi/swipe.gif",
+) {
+  // Pump virtual time so the LaunchedEffect gesture progresses while frames are captured.
+  delay(1000)
 }
 ```
-
-> **Note**
-> This API currently only supports recording. When the Roborazzi task runs in compare/verify mode
-> it is a complete no-op: the block is not executed and no image is recorded or verified.
-> Also note that GIF stores frame delays in centiseconds (10ms resolution), so prefer an `fps`
-> whose frame step (`1000 / fps`) is a multiple of 10ms (e.g. 10, 20, 25, 50) for exact GIF
-> timing. APNG encodes the step exactly.
 
 ### RoborazziRule options
 
