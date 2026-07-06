@@ -25,6 +25,7 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoboAnimationOptions
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboAnimation
+import com.github.takahirom.roborazzi.captureScreenRoboAnimation
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import org.junit.Rule
 import org.junit.Test
@@ -75,6 +76,25 @@ class ComposeAnimationCaptureTest {
         composeTestRule.onNodeWithTag("toggle").performClick()
         delay(300)
       }
+  }
+
+  @Test
+  fun captureAnimationScreen() {
+    composeTestRule.setContent {
+      AnimatedBoxContent()
+    }
+    // Screen-level recording keeps every frame at the device size even as the box grows/shrinks,
+    // unlike the node-scoped variant whose frame dimensions track the animating content.
+    captureScreenRoboAnimation(
+      composeRule = composeTestRule,
+      filePath = "${roborazziSystemPropertyOutputDirectory()}/manual_animation_screen.gif",
+      animationOptions = RoboAnimationOptions(fps = 10),
+    ) {
+      composeTestRule.onNodeWithTag("toggle").performClick()
+      delay(300)
+      composeTestRule.onNodeWithTag("toggle").performClick()
+      delay(300)
+    }
   }
 
   @Test

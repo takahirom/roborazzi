@@ -5,12 +5,18 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import com.dropbox.differ.ImageComparator
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToLong
 
 /**
  * Options for [captureRoboAnimation].
  *
- * @param fps Frames per second of the recorded animation. The recording clock is advanced by
- * 1000 / fps milliseconds of virtual time per frame, so the output plays back in real time.
+ * @param fps Frames per second of the recorded animation. The frame step is 1000 / fps rounded to
+ * whole milliseconds ([frameStepMillis]); both the virtual-clock advance per recorded frame and
+ * the frame delay encoded in the output are exactly that step, so capture and playback share a
+ * single timeline. Note that GIF stores delays in centiseconds, so a step that is not a multiple
+ * of 10 ms (e.g. fps = 60 -> 17 ms) is rounded by the GIF format itself; prefer fps values whose
+ * step is a multiple of 10 ms (e.g. 10, 20, 25, 50) for exact GIF timing. APNG encodes the step
+ * exactly.
  * @param settleTimeoutMillis After [block] finishes, recording continues until the UI stops
  * changing, up to this amount of additional virtual time. This allows capturing animations
  * that are still running when the block ends.
@@ -33,7 +39,12 @@ data class RoboAnimationOptions(
     }
   }
 
-  val frameStepMillis: Long get() = 1_000L / fps
+  /**
+   * Virtual time advanced per recorded frame: 1000 / [fps] rounded to whole milliseconds (at
+   * least 1). This is the single source of truth for timing -- the encoded frame delay is this
+   * exact value, so the output plays back at the same speed the frames were captured.
+   */
+  internal val frameStepMillis: Long get() = (1_000.0 / fps).roundToLong().coerceAtLeast(1)
 }
 
 /**
@@ -122,6 +133,10 @@ class RoboAnimationRecorderScope internal constructor(
  * After [block] returns, recording continues until the UI settles (see
  * [RoboAnimationOptions.settleTimeoutMillis]), so a block that only performs a click still
  * records the whole animation the click starts.
+ *
+ * Note: this API currently only supports recording. When the Roborazzi task is running in
+ * compare/verify mode, this function is a complete no-op: [block] is not executed and no image is
+ * recorded or verified.
  */
 @ExperimentalRoborazziApi
 fun SemanticsNodeInteraction.captureRoboAnimation(
@@ -152,13 +167,129 @@ fun SemanticsNodeInteraction.captureRoboAnimation(
 ) {
   // currently, animation compare is not supported
   if (!roborazziOptions.taskType.isRecording()) return
+  recordAnimation(
+    composeRule = composeRule,
+    file = file,
+    animationOptions = animationOptions,
+    roborazziOptions = roborazziOptions,
+    block = block,
+  ) {
+    // Re-fetch the node each frame so the capture reflects the current animation state.
+    RoboComponent.Compose(
+      node = fetchSemanticsNode("roborazzi can't find component"),
+      roborazziOptions = roborazziOptions
+    )
+  }
+}
+
+/**
+ * Records the animation of the whole screen (all window roots) as an animated image with a fixed
+ * frame rate, so that the output plays back the UI in real time. This is the screen-level
+ * counterpart of [captureRoboAnimation], mirroring how [captureScreenRoboImage] relates to
+ * [captureRoboImage].
+ *
+ * Prefer this over the node-scoped [captureRoboAnimation] for two reasons:
+ *
+ * 1. **Stable, device-sized viewport.** Every frame captures the entire device screen, so all
+ * frames have identical dimensions. This matches what designers expect from a screen recording.
+ * A node-scoped recording, by contrast, is cropped to the node, so its dimensions change as the
+ * node animates (grows/shrinks).
+ * 2. **Captures window overlays.** Overlays drawn at the window root -- such as gesture
+ * visualizations (e.g. touch/tap indicators) or dialogs added mid-recording -- live on separate
+ * window roots and are invisible to a node-scoped capture. Capturing all window roots per frame
+ * includes them.
+ *
+ * The output format is chosen by the [filePath]/[file] extension: `.gif` produces a GIF (256
+ * colors; the default) and `.png` produces a lossless, full-color APNG (Animated PNG). Prefer
+ * `.png` when color fidelity matters.
+ *
+ * ```kotlin
+ * captureScreenRoboAnimation(
+ *   composeRule = composeTestRule,
+ *   filePath = "build/outputs/roborazzi/animation.gif",
+ *   animationOptions = RoboAnimationOptions(fps = 10),
+ * ) {
+ *   composeTestRule.onNodeWithTag("toggle").performClick()
+ *   delay(300)
+ * }
+ * ```
+ *
+ * After [block] returns, recording continues until the UI settles (see
+ * [RoboAnimationOptions.settleTimeoutMillis]), so a block that only performs a click still
+ * records the whole animation the click starts.
+ *
+ * Note: this API currently only supports recording. When the Roborazzi task is running in
+ * compare/verify mode, this function is a complete no-op: [block] is not executed and no image is
+ * recorded or verified.
+ */
+@ExperimentalRoborazziApi
+fun captureScreenRoboAnimation(
+  composeRule: ComposeTestRule,
+  filePath: String = DefaultFileNameGenerator.generateFilePath("gif"),
+  animationOptions: RoboAnimationOptions = RoboAnimationOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  block: RoboAnimationRecorderScope.() -> Unit
+) {
+  // currently, animation compare is not supported
+  if (!roborazziOptions.taskType.isRecording()) return
+  captureScreenRoboAnimation(
+    composeRule = composeRule,
+    file = fileWithRecordFilePathStrategy(filePath),
+    animationOptions = animationOptions,
+    roborazziOptions = roborazziOptions,
+    block = block
+  )
+}
+
+@ExperimentalRoborazziApi
+fun captureScreenRoboAnimation(
+  composeRule: ComposeTestRule,
+  file: File,
+  animationOptions: RoboAnimationOptions = RoboAnimationOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  block: RoboAnimationRecorderScope.() -> Unit
+) {
+  // currently, animation compare is not supported
+  if (!roborazziOptions.taskType.isRecording()) return
+  recordAnimation(
+    composeRule = composeRule,
+    file = file,
+    animationOptions = animationOptions,
+    roborazziOptions = roborazziOptions,
+    block = block,
+  ) {
+    // Idle the main Looper so windows added mid-recording (e.g. dialogs, or a gesture overlay
+    // attached on a posted message) are laid out before we enumerate the roots. The recorder loop
+    // already calls composeRule.waitForIdle() each step; this drains the pending Looper messages
+    // that create/lay out those windows. (We deliberately avoid Espresso.onIdle() here, which can
+    // interact badly with the paused Compose clock.)
+    idleMainLooperFor(0)
+    // Re-fetch the window roots each frame so windows added mid-recording (e.g. dialogs) are
+    // included in the capture.
+    RoboComponent.Screen(
+      rootsOrderByDepth = fetchRobolectricWindowRoots(),
+      roborazziOptions = roborazziOptions
+    )
+  }
+}
+
+/**
+ * Shared recording loop for [captureRoboAnimation] and [captureScreenRoboAnimation]. The only
+ * difference between the two is [rootComponentForFrame], which produces the [RoboComponent] to
+ * capture for each frame (a single Compose node vs. all screen window roots).
+ */
+private fun recordAnimation(
+  composeRule: ComposeTestRule,
+  file: File,
+  animationOptions: RoboAnimationOptions,
+  roborazziOptions: RoborazziOptions,
+  block: RoboAnimationRecorderScope.() -> Unit,
+  rootComponentForFrame: () -> RoboComponent,
+) {
   val canvases = mutableListOf<AwtRoboCanvas>()
   val captureFrame = {
     capture(
-      rootComponent = RoboComponent.Compose(
-        node = fetchSemanticsNode("roborazzi can't find component"),
-        roborazziOptions = roborazziOptions
-      ),
+      rootComponent = rootComponentForFrame(),
       roborazziOptions = roborazziOptions
     ) { canvas ->
       canvases.add(canvas)
@@ -228,7 +359,7 @@ private fun recordUntilSettled(
   }
 }
 
-@OptIn(ExperimentalRoborazziApi::class)
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 private fun saveAnimatedImage(
   file: File,
   canvases: List<AwtRoboCanvas>,
@@ -244,7 +375,9 @@ private fun saveAnimatedImage(
   // GIF encoder's boolean error returns are surfaced as IllegalStateException in its adapter).
   file.outputStream().use { outputStream ->
     encoder.start(outputStream)
-    encoder.setFrameRate(animationOptions.fps.toFloat())
+    // The encoded frame delay is exactly the virtual-clock step used while recording, so capture
+    // and playback share a single timeline (see RoboAnimationOptions.frameStepMillis).
+    encoder.setFrameDelayMillis(animationOptions.frameStepMillis)
     if (canvases.isNotEmpty()) {
       val resizeScale = roborazziOptions.recordOptions.resizeScale
       encoder.setSize(

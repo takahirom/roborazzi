@@ -25,6 +25,7 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoboAnimationOptions
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboAnimation
+import com.github.takahirom.roborazzi.captureScreenRoboAnimation
 import com.github.takahirom.roborazzi.provideRoborazziContext
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import me.saket.touchrobot.rememberTouchRobot
@@ -83,6 +84,28 @@ class ComposeTouchRobotAnimationTest {
         "($latestOffsetX, $latestOffsetY)",
       abs(latestOffsetX) > 100f && abs(latestOffsetY) > 100f
     )
+  }
+
+  @Test
+  fun captureTouchRobotSwipeScreen() {
+    // captureScreenRoboAnimation records only in record mode and no-ops otherwise, so the gesture
+    // that drives the box never progresses in compare/verify mode. Skip the test then instead of
+    // silently passing without exercising anything.
+    assumeTrue(provideRoborazziContext().options.taskType.isRecording())
+    composeTestRule.setContent {
+      DraggableBoxContent()
+    }
+    // Screen-level recording captures the whole device-sized viewport including the touch-robot
+    // show-taps pointer overlay, which is drawn at the host view root and is invisible to a
+    // node-scoped recording.
+    captureScreenRoboAnimation(
+      composeRule = composeTestRule,
+      filePath = "${roborazziSystemPropertyOutputDirectory()}/touch_robot_swipe_screen.gif",
+      animationOptions = RoboAnimationOptions(fps = 10),
+    ) {
+      // Pump virtual time so the LaunchedEffect gesture progresses while frames are captured.
+      delay(1000)
+    }
   }
 }
 
