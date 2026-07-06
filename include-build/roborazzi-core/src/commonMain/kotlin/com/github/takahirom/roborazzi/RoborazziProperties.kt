@@ -32,6 +32,24 @@ fun roborazziEnableContextData(): Boolean {
   return getSystemProperty("roborazzi.contextdata", "true").toBoolean()
 }
 
+/**
+ * Applies the [roborazziEnableContextData] flag to the user-supplied context data.
+ * When the flag is disabled the context data is dropped (empty map); when enabled
+ * the user-supplied [RoborazziOptions.contextData] is returned as-is.
+ *
+ * Platform facades (e.g. iOS) use this directly. The JVM facade additionally
+ * injects default context data (the test class name) on top of the result; that
+ * default is JVM-only and is not part of this common policy.
+ */
+@InternalRoborazziApi
+fun applyContextDataPolicy(roborazziOptions: RoborazziOptions): Map<String, Any> =
+  if (roborazziEnableContextData()) {
+    roborazziOptions.contextData
+  } else {
+    // This will be removed when we found if this is safe.
+    emptyMap()
+  }
+
 @Deprecated(
   message = "Use roborazziSystemPropertyTaskType()",
   replaceWith = ReplaceWith("roborazziSystemPropertyTaskType().isEnabled()"),

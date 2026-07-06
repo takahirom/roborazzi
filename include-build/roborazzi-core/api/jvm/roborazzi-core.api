@@ -801,6 +801,7 @@ public final class com/github/takahirom/roborazzi/RoborazziOptionsKt {
 
 public final class com/github/takahirom/roborazzi/RoborazziPropertiesKt {
 	public static final field DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH Ljava/lang/String;
+	public static final fun applyContextDataPolicy (Lcom/github/takahirom/roborazzi/RoborazziOptions;)Ljava/util/Map;
 	public static final fun getROBORAZZI_DEBUG ()Z
 	public static final fun roborazziCompareEnabled ()Z
 	public static final fun roborazziDefaultResizeScale ()D

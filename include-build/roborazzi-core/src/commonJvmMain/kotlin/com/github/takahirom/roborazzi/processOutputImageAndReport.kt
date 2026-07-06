@@ -37,16 +37,15 @@ fun processOutputImageAndReport(
 }
 
 @InternalRoborazziApi
-private fun buildContextData(roborazziOptions: RoborazziOptions): Map<String, Any> =
-  if (roborazziEnableContextData()) {
-    val className = provideRoborazziContext().description?.className
-    val classNameMap: Map<out String, Any> = className?.let {
-      mapOf(
-        RoborazziReportConst.DefaultContextData.DescriptionClass.key to className.toString()
-      )
-    } ?: mapOf()
-    roborazziOptions.contextData + classNameMap
-  } else {
-    // This will be removed when we found if this is safe.
-    mapOf()
-  }
+private fun buildContextData(roborazziOptions: RoborazziOptions): Map<String, Any> {
+  val base = applyContextDataPolicy(roborazziOptions)
+  if (!roborazziEnableContextData()) return base
+  // JVM-only: inject the test class name derived from provideRoborazziContext().
+  val className = provideRoborazziContext().description?.className
+  val classNameMap: Map<out String, Any> = className?.let {
+    mapOf(
+      RoborazziReportConst.DefaultContextData.DescriptionClass.key to className.toString()
+    )
+  } ?: mapOf()
+  return base + classNameMap
+}
