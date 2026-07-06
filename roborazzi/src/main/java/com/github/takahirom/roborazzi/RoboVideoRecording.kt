@@ -321,9 +321,13 @@ private fun recordVideo(
     if (failure != null) {
       // The block failed. Attempt a best-effort save so any frames captured before the failure
       // are still written, but never let a save failure mask the original one: attach it as a
-      // suppressed exception and always rethrow the original first-class failure.
-      runCatching { saveAnimatedImage(file, canvases, videoOptions, roborazziOptions) }
-        .exceptionOrNull()?.let { failure.addSuppressed(it) }
+      // suppressed exception and always rethrow the original first-class failure. Skip the save
+      // entirely when no frame was captured (e.g. the very first capture failed) so a failed
+      // recording never leaves an empty, invalid animation file behind.
+      if (canvases.isNotEmpty()) {
+        runCatching { saveAnimatedImage(file, canvases, videoOptions, roborazziOptions) }
+          .exceptionOrNull()?.let { failure.addSuppressed(it) }
+      }
       throw failure
     }
     // The block succeeded, so a save failure is a real failure and should surface normally.
@@ -344,11 +348,15 @@ private fun recordUntilSettled(
 ) {
   var settleElapsedMillis = 0L
   while (settleElapsedMillis < videoOptions.settleTimeoutMillis) {
-    composeRule.mainClock.advanceTimeBy(videoOptions.frameStepMillis)
-    idleMainLooperFor(videoOptions.frameStepMillis)
+    // Clamp the final step to the remaining budget (mirroring RoboVideoRecorderScope.delay) so
+    // the settle phase never advances virtual time past settleTimeoutMillis.
+    val stepMillis =
+      minOf(videoOptions.frameStepMillis, videoOptions.settleTimeoutMillis - settleElapsedMillis)
+    composeRule.mainClock.advanceTimeBy(stepMillis)
+    idleMainLooperFor(stepMillis)
     composeRule.waitForIdle()
     captureFrame()
-    settleElapsedMillis += videoOptions.frameStepMillis
+    settleElapsedMillis += stepMillis
     val lastCanvas = canvases.getOrNull(canvases.size - 1) ?: return
     val previousCanvas = canvases.getOrNull(canvases.size - 2) ?: return
     val comparisonResult: ImageComparator.ComparisonResult =
