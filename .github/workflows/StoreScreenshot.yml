@@ -11,7 +11,10 @@ permissions: {}
 
 jobs:
   store-screenshot-test:
-    runs-on: macos-latest
+    # Pin to an explicit image so recording and comparing run on the same OS.
+    # `macos-latest` currently drifts between macOS 15 and 26 during migration,
+    # which changes font anti-aliasing and produces spurious screenshot diffs.
+    runs-on: macos-26
     timeout-minutes: 50
 
     permissions:

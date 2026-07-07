@@ -7,7 +7,10 @@ permissions: {}
 
 jobs:
   compare-screenshot-test:
-    runs-on: macos-latest
+    # Pin to an explicit image so comparing runs on the same OS as recording
+    # (StoreScreenshot). `macos-latest` currently drifts between macOS 15 and 26
+    # during migration, which changes font anti-aliasing and causes spurious diffs.
+    runs-on: macos-26
     timeout-minutes: 50
 
     permissions:
