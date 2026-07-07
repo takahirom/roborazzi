@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi.sample
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -22,9 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.compose.runtime.LaunchedEffect
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
-import com.github.takahirom.roborazzi.RoboAnimationOptions
+import com.github.takahirom.roborazzi.RoboVideoOptions
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
-import com.github.takahirom.roborazzi.captureRoboAnimation
+import com.github.takahirom.roborazzi.recordRoboVideo
+import com.github.takahirom.roborazzi.recordScreenRoboVideo
 import com.github.takahirom.roborazzi.provideRoborazziContext
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import me.saket.touchrobot.rememberTouchRobot
@@ -41,20 +43,20 @@ import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Prototype: drive a Compose gesture with saket/touch-robot and record it in real time with
- * [captureRoboAnimation]. The gesture runs in a LaunchedEffect while the recording loop pumps
+ * [recordRoboVideo]. The gesture runs in a LaunchedEffect while the recording loop pumps
  * virtual time frame by frame.
  */
 @OptIn(ExperimentalRoborazziApi::class)
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], qualifiers = RobolectricDeviceQualifiers.NexusOne)
-class ComposeTouchRobotAnimationTest {
+class ComposeTouchRobotVideoTest {
   @get:Rule
   val composeTestRule = createComposeRule()
 
   @Test
-  fun captureTouchRobotSwipe() {
-    // captureRoboAnimation records only in record mode and no-ops otherwise, so the gesture that
+  fun recordTouchRobotSwipe() {
+    // recordRoboVideo records only in record mode and no-ops otherwise, so the gesture that
     // drives the box never progresses in compare/verify mode. Skip the test then instead of
     // asserting on an un-driven gesture (which fails) or leaving it suspended (which hangs).
     assumeTrue(provideRoborazziContext().options.taskType.isRecording())
@@ -69,10 +71,10 @@ class ComposeTouchRobotAnimationTest {
       })
     }
     composeTestRule.onNodeWithTag("root")
-      .captureRoboAnimation(
+      .recordRoboVideo(
         composeRule = composeTestRule,
         filePath = "${roborazziSystemPropertyOutputDirectory()}/touch_robot_swipe.gif",
-        animationOptions = RoboAnimationOptions(fps = 10),
+        videoOptions = RoboVideoOptions(fps = 10),
       ) {
         // Pump virtual time so the LaunchedEffect gesture progresses while frames are captured.
         delay(1000)
@@ -83,6 +85,28 @@ class ComposeTouchRobotAnimationTest {
         "($latestOffsetX, $latestOffsetY)",
       abs(latestOffsetX) > 100f && abs(latestOffsetY) > 100f
     )
+  }
+
+  @Test
+  fun recordTouchRobotSwipeScreen() {
+    // recordScreenRoboVideo records only in record mode and no-ops otherwise, so the gesture
+    // that drives the box never progresses in compare/verify mode. Skip the test then instead of
+    // silently passing without exercising anything.
+    assumeTrue(provideRoborazziContext().options.taskType.isRecording())
+    composeTestRule.setContent {
+      DraggableBoxContent()
+    }
+    // Screen-level recording captures the whole device-sized viewport including the touch-robot
+    // show-taps pointer overlay, which is drawn at the host view root and is invisible to a
+    // node-scoped recording.
+    recordScreenRoboVideo(
+      composeRule = composeTestRule,
+      filePath = "${roborazziSystemPropertyOutputDirectory()}/touch_robot_swipe_screen.gif",
+      videoOptions = RoboVideoOptions(fps = 10),
+    ) {
+      // Pump virtual time so the LaunchedEffect gesture progresses while frames are captured.
+      delay(1000)
+    }
   }
 }
 
@@ -95,7 +119,7 @@ private fun DraggableBoxContent(onOffsetChanged: (Float, Float) -> Unit = { _, _
 
   LaunchedEffect(Unit) {
     // Swipe from near the top-left of the box down and to the right. The suspend gesture makes
-    // progress because captureRoboAnimation idles the Robolectric main Looper in lockstep with
+    // progress because recordRoboVideo idles the Robolectric main Looper in lockstep with
     // the Compose main clock while recording frames.
     val startPx = with(density) { 40.dp.toPx() }.roundToInt()
     val endPx = with(density) { 240.dp.toPx() }.roundToInt()
@@ -110,8 +134,12 @@ private fun DraggableBoxContent(onOffsetChanged: (Float, Float) -> Unit = { _, _
 
   Box(
     Modifier
+      // Fill the window so the touch-robot show-taps overlay window (sized to this host view,
+      // with default gravity) covers the whole screen. A smaller host view produces a smaller
+      // overlay window that WindowManager centers, drawing the tap indicator offset from the
+      // actual touch point in screen-level captures.
       .testTag("root")
-      .size(300.dp)
+      .fillMaxSize()
       .background(Color.LightGray)
       .pointerInput(Unit) {
         detectDragGestures { change, dragAmount ->

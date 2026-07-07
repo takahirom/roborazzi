@@ -44,6 +44,12 @@ kotlin {
 
       }
     }
+    jvmTest {
+      dependencies {
+        implementation(libs.kotlin.test)
+        implementation(libs.kotlin.test.junit)
+      }
+    }
     iosMain {
       dependencies {
         // compileOnly is not supported for Kotlin/Native; the serialization

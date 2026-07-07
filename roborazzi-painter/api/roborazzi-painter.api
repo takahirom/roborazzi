@@ -18,7 +18,7 @@ public abstract interface class com/github/takahirom/roborazzi/AnimatedImageEnco
 	public abstract fun addFrame (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;D)V
 	public abstract fun finish ()V
 	public abstract fun setBackground (Ljava/lang/Integer;)V
-	public abstract fun setFrameRate (F)V
+	public abstract fun setFrameDelayMillis (J)V
 	public abstract fun setRepeat (I)V
 	public abstract fun setSize (II)V
 	public abstract fun start (Ljava/io/OutputStream;)V
