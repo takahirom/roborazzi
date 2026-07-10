@@ -1,3 +1,6 @@
+// TODO: Migrate off the deprecated :common module before ComposablePreviewScanner 0.10.0
+@file:Suppress("DEPRECATION")
+
 package com.github.takahirom.preview.tests
 
 import androidx.compose.ui.test.ExperimentalTestApi
