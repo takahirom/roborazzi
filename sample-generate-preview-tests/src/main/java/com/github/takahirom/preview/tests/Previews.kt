@@ -40,6 +40,8 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewWrapper
+import androidx.compose.ui.tooling.preview.PreviewWrapperProvider
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
@@ -412,6 +414,38 @@ fun PreviewDelayed() {
   ) {
     Text("Counter: ${counter}00ms ")
     CircularProgressIndicator()
+  }
+}
+
+// https://github.com/takahirom/roborazzi/issues/823
+// ComposablePreviewScanner 0.9.0+ automatically applies @PreviewWrapper when invoking the preview,
+// so the wrapper's theme and background should appear in the screenshot.
+class DarkThemeWrapperProvider : PreviewWrapperProvider {
+  @Composable
+  override fun Wrap(content: @Composable () -> Unit) {
+    MaterialTheme(colorScheme = darkColorScheme()) {
+      Box(
+        Modifier
+          .background(MaterialTheme.colorScheme.background)
+          .padding(16.dp)
+      ) {
+        content()
+      }
+    }
+  }
+}
+
+@PreviewWrapper(DarkThemeWrapperProvider::class)
+@Preview
+@Composable
+fun PreviewWithPreviewWrapper() {
+  Card(
+    Modifier.width(180.dp)
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Wrapped by PreviewWrapperProvider"
+    )
   }
 }
 
