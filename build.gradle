@@ -30,6 +30,7 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
       "sample-android-without-compose",
       "sample-compose-desktop-multiplatform",
       "sample-compose-desktop-jvm",
+      "sample-compose-v2",
       "sample-generate-preview-tests",
       "sample-generate-preview-tests-multiplatform",
       "roborazzi-idea-plugin",
