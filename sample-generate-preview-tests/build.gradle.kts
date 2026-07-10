@@ -65,6 +65,9 @@ dependencies {
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling)
   implementation(libs.androidx.compose.runtime)
+  // PreviewWrapper/PreviewWrapperProvider requires Compose UI 1.11+.
+  // This raises the androidx.compose.ui artifacts in this module only.
+  implementation("androidx.compose.ui:ui-tooling-preview:1.11.4")
 
 // replaced by dependency substitution
   testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:0.1.0")

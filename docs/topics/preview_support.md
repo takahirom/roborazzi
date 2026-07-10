@@ -157,6 +157,24 @@ fun DelayedPreview() {
 
 This annotation enables capturing screenshots at specific time intervals, particularly useful for testing animated components or delayed state changes.
 
+## PreviewWrapper support
+
+Previews annotated with [`@PreviewWrapper`](https://developer.android.com/reference/kotlin/androidx/compose/ui/tooling/preview/PreviewWrapper) (Compose UI 1.11+) are automatically wrapped by ComposablePreviewScanner 0.9.0 or later, so the wrapper's content, such as a theme or background, appears in the screenshots without any extra setup:
+
+```kotlin
+class MyWrapperProvider : PreviewWrapperProvider {
+  @Composable
+  override fun Wrap(content: @Composable () -> Unit) {
+    MyTheme { content() }
+  }
+}
+
+@PreviewWrapper(MyWrapperProvider::class)
+@Preview
+@Composable
+fun WrappedPreview() { ... }
+```
+
 ## Manually adding Compose Preview screenshot tests
 
 Roborazzi provides a helper function for ComposablePreviewScanner.
