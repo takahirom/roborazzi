@@ -73,6 +73,8 @@ public final class com/github/takahirom/roborazzi/ComposePreviewTester$Options {
 public final class com/github/takahirom/roborazzi/ComposePreviewTester$Options$JUnit4TestLifecycleOptions : com/github/takahirom/roborazzi/ComposePreviewTester$Options$TestLifecycleOptions {
 	public static final field $stable I
 	public fun <init> ()V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lkotlin/jvm/functions/Function0;

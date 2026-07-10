@@ -337,7 +337,34 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
        * scenario is closed by Roborazzi after the capture completes.
        */
       val activityScenarioProvider: ((ComposeContentTestRule) -> ActivityScenario<out ComponentActivity>)? = null,
-    ) : TestLifecycleOptions
+    ) : TestLifecycleOptions {
+      /**
+       * Kept for binary compatibility with the previous
+       * `AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>`-based
+       * signature, including its default-arguments (synthetic) constructor.
+       * Hidden from source; new code resolves to the primary constructor.
+       * The cast inside the adapted [testRuleFactory] is safe because factories
+       * compiled against the old signature always produce v1 [AndroidComposeTestRule]s.
+       */
+      @Deprecated(
+        message = "Use the ComposeContentTestRule-based constructor instead.",
+        level = DeprecationLevel.HIDDEN
+      )
+      @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+      constructor(
+        composeRuleFactory: () -> AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *> = {
+          createAndroidComposeRule<RoborazziActivity>(effectContext = StandardTestDispatcher()) as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>
+        },
+        testRuleFactory: (AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>) -> TestRule = {
+          JUnit4TestLifecycleOptions().testRuleFactory(it)
+        },
+      ) : this(
+        composeRuleFactory = composeRuleFactory,
+        testRuleFactory = { composeTestRule ->
+          testRuleFactory(composeTestRule as AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>)
+        },
+      )
+    }
 
     data class ScanOptions(
       /**
