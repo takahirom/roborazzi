@@ -43,7 +43,8 @@ In the DroidKaigi 2023 app, Roborazzi was introduced from the early stages of de
 ## Using Roborazzi documentation with AI coding agents
 
 Roborazzi ships its documentation as an installable [agent skill](https://skills.sh/). Running the
-following command installs the docs into your AI coding agent (Claude Code, Cursor, Codex, etc.),
+following command installs the docs into your AI coding agent (Claude Code, Cursor, Codex,
+Antigravity, Gemini CLI, etc.),
 so the agent can look up Roborazzi setup and usage while working on your project:
 
 ```bash
