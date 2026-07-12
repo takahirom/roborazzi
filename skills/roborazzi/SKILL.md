@@ -1,6 +1,6 @@
 ---
 name: roborazzi
-description: Use when working with Roborazzi screenshot tests on Android/JVM — setting up the Roborazzi Gradle plugin, recording/comparing/verifying screenshots (record, compare, verify tasks), writing tests with captureRoboImage or RoborazziRule, Compose Preview screenshot testing (ComposablePreviewScanner), Compose Multiplatform (iOS/desktop) screenshots, AI-powered image assertions, Roborazzi Gradle properties (roborazzi.*), or troubleshooting Roborazzi/Robolectric screenshot test failures.
+description: Use when working with Roborazzi screenshot tests on Android/JVM — setting up the Roborazzi Gradle plugin, running record/compare/verify tasks, writing tests with captureRoboImage or RoborazziRule, Compose Preview screenshot testing (ComposablePreviewScanner), Compose Multiplatform (iOS/desktop) screenshots, AI-powered image assertions, roborazzi.* Gradle properties, or troubleshooting Roborazzi/Robolectric screenshot test failures.
 ---
 
 # Roborazzi
@@ -16,8 +16,7 @@ variant; see the build setup reference).
 
 ## Reference index
 
-The full documentation is available in the `references/` directory of this skill. Read the file
-that matches the task at hand:
+Read the reference that matches the task at hand:
 
 | File | Read when |
 |---|---|
