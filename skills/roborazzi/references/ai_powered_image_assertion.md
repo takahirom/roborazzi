@@ -68,6 +68,11 @@ interface AiAssertionModel {
     actualImageFilePath: String,
     aiAssertionOptions: AiAssertionOptions
   ): AiAssertionResults
+
+  fun assert(
+    targetImages: TargetImages,
+    aiAssertionOptions: AiAssertionOptions
+  ): AiAssertionResults
 }
 ```
 
@@ -76,7 +81,9 @@ compareOptions = RoborazziOptions.CompareOptions(
   aiAssertionOptions = AiAssertionOptions(
     aiAssertionModel = object : AiAssertionOptions.AiAssertionModel {
       override fun assert(
+        referenceImageFilePath: String,
         comparisonImageFilePath: String,
+        actualImageFilePath: String,
         aiAssertionOptions: AiAssertionOptions
       ): AiAssertionResults {
         // You can use any LLMs here to create AiAssertionResults
@@ -84,12 +91,24 @@ compareOptions = RoborazziOptions.CompareOptions(
           aiAssertionResults = aiAssertionOptions.aiAssertions.map { assertion ->
             AiAssertionResult(
               assertionPrompt = assertion.assertionPrompt,
-              fulfillmentPercent = fulfillmentPercent,
+              fulfillmentPercent = 100,
               requiredFulfillmentPercent = assertion.requiredFulfillmentPercent,
               failIfNotFulfilled = assertion.failIfNotFulfilled,
               explanation = "This is a manual test.",
             )
           }
+        )
+      }
+
+      override fun assert(
+        targetImages: TargetImages,
+        aiAssertionOptions: AiAssertionOptions
+      ): AiAssertionResults {
+        return assert(
+          referenceImageFilePath = "",
+          comparisonImageFilePath = targetImages.images.first().filePath,
+          actualImageFilePath = "",
+          aiAssertionOptions = aiAssertionOptions
         )
       }
     },

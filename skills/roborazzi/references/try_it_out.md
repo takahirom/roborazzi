@@ -3,7 +3,7 @@
 
 Available on Maven Central.
 
-### Add Robolectric
+## Add Robolectric
 
 This is an example of adding Robolectric to your project:
 https://github.com/takahirom/roborazzi-usage-examples/compare/b697...5c12
@@ -13,7 +13,7 @@ This library is dependent on Robolectric. Please see below to add Robolectric.
 https://robolectric.org/getting-started/
 
 
-### Add Roborazzi
+## Add Roborazzi
 
 This is an example of adding Roborazzi to your project:
 https://github.com/takahirom/roborazzi-usage-examples/commit/3a02

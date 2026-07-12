@@ -1,6 +1,6 @@
 # How to use
 
-### Take a screenshot manually
+## Take a screenshot manually
 
 You can take a screenshot by calling captureRoboImage().
 
@@ -131,7 +131,7 @@ bitmap.captureRoboImage()
 
 </table>
 
-### Device configuration
+## Device configuration
 
 You can configure the device by using the `@Config` annotation and `RobolectricDeviceQualifiers`.
 
@@ -187,11 +187,11 @@ fun test() {
 
 </table>
 
-### Integrate to your GitHub Actions
+## Integrate to your GitHub Actions
 
 It is easy to integrate Roborazzi to your GitHub Actions.
 
-#### Add a job to store screenshots
+### Add a job to store screenshots
 
 ```yaml
 name: store screenshots
@@ -222,14 +222,14 @@ jobs:
           ./gradlew app:recordRoborazziDebug --stacktrace
 
       # Upload screenshots to GitHub Actions Artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: screenshots
           path: app/build/outputs/roborazzi
           retention-days: 30
 ```
 
-#### Add a job to verify screenshots
+### Add a job to verify screenshots
 
 ```yaml
 name: verify test
@@ -255,7 +255,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       # Download screenshots from main branch
-      - uses: dawidd6/action-download-artifact@v2
+      - uses: dawidd6/action-download-artifact@v6
         with:
           name: screenshots
           path: app/build/outputs/roborazzi
@@ -268,21 +268,21 @@ jobs:
           # If there is a difference between the screenshots, the test will fail.
           ./gradlew app:verifyRoborazziDebug --stacktrace
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: screenshot-diff
           path: app/build/outputs/roborazzi
           retention-days: 30
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: screenshot-diff-reports
           path: app/build/reports
           retention-days: 30
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: screenshot-diff-test-results
@@ -291,7 +291,7 @@ jobs:
 
 ```
 
-#### Advanced workflow Sample: Compare Snapshot Results on Pull Requests
+### Advanced workflow Sample: Compare Snapshot Results on Pull Requests
 
 For those who are looking for a more advanced example, we have prepared a sample repository that
 demonstrates how to use Roborazzi to compare snapshot results on GitHub pull requests. This sample
@@ -305,7 +305,7 @@ projects.
 
 Example of the comment
 
-<img src="https://user-images.githubusercontent.com/1386930/236480693-80483cde-53fe-4c04-ba1f-2352e14b5f15.png" width="600" />
+<img alt="Example of a Roborazzi screenshot comparison comment on a GitHub pull request" src="https://user-images.githubusercontent.com/1386930/236480693-80483cde-53fe-4c04-ba1f-2352e14b5f15.png" width="600" />
 
 ## RoborazziRule (Optional)
 
@@ -367,7 +367,7 @@ fun captureRoboGifSample() {
 }
 ```
 
-<img width="350" src="https://user-images.githubusercontent.com/1386930/226362212-35d34c9e-6df1-4671-8949-10fad7ad98c9.gif" />
+<img alt="GIF of the test interactions captured by captureRoboGif" width="350" src="https://user-images.githubusercontent.com/1386930/226362212-35d34c9e-6df1-4671-8949-10fad7ad98c9.gif" />
 
 ### Generate gif with test rule
 

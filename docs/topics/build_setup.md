@@ -218,7 +218,7 @@ Please be careful when using this task.
 
 The comparison image, saved as `[original]_compare.png`, is shown below:
 
-![image](https://github.com/takahirom/roborazzi/assets/1386930/722090ff-77c4-4a04-a0e3-8ce562ffa6be)
+![Comparison image highlighting the differences between the recorded and actual screenshots](https://github.com/takahirom/roborazzi/assets/1386930/722090ff-77c4-4a04-a0e3-8ce562ffa6be)
 
 You can check the test report in `build/reports/roborazzi/index.html`
 
@@ -249,11 +249,11 @@ roborazzi {
 > You can customize the file path strategy for the recorded image. The default strategy is `relativePathFromCurrentDirectory`. If you select `relativePathFromRoborazziContextOutputDirectory`, the file will be saved in the output directory specified by `roborazzi.outputDir`.  
 > This can be configured in your `gradle.properties` file:  
 >
-> ```
+> ```properties
 > roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory
 > ```
 
-#### Separate output directories per variant/target (Experimental)
+### Separate output directories per variant/target (Experimental)
 
 By default, every Roborazzi task shares a single output directory (`build/outputs/roborazzi`) and a single intermediate directory (`build/intermediates/roborazzi`). When multiple Roborazzi test tasks run in a single Gradle invocation (for example `check`, or Kotlin Multiplatform's `allTests`), their directory reads and writes can race with each other. On Gradle 9 this can hard-fail with `Cannot access input property 'roborazziImageInput'` (see [#830](https://github.com/takahirom/roborazzi/issues/830)).
 

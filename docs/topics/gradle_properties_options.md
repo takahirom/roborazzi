@@ -8,7 +8,7 @@ You can also use `-P` to set the options in the command line. For example, `./gr
 This option enables you to configure the behavior of Roborazzi. By default, all settings are set to false.
 For additional configuration options, please refer to the 'Apply Roborazzi Gradle Plugin' section.
 
-```
+```properties
 roborazzi.test.record=true
 # roborazzi.test.compare=true
 # roborazzi.test.verify=true
@@ -20,7 +20,7 @@ roborazzi.test.record=true
 
 This option lets you set the resize scale for the image being recorded. The default value is 1.0.
 
-```
+```properties
 roborazzi.record.resizeScale=0.5
 ```
 
@@ -28,7 +28,7 @@ roborazzi.record.resizeScale=0.5
 
 This setting allows you to specify the file path strategy for the recorded image. The default strategy is `relativePathFromCurrentDirectory`. If you choose `relativePathFromRoborazziContextOutputDirectory`, the file will be saved in the output directory specified by `roborazzi.outputDir`.
 
-```
+```properties
 roborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory
 ```
 
@@ -40,7 +40,7 @@ This option enables you to define the naming strategy for the recorded image. Th
 - If you choose `escapedTestPackageAndClassAndMethod`, the file name will be `com_example_MyTest.testMethod.png`.
 - If you choose `testClassAndMethod`, the file name will be `MyTest.testMethod.png`.
 
-```
+```properties
 roborazzi.record.namingStrategy=testClassAndMethod
 ```
 
@@ -49,7 +49,7 @@ roborazzi.record.namingStrategy=testClassAndMethod
 This option allows you to clean up old screenshots. By default, this option is set to false.
 The reason why Roborazzi does not delete old screenshots by default is that Roborazzi doesn't know if you are running filtered tests or not. If you are running filtered tests, Roborazzi will delete the screenshots that are not related to the current test run.
 
-```
+```properties
 roborazzi.cleanupOldScreenshots=true
 ```
 
@@ -59,7 +59,7 @@ roborazzi.cleanupOldScreenshots=true
 
 I recommend setting `it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"` in your `build.gradle` file to enhance the accuracy of your screenshots. For more details, please refer to the [issue](https://github.com/takahirom/roborazzi/issues/296).
 
-```
+```kotlin
 android {
     testOptions {
     ...
