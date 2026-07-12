@@ -32,5 +32,6 @@ that matches the task at hand:
 | [references/idea_plugin.md](references/idea_plugin.md) | Using the Roborazzi IntelliJ IDEA / Android Studio plugin to view screenshots in the IDE. |
 | [references/faq.md](references/faq.md) | Troubleshooting: common errors, CI setup questions, Robolectric configuration issues, and other frequently asked questions. |
 
-Files under `references/` are generated verbatim from the repository's `docs/topics/` directory by
-the `generateSkill` Gradle task — do not edit them here.
+The files under `references/` mirror the official Roborazzi documentation at the time this skill
+was published. The latest version is always available at
+[the documentation site](https://takahirom.github.io/roborazzi/).
