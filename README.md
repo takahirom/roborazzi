@@ -43,6 +43,16 @@ efficient and reliable testing process by capturing screenshots with Robolectric
 
 In the DroidKaigi 2023 app, Roborazzi was introduced from the early stages of development as part of the architectural design. This integration allowed the team to verify changes throughout the development process. The specific architectural decisions and how they were implemented can be found [README](https://github.com/DroidKaigi/conference-app-2023#screenshot-testing-with-robolectric-native-graphics-rng-and-roborazzi).
 
+## Using Roborazzi documentation with AI coding agents
+
+Roborazzi ships its documentation as an installable [agent skill](https://skills.sh/). Running the
+following command installs the docs into your AI coding agent (Claude Code, Cursor, Codex, etc.),
+so the agent can look up Roborazzi setup and usage while working on your project:
+
+```
+npx skills add takahirom/roborazzi
+```
+
 <!-- end -->
 <!-- topic_try_it_out -->
 

@@ -13,6 +13,28 @@ permissions:
   contents: read
 
 jobs:
+  check-generated-files:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+      - uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # v3.13.0
+        with:
+          distribution: 'zulu'
+          java-version: 19
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Check README.md and skills/ are in sync with docs/topics
+        run: |
+          ./gradlew generateReadme generateSkill --stacktrace
+          git add -N README.md skills/
+          git diff --exit-code README.md skills/ || {
+            echo "README.md or skills/ is out of sync with docs/topics. Run ./gradlew generateReadme generateSkill and commit the result."
+            exit 1
+          }
+
   test:
     runs-on: macos-latest
 
