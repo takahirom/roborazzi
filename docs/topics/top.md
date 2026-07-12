@@ -45,6 +45,6 @@ Roborazzi ships its documentation as an installable [agent skill](https://skills
 following command installs the docs into your AI coding agent (Claude Code, Cursor, Codex, etc.),
 so the agent can look up Roborazzi setup and usage while working on your project:
 
-```
+```bash
 npx skills add takahirom/roborazzi
 ```
