@@ -43,7 +43,6 @@ fun checkLaunchShot() {
 
 This allows you to create a category of screenshot tests and filter them using the `-Pscreenshot` property, thus making it easier to run only those specific tests.
 
-## Q: How can I debug screenshot tests in Android Studio?
 ## Q: How can I execute screenshot tests using Android Studio's Run button?
 
 A: To execute screenshot tests using Android Studio's Run button, configure your project as follows:
@@ -102,10 +101,9 @@ may be racing over the shared output directory. In that case you can enable the
 experimental `separateOutputDirs` option so each variant/target gets its own directory.
 See [Separate output directories per variant/target](build_setup.md#separate-output-directories-per-variant-target-experimental).
 
-## Q: Why do my screenshot tests fail inconsistently across different operating systems like MacOS, Ubuntu, and Windows?
+## Q: Why do my screenshot tests fail inconsistently across different operating systems like macOS, Ubuntu, and Windows?
 
 **A:** This is a known issue caused by variations in how graphics libraries render components on different platforms.
-This issue is due to variations in how graphics libraries render components on different platforms. 
 As we've seen with [Now in Android](https://github.com/android/nowinandroid/issues/1242#issuecomment-2032962982), there are no guarantees for identical rendering across all environments. 
 To ensure more consistent results, consider configuring your continuous integration (CI) environment to both record and test screenshots. This setup minimizes discrepancies by using the same settings and resources for all tests.
 

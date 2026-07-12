@@ -104,11 +104,17 @@ compareOptions = RoborazziOptions.CompareOptions(
         targetImages: TargetImages,
         aiAssertionOptions: AiAssertionOptions
       ): AiAssertionResults {
-        return assert(
-          referenceImageFilePath = "",
-          comparisonImageFilePath = targetImages.images.first().filePath,
-          actualImageFilePath = "",
-          aiAssertionOptions = aiAssertionOptions
+        // targetImages.images holds the images to assert (e.g. targetImages.images.first().filePath)
+        return AiAssertionResults(
+          aiAssertionResults = aiAssertionOptions.aiAssertions.map { assertion ->
+            AiAssertionResult(
+              assertionPrompt = assertion.assertionPrompt,
+              fulfillmentPercent = 100,
+              requiredFulfillmentPercent = assertion.requiredFulfillmentPercent,
+              failIfNotFulfilled = assertion.failIfNotFulfilled,
+              explanation = "This is a manual test.",
+            )
+          }
         )
       }
     },
