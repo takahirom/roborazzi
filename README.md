@@ -1079,9 +1079,9 @@ look at, **UI tree dump** writes a machine-readable JSON **sidecar** — a file 
 lives next to the screenshot it describes — for tools and AI agents to read.
 
 When enabled, capturing `MyTest.png` also writes `MyTest.uitree.json` beside it
-describing the Compose semantics + View hierarchy of the current run, plus an
-annotated `MyTest.annotated.png` (see [Annotated image](#annotated-image-set-of-mark)
-below). It is written on record **and** compare/verify tasks (always describing
+describing the Compose semantics + View hierarchy of the current run, plus, by
+default, an annotated `MyTest.annotated.png` (see
+[Annotated image](#annotated-image-set-of-mark) below). It is written on record **and** compare/verify tasks (always describing
 the current run), next to whatever image the task writes:
 
 * On **record**, next to the golden image: `MyTest.uitree.json`.
@@ -1150,9 +1150,10 @@ Here each mark's number is the same `n` used in the JSON sidecar.
 
 ![Annotated Set-of-Mark image](https://github.com/user-attachments/assets/208593c3-cd2b-4c0a-ae5b-e7cf6cd0260e)
 
-Alongside the JSON sidecar, an annotated **Set-of-Mark** image is written next to
-the screenshot: a copy of the output screenshot with every numbered node drawn as
-a bounding box plus a small numbered label.
+Alongside the JSON sidecar, an annotated **Set-of-Mark** image is written by
+default (see `annotateImage` below) next to the screenshot: a copy of the output
+screenshot with every numbered node drawn as a bounding box plus a small numbered
+label.
 
 * On **record**, next to the golden image: `MyTest.annotated.png`.
 * On **compare/verify**, next to the `_actual` image: `MyTest_actual.annotated.png`.
