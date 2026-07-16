@@ -136,16 +136,16 @@ class UiTreeDumpIntegrationTest {
     assertEquals(screenshot.height, annotated.height)
 
     // The boxes were drawn, so at least some pixels differ from the screenshot.
-    var differingPixels = 0
+    var hasDifferingPixels = false
     outer@ for (x in 0 until screenshot.width) {
       for (y in 0 until screenshot.height) {
         if (screenshot.getPixel(x, y) != annotated.getPixel(x, y)) {
-          differingPixels++
-          if (differingPixels > 0) break@outer
+          hasDifferingPixels = true
+          break@outer
         }
       }
     }
-    assertTrue("annotated image is identical to the screenshot", differingPixels > 0)
+    assertTrue("annotated image is identical to the screenshot", hasDifferingPixels)
 
     // Numbering consistency: the max n drawn equals the max n in the sidecar JSON.
     val json = sidecarFile.readText()
