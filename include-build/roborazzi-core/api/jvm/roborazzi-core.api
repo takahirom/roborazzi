@@ -587,8 +587,46 @@ public abstract interface class com/github/takahirom/roborazzi/RoboCanvas {
 	public abstract fun save (Ljava/lang/String;DLjava/util/Map;Lcom/github/takahirom/roborazzi/ImageIoFormat;)V
 }
 
+public abstract interface class com/github/takahirom/roborazzi/RoboComponentTree {
+	public fun countOfComponent ()I
+	public fun depth ()I
+	public abstract fun getActions ()Ljava/util/List;
+	public abstract fun getBounds ()Lcom/github/takahirom/roborazzi/RoboRect;
+	public abstract fun getChildren ()Ljava/util/List;
+	public abstract fun getFlags ()Ljava/util/List;
+	public abstract fun getHeight ()I
+	public abstract fun getProperties ()Ljava/util/Map;
+	public abstract fun getTestTag ()Ljava/lang/String;
+	public abstract fun getVisibility ()Lcom/github/takahirom/roborazzi/Visibility;
+	public abstract fun getWidth ()I
+}
+
+public final class com/github/takahirom/roborazzi/RoboComponentTree$DefaultImpls {
+	public static fun countOfComponent (Lcom/github/takahirom/roborazzi/RoboComponentTree;)I
+	public static fun depth (Lcom/github/takahirom/roborazzi/RoboComponentTree;)I
+}
+
 public final class com/github/takahirom/roborazzi/RoboOutputNameKt {
 	public static final fun roboOutputName ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoboRect {
+	public fun <init> (IIII)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun copy (IIII)Lcom/github/takahirom/roborazzi/RoboRect;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoboRect;IIIIILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoboRect;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBottom ()I
+	public final fun getHeight ()I
+	public final fun getLeft ()I
+	public final fun getRight ()I
+	public final fun getTop ()I
+	public final fun getWidth ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/github/takahirom/roborazzi/RoborazziAccessibilityOptions {
@@ -889,5 +927,14 @@ public final class com/github/takahirom/roborazzi/SystemProperty_commonJvmKt {
 
 public final class com/github/takahirom/roborazzi/ThresholdValidatorKt {
 	public static final fun ThresholdValidator (F)Lkotlin/jvm/functions/Function1;
+}
+
+public final class com/github/takahirom/roborazzi/Visibility : java/lang/Enum {
+	public static final field Gone Lcom/github/takahirom/roborazzi/Visibility;
+	public static final field Invisible Lcom/github/takahirom/roborazzi/Visibility;
+	public static final field Visible Lcom/github/takahirom/roborazzi/Visibility;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/Visibility;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/Visibility;
 }
 
