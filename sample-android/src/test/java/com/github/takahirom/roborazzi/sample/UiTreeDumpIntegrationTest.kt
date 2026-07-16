@@ -1,5 +1,6 @@
 package com.github.takahirom.roborazzi.sample
 
+import android.graphics.BitmapFactory
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -91,5 +93,100 @@ class UiTreeDumpIntegrationTest {
 
     imageFile.delete()
     sidecarFile.delete()
+  }
+
+  @Test
+  fun writesAnnotatedImageMatchingSidecarNumbering() {
+    composeTestRule.setContent {
+      Column {
+        Text(
+          text = "Login",
+          modifier = Modifier
+            .testTag("login_button")
+            .size(120.dp)
+            .clickable { }
+        )
+        Text(text = "Forgot password?")
+      }
+    }
+
+    val prefix =
+      "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.annotated"
+    val imageFile = File("$prefix.png")
+    val sidecarFile = File("$prefix.uitree.json")
+    val annotatedFile = File("$prefix.annotated.png")
+    listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
+
+    onView(isRoot()).captureRoboImage(
+      file = imageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        uiTreeDumpOptions = UiTreeDumpOptions(),
+      ),
+    )
+
+    // The annotated image is written next to the screenshot.
+    assertTrue("annotated image not found: ${annotatedFile.absolutePath}", annotatedFile.exists())
+
+    val screenshot = BitmapFactory.decodeFile(imageFile.absolutePath)
+    val annotated = BitmapFactory.decodeFile(annotatedFile.absolutePath)
+
+    // Same dimensions as the screenshot.
+    assertEquals(screenshot.width, annotated.width)
+    assertEquals(screenshot.height, annotated.height)
+
+    // The boxes were drawn, so at least some pixels differ from the screenshot.
+    var differingPixels = 0
+    outer@ for (x in 0 until screenshot.width) {
+      for (y in 0 until screenshot.height) {
+        if (screenshot.getPixel(x, y) != annotated.getPixel(x, y)) {
+          differingPixels++
+          if (differingPixels > 0) break@outer
+        }
+      }
+    }
+    assertTrue("annotated image is identical to the screenshot", differingPixels > 0)
+
+    // Numbering consistency: the max n drawn equals the max n in the sidecar JSON.
+    val json = sidecarFile.readText()
+    val maxNInJson = Regex("\"n\": (\\d+)").findAll(json)
+      .map { it.groupValues[1].toInt() }
+      .maxOrNull()
+    // Two annotatable nodes here (login_button, "Forgot password?").
+    assertEquals(2, maxNInJson)
+
+    listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
+  }
+
+  @Test
+  fun annotateImageFalseWritesSidecarButNoAnnotatedImage() {
+    composeTestRule.setContent {
+      Text(
+        text = "Login",
+        modifier = Modifier
+          .testTag("login_button")
+          .size(120.dp)
+      )
+    }
+
+    val prefix =
+      "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.optOut"
+    val imageFile = File("$prefix.png")
+    val sidecarFile = File("$prefix.uitree.json")
+    val annotatedFile = File("$prefix.annotated.png")
+    listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
+
+    onView(isRoot()).captureRoboImage(
+      file = imageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        uiTreeDumpOptions = UiTreeDumpOptions(annotateImage = false),
+      ),
+    )
+
+    assertTrue("sidecar should still be written", sidecarFile.exists())
+    assertFalse("no annotated image when annotateImage = false", annotatedFile.exists())
+
+    listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
   }
 }
