@@ -1,6 +1,7 @@
 package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoboComponentTree
 import com.github.takahirom.roborazzi.RoboComponentTreeType
 import com.github.takahirom.roborazzi.RoboRect
@@ -35,7 +36,7 @@ private class FakeNode(
   override val height: Int get() = bounds.height
 }
 
-@OptIn(ExperimentalRoborazziApi::class)
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 class UiTreeDumpTest {
 
   private fun sampleTree(): RoboComponentTree = FakeNode(

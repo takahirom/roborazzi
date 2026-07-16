@@ -65,11 +65,11 @@ class UiTreeDumpOptions(
 }
 
 /**
- * Carries the OUTPUT image geometry recorded at the root of the UI tree JSON so
- * consumers can map RAW (unscaled) node [RoboComponentTree.bounds] onto the
- * image that the task actually wrote.
+ * Internal tooling type carrying the OUTPUT image geometry recorded at the root
+ * of the UI tree JSON so consumers can map RAW (unscaled) node
+ * [RoboComponentTree.bounds] onto the image that the task actually wrote.
  */
-@ExperimentalRoborazziApi
+@InternalRoborazziApi
 data class UiTreeCaptureInfo(
   val imageWidth: Int,
   val imageHeight: Int,
@@ -88,8 +88,10 @@ private const val MergeDescendantsFlag = "MergeDescendants"
  * `RoboComponent` subclasses) use reference identity, so equal-but-distinct
  * nodes are handled correctly; do not implement structural equality on tree
  * node types you want numbered independently.
+ *
+ * Internal tooling helper backing the sidecar/annotation pipeline.
  */
-@ExperimentalRoborazziApi
+@InternalRoborazziApi
 fun assignUiTreeNumbers(
   root: RoboComponentTree,
   isAnnotatable: (RoboComponentTree) -> Boolean,
@@ -114,8 +116,11 @@ fun assignUiTreeNumbers(
 /**
  * Serializes [this] tree into the grep-first UI tree JSON described in the
  * Roborazzi docs. Deterministic: the same tree yields byte-identical output.
+ *
+ * Internal tooling helper backing the sidecar/annotation pipeline; the
+ * user-facing surface is [UiTreeDumpOptions] and the written sidecar files.
  */
-@ExperimentalRoborazziApi
+@InternalRoborazziApi
 fun RoboComponentTree.toUiTreeJson(
   captureInfo: UiTreeCaptureInfo,
   options: UiTreeDumpOptions = UiTreeDumpOptions(),
