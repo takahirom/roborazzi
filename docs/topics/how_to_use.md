@@ -696,9 +696,10 @@ look at, **UI tree dump** writes a machine-readable JSON sidecar next to each
 captured screenshot for tools and AI agents to read.
 
 When enabled, capturing `MyTest.png` also writes `MyTest.uitree.json` beside it
-describing the Compose semantics + View hierarchy of the current run. It is
-written on record **and** compare/verify tasks (always describing the current
-run), next to whatever image the task writes:
+describing the Compose semantics + View hierarchy of the current run, plus an
+annotated `MyTest.annotated.png` (see [Annotated image](#annotated-image-set-of-mark)
+below). It is written on record **and** compare/verify tasks (always describing
+the current run), next to whatever image the task writes:
 
 * On **record**, next to the golden image: `MyTest.uitree.json`.
 * On **compare/verify**, next to the `_actual` image: `MyTest_actual.uitree.json`.
@@ -756,6 +757,37 @@ attributes, so a single `grep` finds a node and its coordinates.
   `MergeDescendants` flag is numbered, its descendants are not numbered.
 * Output is **deterministic**: the same UI produces byte-identical JSON (no
   timestamps, no hashes).
+
+#### Annotated image (Set-of-Mark)
+
+Alongside the JSON sidecar, an annotated **Set-of-Mark** image is written next to
+the screenshot: a copy of the output screenshot with every numbered node drawn as
+a bounding box plus a small numbered label.
+
+* On **record**, next to the golden image: `MyTest.annotated.png`.
+* On **compare/verify**, next to the `_actual` image: `MyTest_actual.annotated.png`.
+
+The number on each box is exactly the same `n` used in the JSON sidecar, so the
+image and the JSON always agree: an agent (or a human) can point at "element #3"
+in the picture and look up `"n": 3` in the JSON to read its exact `bounds`,
+properties, and actions. The boxes are mapped onto the output image with the same
+contract the JSON documents (`image = (raw - root.origin) * scale`).
+
+The annotated image is a **display artifact of the current run only**: like the
+JSON sidecar it never participates in image comparison and never fails a capture,
+and it is never treated as a golden.
+
+To write only the JSON sidecar and skip the annotated image, opt out with
+`annotateImage = false`:
+
+```kotlin
+onView(ViewMatchers.isRoot())
+  .captureRoboImage(
+    roborazziOptions = RoborazziOptions(
+      uiTreeDumpOptions = UiTreeDumpOptions(annotateImage = false)
+    )
+  )
+```
 
 #### Primary use case: an AI agent iterating on UI numerically
 
