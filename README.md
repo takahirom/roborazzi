@@ -1072,6 +1072,103 @@ If you are having trouble debugging your test, try Dump mode as follows.
 
 ![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
 
+### UI tree dump (JSON)
+
+While [Dump mode](#dump-mode) renders the UI tree *into an image* for humans to
+look at, **UI tree dump** writes a machine-readable JSON sidecar next to each
+captured screenshot for tools and AI agents to read.
+
+When enabled, capturing `MyTest.png` also writes `MyTest.uitree.json` beside it
+describing the Compose semantics + View hierarchy of the current run. It is
+written on record **and** compare/verify tasks (always describing the current
+run), next to whatever image the task writes:
+
+* On **record**, next to the golden image: `MyTest.uitree.json`.
+* On **compare/verify**, next to the `_actual` image: `MyTest_actual.uitree.json`.
+
+The sidecar is **informational only**: it never participates in image diffing and
+never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
+(which have no component tree) do not produce a sidecar.
+
+#### Enabling it
+
+Via the Gradle property (no code change):
+
+```
+./gradlew recordRoborazziDebug -Proborazzi.dumpUiTree=true
+```
+
+Or per capture via `RoborazziOptions`:
+
+```kotlin
+onView(ViewMatchers.isRoot())
+  .captureRoboImage(
+    roborazziOptions = RoborazziOptions(
+      uiTreeDumpOptions = UiTreeDumpOptions()
+    )
+  )
+```
+
+#### Format
+
+```json
+{ "schemaVersion": 1, "capture": { "imageWidth": 220, "imageHeight": 100, "scale": 1.0 }, "root":
+ { "type": "view", "className": "androidx.compose.ui.platform.ComposeView", "bounds": [0, 0, 220, 100], "children": [
+  { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 24, 204, 72], "properties": { "Role": "Button", "Text": "Login" }, "actions": ["OnClick"], "flags": ["MergeDescendants"] },
+  { "n": 2, "type": "compose", "bounds": [16, 80, 204, 96], "properties": { "Text": "Forgot password?" } } ] }
+}
+```
+
+The format is deliberately grep-first: one node per line with all of its scalar
+attributes, so a single `grep` finds a node and its coordinates.
+
+* `bounds` is `[left, top, right, bottom]` in **RAW (unscaled) window pixel**
+  coordinates. The root-level `capture` object carries the output image's
+  `imageWidth`/`imageHeight` and the `scale` (the resize scale). Because a
+  single-component capture's root can start at a non-zero window offset (e.g. the
+  root `bounds` is `[0, 358, 94, 526]` for a 94x168 image), subtract the ROOT
+  node's origin before applying the scale:
+  `imageX = (rawX - root.bounds[0]) * scale`,
+  `imageY = (rawY - root.bounds[1]) * scale`. For full-screen captures the root
+  origin is `0, 0`, so this degenerates to `imagePixel = rawPixel * scale`.
+* Empty/default fields are omitted (no empty maps/lists, no `visibility` when the
+  node is visible).
+* `n` is a sequential (1-based, pre-order) number assigned only to *annotatable*
+  nodes — visible nodes that have a test tag, a `Text`/`ContentDescription`
+  property, or at least one action. Once an annotatable node with the
+  `MergeDescendants` flag is numbered, its descendants are not numbered.
+* Output is **deterministic**: the same UI produces byte-identical JSON (no
+  timestamps, no hashes).
+
+#### Primary use case: an AI agent iterating on UI numerically
+
+Because the output is deterministic and carries exact coordinates, an agent can
+verify a UI fix **numerically** instead of eyeballing screenshots:
+
+1. Record the current UI and read the node line:
+
+   ```
+   ./gradlew recordRoborazziDebug -Proborazzi.dumpUiTree=true
+   grep login_button build/outputs/roborazzi/MyTest.uitree.json
+   #  { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 24, 204, 72], ... }
+   ```
+
+2. Compute what you need from the raw numbers — for example the vertical gap to
+   the next sibling (`80 - 72 = 8px`) — and make the layout change.
+
+3. Record again and diff the two JSON files:
+
+   ```
+   diff old/MyTest.uitree.json build/outputs/roborazzi/MyTest.uitree.json
+   ```
+
+   Determinism makes the diff meaningful: only the bounds/properties that
+   actually changed appear, so the agent can confirm the fix moved the node by
+   exactly the intended amount.
+
+The sidecar always reflects the current run and never fails verification, so it
+is safe to leave enabled while iterating.
+
 ### Accessibility Check
 
 Roborazzi Accessibility Checks is a library that integrates accessibility checks into Roborazzi.
@@ -1703,6 +1800,19 @@ The reason why Roborazzi does not delete old screenshots by default is that Robo
 
 ```properties
 roborazzi.cleanupOldScreenshots=true
+```
+
+## roborazzi.dumpUiTree
+
+This option enables the [UI tree dump (JSON)](how_to_use.md#ui-tree-dump-json).
+When set to `true`, each captured screenshot gets a machine-readable
+`.uitree.json` sidecar written next to the image it describes
+(`MyTest.uitree.json` on record, `MyTest_actual.uitree.json` on compare/verify).
+By default this option is set to false. The sidecar is informational only: it
+never participates in image diffing and never fails verification.
+
+```properties
+roborazzi.dumpUiTree=true
 ```
 
 ## Robolectric Options
