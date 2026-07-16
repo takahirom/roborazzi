@@ -54,11 +54,11 @@ fun ViewInteraction.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  perform(ImageCaptureViewAction(roborazziOptions) { canvas ->
+  perform(ImageCaptureViewAction(roborazziOptions, file) { canvas, effectiveOptions ->
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
-      roborazziOptions = roborazziOptions
+      roborazziOptions = effectiveOptions
     )
     canvas.release()
   })
@@ -158,6 +158,16 @@ fun captureRootsInternal(
   roborazziOptions: RoborazziOptions,
   file: File
 ) {
+  val effectiveOptions = writeUiTreeSidecarIfEnabled(
+    serializationTree = {
+      RoboComponent.Screen(
+        rootsOrderByDepth = roots,
+        roborazziOptions = roborazziOptions.copy(captureType = UiTreeTraversalCaptureType())
+      )
+    },
+    goldenFile = file,
+    roborazziOptions = roborazziOptions,
+  )
   capture(
     rootComponent = RoboComponent.Screen(
       rootsOrderByDepth = roots,
@@ -168,7 +178,7 @@ fun captureRootsInternal(
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
-      roborazziOptions = roborazziOptions
+      roborazziOptions = effectiveOptions
     )
     canvas.release()
   }
@@ -342,9 +352,20 @@ fun SemanticsNodeInteraction.captureRoboImage(
     file = file,
     roborazziOptions = roborazziOptions,
     captureSingleComponent = {
+      val node = this.fetchSemanticsNode("fail to captureRoboImage")
+      val effectiveOptions = writeUiTreeSidecarIfEnabled(
+        serializationTree = {
+          RoboComponent.Compose(
+            node = node,
+            roborazziOptions = roborazziOptions.copy(captureType = UiTreeTraversalCaptureType())
+          )
+        },
+        goldenFile = file,
+        roborazziOptions = roborazziOptions,
+      )
       capture(
         rootComponent = RoboComponent.Compose(
-          node = this.fetchSemanticsNode("fail to captureRoboImage"),
+          node = node,
           roborazziOptions = roborazziOptions
         ),
         roborazziOptions = roborazziOptions,
@@ -352,7 +373,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
         processOutputImageAndReportWithDefaults(
           canvas = canvas,
           goldenFile = file,
-          roborazziOptions = roborazziOptions
+          roborazziOptions = effectiveOptions
         )
         canvas.release()
       }
@@ -416,7 +437,7 @@ fun ViewInteraction.captureAndroidView(
   val listener = ViewTreeObserver.OnGlobalLayoutListener {
     handler.postAtFrontOfQueue {
       this@captureAndroidView.perform(
-        ImageCaptureViewAction(roborazziOptions) { canvas ->
+        ImageCaptureViewAction(roborazziOptions) { canvas, _ ->
           canvases.addIfChanged(canvas, roborazziOptions)
         }
       )
@@ -469,7 +490,7 @@ fun ViewInteraction.captureAndroidView(
   try {
     // If there is already a screen, we should take the screenshot first not to miss the frame.
     perform(
-      ImageCaptureViewAction(roborazziOptions) { canvas ->
+      ImageCaptureViewAction(roborazziOptions) { canvas, _ ->
         canvases.addIfChanged(canvas, roborazziOptions)
       }
     )
@@ -643,7 +664,8 @@ private fun saveAllImage(
 
 private class ImageCaptureViewAction(
   val roborazziOptions: RoborazziOptions,
-  val saveAction: (AwtRoboCanvas) -> Unit
+  val goldenFile: File? = null,
+  val saveAction: (AwtRoboCanvas, RoborazziOptions) -> Unit
 ) :
   ViewAction {
   override fun getConstraints(): Matcher<View> {
@@ -655,14 +677,31 @@ private class ImageCaptureViewAction(
   }
 
   override fun perform(uiController: UiController, view: View) {
+    // The UI tree sidecar is only written for single-image captures with a known
+    // golden file; multi-frame (gif) captures pass a null goldenFile and skip it.
+    val effectiveOptions = if (goldenFile != null) {
+      writeUiTreeSidecarIfEnabled(
+        serializationTree = {
+          RoboComponent.View(
+            view = view,
+            roborazziOptions.copy(captureType = UiTreeTraversalCaptureType()),
+          )
+        },
+        goldenFile = goldenFile,
+        roborazziOptions = roborazziOptions,
+      )
+    } else {
+      roborazziOptions
+    }
     capture(
       rootComponent = RoboComponent.View(
         view = view,
         roborazziOptions,
       ),
       roborazziOptions = roborazziOptions,
-      onCanvas = saveAction
-    )
+    ) { canvas ->
+      saveAction(canvas, effectiveOptions)
+    }
   }
 }
 
