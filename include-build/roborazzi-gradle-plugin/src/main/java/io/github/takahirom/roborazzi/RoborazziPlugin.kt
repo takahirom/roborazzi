@@ -101,9 +101,13 @@ val KnownImageFileExtensions: Set<String> = setOf("png", "gif", "jpg", "jpeg", "
 // Keep in sync with roborazziUiTreeSidecarSuffix in roborazzi-core.
 internal const val UiTreeSidecarSuffix: String = ".uitree.json"
 
+// Keep in sync with roborazziAnnotatedImageSuffix in roborazzi-core.
+internal const val AnnotatedImageSuffix: String = ".annotated.png"
+
 /**
- * A file Roborazzi is responsible for cleaning up: a known screenshot image or a
- * `.uitree.json` UI tree sidecar written next to one.
+ * A file Roborazzi is responsible for cleaning up: a known screenshot image (this
+ * also covers the `.annotated.png` Set-of-Mark image) or a `.uitree.json` UI tree
+ * sidecar written next to one.
  */
 internal fun File.isRoborazziManagedOutput(): Boolean =
   KnownImageFileExtensions.contains(extension) || name.endsWith(UiTreeSidecarSuffix)
@@ -114,6 +118,16 @@ internal fun File.isRoborazziManagedOutput(): Boolean =
 internal fun uiTreeSidecarPathFor(imagePath: String): String {
   val imageFile = File(imagePath)
   return File(imageFile.parentFile, imageFile.nameWithoutExtension + UiTreeSidecarSuffix)
+    .absolutePath
+}
+
+/**
+ * The `.annotated.png` Set-of-Mark image path Roborazzi would write next to
+ * [imagePath].
+ */
+internal fun annotatedPathFor(imagePath: String): String {
+  val imageFile = File(imagePath)
+  return File(imageFile.parentFile, imageFile.nameWithoutExtension + AnnotatedImageSuffix)
     .absolutePath
 }
 
@@ -767,9 +781,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
           result.compareFile,
           result.goldenFile
         )
-        // Keep both the live images and their UI tree sidecars.
+        // Keep the live images, their UI tree sidecars, and their annotated images.
         val latestFiles = (imageFiles.map { File(it).absolutePath } +
-          imageFiles.map { uiTreeSidecarPathFor(it) })
+          imageFiles.map { uiTreeSidecarPathFor(it) } +
+          imageFiles.map { annotatedPathFor(it) })
         removingFiles.removeAll(latestFiles.toSet())
       }
       test.infoln("Roborazzi: Cleanup old files $removingFiles")
