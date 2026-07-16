@@ -162,8 +162,14 @@ public final class com/github/takahirom/roborazzi/RoborazziTransparentActivity :
 	public fun <init> ()V
 }
 
+public final class com/github/takahirom/roborazzi/UiTreeDumpWriteResult {
+	public final fun getEffectiveOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public final fun writeAnnotatedImage ()V
+}
+
 public final class com/github/takahirom/roborazzi/UiTreeSidecarKt {
+	public static final fun annotatedImageFile (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)Ljava/io/File;
 	public static final fun uiTreeSidecarFile (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)Ljava/io/File;
-	public static final fun writeUiTreeSidecarIfEnabled (Lkotlin/jvm/functions/Function0;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public static final fun writeUiTreeDumpIfEnabled (Lkotlin/jvm/functions/Function0;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)Lcom/github/takahirom/roborazzi/UiTreeDumpWriteResult;
 }
 
