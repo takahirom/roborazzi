@@ -1094,7 +1094,7 @@ never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
 
 Via the Gradle property (no code change):
 
-```
+```shell
 ./gradlew recordRoborazziDebug -Proborazzi.dumpUiTree=true
 ```
 
@@ -1147,7 +1147,7 @@ verify a UI fix **numerically** instead of eyeballing screenshots:
 
 1. Record the current UI and read the node line:
 
-   ```
+   ```shell
    ./gradlew recordRoborazziDebug -Proborazzi.dumpUiTree=true
    grep login_button build/outputs/roborazzi/MyTest.uitree.json
    #  { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 24, 204, 72], ... }
@@ -1158,7 +1158,7 @@ verify a UI fix **numerically** instead of eyeballing screenshots:
 
 3. Record again and diff the two JSON files:
 
-   ```
+   ```shell
    diff old/MyTest.uitree.json build/outputs/roborazzi/MyTest.uitree.json
    ```
 
