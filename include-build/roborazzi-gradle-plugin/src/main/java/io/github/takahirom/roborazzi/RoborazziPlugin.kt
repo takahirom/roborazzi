@@ -98,6 +98,25 @@ open class RoborazziCompareExtension @Inject constructor(objects: ObjectFactory)
 
 val KnownImageFileExtensions: Set<String> = setOf("png", "gif", "jpg", "jpeg", "webp")
 
+// Keep in sync with roborazziUiTreeSidecarSuffix in roborazzi-core.
+internal const val UiTreeSidecarSuffix: String = ".uitree.json"
+
+/**
+ * A file Roborazzi is responsible for cleaning up: a known screenshot image or a
+ * `.uitree.json` UI tree sidecar written next to one.
+ */
+internal fun File.isRoborazziManagedOutput(): Boolean =
+  KnownImageFileExtensions.contains(extension) || name.endsWith(UiTreeSidecarSuffix)
+
+/**
+ * The `.uitree.json` sidecar path Roborazzi would write next to [imagePath].
+ */
+internal fun uiTreeSidecarPathFor(imagePath: String): String {
+  val imageFile = File(imagePath)
+  return File(imageFile.parentFile, imageFile.nameWithoutExtension + UiTreeSidecarSuffix)
+    .absolutePath
+}
+
 @Suppress("unused")
 // From Paparazzi: https://github.com/cashapp/paparazzi/blob/a76702744a7f380480f323ffda124e845f2733aa/paparazzi/paparazzi-gradle-plugin/src/main/java/app/cash/paparazzi/gradle/PaparazziPlugin.kt
 abstract class RoborazziPlugin : Plugin<Project> {
@@ -240,7 +259,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           val outputDirFile = variantOutputDir.get().asFile
           if (outputDirFile.exists()) {
             outputDirFile.walkTopDown().forEach { file ->
-              if (KnownImageFileExtensions.contains(file.extension)) {
+              if (file.isRoborazziManagedOutput()) {
                 file.delete()
               }
             }
@@ -249,7 +268,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
           val intermediateDirFile = variantIntermediateDir.get().asFile
           if (intermediateDirFile.exists()) {
             intermediateDirFile.walkTopDown().forEach { file ->
-              if (KnownImageFileExtensions.contains(file.extension)) {
+              if (file.isRoborazziManagedOutput()) {
                 file.delete()
               }
             }
@@ -726,9 +745,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
     val isRecordRun = test.systemProperties["roborazzi.test.record"] == true
 
     if (isCleanupRun || isRecordRun) {
-      // Delete all images from the intermediateDir
+      // Delete all images and UI tree sidecars from the intermediateDir
       intermediateDir.get().asFile.walkTopDown().forEach { file ->
-        if (KnownImageFileExtensions.contains(file.extension)) {
+        if (file.isRoborazziManagedOutput()) {
           file.delete()
         }
       }
@@ -739,16 +758,19 @@ abstract class RoborazziPlugin : Plugin<Project> {
       val removingFiles: MutableSet<String> = outputDir.get().asFile
         .walkTopDown()
         .toList()
-        .filter { it.isFile && KnownImageFileExtensions.contains(it.extension) }
+        .filter { it.isFile && it.isRoborazziManagedOutput() }
         .map { it.absolutePath }
         .toMutableSet()
       roborazziResults.captureResults.forEach { result ->
-        val latestFiles = listOfNotNull(
+        val imageFiles = listOfNotNull(
           result.actualFile,
           result.compareFile,
           result.goldenFile
-        ).map { File(it).absolutePath }
-        removingFiles.removeAll(latestFiles)
+        )
+        // Keep both the live images and their UI tree sidecars.
+        val latestFiles = (imageFiles.map { File(it).absolutePath } +
+          imageFiles.map { uiTreeSidecarPathFor(it) })
+        removingFiles.removeAll(latestFiles.toSet())
       }
       test.infoln("Roborazzi: Cleanup old files $removingFiles")
       removingFiles.forEach { file ->
