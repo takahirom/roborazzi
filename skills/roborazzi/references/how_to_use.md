@@ -766,6 +766,8 @@ overlaying numbered marks on image regions lets a model refer to a region
 unambiguously by its number ([Yang et al., 2023](https://arxiv.org/abs/2310.11441)).
 Here each mark's number is the same `n` used in the JSON sidecar.
 
+![Annotated Set-of-Mark image](https://github.com/user-attachments/assets/208593c3-cd2b-4c0a-ae5b-e7cf6cd0260e)
+
 Alongside the JSON sidecar, an annotated **Set-of-Mark** image is written next to
 the screenshot: a copy of the output screenshot with every numbered node drawn as
 a bounding box plus a small numbered label.
