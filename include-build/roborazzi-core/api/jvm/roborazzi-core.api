@@ -593,10 +593,13 @@ public abstract interface class com/github/takahirom/roborazzi/RoboComponentTree
 	public abstract fun getActions ()Ljava/util/List;
 	public abstract fun getBounds ()Lcom/github/takahirom/roborazzi/RoboRect;
 	public abstract fun getChildren ()Ljava/util/List;
+	public fun getClassName ()Ljava/lang/String;
 	public abstract fun getFlags ()Ljava/util/List;
 	public abstract fun getHeight ()I
 	public abstract fun getProperties ()Ljava/util/Map;
+	public fun getResourceId ()Ljava/lang/String;
 	public abstract fun getTestTag ()Ljava/lang/String;
+	public abstract fun getTreeType ()Lcom/github/takahirom/roborazzi/RoboComponentTreeType;
 	public abstract fun getVisibility ()Lcom/github/takahirom/roborazzi/Visibility;
 	public abstract fun getWidth ()I
 }
@@ -604,6 +607,18 @@ public abstract interface class com/github/takahirom/roborazzi/RoboComponentTree
 public final class com/github/takahirom/roborazzi/RoboComponentTree$DefaultImpls {
 	public static fun countOfComponent (Lcom/github/takahirom/roborazzi/RoboComponentTree;)I
 	public static fun depth (Lcom/github/takahirom/roborazzi/RoboComponentTree;)I
+	public static fun getClassName (Lcom/github/takahirom/roborazzi/RoboComponentTree;)Ljava/lang/String;
+	public static fun getResourceId (Lcom/github/takahirom/roborazzi/RoboComponentTree;)Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoboComponentTreeType : java/lang/Enum {
+	public static final field Compose Lcom/github/takahirom/roborazzi/RoboComponentTreeType;
+	public static final field Screen Lcom/github/takahirom/roborazzi/RoboComponentTreeType;
+	public static final field View Lcom/github/takahirom/roborazzi/RoboComponentTreeType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getJsonValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoboComponentTreeType;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/RoboComponentTreeType;
 }
 
 public final class com/github/takahirom/roborazzi/RoboOutputNameKt {
@@ -669,8 +684,8 @@ public final class com/github/takahirom/roborazzi/RoborazziOptions {
 	public fun <init> ()V
 	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;)V
 	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;)V
-	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun addedAiAssertion (Ljava/lang/String;I)Lcom/github/takahirom/roborazzi/RoborazziOptions;
 	public final fun addedAiAssertions ([Lcom/github/takahirom/roborazzi/AiAssertionOptions$AiAssertion;)Lcom/github/takahirom/roborazzi/RoborazziOptions;
 	public final fun component1 ()Lcom/github/takahirom/roborazzi/RoborazziTaskType;
@@ -679,8 +694,9 @@ public final class com/github/takahirom/roborazzi/RoborazziOptions {
 	public final fun component4 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;
 	public final fun component5 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;
 	public final fun component6 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
-	public final fun copy (Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;)Lcom/github/takahirom/roborazzi/RoborazziOptions;
-	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public final fun component7 ()Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;
+	public final fun copy (Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;)Lcom/github/takahirom/roborazzi/RoborazziOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziTaskType;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCaptureType ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;
 	public final fun getCompareOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions$CompareOptions;
@@ -688,6 +704,7 @@ public final class com/github/takahirom/roborazzi/RoborazziOptions {
 	public final fun getRecordOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
 	public final fun getReportOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions$ReportOptions;
 	public final fun getTaskType ()Lcom/github/takahirom/roborazzi/RoborazziTaskType;
+	public final fun getUiTreeDumpOptions ()Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -927,6 +944,42 @@ public final class com/github/takahirom/roborazzi/SystemProperty_commonJvmKt {
 
 public final class com/github/takahirom/roborazzi/ThresholdValidatorKt {
 	public static final fun ThresholdValidator (F)Lkotlin/jvm/functions/Function1;
+}
+
+public final class com/github/takahirom/roborazzi/UiTreeCaptureInfo {
+	public fun <init> (IID)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()D
+	public final fun copy (IID)Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;IIDILjava/lang/Object;)Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getImageHeight ()I
+	public final fun getImageWidth ()I
+	public final fun getScale ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/UiTreeDumpKt {
+	public static final field ROBORAZZI_UI_TREE_FILE_PATH_KEY Ljava/lang/String;
+	public static final field roborazziUiTreeSidecarSuffix Ljava/lang/String;
+	public static final fun assignUiTreeNumbers (Lcom/github/takahirom/roborazzi/RoboComponentTree;Lkotlin/jvm/functions/Function1;)Ljava/util/Map;
+	public static final fun defaultUiTreeDumpOptions ()Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;
+	public static final fun toUiTreeJson (Lcom/github/takahirom/roborazzi/RoboComponentTree;Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;)Ljava/lang/String;
+	public static synthetic fun toUiTreeJson$default (Lcom/github/takahirom/roborazzi/RoboComponentTree;Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;ILjava/lang/Object;)Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/UiTreeDumpOptions {
+	public static final field Companion Lcom/github/takahirom/roborazzi/UiTreeDumpOptions$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun isAnnotatable ()Lkotlin/jvm/functions/Function1;
+}
+
+public final class com/github/takahirom/roborazzi/UiTreeDumpOptions$Companion {
+	public final fun getDefaultIsAnnotatable ()Lkotlin/jvm/functions/Function1;
 }
 
 public final class com/github/takahirom/roborazzi/Visibility : java/lang/Enum {

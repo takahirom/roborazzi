@@ -28,6 +28,19 @@ data class RoboRect(
 }
 
 /**
+ * Discriminates the kind of node in a [RoboComponentTree].
+ *
+ * Serialized into the UI tree JSON as the lowercase `type` value
+ * ("screen", "view", "compose").
+ */
+enum class RoboComponentTreeType {
+  Screen, View, Compose;
+
+  /** The value emitted for the JSON `type` key. */
+  val jsonValue: String get() = name.lowercase()
+}
+
+/**
  * Platform-independent structure of a captured UI component.
  *
  * This carries the tree shape and the structured accessibility/semantics data
@@ -41,6 +54,21 @@ interface RoboComponentTree {
   val visibility: Visibility
   val width: Int
   val height: Int
+
+  /** The kind of node, used as the `type` discriminator in the UI tree JSON. */
+  val treeType: RoboComponentTreeType
+
+  /**
+   * Fully-qualified class name for platform view nodes, or null when not
+   * applicable (for example Compose or screen nodes).
+   */
+  val className: String? get() = null
+
+  /**
+   * Resource id name of a platform view (for example
+   * "com.example:id/foo"), or null when the node has no id.
+   */
+  val resourceId: String? get() = null
 
   /**
    * Structured accessibility/semantics properties keyed by property name.
