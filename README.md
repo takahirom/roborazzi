@@ -1085,7 +1085,9 @@ default, an annotated `MyTest.annotated.png` (see
 the current run), next to whatever image the task writes:
 
 * On **record**, next to the golden image: `MyTest.uitree.json`.
-* On **compare/verify**, next to the `_actual` image: `MyTest_actual.uitree.json`.
+* On **compare/verify**, written under the `_actual` basename in the compare
+  output directory (`MyTest_actual.uitree.json`) — note an unchanged verify writes
+  the sidecar even though no `MyTest_actual.png` image is produced.
 
 The sidecar is **informational only**: it never participates in image diffing and
 never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
@@ -1156,7 +1158,10 @@ screenshot with every numbered node drawn as a bounding box plus a small numbere
 label.
 
 * On **record**, next to the golden image: `MyTest.annotated.png`.
-* On **compare/verify**, next to the `_actual` image: `MyTest_actual.annotated.png`.
+* On **compare/verify**, written under the `_actual` basename in the compare
+  output directory (`MyTest_actual.annotated.png`) — like the sidecar, it is
+  written even on an unchanged verify that produces no `MyTest_actual.png` image
+  (the identical golden is annotated instead).
 
 The number on each box is exactly the same `n` used in the JSON sidecar, so the
 image and the JSON always agree: an agent (or a human) can point at "element #3"
