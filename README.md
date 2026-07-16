@@ -1075,8 +1075,8 @@ If you are having trouble debugging your test, try Dump mode as follows.
 ### UI tree dump (JSON)
 
 While [Dump mode](#dump-mode) renders the UI tree *into an image* for humans to
-look at, **UI tree dump** writes a machine-readable JSON sidecar next to each
-captured screenshot for tools and AI agents to read.
+look at, **UI tree dump** writes a machine-readable JSON **sidecar** — a file that
+lives next to the screenshot it describes — for tools and AI agents to read.
 
 When enabled, capturing `MyTest.png` also writes `MyTest.uitree.json` beside it
 describing the Compose semantics + View hierarchy of the current run, plus an
@@ -1142,6 +1142,11 @@ attributes, so a single `grep` finds a node and its coordinates.
   timestamps, no hashes).
 
 #### Annotated image (Set-of-Mark)
+
+"Set-of-Mark" refers to a prompting technique for vision-language models:
+overlaying numbered marks on image regions lets a model refer to a region
+unambiguously by its number ([Yang et al., 2023](https://arxiv.org/abs/2310.11441)).
+Here each mark's number is the same `n` used in the JSON sidecar.
 
 Alongside the JSON sidecar, an annotated **Set-of-Mark** image is written next to
 the screenshot: a copy of the output screenshot with every numbered node drawn as
