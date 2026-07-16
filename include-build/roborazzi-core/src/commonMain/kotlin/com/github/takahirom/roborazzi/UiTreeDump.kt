@@ -143,28 +143,32 @@ fun assignUiTreeNumbers(
 }
 
 /**
- * A single numbered marker to draw on the annotated Set-of-Mark image: the node's
+ * Internal marker used by the annotated Set-of-Mark image wiring: a node's
  * [number] (the same `n` used in the JSON sidecar) and its [bounds] already mapped
  * into OUTPUT-image pixel coordinates and clamped to the image.
+ *
+ * This is an internal tooling helper and not part of the supported public API.
  */
-@ExperimentalRoborazziApi
+@InternalRoborazziApi
 data class UiTreeAnnotation(
   val number: Int,
   val bounds: RoboRect,
 )
 
 /**
- * Pure geometry for the annotated image: maps each numbered node's RAW window
- * [RoboComponentTree.bounds] onto the OUTPUT image using the same contract the
- * JSON documents (`image = (raw - root.origin) * scale`), clamps the result to
+ * Internal geometry helper for the annotated image: maps each numbered node's RAW
+ * window [RoboComponentTree.bounds] onto the OUTPUT image using the same contract
+ * the JSON documents (`image = (raw - root.origin) * scale`), clamps the result to
  * the image, and drops boxes that fall fully outside the image or become
  * degenerate (width/height <= 0) after clamping.
  *
  * [numbers] must be the map produced by [assignUiTreeNumbers] for [root] so the
  * drawn numbers match the JSON sidecar exactly. The returned list is ordered by
  * ascending [UiTreeAnnotation.number].
+ *
+ * This is an internal tooling helper and not part of the supported public API.
  */
-@ExperimentalRoborazziApi
+@InternalRoborazziApi
 fun computeUiTreeAnnotations(
   root: RoboComponentTree,
   numbers: Map<RoboComponentTree, Int>,
