@@ -21,6 +21,7 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RoborazziOptions
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -70,10 +71,10 @@ class RoboComponentStructureTest {
       component.properties["ContentDescription"]!!.contains("hello description")
     )
     // TestTag must never leak into the generic properties map.
-    assertTrue(!component.properties.containsKey("TestTag"))
+    assertFalse(component.properties.containsKey("TestTag"))
     // Flags and actions must not appear as properties.
-    assertTrue(!component.properties.containsKey("OnClick"))
-    assertTrue(!component.properties.containsKey("Disabled"))
+    assertFalse(component.properties.containsKey("OnClick"))
+    assertFalse(component.properties.containsKey("Disabled"))
 
     // actions are action-valued semantics keys.
     assertTrue(
@@ -134,10 +135,10 @@ class RoboComponentStructureTest {
     // properties hold only meaningful, present entries (no always-on booleans).
     assertEquals("view text", component.properties["Text"])
     assertEquals("view description", component.properties["ContentDescription"])
-    assertTrue(!component.properties.containsKey("Clickable"))
-    assertTrue(!component.properties.containsKey("Enabled"))
-    assertTrue(!component.properties.containsKey("Focused"))
-    assertTrue(!component.properties.containsKey("ImportantForAccessibility"))
+    assertFalse(component.properties.containsKey("Clickable"))
+    assertFalse(component.properties.containsKey("Enabled"))
+    assertFalse(component.properties.containsKey("Focused"))
+    assertFalse(component.properties.containsKey("ImportantForAccessibility"))
 
     // Notable boolean states are reported as presence-only flags.
     assertTrue(
@@ -145,7 +146,7 @@ class RoboComponentStructureTest {
       component.flags.contains("Clickable")
     )
     // An enabled view has no Disabled flag.
-    assertTrue(!component.flags.contains("Disabled"))
+    assertFalse(component.flags.contains("Disabled"))
     assertEquals(component.flags.sorted(), component.flags)
 
     // A clickable View with a click listener exposes the OnClick action.
@@ -174,15 +175,15 @@ class RoboComponentStructureTest {
       "flags should contain Disabled but was ${component.flags}",
       component.flags.contains("Disabled")
     )
-    assertTrue(!component.flags.contains("Clickable"))
+    assertFalse(component.flags.contains("Clickable"))
 
     // No boolean noise entries in the properties map.
-    assertTrue(!component.properties.containsKey("Enabled"))
-    assertTrue(!component.properties.containsKey("Clickable"))
-    assertTrue(!component.properties.containsKey("Focused"))
-    assertTrue(!component.properties.containsKey("ImportantForAccessibility"))
+    assertFalse(component.properties.containsKey("Enabled"))
+    assertFalse(component.properties.containsKey("Clickable"))
+    assertFalse(component.properties.containsKey("Focused"))
+    assertFalse(component.properties.containsKey("ImportantForAccessibility"))
 
     // A non-clickable view exposes no OnClick action.
-    assertTrue(!component.actions.contains("OnClick"))
+    assertFalse(component.actions.contains("OnClick"))
   }
 }
