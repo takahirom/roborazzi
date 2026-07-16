@@ -23,7 +23,7 @@ Read the reference that matches the task at hand:
 | [references/top.md](references/top.md) | You need an overview of what Roborazzi is and why to use it over device tests or Paparazzi. |
 | [references/try_it_out.md](references/try_it_out.md) | You want a minimal quick start or a sample project to try Roborazzi. |
 | [references/build_setup.md](references/build_setup.md) | Setting up the Gradle plugin and dependencies, or running/understanding the `record`/`compare`/`verify` Gradle tasks and their outputs. |
-| [references/how_to_use.md](references/how_to_use.md) | Writing tests: `captureRoboImage` for views/Compose/Espresso, `RoborazziRule` and its options, output paths and file naming, capturing GIFs/videos, RoborazziOptions (thresholds, image comparators, dump mode). |
+| [references/how_to_use.md](references/how_to_use.md) | Writing tests: `captureRoboImage` for views/Compose/Espresso, `RoborazziRule` and its options, output paths and file naming, capturing GIFs/videos, RoborazziOptions (thresholds, image comparators, dump mode, UI tree dump / semantics JSON sidecar for tools & AI agents). |
 | [references/preview_support.md](references/preview_support.md) | Generating screenshot tests from `@Preview` composables with ComposablePreviewScanner, including setup and customization of preview tests. |
 | [references/compose_multiplatform.md](references/compose_multiplatform.md) | Screenshot testing Compose Multiplatform targets (iOS, desktop/JVM), including feature support per platform. |
 | [references/ai_powered_image_assertion.md](references/ai_powered_image_assertion.md) | Asserting screenshot content with AI models (OpenAI, Gemini) via roborazzi-ai modules. |

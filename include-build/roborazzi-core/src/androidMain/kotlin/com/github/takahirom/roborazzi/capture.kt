@@ -114,6 +114,7 @@ sealed interface RoboComponent : RoboComponentTree {
     override val actions: List<String> = emptyList()
     override val flags: List<String> = emptyList()
     override val testTag: String? = null
+    override val treeType: RoboComponentTreeType = RoboComponentTreeType.Screen
   }
 
   class View(
@@ -151,6 +152,10 @@ sealed interface RoboComponent : RoboComponentTree {
         null
       }
     }
+
+    override val treeType: RoboComponentTreeType = RoboComponentTreeType.View
+    override val className: String? = view.javaClass.name
+    override val resourceId: String? = idResourceName
     override val text: String = HumanReadables.describe(view)
 
     // TODO: Support other accessibility information
@@ -275,6 +280,7 @@ sealed interface RoboComponent : RoboComponentTree {
     override val properties: Map<String, String> = node.config.toRoboProperties()
     override val actions: List<String> = node.config.toRoboActions()
     override val flags: List<String> = node.config.toRoboFlags()
+    override val treeType: RoboComponentTreeType = RoboComponentTreeType.Compose
   }
 
   companion object {
@@ -331,10 +337,24 @@ fun withComposeTestTag(testTag: String): (RoboComponent) -> Boolean {
   }
 }
 
+/**
+ * Internal capture type used only to build the full UI tree for the JSON
+ * sidecar. It never takes bitmaps ([shouldTakeScreenshot] returns false, so
+ * child [RoboComponent] construction skips the per-node bitmap fetch) yet it
+ * traverses the whole hierarchy via [RoboComponent.defaultChildVisitor]. This
+ * lets us describe the tree without paying the child-bitmap cost and without
+ * changing the behavior of the actual screenshot capture.
+ */
+@InternalRoborazziApi
+class UiTreeTraversalCaptureType : RoborazziOptions.CaptureType {
+  override fun shouldTakeScreenshot(): Boolean = false
+}
+
 internal val RoborazziOptions.CaptureType.roboComponentChildVisitor: (Any, RoborazziOptions, Rect) -> List<RoboComponent>
   get() {
     return when (this) {
       is Dump -> RoboComponent.defaultChildVisitor
+      is UiTreeTraversalCaptureType -> RoboComponent.defaultChildVisitor
       is RoborazziOptions.CaptureType.Screenshot -> { _, _, _ -> listOf() }
       else -> { _, _, _ -> listOf() }
     }

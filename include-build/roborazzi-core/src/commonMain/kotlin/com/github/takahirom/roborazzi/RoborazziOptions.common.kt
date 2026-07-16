@@ -17,6 +17,17 @@ data class RoborazziOptions(
   val reportOptions: ReportOptions = ReportOptions(),
   val compareOptions: CompareOptions = CompareOptions(),
   val recordOptions: RecordOptions = RecordOptions(),
+  /**
+   * When non-null, a machine-readable `.uitree.json` sidecar describing the UI
+   * tree of the current run is written next to each captured image. null (the
+   * default) disables the feature. It can be enabled without code changes via
+   * the Gradle property `roborazzi.dumpUiTree=true`.
+   *
+   * The sidecar is informational only: it never participates in image diffing
+   * and never fails verification.
+   */
+  @property:ExperimentalRoborazziApi
+  val uiTreeDumpOptions: UiTreeDumpOptions? = defaultUiTreeDumpOptions(),
 ) {
   // Stable parameters
   constructor(
