@@ -124,24 +124,7 @@ private fun StringBuilder.appendConfigInfo(config: SemanticsConfiguration, inden
         append(indent)
         append(key.name)
         append(" = '")
-
-        if (value is AnnotatedString) {
-            if (value.paragraphStyles.isEmpty() && value.spanStyles.isEmpty() && value
-                .getStringAnnotations(0, value.text.length).isEmpty()
-            ) {
-                append(value.text)
-            } else {
-                // Save space if we there is text only in the object
-                append(value)
-            }
-        } else if (value is Iterable<*>) {
-            append(value.sortedBy { it.toString() })
-        } else if (value is CollectionInfo) {
-          append("(rowCount=${value.rowCount}, columnCount=${value.columnCount})")
-        } else {
-            append(value)
-        }
-
+        append(semanticsValueToString(value))
         append("'")
     }
 
@@ -172,4 +155,76 @@ private fun StringBuilder.appendConfigInfo(config: SemanticsConfiguration, inden
         append(indent)
         append("ClearAndSetSemantics = 'true'")
     }
+}
+
+/**
+ * Stringifies a semantics value exactly the way the semantics dump does, so the
+ * structured [RoboComponentTree.properties] map stays consistent with
+ * [SemanticsNode.printToString].
+ */
+private fun semanticsValueToString(value: Any?): String = buildString {
+    if (value is AnnotatedString) {
+        if (value.paragraphStyles.isEmpty() && value.spanStyles.isEmpty() && value
+            .getStringAnnotations(0, value.text.length).isEmpty()
+        ) {
+            append(value.text)
+        } else {
+            // Save space if we there is text only in the object
+            append(value)
+        }
+    } else if (value is Iterable<*>) {
+        append(value.sortedBy { it.toString() })
+    } else if (value is CollectionInfo) {
+        append("(rowCount=${value.rowCount}, columnCount=${value.columnCount})")
+    } else {
+        append(value)
+    }
+}
+
+/**
+ * Extracts the non-action, non-flag semantics into a name -> value map, using
+ * the same filtering and stringification rules as the semantics dump.
+ */
+internal fun SemanticsConfiguration.toRoboProperties(): Map<String, String> {
+    val result = LinkedHashMap<String, String>()
+    for ((key, value) in this.sortedBy { it.key.name }) {
+        if (key == SemanticsProperties.TestTag) continue
+        if (value is AccessibilityAction<*> || value is Function<*>) continue
+        if (value is Unit) continue
+        result[key.name] = semanticsValueToString(value)
+    }
+    return result
+}
+
+/** Extracts the names of action-valued semantics keys, sorted for determinism. */
+internal fun SemanticsConfiguration.toRoboActions(): List<String> {
+    val actions = mutableListOf<String>()
+    for ((key, value) in this) {
+        if (key == SemanticsProperties.TestTag) continue
+        if (value is AccessibilityAction<*> || value is Function<*>) {
+            actions.add(key.name)
+        }
+    }
+    return actions.sorted()
+}
+
+/**
+ * Extracts flag-like semantics: Unit-valued keys plus MergeDescendants and
+ * ClearAndSetSemantics, sorted for determinism.
+ */
+internal fun SemanticsConfiguration.toRoboFlags(): List<String> {
+    val flags = mutableListOf<String>()
+    for ((key, value) in this) {
+        if (key == SemanticsProperties.TestTag) continue
+        if (value is Unit) {
+            flags.add(key.name)
+        }
+    }
+    if (isMergingSemanticsOfDescendants) {
+        flags.add("MergeDescendants")
+    }
+    if (isClearingSemantics) {
+        flags.add("ClearAndSetSemantics")
+    }
+    return flags.sorted()
 }

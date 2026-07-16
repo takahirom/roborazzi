@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
 import android.view.Gravity
@@ -18,13 +17,8 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
-import androidx.core.graphics.plus
 import androidx.test.espresso.Root
 import androidx.test.espresso.util.HumanReadables
-
-enum class Visibility {
-  Visible, Gone, Invisible;
-}
 
 val hasCompose = try {
   Class.forName("androidx.compose.ui.platform.AbstractComposeView")
@@ -33,7 +27,17 @@ val hasCompose = try {
   false
 }
 
-sealed interface RoboComponent {
+private fun Rect.toRoboRect(): RoboRect = RoboRect(left, top, right, bottom)
+
+private fun RoboRect.toAndroidRect(): Rect = Rect(left, top, right, bottom)
+
+sealed interface RoboComponent : RoboComponentTree {
+  override val children: List<RoboComponent>
+  val image: Bitmap?
+  val rect: Rect
+  val text: String
+  val accessibilityText: String
+
   class Screen(
     rootsOrderByDepth: List<Root>,
     roborazziOptions: RoborazziOptions,
@@ -77,11 +81,12 @@ sealed interface RoboComponent {
     } else {
       null
     }
-    override val rect: Rect = run {
+    override val bounds: RoboRect = run {
       val rect = Rect()
       rootsOrderByDepth.firstOrNull()?.decorView?.getGlobalVisibleRect(rect)
-      rect
+      rect.toRoboRect()
     }
+    override val rect: Rect = bounds.toAndroidRect()
     override val children: List<RoboComponent> by lazy {
       val screenDecorView = rootsOrderByDepth.first().decorView
       rootsOrderByDepth.map { root ->
@@ -105,6 +110,10 @@ sealed interface RoboComponent {
     override val text: String = "Screen"
     override val accessibilityText: String = ""
     override val visibility: Visibility = Visibility.Visible
+    override val properties: Map<String, String> = emptyMap()
+    override val actions: List<String> = emptyList()
+    override val flags: List<String> = emptyList()
+    override val testTag: String? = null
   }
 
   class View(
@@ -121,11 +130,12 @@ sealed interface RoboComponent {
     } else {
       null
     }
-    override val rect: Rect = run {
+    override val bounds: RoboRect = run {
       val rect = Rect()
       view.getGlobalVisibleRect(rect)
-      rect + Point(windowOffset.left, windowOffset.top)
+      rect.apply { offset(windowOffset.left, windowOffset.top) }.toRoboRect()
     }
+    override val rect: Rect = bounds.toAndroidRect()
     override val children: List<RoboComponent> = roborazziOptions
       .captureType
       .roboComponentChildVisitor(view, roborazziOptions, windowOffset)
@@ -180,6 +190,25 @@ sealed interface RoboComponent {
       android.view.View.GONE -> Visibility.Gone
       else -> Visibility.Invisible
     }
+
+    override val properties: Map<String, String> = buildMap {
+      (view as? TextView)?.text?.toString()?.let { put("Text", it) }
+      view.contentDescription?.toString()?.let { put("ContentDescription", it) }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        view.stateDescription?.toString()?.let { put("StateDescription", it) }
+      }
+    }
+
+    override val actions: List<String> =
+      if (view.hasOnClickListeners() && view.isClickable) listOf("OnClick") else emptyList()
+
+    override val flags: List<String> = buildList {
+      if (view.isClickable) add("Clickable")
+      if (view.isFocused) add("Focused")
+      if (!view.isEnabled) add("Disabled")
+    }.sorted()
+
+    override val testTag: String? = null
   }
 
   class Compose(
@@ -233,35 +262,19 @@ sealed interface RoboComponent {
       }
     }
     override val visibility: Visibility = Visibility.Visible
-    val testTag: String? = node.config.getOrNull(SemanticsProperties.TestTag)
+    override val testTag: String? = node.config.getOrNull(SemanticsProperties.TestTag)
 
-    override val rect: Rect = run {
+    override val bounds: RoboRect = run {
       val rect = Rect()
       val boundsInWindow = node.boundsInWindow
       rect.set(boundsInWindow.toAndroidRect())
-      rect + Point(windowOffset.left, windowOffset.top)
+      rect.apply { offset(windowOffset.left, windowOffset.top) }.toRoboRect()
     }
-  }
+    override val rect: Rect = bounds.toAndroidRect()
 
-  val image: Bitmap?
-  val rect: Rect
-  val children: List<RoboComponent>
-  val text: String
-  val accessibilityText: String
-  val visibility: Visibility
-  val width: Int
-  val height: Int
-
-  fun depth(): Int {
-    return (children.maxOfOrNull {
-      it.depth()
-    } ?: 0) + 1
-  }
-
-  fun countOfComponent(): Int {
-    return children.sumOf {
-      it.countOfComponent()
-    } + 1
+    override val properties: Map<String, String> = node.config.toRoboProperties()
+    override val actions: List<String> = node.config.toRoboActions()
+    override val flags: List<String> = node.config.toRoboFlags()
   }
 
   companion object {
