@@ -54,6 +54,19 @@ The reason why Roborazzi does not delete old screenshots by default is that Robo
 roborazzi.cleanupOldScreenshots=true
 ```
 
+## roborazzi.dumpUiTree
+
+This option enables the [UI tree dump (JSON)](how_to_use.md#ui-tree-dump-json).
+When set to `true`, each captured screenshot gets a machine-readable
+`.uitree.json` sidecar written next to the image it describes
+(`MyTest.uitree.json` on record, `MyTest_actual.uitree.json` on compare/verify).
+By default this option is set to false. The sidecar is informational only: it
+never participates in image diffing and never fails verification.
+
+```properties
+roborazzi.dumpUiTree=true
+```
+
 ## Robolectric Options
 
 ### robolectric.pixelCopyRenderMode
