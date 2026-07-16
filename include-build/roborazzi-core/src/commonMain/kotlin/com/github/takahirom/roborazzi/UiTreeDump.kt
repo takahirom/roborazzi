@@ -1,5 +1,7 @@
 package com.github.takahirom.roborazzi
 
+import kotlin.math.roundToInt
+
 /**
  * The context data key under which the written `.uitree.json` sidecar path is
  * recorded on a capture result so reports can link to it.
@@ -8,12 +10,28 @@ package com.github.takahirom.roborazzi
 const val ROBORAZZI_UI_TREE_FILE_PATH_KEY: String = "roborazzi_uitree_file_path"
 
 /**
+ * The context data key under which the written `.annotated.png` image path is
+ * recorded on a capture result so reports can link to it.
+ */
+@ExperimentalRoborazziApi
+const val ROBORAZZI_ANNOTATED_FILE_PATH_KEY: String = "roborazzi_annotated_file_path"
+
+/**
  * The default file-name suffix of the written UI tree JSON sidecar (for example
  * `MyTest.uitree.json`, `MyTest_actual.uitree.json`). Used by the capture wiring
  * to name the file and by the Gradle plugin to recognize stale sidecars.
  */
 @InternalRoborazziApi
 const val roborazziUiTreeSidecarSuffix: String = ".uitree.json"
+
+/**
+ * The file-name suffix of the annotated Set-of-Mark image written alongside the
+ * screenshot (for example `MyTest.annotated.png`, `MyTest_actual.annotated.png`).
+ * Used by the capture wiring to name the file and by the Gradle plugin to keep
+ * live annotated images from being cleaned.
+ */
+@InternalRoborazziApi
+const val roborazziAnnotatedImageSuffix: String = ".annotated.png"
 
 /**
  * Default value for [RoborazziOptions.uiTreeDumpOptions]. Returns an enabled
@@ -51,6 +69,17 @@ class UiTreeDumpOptions(
    * skipped (see [assignUiTreeNumbers]).
    */
   val isAnnotatable: (RoboComponentTree) -> Boolean = DefaultIsAnnotatable,
+  /**
+   * When true (the default), an annotated Set-of-Mark PNG (`MyTest.annotated.png`)
+   * is written next to the screenshot in addition to the JSON sidecar. It is a
+   * copy of the output screenshot with each numbered node's `n` drawn as a
+   * bounding box + label, so the image and the JSON always agree.
+   *
+   * The annotated image is a display artifact of the current run only: it never
+   * participates in image comparison and never fails a capture. Set to false to
+   * write only the JSON sidecar.
+   */
+  val annotateImage: Boolean = true,
 ) {
   companion object {
     @ExperimentalRoborazziApi
@@ -114,6 +143,65 @@ fun assignUiTreeNumbers(
 }
 
 /**
+ * A single numbered marker to draw on the annotated Set-of-Mark image: the node's
+ * [number] (the same `n` used in the JSON sidecar) and its [bounds] already mapped
+ * into OUTPUT-image pixel coordinates and clamped to the image.
+ */
+@ExperimentalRoborazziApi
+data class UiTreeAnnotation(
+  val number: Int,
+  val bounds: RoboRect,
+)
+
+/**
+ * Pure geometry for the annotated image: maps each numbered node's RAW window
+ * [RoboComponentTree.bounds] onto the OUTPUT image using the same contract the
+ * JSON documents (`image = (raw - root.origin) * scale`), clamps the result to
+ * the image, and drops boxes that fall fully outside the image or become
+ * degenerate (width/height <= 0) after clamping.
+ *
+ * [numbers] must be the map produced by [assignUiTreeNumbers] for [root] so the
+ * drawn numbers match the JSON sidecar exactly. The returned list is ordered by
+ * ascending [UiTreeAnnotation.number].
+ */
+@ExperimentalRoborazziApi
+fun computeUiTreeAnnotations(
+  root: RoboComponentTree,
+  numbers: Map<RoboComponentTree, Int>,
+  captureInfo: UiTreeCaptureInfo,
+): List<UiTreeAnnotation> {
+  val originX = root.bounds.left
+  val originY = root.bounds.top
+  val scale = captureInfo.scale
+  val imageWidth = captureInfo.imageWidth
+  val imageHeight = captureInfo.imageHeight
+  return numbers.entries
+    .sortedBy { it.value }
+    .mapNotNull { (node, number) ->
+      val b = node.bounds
+      val mappedLeft = ((b.left - originX) * scale).roundToInt()
+      val mappedTop = ((b.top - originY) * scale).roundToInt()
+      val mappedRight = ((b.right - originX) * scale).roundToInt()
+      val mappedBottom = ((b.bottom - originY) * scale).roundToInt()
+      // Drop boxes fully outside the image.
+      if (mappedRight <= 0 || mappedBottom <= 0 ||
+        mappedLeft >= imageWidth || mappedTop >= imageHeight
+      ) {
+        return@mapNotNull null
+      }
+      val left = mappedLeft.coerceIn(0, imageWidth)
+      val top = mappedTop.coerceIn(0, imageHeight)
+      val right = mappedRight.coerceIn(0, imageWidth)
+      val bottom = mappedBottom.coerceIn(0, imageHeight)
+      // Drop degenerate boxes that clamped away to nothing.
+      if (right - left <= 0 || bottom - top <= 0) {
+        return@mapNotNull null
+      }
+      UiTreeAnnotation(number = number, bounds = RoboRect(left, top, right, bottom))
+    }
+}
+
+/**
  * Serializes [this] tree into the grep-first UI tree JSON described in the
  * Roborazzi docs. Deterministic: the same tree yields byte-identical output.
  *
@@ -124,8 +212,19 @@ fun assignUiTreeNumbers(
 fun RoboComponentTree.toUiTreeJson(
   captureInfo: UiTreeCaptureInfo,
   options: UiTreeDumpOptions = UiTreeDumpOptions(),
+): String = toUiTreeJson(captureInfo, assignUiTreeNumbers(this, options.isAnnotatable))
+
+/**
+ * Serializes [this] tree into the grep-first UI tree JSON using a precomputed
+ * [numbers] map. Use this overload when the numbering has already been computed
+ * (via [assignUiTreeNumbers]) so the JSON sidecar and the annotated image share
+ * exactly the same numbers within a capture.
+ */
+@InternalRoborazziApi
+fun RoboComponentTree.toUiTreeJson(
+  captureInfo: UiTreeCaptureInfo,
+  numbers: Map<RoboComponentTree, Int>,
 ): String {
-  val numbers = assignUiTreeNumbers(this, options.isAnnotatable)
   val builder = StringBuilder()
   builder.append("{ \"schemaVersion\": 1, \"capture\": { ")
   builder.append("\"imageWidth\": ").append(captureInfo.imageWidth)
