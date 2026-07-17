@@ -18,6 +18,7 @@ import com.github.takahirom.roborazzi.assignUiTreeNumbers
 import com.github.takahirom.roborazzi.computeUiTreeAnnotations
 import com.github.takahirom.roborazzi.roborazziAnnotatedImageSuffix
 import com.github.takahirom.roborazzi.roborazziReportLog
+import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziUiTreeSidecarSuffix
 import com.github.takahirom.roborazzi.toUiTreeJson
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -27,8 +28,11 @@ import platform.CoreGraphics.CGImageGetWidth
 import platform.CoreGraphics.CGPointMake
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
+import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSString
+import platform.Foundation.timeIntervalSince1970
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.writeToFile
 import platform.UIKit.NSFontAttributeName
@@ -109,10 +113,19 @@ internal fun writeUiTreeDumpIfEnabledIos(
       val annotatedPath = annotatedImagePathIos(resolvedGoldenFilePath, roborazziOptions)
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedPath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
-      val sourceImagePath = currentRunImagePathIos(resolvedGoldenFilePath, roborazziOptions);
+      val sourceImagePath = currentRunImagePathIos(resolvedGoldenFilePath, roborazziOptions)
+      // Snapshot the source image state BEFORE the current task writes the output
+      // image, so the annotated writer can tell whether the `_actual` image was
+      // actually (re)written this run. On an unchanged verify no `_actual` is
+      // written, so a stale one left by an earlier run must not be reused.
+      val sourceModifiedBefore = imageModificationTimeIos(sourceImagePath);
       {
+        val currentModified = imageModificationTimeIos(sourceImagePath)
+        val sourceWrittenThisRun = currentModified != null &&
+          currentModified != sourceModifiedBefore
         writeAnnotatedImageIos(
           sourceImagePath = sourceImagePath,
+          sourceWrittenThisRun = sourceWrittenThisRun,
           fallbackImagePath = resolvedGoldenFilePath,
           annotatedPath = annotatedPath,
           annotations = annotations,
@@ -135,6 +148,29 @@ internal fun writeUiTreeDumpIfEnabledIos(
 
 private fun RoborazziOptions.isPureCompareOrVerify(): Boolean =
   (taskType.isVerifying() || taskType.isComparing()) && !taskType.isRecording()
+
+/**
+ * Resolves a (possibly project-relative) [path] to an absolute path, mirroring the
+ * common image pipeline's `roborazziToAbsolutePath` on iOS (see
+ * `resolveRoborazziAbsolutePath` in roborazzi-core): the Gradle plugin passes the
+ * compare output directory as a project-relative path together with an absolute
+ * `roborazzi.project.path`, and an iOS simulator's working directory is not the
+ * project, so relative paths must be resolved against the project path (falling
+ * back to the process working directory when no project path is configured).
+ *
+ * Without this the sidecar / annotated / `_actual` source paths would land in a
+ * different directory than the image the shared pipeline writes.
+ */
+private fun resolveRoborazziPathIos(path: String): String {
+  if (path.startsWith("/")) return path
+  val projectPath = roborazziSystemPropertyProjectPath()
+  val base = if (projectPath == ".") {
+    NSFileManager.defaultManager.currentDirectoryPath
+  } else {
+    projectPath
+  }
+  return "$base/$path"
+}
 
 private fun uiTreeSidecarPathIos(
   resolvedGoldenFilePath: String,
@@ -161,7 +197,7 @@ private fun sidecarStylePathIos(
   val baseName = fileName.substringBeforeLast(".")
   return if (roborazziOptions.isPureCompareOrVerify()) {
     val outputDir = roborazziOptions.compareOptions.outputDirectoryPath.trimEnd('/')
-    "$outputDir/${baseName}_actual$suffix"
+    resolveRoborazziPathIos("$outputDir/${baseName}_actual$suffix")
   } else {
     val parentPath = resolvedGoldenFilePath.substringBeforeLast("/")
     "$parentPath/$baseName$suffix"
@@ -183,7 +219,19 @@ private fun currentRunImagePathIos(
   val baseName = fileName.substringBeforeLast(".")
   val extension = fileName.substringAfterLast(".", "png")
   val outputDir = roborazziOptions.compareOptions.outputDirectoryPath.trimEnd('/')
-  return "$outputDir/${baseName}_actual.$extension"
+  return resolveRoborazziPathIos("$outputDir/${baseName}_actual.$extension")
+}
+
+/**
+ * The modification time (seconds since 1970) of the file at [path], or null when it
+ * does not exist. Used to detect whether the `_actual` image was (re)written this
+ * run (see the snapshot in [writeUiTreeDumpIfEnabledIos]).
+ */
+private fun imageModificationTimeIos(path: String): Double? {
+  val attributes = NSFileManager.defaultManager.attributesOfItemAtPath(path, error = null)
+    ?: return null
+  val modificationDate = attributes[NSFileModificationDate] as? NSDate ?: return null
+  return modificationDate.timeIntervalSince1970
 }
 
 private fun writeTextFileIos(path: String, text: String) {
@@ -245,6 +293,7 @@ private const val LabelFontSize = 16.0
  */
 private fun writeAnnotatedImageIos(
   sourceImagePath: String,
+  sourceWrittenThisRun: Boolean,
   fallbackImagePath: String,
   annotatedPath: String,
   annotations: List<UiTreeAnnotation>,
@@ -252,7 +301,7 @@ private fun writeAnnotatedImageIos(
   try {
     val fileManager = NSFileManager.defaultManager
     val source = when {
-      fileManager.fileExistsAtPath(sourceImagePath) -> sourceImagePath
+      sourceWrittenThisRun && fileManager.fileExistsAtPath(sourceImagePath) -> sourceImagePath
       fileManager.fileExistsAtPath(fallbackImagePath) -> fallbackImagePath
       else -> {
         roborazziReportLog("Annotated image skipped: no output image at $sourceImagePath")

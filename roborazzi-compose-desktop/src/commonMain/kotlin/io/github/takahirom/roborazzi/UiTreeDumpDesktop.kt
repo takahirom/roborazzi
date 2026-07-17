@@ -85,10 +85,19 @@ internal fun writeUiTreeDumpIfEnabledDesktop(
       val annotatedFile = annotatedImageFileDesktop(goldenFile, roborazziOptions)
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedFile.absolutePath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
-      val sourceImageFile = currentRunImageFileDesktop(goldenFile, roborazziOptions);
+      val sourceImageFile = currentRunImageFileDesktop(goldenFile, roborazziOptions)
+      // Snapshot the source image state BEFORE the current task writes the output
+      // image, so the annotated writer can tell whether the `_actual` image was
+      // actually (re)written this run. On an unchanged verify no `_actual` is
+      // written, so a stale one left by an earlier run must not be reused.
+      val sourceExistedBefore = sourceImageFile.exists()
+      val sourceLastModifiedBefore = if (sourceExistedBefore) sourceImageFile.lastModified() else 0L;
       {
+        val sourceWrittenThisRun = sourceImageFile.exists() &&
+          (!sourceExistedBefore || sourceImageFile.lastModified() != sourceLastModifiedBefore)
         writeAnnotatedImageDesktop(
           sourceImageFile = sourceImageFile,
+          sourceWrittenThisRun = sourceWrittenThisRun,
           fallbackImageFile = goldenFile,
           annotatedFile = annotatedFile,
           annotations = annotations,
@@ -187,13 +196,14 @@ private const val LabelPadding = 4
  */
 private fun writeAnnotatedImageDesktop(
   sourceImageFile: File,
+  sourceWrittenThisRun: Boolean,
   fallbackImageFile: File,
   annotatedFile: File,
   annotations: List<UiTreeAnnotation>,
 ) {
   try {
     val source = when {
-      sourceImageFile.exists() -> sourceImageFile
+      sourceWrittenThisRun && sourceImageFile.exists() -> sourceImageFile
       fallbackImageFile.exists() -> fallbackImageFile
       else -> {
         roborazziDebugLog {

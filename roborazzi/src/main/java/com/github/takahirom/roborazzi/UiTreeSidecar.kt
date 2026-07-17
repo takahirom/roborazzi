@@ -74,9 +74,19 @@ fun writeUiTreeDumpIfEnabled(
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedFile.absolutePath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
       val sourceImageFile = currentRunImageFile(goldenFile, roborazziOptions)
+      // Snapshot the source image state BEFORE the current task writes the output
+      // image, so the annotated writer (invoked afterwards) can tell whether the
+      // `_actual` image was actually (re)written this run. On an unchanged verify
+      // no `_actual` is written, so a stale one left by an earlier run must not be
+      // picked up; the writer then falls back to the identical golden.
+      val sourceExistedBefore = sourceImageFile.exists()
+      val sourceLastModifiedBefore = if (sourceExistedBefore) sourceImageFile.lastModified() else 0L
       val writer: () -> Unit = {
+        val sourceWrittenThisRun = sourceImageFile.exists() &&
+          (!sourceExistedBefore || sourceImageFile.lastModified() != sourceLastModifiedBefore)
         writeAnnotatedImage(
           sourceImageFile = sourceImageFile,
+          sourceWrittenThisRun = sourceWrittenThisRun,
           fallbackImageFile = goldenFile,
           annotatedFile = annotatedFile,
           annotations = annotations,
