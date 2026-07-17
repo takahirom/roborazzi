@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Regression test for https://github.com/takahirom/roborazzi/issues/881
@@ -27,9 +28,10 @@ class ImageIoFormatOverwriteTest {
     val largeFileLength = file.length()
 
     format.awtImageWriter.write(file, emptyMap(), noiseImage(size = 32))
-    assert(file.length() < largeFileLength) {
+    assertTrue(
+      file.length() < largeFileLength,
       "Overwritten file should be truncated: was $largeFileLength, now ${file.length()}"
-    }
+    )
 
     val loaded = format.awtImageLoader.load(file)
     assertEquals(32, loaded.width)
