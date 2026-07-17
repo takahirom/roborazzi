@@ -85,8 +85,8 @@ internal fun writeUiTreeDumpIfEnabledDesktop(
       val annotatedFile = annotatedImageFileDesktop(goldenFile, roborazziOptions)
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedFile.absolutePath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
-      val sourceImageFile = currentRunImageFileDesktop(goldenFile, roborazziOptions);
-      { sourceWrittenThisRun: Boolean ->
+      val sourceImageFile = currentRunImageFileDesktop(goldenFile, roborazziOptions)
+      val writer: (Boolean) -> Unit = { sourceWrittenThisRun ->
         writeAnnotatedImageDesktop(
           sourceImageFile = sourceImageFile,
           // The capture pipeline reports whether it wrote the source image this
@@ -98,6 +98,7 @@ internal fun writeUiTreeDumpIfEnabledDesktop(
           annotations = annotations,
         )
       }
+      writer
     } else {
       null
     }

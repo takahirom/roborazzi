@@ -110,8 +110,8 @@ internal fun writeUiTreeDumpIfEnabledIos(
       val annotatedPath = annotatedImagePathIos(resolvedGoldenFilePath, roborazziOptions)
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedPath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
-      val sourceImagePath = currentRunImagePathIos(resolvedGoldenFilePath, roborazziOptions);
-      { sourceWrittenThisRun: Boolean ->
+      val sourceImagePath = currentRunImagePathIos(resolvedGoldenFilePath, roborazziOptions)
+      val writer: (Boolean) -> Unit = { sourceWrittenThisRun ->
         writeAnnotatedImageIos(
           sourceImagePath = sourceImagePath,
           // The capture pipeline reports whether it wrote the source image this
@@ -123,6 +123,7 @@ internal fun writeUiTreeDumpIfEnabledIos(
           annotations = annotations,
         )
       }
+      writer
     } else {
       null
     }
