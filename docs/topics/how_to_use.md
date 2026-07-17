@@ -575,7 +575,7 @@ If you are having trouble debugging your test, try Dump mode as follows.
 ![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
 
 For a machine-readable version of the UI tree for tools and AI agents, see
-[UI tree dump (JSON)](https://takahirom.github.io/roborazzi/ui_tree_dump.html).
+[UI tree dump (JSON)](https://takahirom.github.io/roborazzi/ui-tree-dump.html).
 
 ### Accessibility Check
 
