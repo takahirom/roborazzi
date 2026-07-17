@@ -243,14 +243,11 @@ class IosTest {
         filePath = goldenPath,
         roborazziOptions = RoborazziOptions(
           taskType = RoborazziTaskType.Record,
+          compareOptions = RoborazziOptions.CompareOptions(
+            outputDirectoryPath = "$baseDir/compare",
+          ),
           uiTreeDumpOptions = UiTreeDumpOptions(),
-        ).let {
-          it.copy(
-            compareOptions = RoborazziOptions.CompareOptions(
-              outputDirectoryPath = "$baseDir/compare",
-            )
-          )
-        },
+        ),
       )
     }
 
@@ -326,14 +323,11 @@ class IosTest {
         filePath = goldenPath,
         roborazziOptions = RoborazziOptions(
           taskType = RoborazziTaskType.Record,
+          compareOptions = RoborazziOptions.CompareOptions(
+            outputDirectoryPath = "$baseDir/compare",
+          ),
           uiTreeDumpOptions = UiTreeDumpOptions(annotateImage = false),
-        ).let {
-          it.copy(
-            compareOptions = RoborazziOptions.CompareOptions(
-              outputDirectoryPath = "$baseDir/compare",
-            )
-          )
-        },
+        ),
       )
     }
 
