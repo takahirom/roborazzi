@@ -205,7 +205,7 @@ Then, you can run the Gradle tasks for Desktop Support, just like you do for And
 
 If you use the Kotlin JVM plugin, the task will be `recordRoborazzi**Jvm**`.
 
-Compose Desktop has **full [UI tree dump](https://takahirom.github.io/roborazzi/how_to_use.html#ui-tree-dump-json)
+Compose Desktop has **full [UI tree dump](https://takahirom.github.io/roborazzi/ui-tree-dump.html)
 support**: enabling `uiTreeDumpOptions` (or `-Proborazzi.dumpUiTree=true`) on a
 `SemanticsNodeInteraction.captureRoboImage` writes both the `MyTest.uitree.json`
 sidecar and (by default) the annotated `MyTest.annotated.png`, with the same

@@ -7,6 +7,9 @@
 <!-- end -->
 <!-- topic_how_to_use -->
 <!-- end -->
+
+<!-- topic_ui_tree_dump -->
+<!-- end -->
 <!-- topic_preview_support -->
 <!-- end -->
 <!-- topic_ai_powered_image_assertion -->

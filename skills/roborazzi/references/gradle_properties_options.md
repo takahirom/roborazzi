@@ -56,7 +56,7 @@ roborazzi.cleanupOldScreenshots=true
 
 ## roborazzi.dumpUiTree
 
-This option enables the [UI tree dump (JSON)](how_to_use.md#ui-tree-dump-json).
+This option enables the [UI tree dump (JSON)](https://takahirom.github.io/roborazzi/ui-tree-dump.html).
 When set to `true`, each captured screenshot gets a machine-readable
 `.uitree.json` sidecar written next to the image it describes
 (`MyTest.uitree.json` on record, `MyTest_actual.uitree.json` on compare/verify).
