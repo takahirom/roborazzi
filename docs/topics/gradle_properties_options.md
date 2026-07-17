@@ -6,7 +6,7 @@ You can also use `-P` to set the options in the command line. For example, `./gr
 ## roborazzi.test
 
 This option enables you to configure the behavior of Roborazzi. By default, all settings are set to false.
-For additional configuration options, please refer to the 'Apply Roborazzi Gradle Plugin' section.
+For the tasks these properties correspond to, see [Build setup](https://takahirom.github.io/roborazzi/build-setup.html).
 
 ```properties
 roborazzi.test.record=true
@@ -82,4 +82,7 @@ android {
             all {
                 it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
             }
+        }
+    }
+}
 ```
