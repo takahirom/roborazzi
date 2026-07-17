@@ -1,6 +1,6 @@
 # Multiplatform support
 
-### Experimental feature: iOS support
+## Experimental feature: iOS support
 
 Roborazzi supports Compose Multiplatform iOS. You can use Roborazzi with Compose iOS as follows:
 
@@ -113,7 +113,7 @@ reporters, and the `reference | diff | new` comparison output (including
 `ComparisonStyle.Grid`) all behave the same way. A few platform-specific
 features remain unsupported (see the table above); contributions are welcome.
 
-### Experimental feature: Compose Desktop support
+## Experimental feature: Compose Desktop support
 
 Roborazzi supports Compose Desktop. You can use Roborazzi with Compose Desktop as follows:
 
