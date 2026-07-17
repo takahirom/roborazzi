@@ -237,76 +237,17 @@ see [Capture GIFs and videos](https://takahirom.github.io/roborazzi/gif_and_vide
 
 ### RoborazziRule options
 
-You can use some RoborazziRule options
+`RoborazziRule.Options` has:
 
-```kotlin
-/**
- * This rule is a JUnit rule for roborazzi.
- * This rule is optional. You can use [captureRoboImage] without this rule.
- *
- * This rule have two features.
- * 1. Provide context such as `RoborazziOptions` and `outputDirectoryPath` etc for [captureRoboImage].
- * 2. Capture screenshots for each test when specifying RoborazziRule.options.captureType.
- */
-class RoborazziRule private constructor(
-  private val captureRoot: CaptureRoot,
-  private val options: Options = Options()
-) : TestWatcher() {
-  /**
-   * If you add this annotation to the test, the test will be ignored by
-   * roborazzi's CaptureType.LastImage, CaptureType.AllImage and CaptureType.Gif.
-   */
-  annotation class Ignore
+- `captureType` — what the rule captures per test: `None` (default; the rule only provides
+  context), `LastImage`, `AllImage` (an image per layout change, like `TestClass_method_0.png`),
+  or `Gif`. The image-generating types take `onlyFail = true` to capture only when the test
+  fails. Annotate a test with `@RoborazziRule.Ignore` to exclude it from these capture types.
+- `outputDirectoryPath` / `outputFileProvider` — where output files go and how they are named.
+- `roborazziOptions` — the `RoborazziOptions` provided to `captureRoboImage()` in the test.
 
-  data class Options(
-    val captureType: CaptureType = CaptureType.None,
-    /**
-     * output directory path
-     */
-    val outputDirectoryPath: String = provideRoborazziContext().outputDirectory,
-
-    val outputFileProvider: FileProvider = provideRoborazziContext().fileProvider
-      ?: defaultFileProvider,
-    val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
-  )
-
-  sealed interface CaptureType {
-    /**
-     * Do not generate images. Just provide the image path to [captureRoboImage].
-     */
-    object None : CaptureType
-
-    /**
-     * Generate last images for each test
-     */
-    data class LastImage(
-      /**
-       * capture only when the test fail
-       */
-      val onlyFail: Boolean = false,
-    ) : CaptureType
-
-    /**
-     * Generate images for Each layout change like TestClass_method_0.png for each test
-     */
-    data class AllImage(
-      /**
-       * capture only when the test fail
-       */
-      val onlyFail: Boolean = false,
-    ) : CaptureType
-
-    /**
-     * Generate gif images for each test
-     */
-    data class Gif(
-      /**
-       * capture only when the test fail
-       */
-      val onlyFail: Boolean = false,
-    ) : CaptureType
-  }
-```
+See [RoborazziRule](https://github.com/takahirom/roborazzi/blob/main/roborazzi-junit-rule/src/main/java/com/github/takahirom/roborazzi/RoborazziRule.kt)
+for the full definition.
 
 #### Image comparator custom settings
 When comparing images, you may encounter differences due to minor changes related to antialiasing. You can use the options below to avoid this.
@@ -328,7 +269,7 @@ val roborazziRule = RoborazziRule(
 )
 ```
 
-### Experimental WebP support and other image formats
+## Experimental WebP support and other image formats
 
 You can set `roborazzi.record.image.extension` to `webp` in your `gradle.properties` file to generate WebP images.
 
@@ -357,10 +298,9 @@ data class JvmImageIoFormat(
   val awtImageWriter: AwtImageWriter,
   val awtImageLoader: AwtImageLoader
 ) : ImageIoFormat
-
 ```
 
-### Dump mode
+## Dump mode
 
 If you are having trouble debugging your test, try Dump mode as follows.
 
@@ -369,11 +309,11 @@ If you are having trouble debugging your test, try Dump mode as follows.
 For a machine-readable version of the UI tree for tools and AI agents, see
 [UI tree dump (JSON)](https://takahirom.github.io/roborazzi/ui_tree_dump.html).
 
-### Accessibility Check
+## Accessibility Check
 
 Roborazzi Accessibility Checks is a library that integrates accessibility checks into Roborazzi.
 Please refer to [Accessibility Check](https://github.com/takahirom/roborazzi/blob/main/roborazzi-accessibility-check/README.md)
 
-### Roborazzi options
+## Roborazzi options
 
 Please check out [RoborazziOptions](https://github.com/takahirom/roborazzi/blob/main/include-build/roborazzi-core/src/commonJvmMain/kotlin/com/github/takahirom/roborazzi/RoborazziOptions.kt) for available Roborazzi options.
