@@ -4,6 +4,8 @@ import com.github.takahirom.roborazzi.CaptureResult
 import com.github.takahirom.roborazzi.CaptureResults
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.InternalRoborazziApi
+import com.github.takahirom.roborazzi.ROBORAZZI_ANNOTATED_FILE_PATH_KEY
+import com.github.takahirom.roborazzi.ROBORAZZI_UI_TREE_FILE_PATH_KEY
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
@@ -101,9 +103,6 @@ val KnownImageFileExtensions: Set<String> = setOf("png", "gif", "jpg", "jpeg", "
 // Keep in sync with roborazziUiTreeSidecarSuffix in roborazzi-core.
 internal const val UiTreeSidecarSuffix: String = ".uitree.json"
 
-// Keep in sync with roborazziAnnotatedImageSuffix in roborazzi-core.
-internal const val AnnotatedImageSuffix: String = ".annotated.png"
-
 /**
  * A file Roborazzi is responsible for cleaning up: a known screenshot image (this
  * also covers the `.annotated.png` Set-of-Mark image) or a `.uitree.json` UI tree
@@ -113,22 +112,31 @@ internal fun File.isRoborazziManagedOutput(): Boolean =
   KnownImageFileExtensions.contains(extension) || name.endsWith(UiTreeSidecarSuffix)
 
 /**
- * The `.uitree.json` sidecar path Roborazzi would write next to [imagePath].
+ * The absolute paths of the files a cleanup run must KEEP for a single
+ * [result]: its live images plus any UI tree sidecar / annotated image THIS run
+ * actually wrote.
+ *
+ * The sidecar and annotated paths are taken from the result's context data (what
+ * the capture recorded writing), NOT synthesized from the image basenames.
+ * Synthesizing was wrong in two ways:
+ *  - an unchanged verify reports only the golden file, while its sidecar/annotated
+ *    files use the `_actual` basename, so the fresh files were not kept and got
+ *    deleted; and
+ *  - the paths were derived unconditionally, so a stale sidecar/annotated file
+ *    survived cleanup even after the dump (or annotateImage) feature was turned
+ *    off and nothing was written this run.
  */
-internal fun uiTreeSidecarPathFor(imagePath: String): String {
-  val imageFile = File(imagePath)
-  return File(imageFile.parentFile, imageFile.nameWithoutExtension + UiTreeSidecarSuffix)
-    .absolutePath
-}
-
-/**
- * The `.annotated.png` Set-of-Mark image path Roborazzi would write next to
- * [imagePath].
- */
-internal fun annotatedPathFor(imagePath: String): String {
-  val imageFile = File(imagePath)
-  return File(imageFile.parentFile, imageFile.nameWithoutExtension + AnnotatedImageSuffix)
-    .absolutePath
+internal fun keeperFilesFor(result: CaptureResult): Set<String> {
+  val imageFiles = listOfNotNull(
+    result.actualFile,
+    result.compareFile,
+    result.goldenFile,
+  ).map { File(it).absolutePath }
+  val sidecarFiles = listOfNotNull(
+    result.contextData[ROBORAZZI_UI_TREE_FILE_PATH_KEY] as? String,
+    result.contextData[ROBORAZZI_ANNOTATED_FILE_PATH_KEY] as? String,
+  ).map { File(it).absolutePath }
+  return (imageFiles + sidecarFiles).toSet()
 }
 
 @Suppress("unused")
@@ -776,16 +784,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
         .map { it.absolutePath }
         .toMutableSet()
       roborazziResults.captureResults.forEach { result ->
-        val imageFiles = listOfNotNull(
-          result.actualFile,
-          result.compareFile,
-          result.goldenFile
-        )
-        // Keep the live images, their UI tree sidecars, and their annotated images.
-        val latestFiles = (imageFiles.map { File(it).absolutePath } +
-          imageFiles.map { uiTreeSidecarPathFor(it) } +
-          imageFiles.map { annotatedPathFor(it) })
-        removingFiles.removeAll(latestFiles.toSet())
+        // Keep the live images plus the UI tree sidecar / annotated image this run
+        // actually wrote (recorded in the result's context data).
+        removingFiles.removeAll(keeperFilesFor(result))
       }
       test.infoln("Roborazzi: Cleanup old files $removingFiles")
       removingFiles.forEach { file ->
