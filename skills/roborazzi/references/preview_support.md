@@ -44,9 +44,7 @@ roborazzi {
     testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
     // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
     generatedTestClassCount = 4
-    // Filter previews by annotation. Defaults to AnnotationFilter.Filter.RoboPreviewExclude
-    // (previews annotated with @RoboPreviewExclude are skipped). Override to switch to opt-in mode
-    // where only previews annotated with @RoboPreviewInclude are captured.
+    // Filter previews by annotation. See "Filtering previews by annotation" below.
     annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
   }
 }
@@ -130,7 +128,7 @@ annotationFilter = AnnotationFilter.Include("com.example.MyIncludeAnnotation")
 
 ## Annotation-based Capture Control
 
-To enable fine-grained control over screenshot timing in Compose Previews, add the new annotations dependency:
+To enable fine-grained control over screenshot timing in Compose Previews, add the annotations dependency:
 
 ```gradle
 testImplementation("io.github.takahirom.roborazzi:roborazzi-annotations:[version]")
