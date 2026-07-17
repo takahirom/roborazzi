@@ -1114,14 +1114,14 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3.9.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 19
 
-      - name: Gradle cache
-        uses: gradle/gradle-build-action@v2
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: test
         run: |
@@ -1152,14 +1152,14 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3.9.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 19
 
-      - name: Gradle cache
-        uses: gradle/gradle-build-action@v2
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       # Download screenshots from main branch
       - uses: dawidd6/action-download-artifact@v6
