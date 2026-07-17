@@ -837,26 +837,42 @@ bounds before and after the change and prove the margin is there.
    is at `24`.
 
 2. Make the layout change, working from those raw numbers instead of a
-   screenshot.
+   screenshot. The agent keeps the `before` values (top `24`) in its working
+   context.
 
-3. Record again and diff the two JSON files:
+3. Re-record and read the same node line again. Recording overwrites the sidecar
+   in place — there is no separate diff step and nothing to clean up:
 
    ```shell
-   diff old/MyTest.uitree.json build/outputs/roborazzi/MyTest.uitree.json
+   ./gradlew recordRoborazziDebug -Proborazzi.dumpUiTree=true
+   grep login_button build/outputs/roborazzi/MyTest.uitree.json
+   #  { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 32, 204, 80], ... }
    ```
 
-   The node's `top` moved from `24` to `32`, so the 8px margin is provably there:
+   The top edge moved from `24` to `32`, so the 8px margin is provably there. That
+   comparison is trustworthy because the output is deterministic — same UI, same
+   bytes — so a change in the numbers always reflects a real change in the layout,
+   never run-to-run noise.
 
-   ```
-   before:  { "n": 1, "testTag": "login_button", "bounds": [16, 24, 204, 72], ... }
-   after:   { "n": 1, "testTag": "login_button", "bounds": [16, 32, 204, 80], ... }
-   ```
+Roborazzi does not diff the trees for you, but the sidecar is plain text, so if
+you want an explicit file diff, copy the sidecar aside **before** re-recording
+(recording overwrites it in place):
 
-   Because the output is deterministic, every line in the diff is a real change —
-   there are no timestamps and no ordering or numbering noise. The agent can
-   confirm the node moved by exactly the intended amount, and any other lines
-   reveal genuine side effects of the change (for example the siblings below the
-   button shifting down too), which is exactly what you want it to notice.
+```shell
+cp build/outputs/roborazzi/MyTest.uitree.json /tmp/before.uitree.json
+# ...make the change, then re-record...
+diff /tmp/before.uitree.json build/outputs/roborazzi/MyTest.uitree.json
+```
+
+Determinism makes that diff meaningful: every line in it is a real change, with no
+timestamp or ordering noise. Beyond the button's own `top`, extra lines reveal
+genuine side effects — for example the siblings below the button shifting down —
+which is exactly what you want the agent to notice.
+
+A `compareRoborazziDebug` (or verify) run gives you a before/after pair without
+copying anything: the golden `MyTest.uitree.json` written at record time and the
+current run's `MyTest_actual.uitree.json` sit side by side in the output
+directory.
 
 The sidecar always reflects the current run and never fails verification, so it
 is safe to leave enabled while iterating.
