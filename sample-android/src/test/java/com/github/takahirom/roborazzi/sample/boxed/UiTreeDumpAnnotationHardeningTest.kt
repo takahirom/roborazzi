@@ -44,6 +44,11 @@ import java.io.FileOutputStream
  *    earlier run; and
  *  - the annotated image is always a real PNG, even when `recordOptions` uses a
  *    non-PNG image format such as lossless WebP.
+ *
+ * These tests intentionally record goldens and (in the failing-verify case)
+ * generate a `_compare` diff in the SHARED Roborazzi output / compare directories,
+ * so every artifact is deleted in a `finally` block. Leaving a `_compare` image
+ * behind would make the CompareScreenshot CI post a bogus snapshot-diff comment.
  */
 @OptIn(ExperimentalRoborazziApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -64,60 +69,81 @@ class UiTreeDumpAnnotationHardeningTest {
     return head.contentEquals(pngMagic)
   }
 
+  /**
+   * Every artifact a UI-tree-dump capture of [goldenImage] can produce in the
+   * shared output / compare directories: the golden image and its sidecar /
+   * annotated files, plus the `_actual` / `_compare` variants written on a
+   * compare/verify run. Used to delete them all, so tests never leak into the
+   * shared dirs (a stray `_compare` image trips the CompareScreenshot CI).
+   */
+  private fun sharedArtifactsFor(goldenImage: File, compareOutputDirectoryPath: String): List<File> {
+    val outDir = goldenImage.parentFile
+    val baseName = goldenImage.nameWithoutExtension
+    val compareDir = File(compareOutputDirectoryPath)
+    return listOf(
+      goldenImage,
+      File(outDir, "$baseName.uitree.json"),
+      File(outDir, "$baseName.annotated.png"),
+      File(compareDir, "${baseName}_actual.png"),
+      File(compareDir, "${baseName}_actual.uitree.json"),
+      File(compareDir, "${baseName}_actual.annotated.png"),
+      File(compareDir, "${baseName}_compare.png"),
+    )
+  }
+
   @Test
   fun failingVerifyStillWritesAnnotatedImageForActual() {
     boxedEnvironment {
       val prefix =
         "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.failingVerify"
       val goldenImage = File("$prefix.png")
-      val actualImage = File(
-        "${roborazziSystemPropertyCompareOutputDirectory()}/${this::class.qualifiedName}.failingVerify_actual.png"
-      )
-      val actualAnnotated = File(
-        "${roborazziSystemPropertyCompareOutputDirectory()}/${this::class.qualifiedName}.failingVerify_actual.annotated.png"
-      )
-      listOf(goldenImage, actualImage, actualAnnotated).forEach { it.delete() }
-
-      val options = { taskType: RoborazziTaskType ->
-        RoborazziOptions(taskType = taskType, uiTreeDumpOptions = UiTreeDumpOptions())
-      }
-
-      var label by mutableStateOf("Login")
-      composeTestRule.setContent {
-        Text(text = label, modifier = Modifier.testTag("btn").size(120.dp))
-      }
-
-      // Record a golden showing "Login".
-      setupRoborazziSystemProperty(record = true)
-      onView(isRoot()).captureRoboImage(
-        file = goldenImage,
-        roborazziOptions = options(RoborazziTaskType.Record),
-      )
-      assertTrue("golden should exist", goldenImage.exists())
-
-      // Change the content so the verify fails, then verify: it must throw, and the
-      // freshly written `_actual` must still get its `.annotated.png`.
-      label = "Logout now!"
-      composeTestRule.waitForIdle()
-      setupRoborazziSystemProperty(verify = true)
-
-      var threw = false
+      val compareDir = roborazziSystemPropertyCompareOutputDirectory()
+      val actualImage = File(compareDir, "${goldenImage.nameWithoutExtension}_actual.png")
+      val actualAnnotated = File(compareDir, "${goldenImage.nameWithoutExtension}_actual.annotated.png")
+      val artifacts = sharedArtifactsFor(goldenImage, compareDir)
+      artifacts.forEach { it.delete() }
       try {
+        val options = { taskType: RoborazziTaskType ->
+          RoborazziOptions(taskType = taskType, uiTreeDumpOptions = UiTreeDumpOptions())
+        }
+
+        var label by mutableStateOf("Login")
+        composeTestRule.setContent {
+          Text(text = label, modifier = Modifier.testTag("btn").size(120.dp))
+        }
+
+        // Record a golden showing "Login".
+        setupRoborazziSystemProperty(record = true)
         onView(isRoot()).captureRoboImage(
           file = goldenImage,
-          roborazziOptions = options(RoborazziTaskType.Verify),
+          roborazziOptions = options(RoborazziTaskType.Record),
         )
-      } catch (e: AssertionError) {
-        threw = true
-      }
-      assertTrue("a changed verify must throw AssertionError", threw)
-      assertTrue("changed verify must write the _actual image", actualImage.exists())
-      assertTrue(
-        "a failing verify must still write the _actual annotated image",
-        actualAnnotated.exists(),
-      )
+        assertTrue("golden should exist", goldenImage.exists())
 
-      listOf(goldenImage, actualImage, actualAnnotated).forEach { it.delete() }
+        // Change the content so the verify fails, then verify: it must throw, and the
+        // freshly written `_actual` must still get its `.annotated.png`.
+        label = "Logout now!"
+        composeTestRule.waitForIdle()
+        setupRoborazziSystemProperty(verify = true)
+
+        var threw = false
+        try {
+          onView(isRoot()).captureRoboImage(
+            file = goldenImage,
+            roborazziOptions = options(RoborazziTaskType.Verify),
+          )
+        } catch (e: AssertionError) {
+          threw = true
+        }
+        assertTrue("a changed verify must throw AssertionError", threw)
+        assertTrue("changed verify must write the _actual image", actualImage.exists())
+        assertTrue(
+          "a failing verify must still write the _actual annotated image",
+          actualAnnotated.exists(),
+        )
+      } finally {
+        artifacts.forEach { it.delete() }
+      }
     }
   }
 
@@ -127,57 +153,56 @@ class UiTreeDumpAnnotationHardeningTest {
       val prefix =
         "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.unchangedVerify"
       val goldenImage = File("$prefix.png")
-      val actualImage = File(
-        "${roborazziSystemPropertyCompareOutputDirectory()}/${this::class.qualifiedName}.unchangedVerify_actual.png"
-      )
-      val actualAnnotated = File(
-        "${roborazziSystemPropertyCompareOutputDirectory()}/${this::class.qualifiedName}.unchangedVerify_actual.annotated.png"
-      )
-      listOf(goldenImage, actualImage, actualAnnotated).forEach { it.delete() }
+      val compareDir = roborazziSystemPropertyCompareOutputDirectory()
+      val actualImage = File(compareDir, "${goldenImage.nameWithoutExtension}_actual.png")
+      val actualAnnotated = File(compareDir, "${goldenImage.nameWithoutExtension}_actual.annotated.png")
+      val artifacts = sharedArtifactsFor(goldenImage, compareDir)
+      artifacts.forEach { it.delete() }
+      try {
+        val options = { taskType: RoborazziTaskType ->
+          RoborazziOptions(taskType = taskType, uiTreeDumpOptions = UiTreeDumpOptions())
+        }
 
-      val options = { taskType: RoborazziTaskType ->
-        RoborazziOptions(taskType = taskType, uiTreeDumpOptions = UiTreeDumpOptions())
+        composeTestRule.setContent {
+          Text(text = "Login", modifier = Modifier.testTag("btn").size(120.dp))
+        }
+        setupRoborazziSystemProperty(record = true)
+        onView(isRoot()).captureRoboImage(
+          file = goldenImage,
+          roborazziOptions = options(RoborazziTaskType.Record),
+        )
+        val goldenWidth = BitmapFactory.decodeFile(goldenImage.absolutePath).width
+        assertTrue("golden should be wider than the stale marker", goldenWidth > 10)
+
+        // Pre-seed a STALE _actual image from a hypothetical earlier changed run: a
+        // tiny 10x10 PNG whose size is unmistakably different from the golden.
+        actualImage.parentFile?.mkdirs()
+        val stale = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888)
+        FileOutputStream(actualImage).use { stale.compress(Bitmap.CompressFormat.PNG, 100, it) }
+
+        // Verify the unchanged screenshot: no new _actual is written this run, so the
+        // annotated image must be drawn on the golden, NOT the stale 10x10 _actual.
+        setupRoborazziSystemProperty(verify = true)
+        onView(isRoot()).captureRoboImage(
+          file = goldenImage,
+          roborazziOptions = options(RoborazziTaskType.Verify),
+        )
+
+        assertTrue("annotated image should be written", actualAnnotated.exists())
+        val annotatedWidth = BitmapFactory.decodeFile(actualAnnotated.absolutePath).width
+        assertNotEquals(
+          "annotated image must not be based on the stale 10x10 _actual",
+          10,
+          annotatedWidth,
+        )
+        assertEquals(
+          "annotated image must be based on the golden image",
+          goldenWidth,
+          annotatedWidth,
+        )
+      } finally {
+        artifacts.forEach { it.delete() }
       }
-
-      composeTestRule.setContent {
-        Text(text = "Login", modifier = Modifier.testTag("btn").size(120.dp))
-      }
-      setupRoborazziSystemProperty(record = true)
-      onView(isRoot()).captureRoboImage(
-        file = goldenImage,
-        roborazziOptions = options(RoborazziTaskType.Record),
-      )
-      val goldenWidth = BitmapFactory.decodeFile(goldenImage.absolutePath).width
-      assertTrue("golden should be wider than the stale marker", goldenWidth > 10)
-
-      // Pre-seed a STALE _actual image from a hypothetical earlier changed run: a
-      // tiny 10x10 PNG whose size is unmistakably different from the golden.
-      actualImage.parentFile?.mkdirs()
-      val stale = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888)
-      FileOutputStream(actualImage).use { stale.compress(Bitmap.CompressFormat.PNG, 100, it) }
-
-      // Verify the unchanged screenshot: no new _actual is written this run, so the
-      // annotated image must be drawn on the golden, NOT the stale 10x10 _actual.
-      setupRoborazziSystemProperty(verify = true)
-      onView(isRoot()).captureRoboImage(
-        file = goldenImage,
-        roborazziOptions = options(RoborazziTaskType.Verify),
-      )
-
-      assertTrue("annotated image should be written", actualAnnotated.exists())
-      val annotatedWidth = BitmapFactory.decodeFile(actualAnnotated.absolutePath).width
-      assertNotEquals(
-        "annotated image must not be based on the stale 10x10 _actual",
-        10,
-        annotatedWidth,
-      )
-      assertEquals(
-        "annotated image must be based on the golden image",
-        goldenWidth,
-        annotatedWidth,
-      )
-
-      listOf(goldenImage, actualImage, actualAnnotated).forEach { it.delete() }
     }
   }
 
@@ -188,29 +213,31 @@ class UiTreeDumpAnnotationHardeningTest {
         "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.webpAnnotated"
       val goldenImage = File("$prefix.png")
       val goldenAnnotated = File("$prefix.annotated.png")
-      listOf(goldenImage, goldenAnnotated).forEach { it.delete() }
-
-      composeTestRule.setContent {
-        Text(text = "Login", modifier = Modifier.testTag("btn").size(120.dp))
-      }
-      setupRoborazziSystemProperty(record = true)
-      onView(isRoot()).captureRoboImage(
-        file = goldenImage,
-        roborazziOptions = RoborazziOptions(
-          taskType = RoborazziTaskType.Record,
-          recordOptions = RoborazziOptions.RecordOptions(
-            imageIoFormat = LosslessWebPImageIoFormat(),
+      val artifacts = sharedArtifactsFor(goldenImage, roborazziSystemPropertyCompareOutputDirectory())
+      artifacts.forEach { it.delete() }
+      try {
+        composeTestRule.setContent {
+          Text(text = "Login", modifier = Modifier.testTag("btn").size(120.dp))
+        }
+        setupRoborazziSystemProperty(record = true)
+        onView(isRoot()).captureRoboImage(
+          file = goldenImage,
+          roborazziOptions = RoborazziOptions(
+            taskType = RoborazziTaskType.Record,
+            recordOptions = RoborazziOptions.RecordOptions(
+              imageIoFormat = LosslessWebPImageIoFormat(),
+            ),
+            uiTreeDumpOptions = UiTreeDumpOptions(),
           ),
-          uiTreeDumpOptions = UiTreeDumpOptions(),
-        ),
-      )
+        )
 
-      assertTrue("annotated image should be written", goldenAnnotated.exists())
-      if (!startsWithPngMagic(goldenAnnotated)) {
-        fail("annotated image must be a real PNG regardless of recordOptions.imageIoFormat")
+        assertTrue("annotated image should be written", goldenAnnotated.exists())
+        if (!startsWithPngMagic(goldenAnnotated)) {
+          fail("annotated image must be a real PNG regardless of recordOptions.imageIoFormat")
+        }
+      } finally {
+        artifacts.forEach { it.delete() }
       }
-
-      listOf(goldenImage, goldenAnnotated).forEach { it.delete() }
     }
   }
 }
