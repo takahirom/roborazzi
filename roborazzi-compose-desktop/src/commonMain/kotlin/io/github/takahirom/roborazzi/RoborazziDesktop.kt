@@ -7,6 +7,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.AwtRoboCanvas
+import com.github.takahirom.roborazzi.toRoboComponentTree
 import com.github.takahirom.roborazzi.DefaultFileNameGenerator
 import com.github.takahirom.roborazzi.RoboCanvas
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -36,7 +37,13 @@ fun SemanticsNodeInteraction.captureRoboImage(
   if (!roborazziOptions.taskType.isEnabled()) {
     return
   }
-  val density = this.fetchSemanticsNode().layoutInfo.density
+  val node = this.fetchSemanticsNode()
+  val density = node.layoutInfo.density
+  val uiTreeDump = writeUiTreeDumpIfEnabledDesktop(
+    serializationTree = { node.toRoboComponentTree() },
+    goldenFile = file,
+    roborazziOptions = roborazziOptions,
+  )
   val awtImage = this.captureToImage().toAwtImage()
   val canvas = AwtRoboCanvas(
     width = awtImage.width,
@@ -50,9 +57,10 @@ fun SemanticsNodeInteraction.captureRoboImage(
   processOutputImageAndReportWithDefaults(
     canvas = canvas,
     goldenFile = file,
-    roborazziOptions = roborazziOptions,
+    roborazziOptions = uiTreeDump.effectiveOptions,
     density = density
   )
+  uiTreeDump.writeAnnotatedImage()
   canvas.release()
 }
 
