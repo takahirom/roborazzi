@@ -114,7 +114,8 @@ fun SemanticsNodeInteraction.captureRoboImage(
   }
   val newCanvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(width, height, bytes)
   try {
-    processOutputImageAndReport(
+    try {
+      processOutputImageAndReport(
       newRoboCanvas = newCanvas,
       goldenFilePath = resolvedGoldenFilePath,
       // Honor the roborazzi.contextdata flag like the JVM facade does. The JVM
@@ -153,10 +154,14 @@ fun SemanticsNodeInteraction.captureRoboImage(
           hasLabel = grid?.hasLabel ?: true,
         )
       },
-    )
-    // The screenshot (golden or _actual) has now been written; draw the annotated
-    // Set-of-Mark image on top of it. No-op when the feature is off or opted out.
-    uiTreeDump.writeAnnotatedImage()
+      )
+    } finally {
+      // The screenshot (golden or _actual) has now been written; draw the
+      // annotated Set-of-Mark image on top of it, even when verification failed
+      // (the `_actual` is already written). No-op when the feature is off or
+      // opted out, and it never throws, so it cannot mask the assertion error.
+      uiTreeDump.writeAnnotatedImage()
+    }
   } finally {
     newCanvas.release()
   }

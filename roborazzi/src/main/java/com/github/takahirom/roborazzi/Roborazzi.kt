@@ -55,13 +55,20 @@ fun ViewInteraction.captureRoboImage(
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
   perform(ImageCaptureViewAction(roborazziOptions, file) { canvas, uiTreeDump ->
-    processOutputImageAndReportWithDefaults(
-      canvas = canvas,
-      goldenFile = file,
-      roborazziOptions = uiTreeDump.effectiveOptions
-    )
-    uiTreeDump.writeAnnotatedImage()
-    canvas.release()
+    try {
+      processOutputImageAndReportWithDefaults(
+        canvas = canvas,
+        goldenFile = file,
+        roborazziOptions = uiTreeDump.effectiveOptions
+      )
+    } finally {
+      // Draw the annotated image even when verification failed: the output image
+      // (`_actual`) has already been written, so its annotation must still be
+      // produced. writeAnnotatedImage never throws, so it cannot mask the
+      // original assertion error propagating from the report step.
+      uiTreeDump.writeAnnotatedImage()
+      canvas.release()
+    }
   })
 }
 
@@ -176,13 +183,19 @@ fun captureRootsInternal(
     ),
     roborazziOptions = roborazziOptions,
   ) { canvas ->
-    processOutputImageAndReportWithDefaults(
-      canvas = canvas,
-      goldenFile = file,
-      roborazziOptions = uiTreeDump.effectiveOptions
-    )
-    uiTreeDump.writeAnnotatedImage()
-    canvas.release()
+    try {
+      processOutputImageAndReportWithDefaults(
+        canvas = canvas,
+        goldenFile = file,
+        roborazziOptions = uiTreeDump.effectiveOptions
+      )
+    } finally {
+      // See the note on the ViewInteraction path: annotate even on a failing
+      // verify (the `_actual` image is already written), without masking the
+      // assertion error.
+      uiTreeDump.writeAnnotatedImage()
+      canvas.release()
+    }
   }
 }
 
@@ -372,13 +385,19 @@ fun SemanticsNodeInteraction.captureRoboImage(
         ),
         roborazziOptions = roborazziOptions,
       ) { canvas ->
-        processOutputImageAndReportWithDefaults(
-          canvas = canvas,
-          goldenFile = file,
-          roborazziOptions = uiTreeDump.effectiveOptions
-        )
-        uiTreeDump.writeAnnotatedImage()
-        canvas.release()
+        try {
+          processOutputImageAndReportWithDefaults(
+            canvas = canvas,
+            goldenFile = file,
+            roborazziOptions = uiTreeDump.effectiveOptions
+          )
+        } finally {
+          // See the note on the ViewInteraction path: annotate even on a failing
+          // verify (the `_actual` image is already written), without masking the
+          // assertion error.
+          uiTreeDump.writeAnnotatedImage()
+          canvas.release()
+        }
       }
     }
   )

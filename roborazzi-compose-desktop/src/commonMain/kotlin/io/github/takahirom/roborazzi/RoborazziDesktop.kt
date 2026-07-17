@@ -54,14 +54,21 @@ fun SemanticsNodeInteraction.captureRoboImage(
   canvas.apply {
     drawImage(awtImage)
   }
-  processOutputImageAndReportWithDefaults(
-    canvas = canvas,
-    goldenFile = file,
-    roborazziOptions = uiTreeDump.effectiveOptions,
-    density = density
-  )
-  uiTreeDump.writeAnnotatedImage()
-  canvas.release()
+  try {
+    processOutputImageAndReportWithDefaults(
+      canvas = canvas,
+      goldenFile = file,
+      roborazziOptions = uiTreeDump.effectiveOptions,
+      density = density
+    )
+  } finally {
+    // Draw the annotated image even when verification failed: the output image
+    // (`_actual`) has already been written, so its annotation must still be
+    // produced. writeAnnotatedImage never throws, so it cannot mask the original
+    // assertion error propagating from the report step.
+    uiTreeDump.writeAnnotatedImage()
+    canvas.release()
+  }
 }
 
 fun ImageBitmap.captureRoboImage(
