@@ -710,6 +710,20 @@ The sidecar is **informational only**: it never participates in image diffing an
 never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
 (which have no component tree) do not produce a sidecar.
 
+#### Platform support
+
+| Platform | JSON sidecar | Annotated image |
+|---|---|---|
+| Android / Robolectric | supported | supported |
+| Compose Desktop (JVM) | supported | supported |
+| Compose iOS | supported | supported |
+
+The UI tree dump is fully supported on Android/Robolectric, Compose Desktop and
+Compose iOS: each writes the JSON sidecar and, by default, the annotated
+Set-of-Mark image, which looks the same across platforms (the same numbered boxes
+and palette). On the Compose targets the dump is produced by the
+`SemanticsNodeInteraction.captureRoboImage` path.
+
 #### Enabling it
 
 Via the Gradle property (no code change):

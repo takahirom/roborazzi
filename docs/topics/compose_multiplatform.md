@@ -100,6 +100,8 @@ The currently implemented features for iOS support are as follows:
 | pixelBitConfig | 🆖 (Rgb565 falls back to Argb8888 with a warning; CoreGraphics has no 5-6-5 format) |
 | dump | n/a (Robolectric-only concept) |
 | applyDeviceCrop | n/a (Robolectric-only concept) |
+| UI tree dump JSON sidecar (`uiTreeDumpOptions`) | supported (record writes `MyTest.uitree.json` next to the golden; compare/verify writes `MyTest_actual.uitree.json` in the compare output directory — the same `_actual` basename contract as the other platforms) |
+| UI tree annotated image (`annotateImage`) | supported (drawn with UIKit/CoreGraphics; `MyTest.annotated.png` / `MyTest_actual.annotated.png`, matching the Android/Desktop look) |
 
 
 > **Note on translucent pixels:** the iOS canvas stores pixels premultiplied (a CoreGraphics constraint), so translucent colors lose precision proportional to `255 / alpha` (opaque pixels are lossless). The loss is deterministic, so comparing identically-produced images is unaffected; only cross-source comparisons of low-alpha content may need a small threshold.
@@ -201,6 +203,12 @@ Then, you can run the Gradle tasks for Desktop Support, just like you do for And
 ```
 
 If you use the Kotlin JVM plugin, the task will be `recordRoborazzi**Jvm**`.
+
+Compose Desktop has **full [UI tree dump](https://takahirom.github.io/roborazzi/how_to_use.html#ui-tree-dump-json)
+support**: enabling `uiTreeDumpOptions` (or `-Proborazzi.dumpUiTree=true`) on a
+`SemanticsNodeInteraction.captureRoboImage` writes both the `MyTest.uitree.json`
+sidecar and (by default) the annotated `MyTest.annotated.png`, with the same
+naming and `_actual` basename semantics as Android.
 
 The sample image
 

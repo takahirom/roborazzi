@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onRoot
@@ -22,14 +23,26 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.UIImageRoboCanvas
+import com.github.takahirom.roborazzi.UiTreeDumpOptions
 import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.cinterop.ExperimentalForeignApi
+import platform.CoreGraphics.CGImageGetHeight
+import platform.CoreGraphics.CGImageGetWidth
+import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSProcessInfo
+import platform.Foundation.NSString
 import platform.Foundation.NSTemporaryDirectory
+import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.dataWithContentsOfFile
+import platform.Foundation.isEqualToData
+import platform.Foundation.stringWithContentsOfFile
+import platform.UIKit.UIImage
 
 class IosTest {
   @OptIn(ExperimentalTestApi::class)
@@ -196,6 +209,147 @@ class IosTest {
     golden.release()
     compare.release()
   }
+
+  /**
+   * With [UiTreeDumpOptions] enabled, the iOS capture path writes a
+   * `.uitree.json` sidecar AND (by default) an annotated Set-of-Mark
+   * `.annotated.png` next to the golden image. Asserts the sidecar carries a
+   * grep-able testTag line, and that the annotated PNG exists, has the same pixel
+   * dimensions as the screenshot, and differs from it (boxes drawn).
+   */
+  @OptIn(ExperimentalTestApi::class, ExperimentalForeignApi::class)
+  @Test
+  fun uiTreeSidecarAndAnnotatedImageAreWritten() {
+    val baseDir = resolveAbsolutePath(
+      NSTemporaryDirectory() + "roborazzi-ios-uitree-${NSProcessInfo.processInfo.systemUptime}"
+    ).trimEnd('/')
+    val goldenPath = "$baseDir/ios_uitree.png"
+    val sidecarPath = "$baseDir/ios_uitree.uitree.json"
+    val annotatedPath = "$baseDir/ios_uitree.annotated.png"
+
+    runComposeUiTest {
+      setContent {
+        MaterialTheme {
+          Button(
+            modifier = Modifier.testTag("button"),
+            onClick = { /*TODO*/ },
+          ) {
+            Text("Hello UI tree")
+          }
+        }
+      }
+      onRoot().captureRoboImage(
+        composeUiTest = this,
+        filePath = goldenPath,
+        roborazziOptions = RoborazziOptions(
+          taskType = RoborazziTaskType.Record,
+          compareOptions = RoborazziOptions.CompareOptions(
+            outputDirectoryPath = "$baseDir/compare",
+          ),
+          uiTreeDumpOptions = UiTreeDumpOptions(),
+        ),
+      )
+    }
+
+    assertTrue(
+      NSFileManager.defaultManager.fileExistsAtPath(sidecarPath),
+      "UI tree sidecar should be written at $sidecarPath",
+    )
+    val json = NSString.stringWithContentsOfFile(
+      sidecarPath,
+      encoding = NSUTF8StringEncoding,
+      error = null,
+    )
+    assertTrue(json != null, "sidecar should be readable")
+    assertTrue(
+      json.contains("\"schemaVersion\": 1"),
+      "sidecar should be valid UI tree JSON",
+    )
+    assertTrue(
+      json.contains("\"testTag\": \"button\""),
+      "sidecar should contain the tagged node's testTag",
+    )
+
+    assertTrue(
+      NSFileManager.defaultManager.fileExistsAtPath(annotatedPath),
+      "Annotated Set-of-Mark image should be written at $annotatedPath",
+    )
+    val goldenSize = pngPixelSize(goldenPath)
+    val annotatedSize = pngPixelSize(annotatedPath)
+    assertTrue(goldenSize != null && annotatedSize != null, "both PNGs should decode")
+    assertEquals(
+      goldenSize,
+      annotatedSize,
+      "annotated image should have the same pixel dimensions as the screenshot",
+    )
+    // The annotated PNG is a copy of the screenshot with boxes drawn on top, so
+    // its bytes must differ from the plain screenshot.
+    val goldenData = NSData.dataWithContentsOfFile(goldenPath)
+    val annotatedData = NSData.dataWithContentsOfFile(annotatedPath)
+    assertTrue(goldenData != null && annotatedData != null, "both PNGs should load as data")
+    assertFalse(
+      annotatedData.isEqualToData(goldenData),
+      "annotated image should differ from the screenshot (boxes drawn)",
+    )
+  }
+
+  /**
+   * With `annotateImage = false`, only the JSON sidecar is written; no annotated
+   * image is produced.
+   */
+  @OptIn(ExperimentalTestApi::class, ExperimentalForeignApi::class)
+  @Test
+  fun uiTreeAnnotatedImageIsSkippedWhenOptedOut() {
+    val baseDir = resolveAbsolutePath(
+      NSTemporaryDirectory() + "roborazzi-ios-uitree-noannotate-${NSProcessInfo.processInfo.systemUptime}"
+    ).trimEnd('/')
+    val goldenPath = "$baseDir/ios_uitree_noannotate.png"
+    val sidecarPath = "$baseDir/ios_uitree_noannotate.uitree.json"
+    val annotatedPath = "$baseDir/ios_uitree_noannotate.annotated.png"
+
+    runComposeUiTest {
+      setContent {
+        MaterialTheme {
+          Button(
+            modifier = Modifier.testTag("button"),
+            onClick = { /*TODO*/ },
+          ) {
+            Text("Hello UI tree")
+          }
+        }
+      }
+      onRoot().captureRoboImage(
+        composeUiTest = this,
+        filePath = goldenPath,
+        roborazziOptions = RoborazziOptions(
+          taskType = RoborazziTaskType.Record,
+          compareOptions = RoborazziOptions.CompareOptions(
+            outputDirectoryPath = "$baseDir/compare",
+          ),
+          uiTreeDumpOptions = UiTreeDumpOptions(annotateImage = false),
+        ),
+      )
+    }
+
+    assertTrue(
+      NSFileManager.defaultManager.fileExistsAtPath(sidecarPath),
+      "sidecar should still be written when annotateImage=false",
+    )
+    assertFalse(
+      NSFileManager.defaultManager.fileExistsAtPath(annotatedPath),
+      "no annotated image should be written when annotateImage=false",
+    )
+  }
+}
+
+/**
+ * Decodes a PNG at [path] and returns its (width, height) in pixels, or null when
+ * it can't be decoded.
+ */
+@OptIn(ExperimentalForeignApi::class)
+private fun pngPixelSize(path: String): Pair<Int, Int>? {
+  val cgImage = UIImage(contentsOfFile = path).CGImage ?: return null
+  return CGImageGetWidth(cgImage).toInt() to CGImageGetHeight(cgImage).toInt()
 }
 
 // Mirrors the production iOS path resolution: a relative Roborazzi path (e.g. a

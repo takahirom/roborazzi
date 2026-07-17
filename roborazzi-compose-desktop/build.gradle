@@ -18,6 +18,9 @@ kotlin {
   }
   sourceSets {
     commonMain {
+      // Compose semantics -> RoboComponentTree extraction shared verbatim with
+      // the Compose iOS module (single source copy, compiled per platform).
+      kotlin.srcDir("$rootDir/shared-sources/compose-multiplatform/src/commonMain/kotlin")
       dependencies {
         // Please see settings.gradle
         api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
