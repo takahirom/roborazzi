@@ -1093,6 +1093,20 @@ The sidecar is **informational only**: it never participates in image diffing an
 never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
 (which have no component tree) do not produce a sidecar.
 
+#### Platform support
+
+| Platform | JSON sidecar | Annotated image |
+|---|---|---|
+| Android / Robolectric | supported | supported |
+| Compose Desktop (JVM) | supported | supported |
+| Compose iOS | supported | 🆖 not supported (no AWT drawing pipeline) |
+
+On **Compose iOS** only the JSON sidecar is written. `annotateImage` (on by
+default) is ignored gracefully — a notice is logged and no `.annotated.png` is
+produced; enabling it never crashes the capture. On Android/Robolectric and
+Compose Desktop the annotated image is fully supported. On the Compose targets the
+sidecar is produced by the `SemanticsNodeInteraction.captureRoboImage` path.
+
 #### Enabling it
 
 Via the Gradle property (no code change):
@@ -1680,6 +1694,8 @@ The currently implemented features for iOS support are as follows:
 | pixelBitConfig | 🆖 (Rgb565 falls back to Argb8888 with a warning; CoreGraphics has no 5-6-5 format) |
 | dump | n/a (Robolectric-only concept) |
 | applyDeviceCrop | n/a (Robolectric-only concept) |
+| UI tree dump JSON sidecar (`uiTreeDumpOptions`) | supported (`MyTest.uitree.json` written next to the golden) |
+| UI tree annotated image (`annotateImage`) | 🆖 not supported (no AWT drawing pipeline on iOS; the flag is ignored with a logged notice) |
 
 
 > **Note on translucent pixels:** the iOS canvas stores pixels premultiplied (a CoreGraphics constraint), so translucent colors lose precision proportional to `255 / alpha` (opaque pixels are lossless). The loss is deterministic, so comparing identically-produced images is unaffected; only cross-source comparisons of low-alpha content may need a small threshold.
@@ -1781,6 +1797,12 @@ Then, you can run the Gradle tasks for Desktop Support, just like you do for And
 ```
 
 If you use the Kotlin JVM plugin, the task will be `recordRoborazzi**Jvm**`.
+
+Compose Desktop has **full [UI tree dump](how_to_use.md#ui-tree-dump-json)
+support**: enabling `uiTreeDumpOptions` (or `-Proborazzi.dumpUiTree=true`) on a
+`SemanticsNodeInteraction.captureRoboImage` writes both the `MyTest.uitree.json`
+sidecar and (by default) the annotated `MyTest.annotated.png`, with the same
+naming and `_actual` basename semantics as Android.
 
 The sample image
 

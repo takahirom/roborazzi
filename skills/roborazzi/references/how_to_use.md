@@ -711,6 +711,20 @@ The sidecar is **informational only**: it never participates in image diffing an
 never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
 (which have no component tree) do not produce a sidecar.
 
+#### Platform support
+
+| Platform | JSON sidecar | Annotated image |
+|---|---|---|
+| Android / Robolectric | supported | supported |
+| Compose Desktop (JVM) | supported | supported |
+| Compose iOS | supported | 🆖 not supported (no AWT drawing pipeline) |
+
+On **Compose iOS** only the JSON sidecar is written. `annotateImage` (on by
+default) is ignored gracefully — a notice is logged and no `.annotated.png` is
+produced; enabling it never crashes the capture. On Android/Robolectric and
+Compose Desktop the annotated image is fully supported. On the Compose targets the
+sidecar is produced by the `SemanticsNodeInteraction.captureRoboImage` path.
+
 #### Enabling it
 
 Via the Gradle property (no code change):
