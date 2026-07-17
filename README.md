@@ -193,6 +193,16 @@ apply plugin: "io.github.takahirom.roborazzi"
 </table>
 </details>
 
+## Add dependencies
+
+| Description     | Dependencies                                                                         |
+|-----------------|--------------------------------------------------------------------------------------|
+| Core functions  | `testImplementation("io.github.takahirom.roborazzi:roborazzi:[version]")`            |
+| Jetpack Compose | `testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:[version]")`    |
+| JUnit rules     | `testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:[version]")` |
+
+## Run tasks
+
 <table>
 <tr>
 <td> Use Roborazzi task </td> <td> Use default unit test task </td> <td> Description </td>
@@ -368,14 +378,6 @@ The intermediate directory is separated the same way (e.g. `build/intermediates/
 > Enabling this option changes where golden images are stored. Existing users must re-record (or manually move) their goldens into the new per-slug subdirectory, otherwise verification will not find them. This is opt-in and defaults to `false`, so existing behavior is unchanged unless you enable it.
 >
 > This also partially addresses requests for per-flavor/variant subdirectories ([#804](https://github.com/takahirom/roborazzi/issues/804), [#731](https://github.com/takahirom/roborazzi/issues/731)).
-
-### Add dependencies
-
-| Description     | Dependencies                                                                         |
-|-----------------|--------------------------------------------------------------------------------------|
-| Core functions  | `testImplementation("io.github.takahirom.roborazzi:roborazzi:[version]")`            |
-| Jetpack Compose | `testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:[version]")`    |
-| JUnit rules     | `testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:[version]")` |
 
 <!-- end -->
 <!-- topic_how_to_use -->
