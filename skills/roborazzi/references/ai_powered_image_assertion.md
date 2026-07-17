@@ -4,7 +4,7 @@
 Roborazzi supports AI-powered image assertion.
 AI-powered image assertion is an experimental feature. Screenshot tests are a great way to verify your app's UI, but verifying the content of the images can be a tedious and time-consuming task. This manual effort reduces scalability. Roborazzi can help automate this process through AI-powered image assertion, making it more efficient and scalable.
 
-There are two new library modules: `io.github.takahirom.roborazzi:roborazzi-ai-gemini` and `io.github.takahirom.roborazzi:roborazzi-ai-openai` for AI-powered image assertion.
+There are two library modules: `io.github.takahirom.roborazzi:roborazzi-ai-gemini` and `io.github.takahirom.roborazzi:roborazzi-ai-openai` for AI-powered image assertion.
 
 `roborazzi-ai-gemini` leverages [Gemini](https://gemini.google.com/) and [generative-ai-kmp](https://github.com/PatilShreyas/generative-ai-kmp), while `roborazzi-ai-openai` utilizes the [OpenAI API](https://platform.openai.com/) through raw HTTP API calls implemented with Ktor and KotlinX Serialization
 

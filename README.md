@@ -1382,7 +1382,7 @@ We are looking forward to your contributions to support more annotation options.
 Roborazzi supports AI-powered image assertion.
 AI-powered image assertion is an experimental feature. Screenshot tests are a great way to verify your app's UI, but verifying the content of the images can be a tedious and time-consuming task. This manual effort reduces scalability. Roborazzi can help automate this process through AI-powered image assertion, making it more efficient and scalable.
 
-There are two new library modules: `io.github.takahirom.roborazzi:roborazzi-ai-gemini` and `io.github.takahirom.roborazzi:roborazzi-ai-openai` for AI-powered image assertion.
+There are two library modules: `io.github.takahirom.roborazzi:roborazzi-ai-gemini` and `io.github.takahirom.roborazzi:roborazzi-ai-openai` for AI-powered image assertion.
 
 `roborazzi-ai-gemini` leverages [Gemini](https://gemini.google.com/) and [generative-ai-kmp](https://github.com/PatilShreyas/generative-ai-kmp), while `roborazzi-ai-openai` utilizes the [OpenAI API](https://platform.openai.com/) through raw HTTP API calls implemented with Ktor and KotlinX Serialization
 
@@ -1899,16 +1899,6 @@ After that, you can execute screenshot tests using either Android Studio's Run o
 - **Check Plugin**: Ensure that the plugin is properly applied.
 - **Run Task**: Verify that the `recordRoborazziDebug` task is running.
 - **Call Method**: Confirm that `captureRoboImage()` is being called.
-
-By following these steps, you should be able to identify and resolve the issue causing the screenshot tests to not capture images.
-
-## Q: I'm seeing an optimization warning related to Java lambdas in Gradle. What can I do?
-
-**A:** This warning may occur with Gradle 7.5. Upgrade to Gradle 7.6.2 to resolve this issue. Change the distribution URL in `gradle-wrapper.properties`:
-
-```properties
-distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.2-bin.zip
-```
 
 ## Q: Can I run Roborazzi with Bazel?
 
