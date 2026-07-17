@@ -1103,10 +1103,9 @@ never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
 
 The UI tree dump is fully supported on Android/Robolectric, Compose Desktop and
 Compose iOS: each writes the JSON sidecar and, by default, the annotated
-Set-of-Mark image. On the Compose targets the dump is produced by the
-`SemanticsNodeInteraction.captureRoboImage` path. The drawing backend differs per
-platform (Android/Desktop use AWT, iOS uses UIKit/CoreGraphics) but the output
-matches: the same numbered boxes and palette.
+Set-of-Mark image, which looks the same across platforms (the same numbered boxes
+and palette). On the Compose targets the dump is produced by the
+`SemanticsNodeInteraction.captureRoboImage` path.
 
 #### Enabling it
 
