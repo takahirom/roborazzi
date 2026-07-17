@@ -13,6 +13,9 @@
 
 <!-- topic_github_actions -->
 <!-- end -->
+
+<!-- topic_gif_and_video -->
+<!-- end -->
 <!-- topic_preview_support -->
 <!-- end -->
 <!-- topic_ai_powered_image_assertion -->
