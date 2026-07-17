@@ -86,12 +86,14 @@ fun SemanticsNodeInteraction.captureRoboImage(
   val node = fetchSemanticsNode()
   val oneDpPx = with(node.layoutInfo.density) { 1.dp.toPx() }
   val resolvedGoldenFilePath = resolveGoldenFilePath(filePath)
-  // JSON sidecar only on iOS (no annotated image; see writeUiTreeDumpIfEnabledIos).
-  val effectiveOptions = writeUiTreeDumpIfEnabledIos(
+  // Writes the .uitree.json sidecar and prepares the annotated Set-of-Mark image
+  // (drawn after the screenshot is written, via writeAnnotatedImage()).
+  val uiTreeDump = writeUiTreeDumpIfEnabledIos(
     serializationTree = { node.toRoboComponentTree() },
     resolvedGoldenFilePath = resolvedGoldenFilePath,
     roborazziOptions = roborazziOptions,
   )
+  val effectiveOptions = uiTreeDump.effectiveOptions
   val pixelMap = captureToImage().toPixelMap()
   val width = pixelMap.width
   val height = pixelMap.height
@@ -152,6 +154,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
         )
       },
     )
+    // The screenshot (golden or _actual) has now been written; draw the annotated
+    // Set-of-Mark image on top of it. No-op when the feature is off or opted out.
+    uiTreeDump.writeAnnotatedImage()
   } finally {
     newCanvas.release()
   }
