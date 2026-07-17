@@ -29,7 +29,7 @@ kotlin {
     commonMain {
       // Compose semantics -> RoboComponentTree extraction shared verbatim with
       // the Compose Desktop module (single source copy, compiled per platform).
-      kotlin.srcDir("$rootDir/roborazzi-compose-multiplatform-shared/src/commonMain/kotlin")
+      kotlin.srcDir("$rootDir/shared-sources/compose-multiplatform/src/commonMain/kotlin")
       dependencies {
         api libs.kotlin.stdlib
         // Please see settings.gradle
