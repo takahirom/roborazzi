@@ -189,7 +189,7 @@ fun test() {
 
 ## Integrate to your GitHub Actions
 
-See [Integrate to your GitHub Actions](https://takahirom.github.io/roborazzi/github_actions.html)
+See [Integrate to your GitHub Actions](https://takahirom.github.io/roborazzi/github-actions.html)
 for CI workflows that store, verify, and compare screenshots.
 
 ## RoborazziRule (Optional)
@@ -232,7 +232,7 @@ class RuleTestWithPath {
 ```
 
 To record test interactions as animated images (`captureRoboGif()`, `recordRoboVideo()`),
-see [Capture GIFs and videos](https://takahirom.github.io/roborazzi/gif_and_video.html).
+see [Capture GIFs and videos](https://takahirom.github.io/roborazzi/gif-and-video.html).
 
 ### RoborazziRule options
 
@@ -306,7 +306,7 @@ If you are having trouble debugging your test, try Dump mode as follows.
 ![image](https://user-images.githubusercontent.com/1386930/226364158-a07a0fb0-d8e7-46b7-a495-8dd217faaadb.png)
 
 For a machine-readable version of the UI tree for tools and AI agents, see
-[UI tree dump (JSON)](https://takahirom.github.io/roborazzi/ui_tree_dump.html).
+[UI tree dump (JSON)](https://takahirom.github.io/roborazzi/ui-tree-dump.html).
 
 ## Accessibility Check
 
