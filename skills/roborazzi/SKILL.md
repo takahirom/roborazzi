@@ -23,7 +23,8 @@ Read the reference that matches the task at hand:
 | [references/top.md](references/top.md) | You need an overview of what Roborazzi is and why to use it over device tests or Paparazzi. |
 | [references/try_it_out.md](references/try_it_out.md) | You want a minimal quick start or a sample project to try Roborazzi. |
 | [references/build_setup.md](references/build_setup.md) | Setting up the Gradle plugin and dependencies, or running/understanding the `record`/`compare`/`verify` Gradle tasks and their outputs. |
-| [references/how_to_use.md](references/how_to_use.md) | Writing tests: `captureRoboImage` for views/Compose/Espresso, `RoborazziRule` and its options, output paths and file naming, capturing GIFs/videos, RoborazziOptions (thresholds, image comparators, dump mode). |
+| [references/how_to_use.md](references/how_to_use.md) | Writing tests: `captureRoboImage` for views/Compose/Espresso, `RoborazziRule` and its options, output paths and file naming, RoborazziOptions (thresholds, image comparators, dump mode). |
+| [references/gif_and_video.md](references/gif_and_video.md) | Capturing GIFs and videos of test interactions: `captureRoboGif`, `recordRoboVideo` / `recordScreenRoboVideo`, `RoboVideoOptions`, GIF vs APNG output. |
 | [references/ui_tree_dump.md](references/ui_tree_dump.md) | UI tree dump: the machine-readable `.uitree.json` semantics sidecar and annotated Set-of-Mark image for tools & AI agents (`roborazzi.dumpUiTree`, `uiTreeDumpOptions`), including the verify-a-UI-fix-by-bounds workflow. |
 | [references/github_actions.md](references/github_actions.md) | Setting up GitHub Actions CI for Roborazzi: workflows that store baseline screenshots, verify them, and compare snapshot results on pull requests. |
 | [references/preview_support.md](references/preview_support.md) | Generating screenshot tests from `@Preview` composables with ComposablePreviewScanner, including setup and customization of preview tests. |
