@@ -196,22 +196,30 @@ sealed interface RoboComponent : RoboComponentTree {
       else -> Visibility.Invisible
     }
 
-    override val properties: Map<String, String> = buildMap {
-      (view as? TextView)?.text?.toString()?.let { put("Text", it) }
-      view.contentDescription?.toString()?.let { put("ContentDescription", it) }
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        view.stateDescription?.toString()?.let { put("StateDescription", it) }
+    // Lazy: the structured extraction is only needed by the UI tree dump feature
+    // (off by default). Computing it eagerly would pay the cost on every capture's
+    // root node even when the feature is disabled.
+    override val properties: Map<String, String> by lazy {
+      buildMap {
+        (view as? TextView)?.text?.toString()?.let { put("Text", it) }
+        view.contentDescription?.toString()?.let { put("ContentDescription", it) }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+          view.stateDescription?.toString()?.let { put("StateDescription", it) }
+        }
       }
     }
 
-    override val actions: List<String> =
+    override val actions: List<String> by lazy {
       if (view.hasOnClickListeners() && view.isClickable) listOf("OnClick") else emptyList()
+    }
 
-    override val flags: List<String> = buildList {
-      if (view.isClickable) add("Clickable")
-      if (view.isFocused) add("Focused")
-      if (!view.isEnabled) add("Disabled")
-    }.sorted()
+    override val flags: List<String> by lazy {
+      buildList {
+        if (view.isClickable) add("Clickable")
+        if (view.isFocused) add("Focused")
+        if (!view.isEnabled) add("Disabled")
+      }.sorted()
+    }
 
     override val testTag: String? = null
   }
@@ -231,7 +239,9 @@ sealed interface RoboComponent : RoboComponentTree {
     override val children: List<RoboComponent> = roborazziOptions
       .captureType
       .roboComponentChildVisitor(node, roborazziOptions, windowOffset)
-    override val text: String = node.printToString()
+    // Lazy: printToString() walks the semantics config and is only needed by the
+    // UI tree dump feature (off by default), so it must not run on every capture.
+    override val text: String by lazy { node.printToString() }
     override val accessibilityText: String = run {
       buildString {
         val contentDescription = node.config.getOrNull(SemanticsProperties.ContentDescription)
@@ -277,9 +287,12 @@ sealed interface RoboComponent : RoboComponentTree {
     }
     override val rect: Rect = bounds.toAndroidRect()
 
-    override val properties: Map<String, String> = node.config.toRoboProperties()
-    override val actions: List<String> = node.config.toRoboActions()
-    override val flags: List<String> = node.config.toRoboFlags()
+    // Lazy: the structured extraction is only needed by the UI tree dump feature
+    // (off by default). Computing it eagerly would pay the cost on every capture's
+    // root node even when the feature is disabled.
+    override val properties: Map<String, String> by lazy { node.config.toRoboProperties() }
+    override val actions: List<String> by lazy { node.config.toRoboActions() }
+    override val flags: List<String> by lazy { node.config.toRoboFlags() }
     override val treeType: RoboComponentTreeType = RoboComponentTreeType.Compose
   }
 
