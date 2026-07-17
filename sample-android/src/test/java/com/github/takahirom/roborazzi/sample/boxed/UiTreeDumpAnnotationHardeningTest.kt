@@ -26,8 +26,8 @@ import com.github.takahirom.roborazzi.roborazziSystemPropertyCompareOutputDirect
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -126,16 +126,15 @@ class UiTreeDumpAnnotationHardeningTest {
         composeTestRule.waitForIdle()
         setupRoborazziSystemProperty(verify = true)
 
-        var threw = false
-        try {
+        assertThrows(
+          "a changed verify must throw AssertionError",
+          AssertionError::class.java,
+        ) {
           onView(isRoot()).captureRoboImage(
             file = goldenImage,
             roborazziOptions = options(RoborazziTaskType.Verify),
           )
-        } catch (e: AssertionError) {
-          threw = true
         }
-        assertTrue("a changed verify must throw AssertionError", threw)
         assertTrue("changed verify must write the _actual image", actualImage.exists())
         assertTrue(
           "a failing verify must still write the _actual annotated image",
@@ -232,9 +231,10 @@ class UiTreeDumpAnnotationHardeningTest {
         )
 
         assertTrue("annotated image should be written", goldenAnnotated.exists())
-        if (!startsWithPngMagic(goldenAnnotated)) {
-          fail("annotated image must be a real PNG regardless of recordOptions.imageIoFormat")
-        }
+        assertTrue(
+          "annotated image must be a real PNG regardless of recordOptions.imageIoFormat",
+          startsWithPngMagic(goldenAnnotated),
+        )
       } finally {
         artifacts.forEach { it.delete() }
       }
