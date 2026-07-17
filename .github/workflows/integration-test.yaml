@@ -7,7 +7,11 @@ on:
   pull_request:
 
 env:
-  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx6g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+  # Keep the outer build's heap modest: this job spawns nested JVMs (the TestKit
+  # daemon and Robolectric test executors) that must fit in the same runner
+  # memory. An oversized outer heap led to the test executor being OOM-killed
+  # (exit 137) on long TestKit runs.
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx3g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
 
 permissions:
   contents: read
