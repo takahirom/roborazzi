@@ -1229,17 +1229,6 @@ landed.
    also compare the sibling above: its `bottom` vs this `top`.) Because the output
    is deterministic, any change in the numbers is a real layout change, not noise.
 
-Roborazzi doesn't diff the trees, but for an explicit diff, copy the sidecar aside
-**before** re-recording, then compare:
-
-```shell
-cp build/outputs/roborazzi/MyTest.uitree.json /tmp/before.uitree.json
-diff /tmp/before.uitree.json build/outputs/roborazzi/MyTest.uitree.json
-```
-
-A `compareRoborazziDebug`/verify run gives the same pair for free: the golden
-`MyTest.uitree.json` and the current `MyTest_actual.uitree.json` sit side by side.
-
 ### Accessibility Check
 
 Roborazzi Accessibility Checks is a library that integrates accessibility checks into Roborazzi.
