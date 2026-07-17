@@ -615,7 +615,7 @@ class RuleTestWithPath {
 ```
 
 To record test interactions as animated images (`captureRoboGif()`, `recordRoboVideo()`),
-see [Capture GIFs and videos](https://takahirom.github.io/roborazzi/gif_and_video.html).
+see [Capture GIFs and videos](https://takahirom.github.io/roborazzi/gif-and-video.html).
 
 ### RoborazziRule options
 
