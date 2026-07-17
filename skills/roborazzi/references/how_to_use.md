@@ -853,9 +853,11 @@ bounds before and after the change and prove the margin is there.
    after:   { "n": 1, "testTag": "login_button", "bounds": [16, 32, 204, 80], ... }
    ```
 
-   And because the output is deterministic, that is the *only* line in the diff —
-   the agent can confirm the fix moved the node by exactly the intended amount and
-   changed nothing else.
+   Because the output is deterministic, every line in the diff is a real change —
+   there are no timestamps and no ordering or numbering noise. The agent can
+   confirm the node moved by exactly the intended amount, and any other lines
+   reveal genuine side effects of the change (for example the siblings below the
+   button shifting down too), which is exactly what you want it to notice.
 
 The sidecar always reflects the current run and never fails verification, so it
 is safe to leave enabled while iterating.
