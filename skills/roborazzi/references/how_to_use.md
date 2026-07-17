@@ -819,64 +819,41 @@ onView(ViewMatchers.isRoot())
 
 #### Primary use case: letting an AI agent prove its UI fixes
 
-AI agents are bad at judging small layout changes from screenshots. Ask one to
-"add some margin above the login button" and it will often reply "fixed" when
-nothing actually moved — a few pixels look the same in a screenshot. The UI tree
-dump replaces that guesswork with hard evidence: the output is deterministic and
-carries each node's exact coordinates, so the agent can read the button's real
-bounds before and after the change and prove the margin is there.
+AI agents are bad at judging small layout changes from screenshots — ask one to
+"add margin above the button" and it will often claim "fixed" when nothing moved.
+The deterministic UI tree gives it exact coordinates to check instead.
 
-1. Record the current UI and read the node line:
+1. Record and read the node line:
 
    ```shell
    ./gradlew recordRoborazziDebug -Proborazzi.dumpUiTree=true
    grep login_button build/outputs/roborazzi/MyTest.uitree.json
-   #  { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 24, 204, 72], ... }
+   #  { "n": 1, "testTag": "login_button", "bounds": [16, 24, 204, 72], ... }
    ```
 
-   `bounds` is `[left, top, right, bottom]` in pixels, so the button's top edge
-   is at `24`.
+   `bounds` is `[left, top, right, bottom]`, so the top edge is at `24`.
 
-2. Make the layout change, working from those raw numbers instead of a
-   screenshot. The agent keeps the `before` values (top `24`) in its working
-   context.
+2. Make the change, keeping that `before` value in context.
 
-3. Re-record and read the same node line again. Recording overwrites the sidecar
-   in place — there is no separate diff step and nothing to clean up:
+3. Re-record (it overwrites the sidecar in place) and grep the same line:
 
    ```shell
-   ./gradlew recordRoborazziDebug -Proborazzi.dumpUiTree=true
-   grep login_button build/outputs/roborazzi/MyTest.uitree.json
-   #  { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 32, 204, 80], ... }
+   #  { "n": 1, "testTag": "login_button", "bounds": [16, 32, 204, 80], ... }
    ```
 
-   The top edge moved from `24` to `32`, so the 8px margin is provably there. That
-   comparison is trustworthy because the output is deterministic — same UI, same
-   bytes — so a change in the numbers always reflects a real change in the layout,
-   never run-to-run noise.
+   Top moved `24 → 32`, proving the 8px margin. Because the output is
+   deterministic, any change in the numbers is a real layout change, not noise.
 
-Roborazzi does not diff the trees for you, but the sidecar is plain text, so if
-you want an explicit file diff, copy the sidecar aside **before** re-recording
-(recording overwrites it in place):
+Roborazzi doesn't diff the trees, but for an explicit diff, copy the sidecar aside
+**before** re-recording, then compare:
 
 ```shell
 cp build/outputs/roborazzi/MyTest.uitree.json /tmp/before.uitree.json
-# ...make the change, then re-record...
 diff /tmp/before.uitree.json build/outputs/roborazzi/MyTest.uitree.json
 ```
 
-Determinism makes that diff meaningful: every line in it is a real change, with no
-timestamp or ordering noise. Beyond the button's own `top`, extra lines reveal
-genuine side effects — for example the siblings below the button shifting down —
-which is exactly what you want the agent to notice.
-
-A `compareRoborazziDebug` (or verify) run gives you a before/after pair without
-copying anything: the golden `MyTest.uitree.json` written at record time and the
-current run's `MyTest_actual.uitree.json` sit side by side in the output
-directory.
-
-The sidecar always reflects the current run and never fails verification, so it
-is safe to leave enabled while iterating.
+A `compareRoborazziDebug`/verify run gives the same pair for free: the golden
+`MyTest.uitree.json` and the current `MyTest_actual.uitree.json` sit side by side.
 
 ### Accessibility Check
 
