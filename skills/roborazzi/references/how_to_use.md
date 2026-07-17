@@ -821,7 +821,9 @@ onView(ViewMatchers.isRoot())
 
 AI agents are bad at judging small layout changes from screenshots — ask one to
 "add margin above the button" and it will often claim "fixed" when nothing moved.
-The deterministic UI tree gives it exact coordinates to check instead.
+The deterministic UI tree gives it exact coordinates to check instead, so the
+agent can read the button's bounds before and after and prove the change actually
+landed.
 
 1. Record and read the node line:
 
@@ -837,12 +839,13 @@ The deterministic UI tree gives it exact coordinates to check instead.
 
 3. Re-record (it overwrites the sidecar in place) and grep the same line:
 
-   ```shell
+   ```text
    #  { "n": 1, "testTag": "login_button", "bounds": [16, 32, 204, 80], ... }
    ```
 
-   Top moved `24 → 32`, proving the 8px margin. Because the output is
-   deterministic, any change in the numbers is a real layout change, not noise.
+   Top moved `24 → 32` — the button provably sits 8px lower. (To prove a *gap*,
+   also compare the sibling above: its `bottom` vs this `top`.) Because the output
+   is deterministic, any change in the numbers is a real layout change, not noise.
 
 Roborazzi doesn't diff the trees, but for an explicit diff, copy the sidecar aside
 **before** re-recording, then compare:
