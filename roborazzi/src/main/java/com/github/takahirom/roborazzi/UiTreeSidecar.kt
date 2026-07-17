@@ -17,10 +17,16 @@ import java.io.File
 @InternalRoborazziApi
 class UiTreeDumpWriteResult internal constructor(
   val effectiveOptions: RoborazziOptions,
-  private val annotatedImageWriter: (() -> Unit)?,
+  private val annotatedImageWriter: ((sourceWrittenThisRun: Boolean) -> Unit)?,
 ) {
-  fun writeAnnotatedImage() {
-    annotatedImageWriter?.invoke()
+  /**
+   * @param sourceWrittenThisRun whether the current task (re)wrote the output image
+   *   this run, as reported by the capture pipeline. When false (e.g. an unchanged
+   *   verify), the annotation is drawn on the golden instead of a possibly stale
+   *   `_actual` image left by an earlier run.
+   */
+  fun writeAnnotatedImage(sourceWrittenThisRun: Boolean) {
+    annotatedImageWriter?.invoke(sourceWrittenThisRun)
   }
 }
 
@@ -69,23 +75,17 @@ fun writeUiTreeDumpIfEnabled(
     var contextData = roborazziOptions.contextData +
       (ROBORAZZI_UI_TREE_FILE_PATH_KEY to sidecarFile.absolutePath)
 
-    val annotatedImageWriter: (() -> Unit)? = if (dumpOptions.annotateImage) {
+    val annotatedImageWriter: ((Boolean) -> Unit)? = if (dumpOptions.annotateImage) {
       val annotatedFile = annotatedImageFile(goldenFile, roborazziOptions)
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedFile.absolutePath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
       val sourceImageFile = currentRunImageFile(goldenFile, roborazziOptions)
-      // Snapshot the source image state BEFORE the current task writes the output
-      // image, so the annotated writer (invoked afterwards) can tell whether the
-      // `_actual` image was actually (re)written this run. On an unchanged verify
-      // no `_actual` is written, so a stale one left by an earlier run must not be
-      // picked up; the writer then falls back to the identical golden.
-      val sourceExistedBefore = sourceImageFile.exists()
-      val sourceLastModifiedBefore = if (sourceExistedBefore) sourceImageFile.lastModified() else 0L
-      val writer: () -> Unit = {
-        val sourceWrittenThisRun = sourceImageFile.exists() &&
-          (!sourceExistedBefore || sourceImageFile.lastModified() != sourceLastModifiedBefore)
+      val writer: (Boolean) -> Unit = { sourceWrittenThisRun ->
         writeAnnotatedImage(
           sourceImageFile = sourceImageFile,
+          // The capture pipeline reports whether it wrote the source image this
+          // run; on an unchanged verify it did not, so a stale `_actual` from an
+          // earlier run is ignored and the writer falls back to the golden.
           sourceWrittenThisRun = sourceWrittenThisRun,
           fallbackImageFile = goldenFile,
           annotatedFile = annotatedFile,

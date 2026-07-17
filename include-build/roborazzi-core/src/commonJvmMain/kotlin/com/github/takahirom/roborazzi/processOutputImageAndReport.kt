@@ -17,6 +17,9 @@ fun processOutputImageAndReport(
   emptyCanvasFactory: EmptyCanvasFactory,
   canvasFactoryFromFile: CanvasFactoryFromFile,
   comparisonCanvasFactory: ComparisonCanvasFactory,
+  // See the common overload: reports whether this run (re)wrote the current-run
+  // output image, so the annotated-image writer can pick the correct source.
+  reportActualImageWritten: (Boolean) -> Unit = {},
 ) {
   // Validate the golden file name BEFORE building the context data so the
   // reserved-suffix check happens first, matching the observable ordering of the
@@ -33,6 +36,7 @@ fun processOutputImageAndReport(
       canvasFactoryFromFile(File(filePath), bufferedImageType)
     },
     comparisonCanvasFactory = comparisonCanvasFactory,
+    reportActualImageWritten = reportActualImageWritten,
   )
 }
 

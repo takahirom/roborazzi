@@ -28,11 +28,8 @@ import platform.CoreGraphics.CGImageGetWidth
 import platform.CoreGraphics.CGPointMake
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
-import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
-import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSString
-import platform.Foundation.timeIntervalSince1970
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.writeToFile
 import platform.UIKit.NSFontAttributeName
@@ -68,10 +65,10 @@ import kotlin.math.min
  */
 internal class IosUiTreeDumpWriteResult(
   val effectiveOptions: RoborazziOptions,
-  private val annotatedImageWriter: (() -> Unit)?,
+  private val annotatedImageWriter: ((sourceWrittenThisRun: Boolean) -> Unit)?,
 ) {
-  fun writeAnnotatedImage() {
-    annotatedImageWriter?.invoke()
+  fun writeAnnotatedImage(sourceWrittenThisRun: Boolean) {
+    annotatedImageWriter?.invoke(sourceWrittenThisRun)
   }
 }
 
@@ -109,22 +106,17 @@ internal fun writeUiTreeDumpIfEnabledIos(
     var contextData = roborazziOptions.contextData +
       (ROBORAZZI_UI_TREE_FILE_PATH_KEY to sidecarPath)
 
-    val annotatedImageWriter: (() -> Unit)? = if (dumpOptions.annotateImage) {
+    val annotatedImageWriter: ((Boolean) -> Unit)? = if (dumpOptions.annotateImage) {
       val annotatedPath = annotatedImagePathIos(resolvedGoldenFilePath, roborazziOptions)
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedPath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
-      val sourceImagePath = currentRunImagePathIos(resolvedGoldenFilePath, roborazziOptions)
-      // Snapshot the source image state BEFORE the current task writes the output
-      // image, so the annotated writer can tell whether the `_actual` image was
-      // actually (re)written this run. On an unchanged verify no `_actual` is
-      // written, so a stale one left by an earlier run must not be reused.
-      val sourceModifiedBefore = imageModificationTimeIos(sourceImagePath);
-      {
-        val currentModified = imageModificationTimeIos(sourceImagePath)
-        val sourceWrittenThisRun = currentModified != null &&
-          currentModified != sourceModifiedBefore
+      val sourceImagePath = currentRunImagePathIos(resolvedGoldenFilePath, roborazziOptions);
+      { sourceWrittenThisRun: Boolean ->
         writeAnnotatedImageIos(
           sourceImagePath = sourceImagePath,
+          // The capture pipeline reports whether it wrote the source image this
+          // run; on an unchanged verify it did not, so a stale `_actual` is
+          // ignored and the writer falls back to the golden.
           sourceWrittenThisRun = sourceWrittenThisRun,
           fallbackImagePath = resolvedGoldenFilePath,
           annotatedPath = annotatedPath,
@@ -220,18 +212,6 @@ private fun currentRunImagePathIos(
   val extension = fileName.substringAfterLast(".", "png")
   val outputDir = roborazziOptions.compareOptions.outputDirectoryPath.trimEnd('/')
   return resolveRoborazziPathIos("$outputDir/${baseName}_actual.$extension")
-}
-
-/**
- * The modification time (seconds since 1970) of the file at [path], or null when it
- * does not exist. Used to detect whether the `_actual` image was (re)written this
- * run (see the snapshot in [writeUiTreeDumpIfEnabledIos]).
- */
-private fun imageModificationTimeIos(path: String): Double? {
-  val attributes = NSFileManager.defaultManager.attributesOfItemAtPath(path, error = null)
-    ?: return null
-  val modificationDate = attributes[NSFileModificationDate] as? NSDate ?: return null
-  return modificationDate.timeIntervalSince1970
 }
 
 private fun writeTextFileIos(path: String, text: String) {

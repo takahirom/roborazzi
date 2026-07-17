@@ -156,6 +156,7 @@ public final class com/github/takahirom/roborazzi/RoborazziKt {
 	public static synthetic fun captureScreenRoboImage$default (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;ILjava/lang/Object;)V
 	public static final fun fetchRobolectricWindowRoots ()Ljava/util/List;
 	public static final fun processOutputImageAndReportWithDefaults (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+	public static final fun processOutputImageAndReportWithDefaults (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function1;)V
 }
 
 public final class com/github/takahirom/roborazzi/RoborazziTransparentActivity : com/github/takahirom/roborazzi/RoborazziActivity {
@@ -164,7 +165,7 @@ public final class com/github/takahirom/roborazzi/RoborazziTransparentActivity :
 
 public final class com/github/takahirom/roborazzi/UiTreeDumpWriteResult {
 	public final fun getEffectiveOptions ()Lcom/github/takahirom/roborazzi/RoborazziOptions;
-	public final fun writeAnnotatedImage ()V
+	public final fun writeAnnotatedImage (Z)V
 }
 
 public final class com/github/takahirom/roborazzi/UiTreeSidecarKt {

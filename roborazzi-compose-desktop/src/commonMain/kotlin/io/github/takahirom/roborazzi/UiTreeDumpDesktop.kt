@@ -40,10 +40,10 @@ import javax.imageio.ImageIO
  */
 internal class DesktopUiTreeDumpWriteResult(
   val effectiveOptions: RoborazziOptions,
-  private val annotatedImageWriter: (() -> Unit)?,
+  private val annotatedImageWriter: ((sourceWrittenThisRun: Boolean) -> Unit)?,
 ) {
-  fun writeAnnotatedImage() {
-    annotatedImageWriter?.invoke()
+  fun writeAnnotatedImage(sourceWrittenThisRun: Boolean) {
+    annotatedImageWriter?.invoke(sourceWrittenThisRun)
   }
 }
 
@@ -81,22 +81,17 @@ internal fun writeUiTreeDumpIfEnabledDesktop(
     var contextData = roborazziOptions.contextData +
       (ROBORAZZI_UI_TREE_FILE_PATH_KEY to sidecarFile.absolutePath)
 
-    val annotatedImageWriter: (() -> Unit)? = if (dumpOptions.annotateImage) {
+    val annotatedImageWriter: ((Boolean) -> Unit)? = if (dumpOptions.annotateImage) {
       val annotatedFile = annotatedImageFileDesktop(goldenFile, roborazziOptions)
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedFile.absolutePath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
-      val sourceImageFile = currentRunImageFileDesktop(goldenFile, roborazziOptions)
-      // Snapshot the source image state BEFORE the current task writes the output
-      // image, so the annotated writer can tell whether the `_actual` image was
-      // actually (re)written this run. On an unchanged verify no `_actual` is
-      // written, so a stale one left by an earlier run must not be reused.
-      val sourceExistedBefore = sourceImageFile.exists()
-      val sourceLastModifiedBefore = if (sourceExistedBefore) sourceImageFile.lastModified() else 0L;
-      {
-        val sourceWrittenThisRun = sourceImageFile.exists() &&
-          (!sourceExistedBefore || sourceImageFile.lastModified() != sourceLastModifiedBefore)
+      val sourceImageFile = currentRunImageFileDesktop(goldenFile, roborazziOptions);
+      { sourceWrittenThisRun: Boolean ->
         writeAnnotatedImageDesktop(
           sourceImageFile = sourceImageFile,
+          // The capture pipeline reports whether it wrote the source image this
+          // run; on an unchanged verify it did not, so a stale `_actual` is
+          // ignored and the writer falls back to the golden.
           sourceWrittenThisRun = sourceWrittenThisRun,
           fallbackImageFile = goldenFile,
           annotatedFile = annotatedFile,

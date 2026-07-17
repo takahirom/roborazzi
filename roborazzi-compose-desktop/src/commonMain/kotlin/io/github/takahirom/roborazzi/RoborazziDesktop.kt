@@ -7,6 +7,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.AwtRoboCanvas
+import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.toRoboComponentTree
 import com.github.takahirom.roborazzi.DefaultFileNameGenerator
 import com.github.takahirom.roborazzi.RoboCanvas
@@ -54,19 +55,22 @@ fun SemanticsNodeInteraction.captureRoboImage(
   canvas.apply {
     drawImage(awtImage)
   }
+  var actualImageWritten = false
   try {
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
       roborazziOptions = uiTreeDump.effectiveOptions,
-      density = density
-    )
+      density = density,
+    ) { actualImageWritten = it }
   } finally {
     // Draw the annotated image even when verification failed: the output image
     // (`_actual`) has already been written, so its annotation must still be
     // produced. writeAnnotatedImage never throws, so it cannot mask the original
-    // assertion error propagating from the report step.
-    uiTreeDump.writeAnnotatedImage()
+    // assertion error propagating from the report step. The pipeline reports
+    // whether it wrote the source image this run, so a stale `_actual` is never
+    // reused.
+    uiTreeDump.writeAnnotatedImage(actualImageWritten)
     canvas.release()
   }
 }
@@ -116,10 +120,28 @@ fun processOutputImageAndReportWithDefaults(
   roborazziOptions: RoborazziOptions,
   density: Density?,
 ) {
+  processOutputImageAndReportWithDefaults(
+    canvas = canvas,
+    goldenFile = goldenFile,
+    roborazziOptions = roborazziOptions,
+    density = density,
+    reportActualImageWritten = {},
+  )
+}
+
+@InternalRoborazziApi
+fun processOutputImageAndReportWithDefaults(
+  canvas: RoboCanvas,
+  goldenFile: File,
+  roborazziOptions: RoborazziOptions,
+  density: Density?,
+  reportActualImageWritten: (Boolean) -> Unit,
+) {
   processOutputImageAndReport(
     newRoboCanvas = canvas,
     goldenFile = goldenFile,
     roborazziOptions = roborazziOptions,
+    reportActualImageWritten = reportActualImageWritten,
     emptyCanvasFactory = { width, height, filled, bufferedImageType ->
       AwtRoboCanvas(
         width = width,
