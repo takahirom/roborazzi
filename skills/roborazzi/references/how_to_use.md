@@ -817,10 +817,14 @@ onView(ViewMatchers.isRoot())
   )
 ```
 
-#### Primary use case: an AI agent iterating on UI numerically
+#### Primary use case: letting an AI agent prove its UI fixes
 
-Because the output is deterministic and carries exact coordinates, an agent can
-verify a UI fix **numerically** instead of eyeballing screenshots:
+AI agents are bad at judging small layout changes from screenshots. Ask one to
+"add some margin above the login button" and it will often reply "fixed" when
+nothing actually moved — a few pixels look the same in a screenshot. The UI tree
+dump replaces that guesswork with hard evidence: the output is deterministic and
+carries each node's exact coordinates, so the agent can read the button's real
+bounds before and after the change and prove the margin is there.
 
 1. Record the current UI and read the node line:
 
@@ -830,8 +834,11 @@ verify a UI fix **numerically** instead of eyeballing screenshots:
    #  { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 24, 204, 72], ... }
    ```
 
-2. Compute what you need from the raw numbers — for example the vertical gap to
-   the next sibling (`80 - 72 = 8px`) — and make the layout change.
+   `bounds` is `[left, top, right, bottom]` in pixels, so the button's top edge
+   is at `24`.
+
+2. Make the layout change, working from those raw numbers instead of a
+   screenshot.
 
 3. Record again and diff the two JSON files:
 
@@ -839,9 +846,16 @@ verify a UI fix **numerically** instead of eyeballing screenshots:
    diff old/MyTest.uitree.json build/outputs/roborazzi/MyTest.uitree.json
    ```
 
-   Determinism makes the diff meaningful: only the bounds/properties that
-   actually changed appear, so the agent can confirm the fix moved the node by
-   exactly the intended amount.
+   The node's `top` moved from `24` to `32`, so the 8px margin is provably there:
+
+   ```
+   before:  { "n": 1, "testTag": "login_button", "bounds": [16, 24, 204, 72], ... }
+   after:   { "n": 1, "testTag": "login_button", "bounds": [16, 32, 204, 80], ... }
+   ```
+
+   And because the output is deterministic, that is the *only* line in the diff —
+   the agent can confirm the fix moved the node by exactly the intended amount and
+   changed nothing else.
 
 The sidecar always reflects the current run and never fails verification, so it
 is safe to leave enabled while iterating.
