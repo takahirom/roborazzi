@@ -190,7 +190,7 @@ fun test() {
 
 ## Integrate to your GitHub Actions
 
-See [Integrate to your GitHub Actions](https://takahirom.github.io/roborazzi/github_actions.html)
+See [Integrate to your GitHub Actions](https://takahirom.github.io/roborazzi/github-actions.html)
 for CI workflows that store, verify, and compare screenshots.
 
 ## RoborazziRule (Optional)
