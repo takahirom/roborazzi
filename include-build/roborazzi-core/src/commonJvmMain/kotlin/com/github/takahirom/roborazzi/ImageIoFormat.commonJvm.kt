@@ -53,9 +53,19 @@ data class JvmImageIoFormat(
       return@AwtImageWriter
     }
     val writer = getWriter(bufferedImage, imageExtension)
-    val meta = writer.writeMetadata(contextData, bufferedImage)
-    writer.output = ImageIO.createImageOutputStream(file)
-    writer.write(IIOImage(bufferedImage, null, meta))
+    try {
+      val meta = writer.writeMetadata(contextData, bufferedImage)
+      // ImageOutputStream doesn't truncate an existing file, so writing a
+      // smaller image would leave trailing bytes of the previous image.
+      // See: https://github.com/takahirom/roborazzi/issues/881
+      file.delete()
+      ImageIO.createImageOutputStream(file).use { stream ->
+        writer.output = stream
+        writer.write(IIOImage(bufferedImage, null, meta))
+      }
+    } finally {
+      writer.dispose()
+    }
   },
   val awtImageLoader: AwtImageLoader = AwtImageLoader { ImageIO.read(it) }
 ) : ImageIoFormat
@@ -132,9 +142,15 @@ private fun losslessWebPWriter(): AwtImageWriter =
       writeParam.compressionType = losslessType
 
 
-      writer.setOutput(FileImageOutputStream(file))
-
-      writer.write(null, IIOImage(bufferedImage, null, null), writeParam)
+      // FileImageOutputStream doesn't truncate an existing file, so writing a
+      // smaller image would leave trailing bytes of the previous image and
+      // break webp-imageio's file size check on load.
+      // See: https://github.com/takahirom/roborazzi/issues/881
+      file.delete()
+      FileImageOutputStream(file).use { stream ->
+        writer.setOutput(stream)
+        writer.write(null, IIOImage(bufferedImage, null, null), writeParam)
+      }
     } catch (e: NoClassDefFoundError) {
       throw IllegalStateException("Add testImplementation(\"io.github.darkxanter:webp-imageio:0.3.0\") to use this")
     } finally {
