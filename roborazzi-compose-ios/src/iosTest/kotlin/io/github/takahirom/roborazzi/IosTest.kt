@@ -54,7 +54,7 @@ class IosTest {
             Column {
               Button(
                 modifier = Modifier.alpha(alpha),
-                onClick = { /*TODO*/ }) {
+                onClick = { }) {
                 Text("Hello World5")
               }
               Box(
@@ -232,7 +232,7 @@ class IosTest {
         MaterialTheme {
           Button(
             modifier = Modifier.testTag("button"),
-            onClick = { /*TODO*/ },
+            onClick = { },
           ) {
             Text("Hello UI tree")
           }
@@ -312,7 +312,7 @@ class IosTest {
         MaterialTheme {
           Button(
             modifier = Modifier.testTag("button"),
-            onClick = { /*TODO*/ },
+            onClick = { },
           ) {
             Text("Hello UI tree")
           }
