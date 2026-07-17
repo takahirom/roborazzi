@@ -692,38 +692,23 @@ If you are having trouble debugging your test, try Dump mode as follows.
 
 ### UI tree dump (JSON)
 
-While [Dump mode](#dump-mode) renders the UI tree *into an image* for humans to
-look at, **UI tree dump** writes a machine-readable JSON **sidecar** — a file that
-lives next to the screenshot it describes — for tools and AI agents to read.
+While [Dump mode](#dump-mode) renders the UI tree *into an image* for humans, **UI
+tree dump** writes a machine-readable JSON **sidecar** next to the screenshot it
+describes, for tools and AI agents to read. When enabled, capturing `MyTest.png`
+also writes `MyTest.uitree.json` (the Compose semantics + View hierarchy of the
+current run) and, by default, an annotated `MyTest.annotated.png` (see
+[Annotated image](#annotated-image-set-of-mark) below).
 
-When enabled, capturing `MyTest.png` also writes `MyTest.uitree.json` beside it
-describing the Compose semantics + View hierarchy of the current run, plus, by
-default, an annotated `MyTest.annotated.png` (see
-[Annotated image](#annotated-image-set-of-mark) below). It is written on record **and** compare/verify tasks (always describing
-the current run), next to whatever image the task writes:
-
-* On **record**, next to the golden image: `MyTest.uitree.json`.
-* On **compare/verify**, written under the `_actual` basename in the compare
-  output directory (`MyTest_actual.uitree.json`) — note an unchanged verify writes
-  the sidecar even though no `MyTest_actual.png` image is produced.
+The sidecar is written on record and compare/verify, next to the image the task
+writes: `MyTest.uitree.json` on record, and `MyTest_actual.uitree.json` in the
+compare output directory on compare/verify (an unchanged verify still writes it).
 
 The sidecar is **informational only**: it never participates in image diffing and
 never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
-(which have no component tree) do not produce a sidecar.
+(which have no component tree) do not produce one.
 
-#### Platform support
-
-| Platform | JSON sidecar | Annotated image |
-|---|---|---|
-| Android / Robolectric | supported | supported |
-| Compose Desktop (JVM) | supported | supported |
-| Compose iOS | supported | supported |
-
-The UI tree dump is fully supported on Android/Robolectric, Compose Desktop and
-Compose iOS: each writes the JSON sidecar and, by default, the annotated
-Set-of-Mark image, which looks the same across platforms (the same numbered boxes
-and palette). On the Compose targets the dump is produced by the
-`SemanticsNodeInteraction.captureRoboImage` path.
+Supported on Android/Robolectric, Compose Desktop, and Compose iOS, with identical
+output.
 
 #### Enabling it
 
@@ -758,20 +743,15 @@ The format is deliberately grep-first: one node per line with all of its scalar
 attributes, so a single `grep` finds a node and its coordinates.
 
 * `bounds` is `[left, top, right, bottom]` in **RAW (unscaled) window pixel**
-  coordinates. The root-level `capture` object carries the output image's
-  `imageWidth`/`imageHeight` and the `scale` (the resize scale). Because a
-  single-component capture's root can start at a non-zero window offset (e.g. the
-  root `bounds` is `[0, 358, 94, 526]` for a 94x168 image), subtract the ROOT
-  node's origin before applying the scale:
-  `imageX = (rawX - root.bounds[0]) * scale`,
-  `imageY = (rawY - root.bounds[1]) * scale`. For full-screen captures the root
-  origin is `0, 0`, so this degenerates to `imagePixel = rawPixel * scale`.
+  coordinates; the root `capture` object carries the output `imageWidth`/
+  `imageHeight` and `scale`. Map to image pixels with
+  `image = (raw − root.bounds origin) × capture.scale` — the root origin is
+  `0, 0` for full-screen captures.
 * Empty/default fields are omitted (no empty maps/lists, no `visibility` when the
   node is visible).
-* `n` is a sequential (1-based, pre-order) number assigned only to *annotatable*
-  nodes — visible nodes that have a test tag, a `Text`/`ContentDescription`
-  property, or at least one action. Once an annotatable node with the
-  `MergeDescendants` flag is numbered, its descendants are not numbered.
+* `n` is a sequential (1-based, pre-order) number on *annotatable* nodes only —
+  visible nodes with a test tag, a `Text`/`ContentDescription`, or an action; a
+  numbered `MergeDescendants` node's descendants are skipped.
 * Output is **deterministic**: the same UI produces byte-identical JSON (no
   timestamps, no hashes).
 
@@ -780,71 +760,49 @@ attributes, so a single `grep` finds a node and its coordinates.
 "Set-of-Mark" refers to a prompting technique for vision-language models:
 overlaying numbered marks on image regions lets a model refer to a region
 unambiguously by its number ([Yang et al., 2023](https://arxiv.org/abs/2310.11441)).
-Here each mark's number is the same `n` used in the JSON sidecar.
 
-![Annotated Set-of-Mark image](https://github.com/user-attachments/assets/208593c3-cd2b-4c0a-ae5b-e7cf6cd0260e)
+<img width="440" alt="Annotated Set-of-Mark image" src="https://github.com/user-attachments/assets/208593c3-cd2b-4c0a-ae5b-e7cf6cd0260e" />
 
-Alongside the JSON sidecar, an annotated **Set-of-Mark** image is written by
-default (see `annotateImage` below) next to the screenshot: a copy of the output
-screenshot with every numbered node drawn as a bounding box plus a small numbered
-label.
+Written by default next to the screenshot — a copy of the output with every
+numbered node drawn as a labelled box — under the same naming as the sidecar:
+`MyTest.annotated.png` on record, `MyTest_actual.annotated.png` on compare/verify
+(an unchanged verify annotates the identical golden).
 
-* On **record**, next to the golden image: `MyTest.annotated.png`.
-* On **compare/verify**, written under the `_actual` basename in the compare
-  output directory (`MyTest_actual.annotated.png`) — like the sidecar, it is
-  written even on an unchanged verify that produces no `MyTest_actual.png` image
-  (the identical golden is annotated instead).
+Each box's number is the same `n` as in the JSON, so an agent can point at
+"element #3" and look up `"n": 3` for its exact bounds, properties, and actions.
+The annotated image is a **display artifact of the current run only** — never
+compared, never failing a capture, never treated as a golden. Opt out with
+`UiTreeDumpOptions(annotateImage = false)`.
 
-The number on each box is exactly the same `n` used in the JSON sidecar, so the
-image and the JSON always agree: an agent (or a human) can point at "element #3"
-in the picture and look up `"n": 3` in the JSON to read its exact `bounds`,
-properties, and actions. The boxes are mapped onto the output image with the same
-contract the JSON documents (`image = (raw - root.origin) * scale`).
+#### Primary use case: letting an AI agent prove its UI fixes
 
-The annotated image is a **display artifact of the current run only**: like the
-JSON sidecar it never participates in image comparison and never fails a capture,
-and it is never treated as a golden.
+AI agents are bad at judging small layout changes from screenshots — ask one to
+"add margin above the button" and it will often claim "fixed" when nothing moved.
+The deterministic UI tree gives it exact coordinates to check instead, so the
+agent can read the button's bounds before and after and prove the change actually
+landed.
 
-To write only the JSON sidecar and skip the annotated image, opt out with
-`annotateImage = false`:
-
-```kotlin
-onView(ViewMatchers.isRoot())
-  .captureRoboImage(
-    roborazziOptions = RoborazziOptions(
-      uiTreeDumpOptions = UiTreeDumpOptions(annotateImage = false)
-    )
-  )
-```
-
-#### Primary use case: an AI agent iterating on UI numerically
-
-Because the output is deterministic and carries exact coordinates, an agent can
-verify a UI fix **numerically** instead of eyeballing screenshots:
-
-1. Record the current UI and read the node line:
+1. Record and read the node line:
 
    ```shell
    ./gradlew recordRoborazziDebug -Proborazzi.dumpUiTree=true
    grep login_button build/outputs/roborazzi/MyTest.uitree.json
-   #  { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 24, 204, 72], ... }
+   #  { "n": 1, "testTag": "login_button", "bounds": [16, 24, 204, 72], ... }
    ```
 
-2. Compute what you need from the raw numbers — for example the vertical gap to
-   the next sibling (`80 - 72 = 8px`) — and make the layout change.
+   `bounds` is `[left, top, right, bottom]`, so the top edge is at `24`.
 
-3. Record again and diff the two JSON files:
+2. Make the change, keeping that `before` value in context.
 
-   ```shell
-   diff old/MyTest.uitree.json build/outputs/roborazzi/MyTest.uitree.json
+3. Re-record (it overwrites the sidecar in place) and grep the same line:
+
+   ```text
+   #  { "n": 1, "testTag": "login_button", "bounds": [16, 32, 204, 80], ... }
    ```
 
-   Determinism makes the diff meaningful: only the bounds/properties that
-   actually changed appear, so the agent can confirm the fix moved the node by
-   exactly the intended amount.
-
-The sidecar always reflects the current run and never fails verification, so it
-is safe to leave enabled while iterating.
+   Top moved `24 → 32` — the button provably sits 8px lower. (To prove a *gap*,
+   also compare the sibling above: its `bottom` vs this `top`.) Because the output
+   is deterministic, any change in the numbers is a real layout change, not noise.
 
 ### Accessibility Check
 
