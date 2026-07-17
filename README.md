@@ -1042,7 +1042,7 @@ fun captureRoboGifSample() {
 ## Generate gif with test rule
 
 > **Note**  
-> You **don't need to use RoborazziRule** if you're using captureRoboImage().
+> You **don't need to use RoborazziRule** if you're using captureRoboGif().
 
 With the JUnit test rule, you do not need to name the gif image,
 and if you prefer, you can output the gif image **only if the test fails**.
@@ -1059,13 +1059,14 @@ class RuleTestWithOnlyFail {
   val roborazziRule = RoborazziRule(
     captureRoot = onView(isRoot()),
     options = Options(
-      onlyFail = true,
-      captureType = RoborazziRule.CaptureType.Gif,
+      captureType = RoborazziRule.CaptureType.Gif(
+        onlyFail = true
+      ),
     )
   )
 
   @Test
-  fun captureRoboLastImageSampleFail() {
+  fun captureRoboGifSampleFail() {
     // launch
     ActivityScenario.launch(MainActivity::class.java)
     // move to next page
