@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onRoot
@@ -22,14 +23,19 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.UIImageRoboCanvas
+import com.github.takahirom.roborazzi.UiTreeDumpOptions
 import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
 import com.github.takahirom.roborazzi.roborazziSystemPropertyResultDirectory
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSProcessInfo
+import platform.Foundation.NSString
 import platform.Foundation.NSTemporaryDirectory
+import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.stringWithContentsOfFile
 
 class IosTest {
   @OptIn(ExperimentalTestApi::class)
@@ -195,6 +201,75 @@ class IosTest {
     )
     golden.release()
     compare.release()
+  }
+
+  /**
+   * With [UiTreeDumpOptions] enabled, the iOS capture path writes a
+   * `.uitree.json` sidecar next to the golden image (JSON only; the annotated
+   * image is out of scope on iOS). Asserts the sidecar exists and carries a
+   * grep-able testTag line for the tagged node.
+   */
+  @OptIn(ExperimentalTestApi::class, ExperimentalForeignApi::class)
+  @Test
+  fun uiTreeSidecarIsWrittenWithTestTag() {
+    val baseDir = resolveAbsolutePath(
+      NSTemporaryDirectory() + "roborazzi-ios-uitree-${NSProcessInfo.processInfo.systemUptime}"
+    ).trimEnd('/')
+    val goldenPath = "$baseDir/ios_uitree.png"
+    val sidecarPath = "$baseDir/ios_uitree.uitree.json"
+    val annotatedPath = "$baseDir/ios_uitree.annotated.png"
+
+    runComposeUiTest {
+      setContent {
+        MaterialTheme {
+          Button(
+            modifier = Modifier.testTag("button"),
+            onClick = { /*TODO*/ },
+          ) {
+            Text("Hello UI tree")
+          }
+        }
+      }
+      onRoot().captureRoboImage(
+        composeUiTest = this,
+        filePath = goldenPath,
+        roborazziOptions = RoborazziOptions(
+          taskType = RoborazziTaskType.Record,
+          // annotateImage defaults to true; on iOS it must be ignored gracefully
+          // (logged, no crash) and only the JSON sidecar is written.
+          uiTreeDumpOptions = UiTreeDumpOptions(),
+        ).let {
+          it.copy(
+            compareOptions = RoborazziOptions.CompareOptions(
+              outputDirectoryPath = "$baseDir/compare",
+            )
+          )
+        },
+      )
+    }
+
+    assertTrue(
+      NSFileManager.defaultManager.fileExistsAtPath(sidecarPath),
+      "UI tree sidecar should be written at $sidecarPath",
+    )
+    assertFalse(
+      NSFileManager.defaultManager.fileExistsAtPath(annotatedPath),
+      "No annotated image should be written on iOS at $annotatedPath",
+    )
+    val json = NSString.stringWithContentsOfFile(
+      sidecarPath,
+      encoding = NSUTF8StringEncoding,
+      error = null,
+    )
+    assertTrue(json != null, "sidecar should be readable")
+    assertTrue(
+      json.contains("\"schemaVersion\": 1"),
+      "sidecar should be valid UI tree JSON",
+    )
+    assertTrue(
+      json.contains("\"testTag\": \"button\""),
+      "sidecar should contain the tagged node's testTag",
+    )
   }
 }
 

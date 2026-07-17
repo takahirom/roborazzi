@@ -17,6 +17,7 @@ import com.github.takahirom.roborazzi.processOutputImageAndReport
 import com.github.takahirom.roborazzi.roborazziReportLog
 import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import com.github.takahirom.roborazzi.roborazziSystemPropertyProjectPath
+import com.github.takahirom.roborazzi.toRoboComponentTree
 import kotlin.math.roundToInt
 
 /**
@@ -82,7 +83,15 @@ fun SemanticsNodeInteraction.captureRoboImage(
   warnIfUnsupportedPixelBitConfig(roborazziOptions.recordOptions.pixelBitConfig)
   // Density drives the 16dp/4dp grid spacing and label font size for
   // ComparisonStyle.Grid, mirroring the JVM/Compose Desktop pipeline.
-  val oneDpPx = with(fetchSemanticsNode().layoutInfo.density) { 1.dp.toPx() }
+  val node = fetchSemanticsNode()
+  val oneDpPx = with(node.layoutInfo.density) { 1.dp.toPx() }
+  val resolvedGoldenFilePath = resolveGoldenFilePath(filePath)
+  // JSON sidecar only on iOS (no annotated image; see writeUiTreeDumpIfEnabledIos).
+  val effectiveOptions = writeUiTreeDumpIfEnabledIos(
+    serializationTree = { node.toRoboComponentTree() },
+    resolvedGoldenFilePath = resolvedGoldenFilePath,
+    roborazziOptions = roborazziOptions,
+  )
   val pixelMap = captureToImage().toPixelMap()
   val width = pixelMap.width
   val height = pixelMap.height
@@ -105,13 +114,14 @@ fun SemanticsNodeInteraction.captureRoboImage(
   try {
     processOutputImageAndReport(
       newRoboCanvas = newCanvas,
-      goldenFilePath = resolveGoldenFilePath(filePath),
+      goldenFilePath = resolvedGoldenFilePath,
       // Honor the roborazzi.contextdata flag like the JVM facade does. The JVM
       // facade additionally injects the test class name; that default is JVM-only
       // (there is no provideRoborazziContext on iOS), so iOS records only the
-      // user-supplied contextData.
-      contextData = applyContextDataPolicy(roborazziOptions),
-      roborazziOptions = roborazziOptions,
+      // user-supplied contextData. effectiveOptions carries the UI tree sidecar
+      // path in contextData when the dump feature is enabled.
+      contextData = applyContextDataPolicy(effectiveOptions),
+      roborazziOptions = effectiveOptions,
       emptyCanvasFactory = { w, h, _, _ ->
         UIImageRoboCanvas.create(w, h)
       },
