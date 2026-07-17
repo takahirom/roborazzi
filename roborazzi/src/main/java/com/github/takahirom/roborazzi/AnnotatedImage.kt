@@ -10,11 +10,13 @@ import java.io.File
  * Draws the numbered Set-of-Mark boxes onto a COPY of the output screenshot and
  * writes it to [annotatedFile].
  *
- * The source is [sourceImageFile] (the image the current task wrote), falling
- * back to [fallbackImageFile] (the identical golden image) when the current task
- * did not write a separate image, e.g. an unchanged verify. The boxes are drawn
- * on the FINAL output image (already resize-scaled), never on the golden used for
- * comparison, so this is purely a display artifact of the current run.
+ * The source is [sourceImageFile] (the image the current task wrote) only when
+ * [sourceWrittenThisRun] is true, falling back to [fallbackImageFile] (the
+ * identical golden image) otherwise, e.g. an unchanged verify (where no `_actual`
+ * is written and a stale `_actual` from an earlier run must not be reused). The
+ * boxes are drawn on the FINAL output image (already resize-scaled), never on the
+ * golden used for comparison, so this is purely a display artifact of the current
+ * run.
  *
  * This never throws in a way that would fail the capture; any problem is logged
  * and swallowed.
@@ -22,6 +24,7 @@ import java.io.File
 @OptIn(ExperimentalRoborazziApi::class)
 internal fun writeAnnotatedImage(
   sourceImageFile: File,
+  sourceWrittenThisRun: Boolean,
   fallbackImageFile: File,
   annotatedFile: File,
   annotations: List<UiTreeAnnotation>,
@@ -29,7 +32,7 @@ internal fun writeAnnotatedImage(
 ) {
   try {
     val source = when {
-      sourceImageFile.exists() -> sourceImageFile
+      sourceWrittenThisRun && sourceImageFile.exists() -> sourceImageFile
       fallbackImageFile.exists() -> fallbackImageFile
       else -> {
         roborazziDebugLog {
@@ -53,7 +56,10 @@ internal fun writeAnnotatedImage(
         // The source image is already resize-scaled; do not scale it again.
         resizeScale = 1.0,
         contextData = emptyMap(),
-        imageIoFormat = recordOptions.imageIoFormat,
+        // Always write the annotated image as a real PNG regardless of
+        // recordOptions.imageIoFormat: the file is named `.annotated.png`, so a
+        // non-PNG format (e.g. lossless WebP) would put mismatched bytes in it.
+        imageIoFormat = ImageIoFormat(),
       )
       roborazziDebugLog { "Annotated image written: ${annotatedFile.absolutePath}" }
     } finally {

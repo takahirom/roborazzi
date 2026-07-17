@@ -40,10 +40,10 @@ import javax.imageio.ImageIO
  */
 internal class DesktopUiTreeDumpWriteResult(
   val effectiveOptions: RoborazziOptions,
-  private val annotatedImageWriter: (() -> Unit)?,
+  private val annotatedImageWriter: ((sourceWrittenThisRun: Boolean) -> Unit)?,
 ) {
-  fun writeAnnotatedImage() {
-    annotatedImageWriter?.invoke()
+  fun writeAnnotatedImage(sourceWrittenThisRun: Boolean) {
+    annotatedImageWriter?.invoke(sourceWrittenThisRun)
   }
 }
 
@@ -81,19 +81,24 @@ internal fun writeUiTreeDumpIfEnabledDesktop(
     var contextData = roborazziOptions.contextData +
       (ROBORAZZI_UI_TREE_FILE_PATH_KEY to sidecarFile.absolutePath)
 
-    val annotatedImageWriter: (() -> Unit)? = if (dumpOptions.annotateImage) {
+    val annotatedImageWriter: ((Boolean) -> Unit)? = if (dumpOptions.annotateImage) {
       val annotatedFile = annotatedImageFileDesktop(goldenFile, roborazziOptions)
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedFile.absolutePath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
-      val sourceImageFile = currentRunImageFileDesktop(goldenFile, roborazziOptions);
-      {
+      val sourceImageFile = currentRunImageFileDesktop(goldenFile, roborazziOptions)
+      val writer: (Boolean) -> Unit = { sourceWrittenThisRun ->
         writeAnnotatedImageDesktop(
           sourceImageFile = sourceImageFile,
+          // The capture pipeline reports whether it wrote the source image this
+          // run; on an unchanged verify it did not, so a stale `_actual` is
+          // ignored and the writer falls back to the golden.
+          sourceWrittenThisRun = sourceWrittenThisRun,
           fallbackImageFile = goldenFile,
           annotatedFile = annotatedFile,
           annotations = annotations,
         )
       }
+      writer
     } else {
       null
     }
@@ -187,13 +192,14 @@ private const val LabelPadding = 4
  */
 private fun writeAnnotatedImageDesktop(
   sourceImageFile: File,
+  sourceWrittenThisRun: Boolean,
   fallbackImageFile: File,
   annotatedFile: File,
   annotations: List<UiTreeAnnotation>,
 ) {
   try {
     val source = when {
-      sourceImageFile.exists() -> sourceImageFile
+      sourceWrittenThisRun && sourceImageFile.exists() -> sourceImageFile
       fallbackImageFile.exists() -> fallbackImageFile
       else -> {
         roborazziDebugLog {

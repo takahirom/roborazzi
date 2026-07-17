@@ -56,44 +56,56 @@ class UiTreeDumpVerifyTest {
 
       val prefix =
         "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.verifyUnchanged"
+      val compareDir = roborazziSystemPropertyCompareOutputDirectory()
+      val actualPrefix = "$compareDir/${this::class.qualifiedName}.verifyUnchanged_actual"
       val goldenImage = File("$prefix.png")
       val goldenSidecar = File("$prefix.uitree.json")
-      val actualImage = File(
-        "${roborazziSystemPropertyCompareOutputDirectory()}/${this::class.qualifiedName}.verifyUnchanged_actual.png"
+      val actualImage = File("${actualPrefix}.png")
+      val actualSidecar = File("${actualPrefix}.uitree.json")
+      // Every artifact this test can leave in the SHARED output / compare dirs,
+      // including the annotated images the dump feature writes; deleted in a
+      // finally so the shared dirs stay clean even when an assertion fails.
+      val artifacts = listOf(
+        goldenImage,
+        goldenSidecar,
+        File("$prefix.annotated.png"),
+        actualImage,
+        actualSidecar,
+        File("${actualPrefix}.annotated.png"),
+        File("$compareDir/${this::class.qualifiedName}.verifyUnchanged_compare.png"),
       )
-      val actualSidecar = File(
-        "${roborazziSystemPropertyCompareOutputDirectory()}/${this::class.qualifiedName}.verifyUnchanged_actual.uitree.json"
-      )
-      listOf(goldenImage, goldenSidecar, actualImage, actualSidecar).forEach { it.delete() }
+      artifacts.forEach { it.delete() }
 
-      val options = { taskType: RoborazziTaskType ->
-        RoborazziOptions(
-          taskType = taskType,
-          uiTreeDumpOptions = UiTreeDumpOptions(),
-        )
+      try {
+        val options = { taskType: RoborazziTaskType ->
+          RoborazziOptions(
+            taskType = taskType,
+            uiTreeDumpOptions = UiTreeDumpOptions(),
+          )
+        }
+
+        // 1) Record the golden image + golden sidecar.
+        setupRoborazziSystemProperty(record = true)
+        onView(isRoot()).captureRoboImage(file = goldenImage, roborazziOptions = options(RoborazziTaskType.Record))
+        assertTrue("golden image should exist", goldenImage.exists())
+        assertTrue("golden sidecar should exist", goldenSidecar.exists())
+
+        // 2) Verify the unchanged screenshot: must NOT throw (verification passes).
+        setupRoborazziSystemProperty(verify = true)
+        onView(isRoot()).captureRoboImage(file = goldenImage, roborazziOptions = options(RoborazziTaskType.Verify))
+
+        // The image is unchanged, so no _actual image is written...
+        assertFalse("unchanged verify must not write an _actual image", actualImage.exists())
+        // ...but the sidecar for the current run is still written.
+        assertTrue("verify run should (re)write the _actual sidecar", actualSidecar.exists())
+
+        // The sidecar is valid-ish and describes the same node.
+        val json = actualSidecar.readText()
+        val tagLines = json.lines().filter { it.contains("\"login_button\"") }
+        assertEquals(1, tagLines.size)
+      } finally {
+        artifacts.forEach { it.delete() }
       }
-
-      // 1) Record the golden image + golden sidecar.
-      setupRoborazziSystemProperty(record = true)
-      onView(isRoot()).captureRoboImage(file = goldenImage, roborazziOptions = options(RoborazziTaskType.Record))
-      assertTrue("golden image should exist", goldenImage.exists())
-      assertTrue("golden sidecar should exist", goldenSidecar.exists())
-
-      // 2) Verify the unchanged screenshot: must NOT throw (verification passes).
-      setupRoborazziSystemProperty(verify = true)
-      onView(isRoot()).captureRoboImage(file = goldenImage, roborazziOptions = options(RoborazziTaskType.Verify))
-
-      // The image is unchanged, so no _actual image is written...
-      assertFalse("unchanged verify must not write an _actual image", actualImage.exists())
-      // ...but the sidecar for the current run is still written.
-      assertTrue("verify run should (re)write the _actual sidecar", actualSidecar.exists())
-
-      // The sidecar is valid-ish and describes the same node.
-      val json = actualSidecar.readText()
-      val tagLines = json.lines().filter { it.contains("\"login_button\"") }
-      assertEquals(1, tagLines.size)
-
-      listOf(goldenImage, goldenSidecar, actualImage, actualSidecar).forEach { it.delete() }
     }
   }
 }

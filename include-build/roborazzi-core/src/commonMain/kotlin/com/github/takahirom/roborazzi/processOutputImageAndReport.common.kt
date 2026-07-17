@@ -61,6 +61,13 @@ fun processOutputImageAndReport(
   emptyCanvasFactory: EmptyCanvasFactory,
   canvasFactoryFromFile: CanvasFactoryFromPath,
   comparisonCanvasFactory: ComparisonCanvasFactory,
+  // Reports whether this run (re)wrote the current-run output image (the golden on
+  // record, the `_actual` image on a changed compare/verify). It is the explicit,
+  // authoritative signal the annotated-image writer uses to decide whether to
+  // annotate the freshly written image or fall back to the golden. It is invoked
+  // BEFORE the (possibly throwing) verification report, so the annotation still
+  // runs for a failing verify. Defaults to a no-op for callers that do not dump.
+  reportActualImageWritten: (Boolean) -> Unit = {},
 ) {
   val taskType = roborazziOptions.taskType
   roborazziDebugLog {
@@ -157,6 +164,10 @@ fun processOutputImageAndReport(
             contextData = contextData,
             imageIoFormat = recordOptions.imageIoFormat,
           )
+        // The current-run output image was written (the `_actual`, or the golden
+        // for a recording task type). Signal it before the report, which throws
+        // on a failing verify.
+        reportActualImageWritten(true)
         val aiOptions = compareOptions.aiAssertionOptions
         val aiResult = if (aiOptions != null && aiOptions.aiAssertions.isNotEmpty()) {
           aiOptions.aiAssertionModel.assert(
@@ -193,6 +204,9 @@ fun processOutputImageAndReport(
           )
         }
       } else {
+        // Nothing new was written this run; a pre-existing `_actual` from an
+        // earlier changed run must NOT be treated as the current output.
+        reportActualImageWritten(false)
         CaptureResult.Unchanged(
           goldenFile = goldenFilePath,
           timestampNs = roborazziCurrentTimeNs(),
@@ -223,6 +237,9 @@ fun processOutputImageAndReport(
       contextData = contextData,
       imageIoFormat = recordOptions.imageIoFormat,
     )
+    // The recording task type writes the golden, which is also the annotated
+    // image's source.
+    reportActualImageWritten(true)
     roborazziDebugLog {
       "processOutputImageAndReport: \n" +
         " record goldenFile: $goldenFilePath\n"

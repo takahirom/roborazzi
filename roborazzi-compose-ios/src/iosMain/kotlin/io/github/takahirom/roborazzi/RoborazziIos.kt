@@ -113,10 +113,13 @@ fun SemanticsNodeInteraction.captureRoboImage(
     }
   }
   val newCanvas = UIImageRoboCanvas.fromUnpremultipliedRgbaBytes(width, height, bytes)
+  var actualImageWritten = false
   try {
-    processOutputImageAndReport(
+    try {
+      processOutputImageAndReport(
       newRoboCanvas = newCanvas,
       goldenFilePath = resolvedGoldenFilePath,
+      reportActualImageWritten = { actualImageWritten = it },
       // Honor the roborazzi.contextdata flag like the JVM facade does. The JVM
       // facade additionally injects the test class name; that default is JVM-only
       // (there is no provideRoborazziContext on iOS), so iOS records only the
@@ -153,10 +156,16 @@ fun SemanticsNodeInteraction.captureRoboImage(
           hasLabel = grid?.hasLabel ?: true,
         )
       },
-    )
-    // The screenshot (golden or _actual) has now been written; draw the annotated
-    // Set-of-Mark image on top of it. No-op when the feature is off or opted out.
-    uiTreeDump.writeAnnotatedImage()
+      )
+    } finally {
+      // The screenshot (golden or _actual) has now been written; draw the
+      // annotated Set-of-Mark image on top of it, even when verification failed
+      // (the `_actual` is already written). No-op when the feature is off or
+      // opted out, and it never throws, so it cannot mask the assertion error.
+      // The pipeline reports whether it wrote the source image this run, so a
+      // stale `_actual` is never reused.
+      uiTreeDump.writeAnnotatedImage(actualImageWritten)
+    }
   } finally {
     newCanvas.release()
   }
