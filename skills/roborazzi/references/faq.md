@@ -64,16 +64,6 @@ After that, you can execute screenshot tests using either Android Studio's Run o
 - **Run Task**: Verify that the `recordRoborazziDebug` task is running.
 - **Call Method**: Confirm that `captureRoboImage()` is being called.
 
-By following these steps, you should be able to identify and resolve the issue causing the screenshot tests to not capture images.
-
-## Q: I'm seeing an optimization warning related to Java lambdas in Gradle. What can I do?
-
-**A:** This warning may occur with Gradle 7.5. Upgrade to Gradle 7.6.2 to resolve this issue. Change the distribution URL in `gradle-wrapper.properties`:
-
-```properties
-distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.2-bin.zip
-```
-
 ## Q: Can I run Roborazzi with Bazel?
 
 **A:** As of now, there is no direct support for running Roborazzi with Bazel. However, it is possible to do so. Please refer to the following comment for more details:
