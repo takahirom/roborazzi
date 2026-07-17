@@ -946,6 +946,19 @@ public final class com/github/takahirom/roborazzi/ThresholdValidatorKt {
 	public static final fun ThresholdValidator (F)Lkotlin/jvm/functions/Function1;
 }
 
+public final class com/github/takahirom/roborazzi/UiTreeAnnotation {
+	public fun <init> (ILcom/github/takahirom/roborazzi/RoboRect;)V
+	public final fun component1 ()I
+	public final fun component2 ()Lcom/github/takahirom/roborazzi/RoboRect;
+	public final fun copy (ILcom/github/takahirom/roborazzi/RoboRect;)Lcom/github/takahirom/roborazzi/UiTreeAnnotation;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/UiTreeAnnotation;ILcom/github/takahirom/roborazzi/RoboRect;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/UiTreeAnnotation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBounds ()Lcom/github/takahirom/roborazzi/RoboRect;
+	public final fun getNumber ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/github/takahirom/roborazzi/UiTreeCaptureInfo {
 	public fun <init> (IID)V
 	public final fun component1 ()I
@@ -962,19 +975,24 @@ public final class com/github/takahirom/roborazzi/UiTreeCaptureInfo {
 }
 
 public final class com/github/takahirom/roborazzi/UiTreeDumpKt {
+	public static final field ROBORAZZI_ANNOTATED_FILE_PATH_KEY Ljava/lang/String;
 	public static final field ROBORAZZI_UI_TREE_FILE_PATH_KEY Ljava/lang/String;
+	public static final field roborazziAnnotatedImageSuffix Ljava/lang/String;
 	public static final field roborazziUiTreeSidecarSuffix Ljava/lang/String;
 	public static final fun assignUiTreeNumbers (Lcom/github/takahirom/roborazzi/RoboComponentTree;Lkotlin/jvm/functions/Function1;)Ljava/util/Map;
+	public static final fun computeUiTreeAnnotations (Lcom/github/takahirom/roborazzi/RoboComponentTree;Ljava/util/Map;Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;)Ljava/util/List;
 	public static final fun defaultUiTreeDumpOptions ()Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;
 	public static final fun toUiTreeJson (Lcom/github/takahirom/roborazzi/RoboComponentTree;Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;)Ljava/lang/String;
+	public static final fun toUiTreeJson (Lcom/github/takahirom/roborazzi/RoboComponentTree;Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;Ljava/util/Map;)Ljava/lang/String;
 	public static synthetic fun toUiTreeJson$default (Lcom/github/takahirom/roborazzi/RoboComponentTree;Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;Lcom/github/takahirom/roborazzi/UiTreeDumpOptions;ILjava/lang/Object;)Ljava/lang/String;
 }
 
 public final class com/github/takahirom/roborazzi/UiTreeDumpOptions {
 	public static final field Companion Lcom/github/takahirom/roborazzi/UiTreeDumpOptions$Companion;
 	public fun <init> ()V
-	public fun <init> (Lkotlin/jvm/functions/Function1;)V
-	public synthetic fun <init> (Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lkotlin/jvm/functions/Function1;Z)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function1;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAnnotateImage ()Z
 	public final fun isAnnotatable ()Lkotlin/jvm/functions/Function1;
 }
 

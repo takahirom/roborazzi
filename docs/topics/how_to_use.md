@@ -692,16 +692,19 @@ If you are having trouble debugging your test, try Dump mode as follows.
 ### UI tree dump (JSON)
 
 While [Dump mode](#dump-mode) renders the UI tree *into an image* for humans to
-look at, **UI tree dump** writes a machine-readable JSON sidecar next to each
-captured screenshot for tools and AI agents to read.
+look at, **UI tree dump** writes a machine-readable JSON **sidecar** — a file that
+lives next to the screenshot it describes — for tools and AI agents to read.
 
 When enabled, capturing `MyTest.png` also writes `MyTest.uitree.json` beside it
-describing the Compose semantics + View hierarchy of the current run. It is
-written on record **and** compare/verify tasks (always describing the current
-run), next to whatever image the task writes:
+describing the Compose semantics + View hierarchy of the current run, plus, by
+default, an annotated `MyTest.annotated.png` (see
+[Annotated image](#annotated-image-set-of-mark) below). It is written on record **and** compare/verify tasks (always describing
+the current run), next to whatever image the task writes:
 
 * On **record**, next to the golden image: `MyTest.uitree.json`.
-* On **compare/verify**, next to the `_actual` image: `MyTest_actual.uitree.json`.
+* On **compare/verify**, written under the `_actual` basename in the compare
+  output directory (`MyTest_actual.uitree.json`) — note an unchanged verify writes
+  the sidecar even though no `MyTest_actual.png` image is produced.
 
 The sidecar is **informational only**: it never participates in image diffing and
 never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
@@ -756,6 +759,48 @@ attributes, so a single `grep` finds a node and its coordinates.
   `MergeDescendants` flag is numbered, its descendants are not numbered.
 * Output is **deterministic**: the same UI produces byte-identical JSON (no
   timestamps, no hashes).
+
+#### Annotated image (Set-of-Mark)
+
+"Set-of-Mark" refers to a prompting technique for vision-language models:
+overlaying numbered marks on image regions lets a model refer to a region
+unambiguously by its number ([Yang et al., 2023](https://arxiv.org/abs/2310.11441)).
+Here each mark's number is the same `n` used in the JSON sidecar.
+
+![Annotated Set-of-Mark image](https://github.com/user-attachments/assets/208593c3-cd2b-4c0a-ae5b-e7cf6cd0260e)
+
+Alongside the JSON sidecar, an annotated **Set-of-Mark** image is written by
+default (see `annotateImage` below) next to the screenshot: a copy of the output
+screenshot with every numbered node drawn as a bounding box plus a small numbered
+label.
+
+* On **record**, next to the golden image: `MyTest.annotated.png`.
+* On **compare/verify**, written under the `_actual` basename in the compare
+  output directory (`MyTest_actual.annotated.png`) — like the sidecar, it is
+  written even on an unchanged verify that produces no `MyTest_actual.png` image
+  (the identical golden is annotated instead).
+
+The number on each box is exactly the same `n` used in the JSON sidecar, so the
+image and the JSON always agree: an agent (or a human) can point at "element #3"
+in the picture and look up `"n": 3` in the JSON to read its exact `bounds`,
+properties, and actions. The boxes are mapped onto the output image with the same
+contract the JSON documents (`image = (raw - root.origin) * scale`).
+
+The annotated image is a **display artifact of the current run only**: like the
+JSON sidecar it never participates in image comparison and never fails a capture,
+and it is never treated as a golden.
+
+To write only the JSON sidecar and skip the annotated image, opt out with
+`annotateImage = false`:
+
+```kotlin
+onView(ViewMatchers.isRoot())
+  .captureRoboImage(
+    roborazziOptions = RoborazziOptions(
+      uiTreeDumpOptions = UiTreeDumpOptions(annotateImage = false)
+    )
+  )
+```
 
 #### Primary use case: an AI agent iterating on UI numerically
 

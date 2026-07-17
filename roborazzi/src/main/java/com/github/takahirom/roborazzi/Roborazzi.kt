@@ -54,12 +54,13 @@ fun ViewInteraction.captureRoboImage(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  perform(ImageCaptureViewAction(roborazziOptions, file) { canvas, effectiveOptions ->
+  perform(ImageCaptureViewAction(roborazziOptions, file) { canvas, uiTreeDump ->
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
-      roborazziOptions = effectiveOptions
+      roborazziOptions = uiTreeDump.effectiveOptions
     )
+    uiTreeDump.writeAnnotatedImage()
     canvas.release()
   })
 }
@@ -158,7 +159,7 @@ fun captureRootsInternal(
   roborazziOptions: RoborazziOptions,
   file: File
 ) {
-  val effectiveOptions = writeUiTreeSidecarIfEnabled(
+  val uiTreeDump = writeUiTreeDumpIfEnabled(
     serializationTree = {
       RoboComponent.Screen(
         rootsOrderByDepth = roots,
@@ -178,8 +179,9 @@ fun captureRootsInternal(
     processOutputImageAndReportWithDefaults(
       canvas = canvas,
       goldenFile = file,
-      roborazziOptions = effectiveOptions
+      roborazziOptions = uiTreeDump.effectiveOptions
     )
+    uiTreeDump.writeAnnotatedImage()
     canvas.release()
   }
 }
@@ -353,7 +355,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
     roborazziOptions = roborazziOptions,
     captureSingleComponent = {
       val node = this.fetchSemanticsNode("fail to captureRoboImage")
-      val effectiveOptions = writeUiTreeSidecarIfEnabled(
+      val uiTreeDump = writeUiTreeDumpIfEnabled(
         serializationTree = {
           RoboComponent.Compose(
             node = node,
@@ -373,8 +375,9 @@ fun SemanticsNodeInteraction.captureRoboImage(
         processOutputImageAndReportWithDefaults(
           canvas = canvas,
           goldenFile = file,
-          roborazziOptions = effectiveOptions
+          roborazziOptions = uiTreeDump.effectiveOptions
         )
+        uiTreeDump.writeAnnotatedImage()
         canvas.release()
       }
     }
@@ -665,7 +668,7 @@ private fun saveAllImage(
 private class ImageCaptureViewAction(
   val roborazziOptions: RoborazziOptions,
   val goldenFile: File? = null,
-  val saveAction: (AwtRoboCanvas, RoborazziOptions) -> Unit
+  val saveAction: (AwtRoboCanvas, UiTreeDumpWriteResult) -> Unit
 ) :
   ViewAction {
   override fun getConstraints(): Matcher<View> {
@@ -677,10 +680,10 @@ private class ImageCaptureViewAction(
   }
 
   override fun perform(uiController: UiController, view: View) {
-    // The UI tree sidecar is only written for single-image captures with a known
+    // The UI tree dump is only written for single-image captures with a known
     // golden file; multi-frame (gif) captures pass a null goldenFile and skip it.
-    val effectiveOptions = if (goldenFile != null) {
-      writeUiTreeSidecarIfEnabled(
+    val uiTreeDump = if (goldenFile != null) {
+      writeUiTreeDumpIfEnabled(
         serializationTree = {
           RoboComponent.View(
             view = view,
@@ -691,7 +694,7 @@ private class ImageCaptureViewAction(
         roborazziOptions = roborazziOptions,
       )
     } else {
-      roborazziOptions
+      UiTreeDumpWriteResult(roborazziOptions, annotatedImageWriter = null)
     }
     capture(
       rootComponent = RoboComponent.View(
@@ -700,7 +703,7 @@ private class ImageCaptureViewAction(
       ),
       roborazziOptions = roborazziOptions,
     ) { canvas ->
-      saveAction(canvas, effectiveOptions)
+      saveAction(canvas, uiTreeDump)
     }
   }
 }
