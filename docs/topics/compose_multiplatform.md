@@ -101,7 +101,7 @@ The currently implemented features for iOS support are as follows:
 | dump | n/a (Robolectric-only concept) |
 | applyDeviceCrop | n/a (Robolectric-only concept) |
 | UI tree dump JSON sidecar (`uiTreeDumpOptions`) | supported (record writes `MyTest.uitree.json` next to the golden; compare/verify writes `MyTest_actual.uitree.json` in the compare output directory — the same `_actual` basename contract as the other platforms) |
-| UI tree annotated image (`annotateImage`) | 🆖 not supported (no AWT drawing pipeline on iOS; the flag is ignored with a logged notice) |
+| UI tree annotated image (`annotateImage`) | supported (drawn with UIKit/CoreGraphics; `MyTest.annotated.png` / `MyTest_actual.annotated.png`, matching the Android/Desktop look) |
 
 
 > **Note on translucent pixels:** the iOS canvas stores pixels premultiplied (a CoreGraphics constraint), so translucent colors lose precision proportional to `255 / alpha` (opaque pixels are lossless). The loss is deterministic, so comparing identically-produced images is unaffected; only cross-source comparisons of low-alpha content may need a small threshold.

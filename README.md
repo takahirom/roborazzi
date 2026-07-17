@@ -1099,13 +1099,14 @@ never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
 |---|---|---|
 | Android / Robolectric | supported | supported |
 | Compose Desktop (JVM) | supported | supported |
-| Compose iOS | supported | 🆖 not supported (no AWT drawing pipeline) |
+| Compose iOS | supported | supported |
 
-On **Compose iOS** only the JSON sidecar is written. `annotateImage` (on by
-default) is ignored gracefully — a notice is logged and no `.annotated.png` is
-produced; enabling it never crashes the capture. On Android/Robolectric and
-Compose Desktop the annotated image is fully supported. On the Compose targets the
-sidecar is produced by the `SemanticsNodeInteraction.captureRoboImage` path.
+The UI tree dump is fully supported on Android/Robolectric, Compose Desktop and
+Compose iOS: each writes the JSON sidecar and, by default, the annotated
+Set-of-Mark image. On the Compose targets the dump is produced by the
+`SemanticsNodeInteraction.captureRoboImage` path. The drawing backend differs per
+platform (Android/Desktop use AWT, iOS uses UIKit/CoreGraphics) but the output
+matches: the same numbered boxes and palette.
 
 #### Enabling it
 
@@ -1695,7 +1696,7 @@ The currently implemented features for iOS support are as follows:
 | dump | n/a (Robolectric-only concept) |
 | applyDeviceCrop | n/a (Robolectric-only concept) |
 | UI tree dump JSON sidecar (`uiTreeDumpOptions`) | supported (record writes `MyTest.uitree.json` next to the golden; compare/verify writes `MyTest_actual.uitree.json` in the compare output directory — the same `_actual` basename contract as the other platforms) |
-| UI tree annotated image (`annotateImage`) | 🆖 not supported (no AWT drawing pipeline on iOS; the flag is ignored with a logged notice) |
+| UI tree annotated image (`annotateImage`) | supported (drawn with UIKit/CoreGraphics; `MyTest.annotated.png` / `MyTest_actual.annotated.png`, matching the Android/Desktop look) |
 
 
 > **Note on translucent pixels:** the iOS canvas stores pixels premultiplied (a CoreGraphics constraint), so translucent colors lose precision proportional to `255 / alpha` (opaque pixels are lossless). The loss is deterministic, so comparing identically-produced images is unaffected; only cross-source comparisons of low-alpha content may need a small threshold.

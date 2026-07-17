@@ -716,13 +716,14 @@ never fails verification. Bitmap-based `captureRoboImage(Bitmap...)` captures
 |---|---|---|
 | Android / Robolectric | supported | supported |
 | Compose Desktop (JVM) | supported | supported |
-| Compose iOS | supported | 🆖 not supported (no AWT drawing pipeline) |
+| Compose iOS | supported | supported |
 
-On **Compose iOS** only the JSON sidecar is written. `annotateImage` (on by
-default) is ignored gracefully — a notice is logged and no `.annotated.png` is
-produced; enabling it never crashes the capture. On Android/Robolectric and
-Compose Desktop the annotated image is fully supported. On the Compose targets the
-sidecar is produced by the `SemanticsNodeInteraction.captureRoboImage` path.
+The UI tree dump is fully supported on Android/Robolectric, Compose Desktop and
+Compose iOS: each writes the JSON sidecar and, by default, the annotated
+Set-of-Mark image. On the Compose targets the dump is produced by the
+`SemanticsNodeInteraction.captureRoboImage` path. The drawing backend differs per
+platform (Android/Desktop use AWT, iOS uses UIKit/CoreGraphics) but the output
+matches: the same numbered boxes and palette.
 
 #### Enabling it
 
