@@ -44,6 +44,46 @@ data class RoborazziOptions(
     recordOptions = recordOptions,
   )
 
+  // Binary-compatibility bridge for callers compiled against <=1.68.0, before the
+  // uiTreeDumpOptions field was added. Restores the pre-1.69.0 6-arg constructor.
+  @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+  constructor(
+    taskType: RoborazziTaskType = roborazziSystemPropertyTaskType(),
+    contextData: Map<String, Any> = emptyMap(),
+    captureType: CaptureType = if (canScreenshot()) CaptureType.Screenshot() else defaultCaptureType(),
+    reportOptions: ReportOptions = ReportOptions(),
+    compareOptions: CompareOptions = CompareOptions(),
+    recordOptions: RecordOptions = RecordOptions(),
+  ) : this(
+    taskType = taskType,
+    contextData = contextData,
+    captureType = captureType,
+    reportOptions = reportOptions,
+    compareOptions = compareOptions,
+    recordOptions = recordOptions,
+    uiTreeDumpOptions = defaultUiTreeDumpOptions(),
+  )
+
+  // Binary-compatibility bridge for callers compiled against <=1.68.0, before the
+  // uiTreeDumpOptions field was added. Restores the pre-1.69.0 6-arg copy().
+  @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+  fun copy(
+    taskType: RoborazziTaskType = this.taskType,
+    contextData: Map<String, Any> = this.contextData,
+    captureType: CaptureType = this.captureType,
+    reportOptions: ReportOptions = this.reportOptions,
+    compareOptions: CompareOptions = this.compareOptions,
+    recordOptions: RecordOptions = this.recordOptions,
+  ): RoborazziOptions = copy(
+    taskType = taskType,
+    contextData = contextData,
+    captureType = captureType,
+    reportOptions = reportOptions,
+    compareOptions = compareOptions,
+    recordOptions = recordOptions,
+    uiTreeDumpOptions = uiTreeDumpOptions,
+  )
+
   interface CaptureType {
     class Screenshot : CaptureType {
       override fun shouldTakeScreenshot(): Boolean {
