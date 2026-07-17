@@ -1,6 +1,6 @@
 # UI tree dump (JSON)
 
-While [Dump mode](https://takahirom.github.io/roborazzi/how_to_use.html#dump-mode)
+While [Dump mode](https://takahirom.github.io/roborazzi/how-to-use.html#dump-mode)
 renders the UI tree *into an image* for humans, **UI tree dump** writes a
 machine-readable JSON **sidecar** next to the screenshot it describes, for tools
 and AI agents to read. When enabled, capturing `MyTest.png` also writes
