@@ -1,0 +1,40 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+  id 'org.jetbrains.kotlin.jvm'
+  id 'org.jetbrains.kotlin.plugin.compose'
+}
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
+}
+repositories {
+  google()
+  mavenCentral()
+}
+
+// ComposablePreviewScanner publishes JVM 17 metadata/bytecode, so this module
+// targets 17 unlike the rest of the repository (javaTarget = 11). Desktop
+// consumers already need a 17 toolchain for the scanner. These configureEach
+// blocks run after the allprojects ones in the root build file, so 17 wins.
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  compilerOptions {
+    jvmTarget.set(JvmTarget.JVM_17)
+  }
+}
+tasks.withType(JavaCompile).configureEach {
+  sourceCompatibility = '17'
+  targetCompatibility = '17'
+}
+java {
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
+}
+
+dependencies {
+  // Brings the Compose Desktop ui-test and runtime dependencies transitively.
+  api project(":roborazzi-compose-desktop")
+
+  // Consumers add ComposablePreviewScanner themselves (same contract as
+  // roborazzi-compose-preview-scanner-support on Android).
+  compileOnly libs.composable.preview.scanner
+}
