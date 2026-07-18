@@ -4,6 +4,8 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.runDesktopComposeUiTest
+import com.github.takahirom.roborazzi.annotations.ManualClockOptions
+import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import io.github.takahirom.roborazzi.captureRoboImage
 import java.io.File
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
@@ -98,11 +100,16 @@ class DefaultDesktopComposePreviewTester(
 
   /**
    * Parameters for capturing a preview screenshot.
+   *
+   * [manualClockOptions] is set when the preview is annotated with
+   * [RoboComposePreviewOptions] and this capture is one of its time-based variations;
+   * the tester has already set `mainClock.autoAdvance = false` in that case.
    */
   data class CaptureParameter(
     val preview: ComposablePreview<AndroidPreviewInfo>,
     val filePath: String,
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+    val manualClockOptions: ManualClockOptions? = null,
   )
 
   /**
@@ -112,6 +119,9 @@ class DefaultDesktopComposePreviewTester(
     @OptIn(ExperimentalTestApi::class)
     override fun ComposeUiTest.capture(parameter: CaptureParameter) {
       setContent { parameter.preview() }
+      parameter.manualClockOptions?.let { manualClockOptions ->
+        mainClock.advanceTimeBy(manualClockOptions.advanceTimeMillis)
+      }
       onRoot().captureRoboImage(
         filePath = parameter.filePath,
         roborazziOptions = parameter.roborazziOptions,
@@ -159,25 +169,54 @@ class DefaultDesktopComposePreviewTester(
       preview.declaringClass,
       createScreenshotIdFor(preview)
     )
-    val filePath = "$pathPrefix$name.${provideRoborazziContext().imageExtension}"
 
-    roborazziDebugLog {
-      "DefaultDesktopComposePreviewTester.test():\n" +
-        "  filePathStrategy: ${roborazziRecordFilePathStrategy()}\n" +
-        "  outputDirectory: ${roborazziSystemPropertyOutputDirectory()}\n" +
-        "  pathPrefix: \"$pathPrefix\"\n" +
-        "  name: \"$name\"\n" +
-        "  imageExtension: ${provideRoborazziContext().imageExtension}\n" +
-        "  filePath: $filePath"
-    }
+    // One capture per @RoboComposePreviewOptions manual clock variation, with the
+    // same _TIME_Xms file name suffix as the Robolectric preview tests. Previews
+    // without the annotation produce a single capture without a suffix.
+    val manualClockVariations: List<ManualClockOptions?> =
+      annotationOptionsFor(preview).manualClockOptions.toList().ifEmpty { listOf(null) }
 
-    val parameter = CaptureParameter(
-      preview = preview,
-      filePath = filePath,
-    )
-    runDesktopComposeUiTest {
-      with(capturer) { capture(parameter) }
+    manualClockVariations.forEach { manualClockOptions ->
+      val suffix = if (manualClockOptions != null) {
+        "_TIME_${manualClockOptions.advanceTimeMillis}ms"
+      } else {
+        ""
+      }
+      val filePath = "$pathPrefix$name$suffix.${provideRoborazziContext().imageExtension}"
+
+      roborazziDebugLog {
+        "DefaultDesktopComposePreviewTester.test():\n" +
+          "  filePathStrategy: ${roborazziRecordFilePathStrategy()}\n" +
+          "  outputDirectory: ${roborazziSystemPropertyOutputDirectory()}\n" +
+          "  pathPrefix: \"$pathPrefix\"\n" +
+          "  name: \"$name\"\n" +
+          "  manualClockOptions: $manualClockOptions\n" +
+          "  imageExtension: ${provideRoborazziContext().imageExtension}\n" +
+          "  filePath: $filePath"
+      }
+
+      val parameter = CaptureParameter(
+        preview = preview,
+        filePath = filePath,
+        manualClockOptions = manualClockOptions,
+      )
+      runDesktopComposeUiTest {
+        if (manualClockOptions != null) {
+          mainClock.autoAdvance = false
+        }
+        with(capturer) { capture(parameter) }
+      }
     }
+  }
+
+  private fun annotationOptionsFor(preview: ComposablePreview<AndroidPreviewInfo>): RoboComposePreviewOptions {
+    // Look up the annotation via reflection instead of preview.getAnnotation()
+    // for the same reason as the Robolectric tester:
+    // https://github.com/takahirom/roborazzi/pull/633#discussion_r1946472486
+    return Class.forName(preview.declaringClass).declaredMethods
+      .firstOrNull { it.name == preview.methodName }
+      ?.getAnnotation(RoboComposePreviewOptions::class.java)
+      ?: RoboComposePreviewOptions()
   }
 
   private fun createScreenshotIdFor(preview: ComposablePreview<AndroidPreviewInfo>) =
