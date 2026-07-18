@@ -127,8 +127,9 @@ Output goes to the standard `DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH` with **no**
 feature-specific subdirectory. Modules that run both Robolectric and desktop preview
 tests would otherwise overwrite each other's images — that is exactly what the existing
 experimental `separateOutputDirs` option solves (per task-slug subdirectories), so the
-docs point there, and the generator warns when both preview generators are enabled in
-one module without `separateOutputDirs = true`.
+docs point there, and the generator fails with a configuration error when both preview
+generators are enabled in one module without `separateOutputDirs = true` (a warning
+would let one recording run silently corrupt the other baseline).
 
 ### 2. New Gradle extension: `generateComposePreviewDesktopTests`
 
@@ -181,7 +182,7 @@ Android library module to KMP.
 2. `roborazzi-compose-desktop-preview-scanner-support` module (tester + capturer +
    naming) + sample promotion + docs (`preview_support.md` Compose Desktop section).
 3. `generateComposePreviewDesktopTests` extension: target resolution, annotation
-   filters, `includePrivatePreviews`, mixed-module warning, integration tests.
+   filters, `includePrivatePreviews`, mixed-module configuration error, integration tests.
 4. `@RoboComposePreviewOptions` (`manualClockOptions`) support via desktop `mainClock`.
 
 Each PR updates docs and runs `./gradlew generateReadme`.
