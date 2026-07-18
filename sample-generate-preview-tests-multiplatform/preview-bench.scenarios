@@ -1,0 +1,17 @@
+// Benchmark: Robolectric (4.17-beta-2) vs Compose Desktop preview screenshot tests.
+// 30 identical commonMain previews in sample-generate-preview-tests-multiplatform.
+// cleanup-tasks force the test task to re-run in every measured iteration.
+
+robolectric-preview-record {
+  title = "Robolectric 4.17-beta-2 (recordRoborazziDebug, 30 previews)"
+  tasks = [":sample-generate-preview-tests-multiplatform:recordRoborazziDebug"]
+  cleanup-tasks = [":sample-generate-preview-tests-multiplatform:cleanTestDebugUnitTest"]
+  warm-ups = 2
+}
+
+desktop-preview-record {
+  title = "Compose Desktop JVM (recordRoborazziDesktop, 30 previews)"
+  tasks = [":sample-generate-preview-tests-multiplatform:recordRoborazziDesktop"]
+  cleanup-tasks = [":sample-generate-preview-tests-multiplatform:cleanDesktopTest"]
+  warm-ups = 2
+}

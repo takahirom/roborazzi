@@ -1,4 +1,5 @@
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   id("org.jetbrains.kotlin.multiplatform")
@@ -9,18 +10,48 @@ plugins {
   id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Benchmark: force the latest Robolectric beta.
+configurations.all {
+  resolutionStrategy.eachDependency {
+    val independentlyVersioned = setOf("android-all", "android-all-instrumented", "nativeruntime-dist-compat")
+    if (requested.group == "org.robolectric" && requested.name !in independentlyVersioned) {
+      useVersion("4.17-beta-2")
+      because("Benchmark against the latest Robolectric beta")
+    }
+  }
+}
+
 @OptIn(ExperimentalRoborazziApi::class)
 roborazzi {
+  // Both preview generators are enabled in this module, so separate the outputs.
+  separateOutputDirs.set(true)
   generateComposePreviewRobolectricTests {
     enable = true
     packages = listOf("com.github.takahirom.preview.tests")
-    testerQualifiedClassName = "com.github.takahirom.preview.tests.MultiplatformPreviewTester"
+  }
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.github.takahirom.preview.tests")
   }
 }
 
 repositories {
   mavenCentral()
   google()
+}
+
+// ComposablePreviewScanner publishes JVM 17 metadata; raise only the desktop side.
+afterEvaluate {
+  listOf("desktopTestCompileClasspath", "desktopTestRuntimeClasspath").forEach { name ->
+    configurations.named(name) {
+      attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 17)
+    }
+  }
+}
+tasks.withType<KotlinCompile>().matching { it.name.contains("Desktop") }.configureEach {
+  compilerOptions {
+    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+  }
 }
 
 android {
@@ -54,19 +85,20 @@ android {
 
 kotlin {
   androidTarget()
+  jvm("desktop")
 
   sourceSets {
     val commonMain by getting {
       dependencies {
         api(compose.components.uiToolingPreview)
+        implementation(compose.material3)
+        implementation(compose.runtime)
       }
     }
     val androidMain by getting {
       dependencies {
-        implementation(compose.material3)
         implementation(compose.ui)
         implementation(compose.uiTooling)
-        implementation(compose.runtime)
       }
     }
 
@@ -93,6 +125,20 @@ kotlin {
       dependencies {
         implementation(libs.androidx.test.ext.junit)
         implementation(libs.androidx.test.espresso.core)
+      }
+    }
+
+    val desktopMain by getting {
+      dependencies {
+        implementation(compose.desktop.currentOs)
+      }
+    }
+
+    val desktopTest by getting {
+      dependencies {
+        implementation(project(":roborazzi-compose-desktop-preview-scanner-support"))
+        implementation(libs.junit)
+        implementation(libs.composable.preview.scanner)
       }
     }
   }
