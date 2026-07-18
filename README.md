@@ -1306,6 +1306,101 @@ annotationFilter = AnnotationFilter.Include("com.example.MyIncludeAnnotation")
 
 The Compose Preview support also works with Compose Multiplatform common previews (`@Preview` in `commonMain`). You can scan them with the `CommonComposablePreviewScanner` from the ComposablePreviewScanner `common` artifact in a custom tester; the generated tests run as Android unit tests with Robolectric. See the [multiplatform sample project](https://github.com/takahirom/roborazzi/tree/main/sample-generate-preview-tests-multiplatform) for a complete setup.
 
+## Experimental Compose Desktop Preview Support
+
+Roborazzi can also generate preview screenshot tests for the Compose Desktop (JVM)
+target, without Robolectric. Previews are scanned with ComposablePreviewScanner's
+`android` artifact, which is a pure-JVM jar: it finds the multiplatform
+`androidx.compose.ui.tooling.preview.Preview` annotation on the classpath, so previews
+declared in `commonMain` are captured too.
+
+Enable it in your `build.gradle.kts`:
+
+```kotlin
+roborazzi {
+  @OptIn(ExperimentalRoborazziApi::class)
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.example")
+    // Required only when the project has multiple Kotlin JVM targets:
+    // targetName = "desktop"
+  }
+}
+```
+
+Add the dependencies to the JVM target's test source set:
+
+```kotlin
+kotlin {
+  sourceSets {
+    val desktopTest by getting {
+      dependencies {
+        implementation("io.github.takahirom.roborazzi:roborazzi-compose-desktop-preview-scanner-support:[version]")
+        implementation("io.github.sergio-sastre.ComposablePreviewScanner:android:[version]")
+        implementation("junit:junit:4.13.2")
+      }
+    }
+  }
+}
+```
+
+Then run the desktop Roborazzi tasks:
+
+```
+./gradlew recordRoborazziDesktop
+./gradlew compareRoborazziDesktop
+./gradlew verifyRoborazziDesktop
+```
+
+Note: ComposablePreviewScanner is published with JVM 17 metadata, so the desktop
+target needs to target JVM 17 (or relax the test classpath's `TargetJvmVersion`
+attribute). See the [desktop multiplatform sample](https://github.com/takahirom/roborazzi/tree/main/sample-compose-desktop-multiplatform)
+for a complete setup, including manual usage of the tester API without the generator.
+
+### Screenshot naming and mixed modules
+
+Desktop preview screenshots use the same file names as the Robolectric preview tests
+(fully qualified class name + method name + preview parameter suffix), so the same
+preview produces the same file name on both platforms. If one module enables **both**
+`generateComposePreviewRobolectricTests` and `generateComposePreviewDesktopTests`, the
+two sets of screenshots would overwrite each other in the shared output directory, so
+Roborazzi fails with a configuration error unless
+[`separateOutputDirs`](https://takahirom.github.io/roborazzi/build-setup.html#separate-output-directories-per-varianttarget-experimental)
+is enabled, which gives each task its own subdirectory.
+
+### Customizing the desktop tester
+
+`DefaultDesktopComposePreviewTester` accepts a `Capturer` whose receiver is the raw
+`ComposeUiTest` scope, so anything possible inside `runDesktopComposeUiTest` — clock
+control, interactions, wrapping the content in a theme — stays possible:
+
+```kotlin
+@OptIn(ExperimentalRoborazziApi::class, ExperimentalTestApi::class)
+class MyDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester(
+  capturer = DefaultDesktopComposePreviewTester.Capturer { parameter ->
+    setContent { MyTheme { parameter.preview() } }
+    onRoot().captureRoboImage(parameter.filePath, parameter.roborazziOptions)
+  }
+)
+```
+
+Reference your tester in the Gradle configuration with
+`testerQualifiedClassName = "com.example.MyDesktopPreviewTester"` (the class needs a
+parameterless constructor). If you need to change scanning or file naming as well,
+implement `DesktopComposePreviewTester` by delegating to the default tester and
+override the corresponding method.
+
+### Feature parity with the Android preview support
+
+| Feature | Android (Robolectric) | Compose Desktop |
+|---|---|---|
+| Generated preview tests | ✅ | ✅ |
+| `packages`, `includePrivatePreviews`, `testerQualifiedClassName`, `generatedTestClassCount` | ✅ | ✅ |
+| `annotationFilter` (`@RoboPreviewInclude` / `@RoboPreviewExclude`) | ✅ | ✅ |
+| `@RoboComposePreviewOptions` (`manualClockOptions`) | ✅ | ✅ |
+| `@Preview` annotation options (`widthDp`, `fontScale`, `uiMode`, ...) | ✅ (see below) | Not yet — previews render wrap-content |
+| `robolectricConfig` (device qualifiers, SDK) | ✅ | Not applicable |
+
 ## Annotation-based Capture Control
 
 To enable fine-grained control over screenshot timing in Compose Previews, add the annotations dependency:
