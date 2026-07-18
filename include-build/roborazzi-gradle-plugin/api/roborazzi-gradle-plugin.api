@@ -1,3 +1,30 @@
+public class io/github/takahirom/roborazzi/GenerateComposePreviewDesktopTestsExtension {
+	public static final field Companion Lio/github/takahirom/roborazzi/GenerateComposePreviewDesktopTestsExtension$Companion;
+	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
+	public final fun getAnnotationFilter ()Lorg/gradle/api/provider/Property;
+	public final fun getEnable ()Lorg/gradle/api/provider/Property;
+	public final fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
+	public final fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
+	public final fun getPackages ()Lorg/gradle/api/provider/ListProperty;
+	public final fun getTargetName ()Lorg/gradle/api/provider/Property;
+	public final fun getTesterQualifiedClassName ()Lorg/gradle/api/provider/Property;
+	public final fun getUseScanOptionParametersInTester ()Lorg/gradle/api/provider/Property;
+}
+
+public final class io/github/takahirom/roborazzi/GenerateComposePreviewDesktopTestsExtension$Companion {
+}
+
+public abstract class io/github/takahirom/roborazzi/GenerateComposePreviewDesktopTestsTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public final fun generateTests ()V
+	public abstract fun getAnnotationFilter ()Lorg/gradle/api/provider/Property;
+	public abstract fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
+	public abstract fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
+	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getScanPackageTrees ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getTesterQualifiedClassName ()Lorg/gradle/api/provider/Property;
+}
+
 public class io/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTestsExtension {
 	public static final field Companion Lio/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTestsExtension$Companion;
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
@@ -35,8 +62,10 @@ public class io/github/takahirom/roborazzi/RoborazziCompareExtension {
 public class io/github/takahirom/roborazzi/RoborazziExtension {
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
 	public final fun compare (Lorg/gradle/api/Action;)V
+	public final fun generateComposePreviewDesktopTests (Lkotlin/jvm/functions/Function1;)V
 	public final fun generateComposePreviewRobolectricTests (Lkotlin/jvm/functions/Function1;)V
 	public final fun getCompare ()Lio/github/takahirom/roborazzi/RoborazziCompareExtension;
+	public final fun getGenerateComposePreviewDesktopTests ()Lio/github/takahirom/roborazzi/GenerateComposePreviewDesktopTestsExtension;
 	public final fun getGenerateComposePreviewRobolectricTests ()Lio/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTestsExtension;
 	public final fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
 	public final fun getSeparateOutputDirs ()Lorg/gradle/api/provider/Property;

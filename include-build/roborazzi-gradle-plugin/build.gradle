@@ -25,6 +25,7 @@ dependencies {
   integrationTestDepImplementation libs.android.tools.build.gradle
   integrationTestDepImplementation libs.kotlin.gradle.plugin
   integrationTestDepImplementation libs.compose.gradle.plugin
+  integrationTestDepImplementation libs.kotlin.compose.compiler.gradle.plugin
   testImplementation libs.kotlin.test
   testImplementation libs.kotlin.test.junit
   testImplementation libs.junit
@@ -57,6 +58,7 @@ testing.suites {
       implementation libs.android.tools.build.gradle
       implementation libs.kotlin.gradle.plugin
       implementation libs.compose.gradle.plugin
+      implementation libs.kotlin.compose.compiler.gradle.plugin
     }
 
     targets {

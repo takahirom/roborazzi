@@ -198,3 +198,16 @@ class DefaultDesktopComposePreviewTester(
     }.toTypedArray()
   }
 }
+
+@InternalRoborazziApi
+fun getDesktopComposePreviewTester(testerQualifiedClassName: String): DesktopComposePreviewTester {
+  val customTesterClass = try {
+    Class.forName(testerQualifiedClassName)
+  } catch (e: ClassNotFoundException) {
+    throw IllegalArgumentException("The class $testerQualifiedClassName not found", e)
+  }
+  if (!DesktopComposePreviewTester::class.java.isAssignableFrom(customTesterClass)) {
+    throw IllegalArgumentException("The class $testerQualifiedClassName must implement DesktopComposePreviewTester")
+  }
+  return customTesterClass.getDeclaredConstructor().newInstance() as DesktopComposePreviewTester
+}
