@@ -128,8 +128,12 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     val directory = File(testDir, packageName.replace(".", "/"))
     directory.mkdirs()
 
-    // Delete old generated test files to avoid conflicts when changing generatedTestClassCount
-    directory.listFiles()?.filter { it.extension == "kt" }?.forEach { it.delete() }
+    // Delete old generated test files to avoid conflicts when changing
+    // generatedTestClassCount. Scoped to this task's class name prefix so files
+    // from another generator sharing the directory are never wiped.
+    directory.listFiles()
+      ?.filter { it.extension == "kt" && it.name.startsWith(baseClassName) }
+      ?.forEach { it.delete() }
     val testerQualifiedClassNameString = testerQualifiedClassName.get().escapeForKotlinStringLiteral()
 
     if (testClassCount == 1) {
