@@ -21,6 +21,11 @@ jobs:
         id: report-library
         with:
           configuration: 'releaseRuntimeClasspath'
+          # roborazzi-annotations is temporarily omitted from modules: the diff action
+          # runs the dependency task on both the head and base branches, and no
+          # configuration name exists on both sides across its Android-library -> KMP
+          # conversion. Re-add it (jvmRuntimeClasspath / androidRuntimeClasspath /
+          # commonMainImplementationDependenciesMetadata) once the conversion is merged.
           modules: |
             roborazzi-compose-ios|commonMainImplementationDependenciesMetadata
             roborazzi-compose-ios|iosArm64CompilationApi
@@ -35,7 +40,6 @@ jobs:
             roborazzi-painter|commonMainImplementationDependenciesMetadata
             roborazzi-painter|jvmRuntimeClasspath
             roborazzi
-            roborazzi-annotations
             roborazzi-junit-rule
             roborazzi-compose
             roborazzi-compose-preview-scanner-support
