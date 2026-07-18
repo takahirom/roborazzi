@@ -119,9 +119,7 @@ class DefaultDesktopComposePreviewTester(
     @OptIn(ExperimentalTestApi::class)
     override fun ComposeUiTest.capture(parameter: CaptureParameter) {
       setContent { parameter.preview() }
-      parameter.manualClockOptions?.let { manualClockOptions ->
-        mainClock.advanceTimeBy(manualClockOptions.advanceTimeMillis)
-      }
+      advanceMainClockFor(parameter)
       onRoot().captureRoboImage(
         filePath = parameter.filePath,
         roborazziOptions = parameter.roborazziOptions,
@@ -213,10 +211,37 @@ class DefaultDesktopComposePreviewTester(
     // Look up the annotation via reflection instead of preview.getAnnotation()
     // for the same reason as the Robolectric tester:
     // https://github.com/takahirom/roborazzi/pull/633#discussion_r1946472486
-    return Class.forName(preview.declaringClass).declaredMethods
-      .firstOrNull { it.name == preview.methodName }
-      ?.getAnnotation(RoboComposePreviewOptions::class.java)
+    val declaringClass = loadDeclaringClass(preview.declaringClass) ?: return RoboComposePreviewOptions()
+    val candidates = declaringClass.declaredMethods.filter { it.name == preview.methodName }
+    val method = when {
+      candidates.size <= 1 -> candidates.firstOrNull()
+      else ->
+        // Disambiguate overloaded previews with the scanner's parameter type info.
+        candidates.firstOrNull { candidate ->
+          preview.methodParametersType.isNotEmpty() &&
+            candidate.parameterTypes.any { preview.methodParametersType.contains(it.simpleName) }
+        } ?: candidates.first()
+    }
+    return method?.getAnnotation(RoboComposePreviewOptions::class.java)
       ?: RoboComposePreviewOptions()
+  }
+
+  /**
+   * Loads the preview's declaring class. The scanner reports a canonical-style name
+   * (`com.example.Outer.Inner`), while `Class.forName` needs the binary name
+   * (`com.example.Outer${'$'}Inner`), so retry with `$` separators for nested classes.
+   */
+  private fun loadDeclaringClass(className: String): Class<*>? {
+    var candidate = className
+    while (true) {
+      try {
+        return Class.forName(candidate)
+      } catch (e: ClassNotFoundException) {
+        val lastDot = candidate.lastIndexOf('.')
+        if (lastDot < 0) return null
+        candidate = candidate.substring(0, lastDot) + '$' + candidate.substring(lastDot + 1)
+      }
+    }
   }
 
   private fun createScreenshotIdFor(preview: ComposablePreview<AndroidPreviewInfo>) =
@@ -235,6 +260,21 @@ class DefaultDesktopComposePreviewTester(
         throw IllegalArgumentException("The annotation class $annotationClassName not found", e)
       }
     }.toTypedArray()
+  }
+}
+
+/**
+ * Advances the main clock for the current `@RoboComposePreviewOptions` manual clock
+ * variation, if any. Custom [DefaultDesktopComposePreviewTester.Capturer]
+ * implementations should call this after `setContent` — otherwise time-suffixed
+ * captures would all show the initial state, because the tester disables
+ * `mainClock.autoAdvance` for manual clock variations.
+ */
+@ExperimentalRoborazziApi
+@OptIn(ExperimentalTestApi::class)
+fun ComposeUiTest.advanceMainClockFor(parameter: DefaultDesktopComposePreviewTester.CaptureParameter) {
+  parameter.manualClockOptions?.let { manualClockOptions ->
+    mainClock.advanceTimeBy(manualClockOptions.advanceTimeMillis)
   }
 }
 

@@ -171,8 +171,10 @@ Android library module to KMP.
 ## Verification
 
 - Promote the prototype in `sample-compose-desktop-multiplatform` to a proper sample and
-  regression test: rewritten on the new module, screenshots committed, verified in CI
-  via `verifyRoborazziDesktop`. No new sample module.
+  regression test: rewritten on the new module and run as a plain unit test in CI, with
+  screenshots covered by the repository's artifact-based record/compare workflows
+  (StoreScreenshot / CompareScreenshot) rather than committed goldens. No new sample
+  module.
 - Generator: integration test cases in `include-build/roborazzi-gradle-plugin`
   (alongside `PreviewGenerateTest`).
 

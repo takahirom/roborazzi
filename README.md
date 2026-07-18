@@ -1328,11 +1328,20 @@ roborazzi {
 }
 ```
 
-Add the dependencies to the JVM target's test source set:
+Add the dependencies to the JVM target's test source set. If your previews use the
+Roborazzi marker annotations (`@RoboPreviewExclude`, `@RoboComposePreviewOptions`, ...),
+also add `roborazzi-annotations` to the source set that declares the previews
+(usually `commonMain` — test dependencies do not flow into main source sets):
 
 ```kotlin
 kotlin {
   sourceSets {
+    val commonMain by getting {
+      dependencies {
+        // Only needed when previews use the Roborazzi marker annotations
+        implementation("io.github.takahirom.roborazzi:roborazzi-annotations:[version]")
+      }
+    }
     val desktopTest by getting {
       dependencies {
         implementation("io.github.takahirom.roborazzi:roborazzi-compose-desktop-preview-scanner-support:[version]")
@@ -1343,6 +1352,10 @@ kotlin {
   }
 }
 ```
+
+Plain JVM projects (`org.jetbrains.kotlin.jvm`) are also supported: add the same
+dependencies with `testImplementation(...)` and use the `Jvm` task names
+(`recordRoborazziJvm`, `compareRoborazziJvm`, `verifyRoborazziJvm`).
 
 Then run the desktop Roborazzi tasks:
 
@@ -1379,6 +1392,9 @@ control, interactions, wrapping the content in a theme — stays possible:
 class MyDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester(
   capturer = DefaultDesktopComposePreviewTester.Capturer { parameter ->
     setContent { MyTheme { parameter.preview() } }
+    // Keep @RoboComposePreviewOptions manualClockOptions working: without this,
+    // time-suffixed captures would all show the initial state.
+    advanceMainClockFor(parameter)
     onRoot().captureRoboImage(parameter.filePath, parameter.roborazziOptions)
   }
 )

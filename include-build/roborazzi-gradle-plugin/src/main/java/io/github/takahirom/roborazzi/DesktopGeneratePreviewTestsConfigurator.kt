@@ -100,10 +100,12 @@ private fun setupGenerateComposePreviewDesktopTestsTask(
     project.tasks.named(testTaskName, Test::class.java)
 
   // Auto-detect generatedTestClassCount from maxParallelForks if not explicitly set.
-  // Read eagerly (we are in afterEvaluate): mapping the test task provider would add a
-  // generate -> test task dependency and create a dependency cycle.
-  if (!extension.generatedTestClassCount.isPresent) {
-    extension.generatedTestClassCount.convention(testTaskProvider.get().maxParallelForks)
+  // project.provider carries no task-dependency information (unlike mapping
+  // testTaskProvider, which would create a generate -> test dependency cycle) and
+  // is only evaluated at execution time, so late maxParallelForks configuration is
+  // still picked up.
+  val generatedTestClassCountProvider = project.provider {
+    extension.generatedTestClassCount.orNull ?: testTaskProvider.get().maxParallelForks
   }
 
   validateCustomTesterConfiguration(extension)
@@ -118,7 +120,7 @@ private fun setupGenerateComposePreviewDesktopTestsTask(
     it.scanPackageTrees.set(extension.packages)
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(extension.testerQualifiedClassName)
-    it.generatedTestClassCount.set(extension.generatedTestClassCount)
+    it.generatedTestClassCount.set(generatedTestClassCountProvider)
     it.annotationFilter.set(extension.annotationFilter.orElse(AnnotationFilter.Filter.RoboPreviewExclude))
   }
   // Registering the provider as a source directory carries the task dependency,
@@ -196,9 +198,10 @@ private fun verifyDesktopLibraryDependencies(project: Project) {
     }
   }
 
+  // junit:junit is deliberately not checked here: it commonly arrives transitively
+  // (e.g. via kotlin("test")), and this check only sees direct declarations.
   val requiredLibraries = listOf(
     "io.github.takahirom.roborazzi:roborazzi-compose-desktop-preview-scanner-support",
-    "junit:junit",
     "io.github.sergio-sastre.ComposablePreviewScanner:android",
   )
   requiredLibraries.forEach { dependencies.checkExists(it) }

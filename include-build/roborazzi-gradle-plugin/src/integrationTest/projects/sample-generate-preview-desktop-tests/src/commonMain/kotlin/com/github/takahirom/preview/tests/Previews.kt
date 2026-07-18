@@ -78,3 +78,16 @@ fun PreviewExcluded() {
     Text(text = "This preview should be excluded")
   }
 }
+
+class Filters {
+  annotation class CustomExclude
+}
+
+@Filters.CustomExclude
+@Preview
+@Composable
+fun PreviewExcludedByCustomAnnotation() {
+  MaterialTheme {
+    Text(text = "This preview should be excluded by the custom annotation")
+  }
+}

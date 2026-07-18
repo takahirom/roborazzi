@@ -139,7 +139,22 @@ class DesktopPreviewGenerateTest {
       record()
 
       checkHasImages()
-      checkNoImageContaining("PreviewExcluded")
+      checkNoImageContaining("PreviewExcluded.png")
+    }
+  }
+
+  @Test
+  fun whenCustomNestedAnnotationFilterShouldEscapeDollarAndExclude() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      // JVM binary name of a nested annotation: contains '$', which the generated
+      // Kotlin code must escape to stay compilable.
+      buildGradle.annotationFilterExcludeBinaryName =
+        "com.github.takahirom.preview.tests.Filters\$CustomExclude"
+
+      record()
+
+      checkHasImages()
+      checkNoImageContaining("PreviewExcludedByCustomAnnotation")
     }
   }
 
@@ -179,6 +194,7 @@ class DesktopPreviewModule(
     var generatedTestClassCount: Int? = null
     var enableRobolectricPreviewTests = false
     var separateOutputDirs = false
+    var annotationFilterExcludeBinaryName: String? = null
 
     fun write() {
       val file = projectFolder.root.resolve(PATH)
@@ -300,6 +316,13 @@ class DesktopPreviewModule(
       } else {
         ""
       }
+      val annotationFilterExpr = if (annotationFilterExcludeBinaryName != null) {
+        // Keep the real '$' out of the written Kotlin DSL string template.
+        val ktsSafe = annotationFilterExcludeBinaryName!!.replace("$", "\${'\$'}")
+        """annotationFilter = com.github.takahirom.roborazzi.AnnotationFilter.Exclude("$ktsSafe")"""
+      } else {
+        ""
+      }
       val separateOutputDirsExpr = if (separateOutputDirs) {
         """separateOutputDirs = true"""
       } else {
@@ -326,6 +349,7 @@ class DesktopPreviewModule(
                   $includePrivatePreviewsExpr
                   $customTesterExpr
                   $generatedTestClassCountExpr
+                  $annotationFilterExpr
                 }
               }
           """.trimIndent()

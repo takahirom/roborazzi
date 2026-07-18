@@ -107,11 +107,12 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
-    val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
+    val packagesExpr =
+      scanPackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
     val includePrivatePreviewsExpr = includePrivatePreviews.get()
     val annotationFilterExpr = when (val filter = annotationFilter.orNull) {
-      is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
-      is AnnotationFilter.Include -> "AnnotationFilter.Include(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
+      is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
+      is AnnotationFilter.Include -> "AnnotationFilter.Include(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
       null -> "null"
     }
     val testClassCount = generatedTestClassCount.get()
@@ -129,7 +130,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
 
     // Delete old generated test files to avoid conflicts when changing generatedTestClassCount
     directory.listFiles()?.filter { it.extension == "kt" }?.forEach { it.delete() }
-    val testerQualifiedClassNameString = testerQualifiedClassName.get()
+    val testerQualifiedClassNameString = testerQualifiedClassName.get().escapeForKotlinStringLiteral()
 
     if (testClassCount == 1) {
       generateTestClass(
@@ -160,6 +161,26 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     }
   }
 
+  /**
+   * Escapes a configured string for embedding in a generated Kotlin string literal.
+   * Without this, values like the documented nested annotation name
+   * `com.example.Outer$Inner` would be interpreted as string templates and break
+   * the generated test's compilation.
+   */
+  private fun String.escapeForKotlinStringLiteral(): String = buildString {
+    for (c in this@escapeForKotlinStringLiteral) {
+      when (c) {
+        '\\' -> append("\\\\")
+        '"' -> append("\\\"")
+        '$' -> append("\\$")
+        '\n' -> append("\\n")
+        '\r' -> append("\\r")
+        '\t' -> append("\\t")
+        else -> append(c)
+      }
+    }
+  }
+
   private fun generateTestClass(
     directory: File,
     packageName: String,
@@ -171,10 +192,15 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     shardIndex: Int?,
     totalShards: Int
   ) {
+    // Shards are assigned after sorting by a stable identifier: neither ClassGraph
+    // order nor a custom tester's order is guaranteed to be identical across the
+    // independently-initialized test JVMs, and index-based sharding on differing
+    // orders would drop or duplicate previews.
     val valuesFunction = if (shardIndex == null) {
       "previews"
     } else {
-      "previews.filterIndexed { index, _ -> index % $totalShards == $shardIndex }"
+      "previews.sortedBy { \"\${it.declaringClass}.\${it.methodName}_\${it.previewIndex ?: 0}\" }" +
+        ".filterIndexed { index, _ -> index % $totalShards == $shardIndex }"
     }
 
     File(directory, "$className.kt").writeText(

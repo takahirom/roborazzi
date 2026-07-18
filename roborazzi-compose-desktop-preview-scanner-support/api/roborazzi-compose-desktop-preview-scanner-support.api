@@ -85,6 +85,7 @@ public final class com/github/takahirom/roborazzi/DesktopComposePreviewTester$Op
 }
 
 public final class com/github/takahirom/roborazzi/RoborazziDesktopPreviewScannerSupportKt {
+	public static final fun advanceMainClockFor (Landroidx/compose/ui/test/ComposeUiTest;Lcom/github/takahirom/roborazzi/DefaultDesktopComposePreviewTester$CaptureParameter;)V
 	public static final fun getDesktopComposePreviewTester (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester;
 }
 

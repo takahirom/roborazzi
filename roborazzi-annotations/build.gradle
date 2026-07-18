@@ -13,6 +13,11 @@ repositories {
 
 kotlin {
   jvm()
+  // The annotations are pure Kotlin; publish native targets too so a KMP project
+  // can put this dependency in commonMain alongside iOS targets.
+  iosX64()
+  iosArm64()
+  iosSimulatorArm64()
   androidLibrary {
     namespace = 'com.github.takahirom.roborazzi.annotations'
     compileSdk = libs.versions.compileSdk.get().toInteger()
