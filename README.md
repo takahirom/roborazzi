@@ -1359,7 +1359,7 @@ dependencies with `testImplementation(...)` and use the `Jvm` task names
 
 Then run the desktop Roborazzi tasks:
 
-```
+```shell
 ./gradlew recordRoborazziDesktop
 ./gradlew compareRoborazziDesktop
 ./gradlew verifyRoborazziDesktop
