@@ -100,6 +100,30 @@ class DesktopPreviewGenerateTest {
   }
 
   @Test
+  fun whenMixedWithRobolectricPreviewTestsWithoutSeparateOutputDirsShouldFail() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.enableRobolectricPreviewTests = true
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("would overwrite each other"))
+        assert(output.contains("separateOutputDirs"))
+      }
+    }
+  }
+
+  @Test
+  fun whenMixedWithRobolectricPreviewTestsWithSeparateOutputDirsShouldBeRecorded() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.enableRobolectricPreviewTests = true
+      buildGradle.separateOutputDirs = true
+
+      record()
+
+      checkHasImages(outputDirSuffix = "desktop/")
+    }
+  }
+
+  @Test
   fun whenGeneratedTestClassCountIs2ShouldGenerateMultipleTestClasses() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.generatedTestClassCount = 2
@@ -133,6 +157,8 @@ class DesktopPreviewModule(
     var isIncludePrivatePreviews = false
     var useCustomTester = false
     var generatedTestClassCount: Int? = null
+    var enableRobolectricPreviewTests = false
+    var separateOutputDirs = false
 
     fun write() {
       val file = projectFolder.root.resolve(PATH)
@@ -252,8 +278,25 @@ class DesktopPreviewModule(
       } else {
         ""
       }
+      val separateOutputDirsExpr = if (separateOutputDirs) {
+        """separateOutputDirs = true"""
+      } else {
+        ""
+      }
+      val robolectricPreviewTestsExpr = if (enableRobolectricPreviewTests) {
+        """
+                generateComposePreviewRobolectricTests {
+                  enable = true
+                  packages = listOf("com.github.takahirom.preview.tests")
+                }
+        """.trimIndent()
+      } else {
+        ""
+      }
       return """
               roborazzi {
+                $separateOutputDirsExpr
+                $robolectricPreviewTestsExpr
                 generateComposePreviewDesktopTests {
                   enable = $enable
                   packages = listOf("com.github.takahirom.preview.tests")
@@ -286,10 +329,11 @@ class DesktopPreviewModule(
     return buildResult
   }
 
-  fun checkHasImages() {
-    val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+  fun checkHasImages(outputDirSuffix: String = "") {
+    val images =
+      testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/$outputDirSuffix").listFiles()
     assert(images?.isNotEmpty() == true) {
-      "Expected screenshots in build/outputs/roborazzi, but found: ${images?.toList()}"
+      "Expected screenshots in build/outputs/roborazzi/$outputDirSuffix, but found: ${images?.toList()}"
     }
   }
 

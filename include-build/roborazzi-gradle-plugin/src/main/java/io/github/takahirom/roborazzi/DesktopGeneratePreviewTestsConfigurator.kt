@@ -107,7 +107,7 @@ private fun setupGenerateComposePreviewDesktopTestsTask(
   }
 
   validateCustomTesterConfiguration(extension)
-  warnWhenMixedWithRobolectricPreviewTests(project, roborazziExtension)
+  failWhenMixedWithRobolectricPreviewTests(roborazziExtension)
   verifyDesktopLibraryDependencies(project)
 
   val generateTestsTask = project.tasks.register(
@@ -160,19 +160,21 @@ private fun validateCustomTesterConfiguration(extension: GenerateComposePreviewD
 }
 
 @OptIn(ExperimentalRoborazziApi::class)
-private fun warnWhenMixedWithRobolectricPreviewTests(
-  project: Project,
+private fun failWhenMixedWithRobolectricPreviewTests(
   roborazziExtension: RoborazziExtension,
 ) {
   val robolectricEnabled =
     roborazziExtension.generateComposePreviewRobolectricTests.enable.orNull == true
   val separateOutputDirs = roborazziExtension.separateOutputDirs.get()
   if (robolectricEnabled && !separateOutputDirs) {
-    project.logger.warn(
+    // An error rather than a warning: the two generators use the same screenshot
+    // names, so one recording run would silently overwrite the other baseline.
+    error(
       "Roborazzi: Both generateComposePreviewRobolectricTests and generateComposePreviewDesktopTests " +
         "are enabled in this module, and they use the same screenshot names, so the Android and " +
-        "desktop screenshots will overwrite each other in the shared output directory. " +
-        "Please set 'roborazzi.separateOutputDirs = true' so each task gets its own subdirectory."
+        "desktop screenshots would overwrite each other in the shared output directory. " +
+        "Please set 'roborazzi.separateOutputDirs = true' so each task gets its own subdirectory, " +
+        "or disable one of the generators."
     )
   }
 }
