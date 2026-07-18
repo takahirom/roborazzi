@@ -1302,6 +1302,10 @@ annotationFilter = AnnotationFilter.Exclude("com.example.MyExcludeAnnotation")
 annotationFilter = AnnotationFilter.Include("com.example.MyIncludeAnnotation")
 ```
 
+### Compose Multiplatform previews
+
+The Compose Preview support also works with Compose Multiplatform common previews (`@Preview` in `commonMain`). You can scan them with ComposablePreviewScanner's `CommonComposablePreviewScanner` in a custom tester; the generated tests run as Android unit tests with Robolectric. See the [multiplatform sample project](https://github.com/takahirom/roborazzi/tree/main/sample-generate-preview-tests-multiplatform) for a complete setup.
+
 ## Annotation-based Capture Control
 
 To enable fine-grained control over screenshot timing in Compose Previews, add the annotations dependency:
