@@ -119,11 +119,7 @@ private fun setupGenerateComposePreviewDesktopTestsTask(
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(extension.testerQualifiedClassName)
     it.generatedTestClassCount.set(extension.generatedTestClassCount)
-    // Unlike the Robolectric generator there is no RoboPreviewExclude default:
-    // roborazzi-annotations is an Android library today, so the marker annotations are
-    // not usable from commonMain/desktop. Restore the default once roborazzi-annotations
-    // is multiplatform.
-    it.annotationFilter.set(extension.annotationFilter)
+    it.annotationFilter.set(extension.annotationFilter.orElse(AnnotationFilter.Filter.RoboPreviewExclude))
   }
   // Registering the provider as a source directory carries the task dependency,
   // so the generate task runs before the test compilation.

@@ -124,6 +124,26 @@ class DesktopPreviewGenerateTest {
   }
 
   @Test
+  fun whenManualClockOptionsShouldCaptureTimeVariations() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      record()
+
+      checkHasImageContaining("PreviewDelayed_TIME_0ms")
+      checkHasImageContaining("PreviewDelayed_TIME_1032ms")
+    }
+  }
+
+  @Test
+  fun whenPreviewAnnotatedWithRoboPreviewExcludeShouldBeSkipped() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      record()
+
+      checkHasImages()
+      checkNoImageContaining("PreviewExcluded")
+    }
+  }
+
+  @Test
   fun whenGeneratedTestClassCountIs2ShouldGenerateMultipleTestClasses() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.generatedTestClassCount = 2
@@ -229,6 +249,8 @@ class DesktopPreviewModule(
                         implementation(compose.runtime)
                         implementation(compose.material3)
                         api(compose.components.uiToolingPreview)
+                        // replaced by dependency substitution
+                        implementation("io.github.takahirom.roborazzi:roborazzi-annotations:0.1.0")
                     }
                 }
                 val desktopMain by getting {
@@ -341,6 +363,26 @@ class DesktopPreviewModule(
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
     assert(images == null || images.isEmpty()) {
       "Expected no screenshots in build/outputs/roborazzi, but found: ${images?.toList()}"
+    }
+  }
+
+  fun checkHasImageContaining(nameFragment: String) {
+    val images =
+      testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+        .orEmpty()
+        .filter { it.name.contains(nameFragment) }
+    assert(images.isNotEmpty()) {
+      "Expected screenshots containing '$nameFragment', but found none"
+    }
+  }
+
+  fun checkNoImageContaining(nameFragment: String) {
+    val images =
+      testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+        .orEmpty()
+        .filter { it.name.contains(nameFragment) }
+    assert(images.isEmpty()) {
+      "Expected no screenshots containing '$nameFragment', but found: $images"
     }
   }
 

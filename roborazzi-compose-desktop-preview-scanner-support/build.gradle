@@ -33,6 +33,7 @@ java {
 dependencies {
   // Brings the Compose Desktop ui-test and runtime dependencies transitively.
   api project(":roborazzi-compose-desktop")
+  api project(":roborazzi-annotations")
 
   // Consumers add ComposablePreviewScanner themselves (same contract as
   // roborazzi-compose-preview-scanner-support on Android).
