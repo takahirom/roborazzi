@@ -5,11 +5,12 @@ package com.github.takahirom.roborazzi
  * metadata so an external reporting integration can attach them to test reports.
  *
  * When a custom TestEngine (e.g. RoborazziVintageTestEngine from the
- * `roborazzi-junit-platform-reporting` module) is on the classpath, it installs a
- * per-test *sink* via [setSink] before each test and drains it afterwards, forwarding
- * every collected path to JUnit Platform's `EngineExecutionListener.fileEntryPublished()`,
- * which Gradle 9.4+ renders as test attachments. When no engine wrapper is present, no
- * sink is installed and [publishFile] is a no-op.
+ * `roborazzi-junit-platform-reporting` module) is on the classpath, it *arms* a per-test
+ * sink via [setSink] before each test and drains it afterwards via [removeSink],
+ * forwarding every collected path to JUnit Platform's
+ * `EngineExecutionListener.fileEntryPublished()`, which Gradle 9.4+ renders as test
+ * attachments. When no engine wrapper is present, no sink is armed and [publishFile] is a
+ * no-op.
  *
  * ## Why the sink lives in [System.getProperties]
  *
@@ -21,25 +22,38 @@ package com.github.takahirom.roborazzi
  *  * A plain `static`/`@Volatile` field would not work: the sandbox sees its own copy of
  *    this object, whose field is never written by the engine (which runs on the worker
  *    classloader).
- *  * A `ThreadLocal` would not work either: the engine sets it on the "Test worker"
+ *  * A `ThreadLocal` would not work either: the engine arms it on the "Test worker"
  *    thread while `captureRoboImage` reads it on the sandbox thread.
  *
  * The only state shared identically by both classloaders and both threads is what the
- * bootstrap classloader owns. [System.getProperties] is a single JVM-global
- * `Hashtable`, and `java.util.*` collections and `String` are bootstrap-loaded, so a
- * `MutableList<String>` stored there is visible from every sandbox. We therefore pass
- * plain absolute-path strings through that list rather than a callback, keeping
- * `roborazzi-core` free of any JUnit Platform types.
+ * bootstrap classloader owns. [System.getProperties] is a single JVM-global `Properties`
+ * (a `Hashtable`), and `String` is bootstrap-loaded, so a `String` value stored there is
+ * the same instance seen from every sandbox. We therefore accumulate the captured
+ * absolute paths as one newline-separated `String` value rather than a callback or a
+ * collection, keeping `roborazzi-core` free of any JUnit Platform types.
+ *
+ * ## Why a String value (not a collection)
+ *
+ * [System.getProperties] is a [java.util.Properties], whose contract is that every key
+ * and value is a `String`; storing a non-`String` value breaks `Properties.store()`,
+ * `Properties.list()`, and `Properties.stringPropertyNames()`. So the sink value is
+ * always a `String`: the empty string means "armed, nothing captured yet", and each
+ * published path is appended separated by `\n`. Roborazzi image paths are file system
+ * paths that in practice never contain a newline, so splitting the value on `\n` in
+ * [removeSink] faithfully recovers the individual paths.
  *
  * ## Threading / lifecycle
  *
- * The engine installs the sink in `executionStarted` and drains + removes it in
+ * The engine arms the sink in `executionStarted` and drains + removes it in
  * `executionFinished`, both on the test worker thread. Between those two events the test
- * body runs (on the sandbox thread) and appends the paths it writes. Gradle forks a JVM
- * per test worker and runs tests sequentially within it, so a single global sink is
+ * body runs (on the sandbox thread) and appends the paths it writes. Every mutation is
+ * guarded by `synchronized(System.getProperties())`: `Properties` extends `Hashtable`, so
+ * that lock is the map's own monitor, and because all classloaders resolve to the single
+ * bootstrap `Properties` instance the monitor is shared across them too. Gradle forks a
+ * JVM per test worker and runs tests sequentially within it, so a single global sink is
  * sufficient; concurrent in-JVM test execution is not supported. If `captureRoboImage`
- * runs while no sink is installed (no engine wrapper, or a stray background thread after
- * the test finished), [publishFile] is simply a no-op.
+ * runs while no sink is armed (no engine wrapper, or a stray background thread after the
+ * test finished), [publishFile] is simply a no-op.
  */
 @InternalRoborazziApi
 object RoborazziReportingBridge {
@@ -51,31 +65,37 @@ object RoborazziReportingBridge {
   const val SINK_PROPERTY_KEY: String = "com.github.takahirom.roborazzi.reportingBridge.sink"
 
   /**
-   * Installs [sink] as the destination for paths published during the current test.
-   * The collection must be a bootstrap-loaded `java.util.*` type (see class docs) and
-   * should be thread-safe, because it is written from the Robolectric sandbox thread.
+   * Arms the sink for the current test. The stored value is an empty `String`, which
+   * [publishFile] later distinguishes from an unarmed sink (`null`).
    */
-  fun setSink(sink: MutableCollection<String>) {
-    System.getProperties()[SINK_PROPERTY_KEY] = sink
+  fun setSink() {
+    synchronized(System.getProperties()) {
+      System.getProperties()[SINK_PROPERTY_KEY] = ""
+    }
   }
 
   /**
-   * Removes and returns the current sink (the paths captured during the test), or null
-   * if none was installed.
+   * Removes and returns the paths captured during the test (in publish order), or null
+   * if no sink was armed.
    */
-  @Suppress("UNCHECKED_CAST")
-  fun removeSink(): MutableCollection<String>? {
-    return System.getProperties().remove(SINK_PROPERTY_KEY) as? MutableCollection<String>
+  fun removeSink(): List<String>? {
+    synchronized(System.getProperties()) {
+      return (System.getProperties().remove(SINK_PROPERTY_KEY) as? String)
+        ?.split("\n")
+        ?.filter { it.isNotEmpty() }
+    }
   }
 
   /**
-   * Appends [absolutePath] to the current sink, or does nothing when no sink is
-   * installed (no reporting engine, or called outside a test).
+   * Appends [absolutePath] to the current sink, or does nothing when no sink is armed
+   * (no reporting engine, or called outside a test).
    */
-  @Suppress("UNCHECKED_CAST")
   fun publishFile(absolutePath: String) {
-    val sink = System.getProperties()[SINK_PROPERTY_KEY] as? MutableCollection<String> ?: return
-    sink.add(absolutePath)
+    synchronized(System.getProperties()) {
+      val current = System.getProperties()[SINK_PROPERTY_KEY] as? String ?: return
+      System.getProperties()[SINK_PROPERTY_KEY] =
+        if (current.isEmpty()) absolutePath else current + "\n" + absolutePath
+    }
   }
 }
 

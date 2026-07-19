@@ -106,6 +106,14 @@ class JUnitPlatformReportingTest {
       assert(xml.contains("testCapture_actual.png")) {
         "Expected the actual image to be attached in the JUnit XML.\n$xml"
       }
+      // The golden itself is also attached when it exists (record wrote it before the
+      // failing verify). Match the golden strictly inside an [[ATTACHMENT|...]] marker
+      // whose filename ends in "testCapture.png" — the ".png" right after "testCapture"
+      // excludes the "_compare"/"_actual" variants, and scoping to the ATTACHMENT marker
+      // excludes the golden path that also appears in the failure log / system-out.
+      assert(Regex("""\[\[ATTACHMENT\|[^\]]*testCapture\.png""").containsMatchIn(xml)) {
+        "Expected the golden image (testCapture.png) to be attached in the JUnit XML, not only the _compare/_actual variants.\n$xml"
+      }
 
       val html = htmlReport()
       assert(html.contains("class=\"attachments\"")) {
@@ -116,6 +124,11 @@ class JUnitPlatformReportingTest {
       }
       assert(Regex("<img[^>]*testCapture_actual\\.png").containsMatchIn(html)) {
         "Expected the HTML report to embed the actual image.\n$html"
+      }
+      // The golden is embedded too. "testCapture\.png" (literal dot) matches only the
+      // golden filename, not testCapture_compare.png / testCapture_actual.png.
+      assert(Regex("<img[^>]*testCapture\\.png").containsMatchIn(html)) {
+        "Expected the HTML report to embed the golden image (testCapture.png).\n$html"
       }
     }
   }
@@ -303,6 +316,74 @@ class JUnitPlatformReportingTest {
         "Expected the notJUnitPlatform warning to be fully silenced by suppression, but found a diagnostic.\n${result.output}"
       }
       // The test still runs and records normally on plain JUnit4.
+      checkRecordedFileExists(
+        "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture.png"
+      )
+    }
+  }
+
+  /**
+   * (f) excludeEngines("roborazzi-vintage") is a misconfiguration, not a double execution:
+   * the stock junit-vintage engine still runs the tests, but roborazzi-vintage is filtered
+   * out of the execution set, so no images are published — yet each test runs only once.
+   *
+   * The old implementation false-positived here and failed the build with the
+   * doubleExecution error. This must no longer happen: the build must succeed (record does
+   * not fail), no doubleExecution diagnostic appears, and the plugin instead emits the
+   * engineNotSelected warning. Because roborazzi-vintage never runs, only the stock engine
+   * records the single golden and no _2 duplicate is written.
+   */
+  @Test
+  fun doesNotFailOnExcludeRoborazziVintage() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.enableJUnitPlatformReporting = true
+      buildGradle.excludeRoborazziVintageEngine = true
+      // recordWithParams uses BuildType.Build, so a build failure would throw here; the fact
+      // that this returns at all proves the old doubleExecution false-positive is gone.
+      val result = recordWithParams(NO_BUILD_CACHE)
+
+      // No double-execution diagnostic (the removed false positive).
+      assert(!result.output.contains("Diagnostic id: junitPlatformReporting.doubleExecution")) {
+        "Expected no doubleExecution diagnostic for excludeEngines(\"roborazzi-vintage\"), but found one.\n${result.output}"
+      }
+      // The engineNotSelected warning is emitted instead.
+      assert(result.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected a JUnit Platform reporting warning, but found none.\n${result.output}"
+      }
+      assert(result.output.contains("the roborazzi-vintage engine is not in the selected engine set")) {
+        "Expected the engineNotSelected warning body text.\n${result.output}"
+      }
+      assert(result.output.contains("Diagnostic id: junitPlatformReporting.engineNotSelected")) {
+        "Expected the engineNotSelected warning to print its stable, namespaced diagnostic id.\n${result.output}"
+      }
+
+      // Only the stock engine ran, so a single golden was recorded and there is no _2 duplicate.
+      checkRecordedFileExists(
+        "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture.png"
+      )
+      checkRecordedFileNotExists(
+        "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture_2.png"
+      )
+    }
+  }
+
+  /**
+   * (g) Suppressing the engineNotSelected id silences it entirely:
+   * roborazzi.suppress=junitPlatformReporting.engineNotSelected. Same setup as (f), but no
+   * diagnostic must appear, and the build still records normally.
+   */
+  @Test
+  fun suppressingEngineNotSelectedSilencesIt() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.enableJUnitPlatformReporting = true
+      buildGradle.excludeRoborazziVintageEngine = true
+      val result =
+        recordWithParams("-Proborazzi.suppress=junitPlatformReporting.engineNotSelected", NO_BUILD_CACHE)
+
+      assert(!result.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected the engineNotSelected warning to be fully silenced by suppression, but found a diagnostic.\n${result.output}"
+      }
+      // The stock engine still runs and records normally.
       checkRecordedFileExists(
         "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture.png"
       )

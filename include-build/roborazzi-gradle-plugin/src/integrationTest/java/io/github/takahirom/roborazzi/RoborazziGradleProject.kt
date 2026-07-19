@@ -304,6 +304,16 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     // excludeVintageEngine.
     var includeRoborazziVintageEngine = false
 
+    // Only meaningful when enableJUnitPlatformReporting and applyJUnitPlatform are true.
+    // When true, emit `excludeEngines("roborazzi-vintage")`, so the stock junit-vintage
+    // engine still runs the tests but roborazzi-vintage is filtered out of the execution
+    // set. This is a misconfiguration: images are never published, yet there is no double
+    // execution. The plugin must NOT report doubleExecution here (the old implementation
+    // false-positived and errored); it should emit the engineNotSelected warning instead.
+    // Placed before excludeVintageEngine in the when-branch so it wins over that flag's
+    // default of true.
+    var excludeRoborazziVintageEngine = false
+
     init {
       addIncludeBuild()
     }
@@ -451,6 +461,13 @@ dependencies {
               """
               useJUnitPlatform {
                 includeEngines("roborazzi-vintage")
+              }
+              """.trimIndent()
+
+            excludeRoborazziVintageEngine ->
+              """
+              useJUnitPlatform {
+                excludeEngines("roborazzi-vintage")
               }
               """.trimIndent()
 

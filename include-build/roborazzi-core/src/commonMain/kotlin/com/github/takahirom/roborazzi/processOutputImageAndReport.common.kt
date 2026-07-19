@@ -143,6 +143,11 @@ fun processOutputImageAndReport(
             imageIoFormat = recordOptions.imageIoFormat,
           )
         roborazziReportCapturedImage(roborazziToAbsolutePath(comparisonFilePath))
+        // Also attach the existing golden so a report viewer can compare golden vs
+        // actual vs compare. Skipped when there is no golden on record yet (Added).
+        if (isGoldenFilePresent) {
+          roborazziReportCapturedImage(roborazziToAbsolutePath(goldenFilePath))
+        }
         roborazziDebugLog {
           "processOutputImageAndReport(): compareCanvas is saved " +
             "compareFile:$comparisonFilePath"

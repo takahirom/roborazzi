@@ -916,6 +916,14 @@ public final class com/github/takahirom/roborazzi/RoborazziReportConst$DefaultCo
 	public fun getTitle ()Ljava/lang/String;
 }
 
+public final class com/github/takahirom/roborazzi/RoborazziReportingBridge {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziReportingBridge;
+	public static final field SINK_PROPERTY_KEY Ljava/lang/String;
+	public final fun publishFile (Ljava/lang/String;)V
+	public final fun removeSink ()Ljava/util/List;
+	public final fun setSink ()V
+}
+
 public final class com/github/takahirom/roborazzi/RoborazziTaskType : java/lang/Enum {
 	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziTaskType$Companion;
 	public static final field Compare Lcom/github/takahirom/roborazzi/RoborazziTaskType;
