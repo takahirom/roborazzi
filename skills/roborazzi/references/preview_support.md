@@ -143,9 +143,10 @@ declared in `commonMain` are captured too.
 - **Fidelity**: Robolectric renders with the Android framework; desktop renders with the
   host's Skia, so the same preview produces different images — goldens are per-platform.
 - **Speed**: desktop tests run roughly 4–6x faster than the Robolectric ones ([benchmark](https://github.com/takahirom/roborazzi/pull/903)).
-- **Adoption cost**: requires a Kotlin Multiplatform JVM target. For an Android-only
-  project that means a KMP migration first — stick with the Robolectric preview tests
-  there. Desktop tests shine for already-multiplatform code and Desktop-only apps.
+- **Adoption cost**: requires a Kotlin JVM target — a Kotlin Multiplatform `jvm()`
+  target or a plain `org.jetbrains.kotlin.jvm` project. For an Android-only project
+  that means a KMP migration first — stick with the Robolectric preview tests there.
+  Desktop tests shine for already-multiplatform code and Desktop-only apps.
 
 Enable it in your `build.gradle.kts`:
 
