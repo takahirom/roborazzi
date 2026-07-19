@@ -174,6 +174,19 @@ class DesktopPreviewGenerateTest {
   }
 
   @Test
+  fun whenEnabledOnAndroidOnlyProjectShouldFailWithGuidance() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.useAndroidOnlyProject = true
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("no JVM target to generate desktop preview tests for"))
+        assert(output.contains("jvm(\"desktop\")"))
+        assert(output.contains("use generateComposePreviewRobolectricTests instead"))
+      }
+    }
+  }
+
+  @Test
   fun whenPreviewAnnotationOptionsShouldBeApplied() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       record()
@@ -256,10 +269,46 @@ class DesktopPreviewModule(
     var enableRobolectricPreviewTests = false
     var separateOutputDirs = false
     var annotationFilterExcludeBinaryName: String? = null
+    var useAndroidOnlyProject = false
 
     fun write() {
       val file = projectFolder.root.resolve(PATH)
       file.parentFile.mkdirs()
+
+      if (useAndroidOnlyProject) {
+        // A plain Android project (no Kotlin Multiplatform / Kotlin JVM plugin) with
+        // the desktop preview generator enabled: must fail fast with guidance.
+        file.writeText(
+          """
+            plugins {
+                id("com.android.application")
+                id("org.jetbrains.kotlin.android")
+                id("io.github.takahirom.roborazzi")
+            }
+
+            android {
+                namespace = "com.github.takahirom.preview.tests"
+                compileSdk = libs.versions.compileSdk.get().toInt()
+                defaultConfig {
+                    minSdk = 24
+                }
+            }
+
+            roborazzi {
+              generateComposePreviewDesktopTests {
+                enable = true
+                packages = listOf("com.github.takahirom.preview.tests")
+              }
+            }
+
+            repositories {
+                mavenCentral()
+                google()
+            }
+          """.trimIndent()
+        )
+        return
+      }
 
       val previewScannerSupportDependency = if (includePreviewScannerSupportDependency) {
         // replaced by dependency substitution
