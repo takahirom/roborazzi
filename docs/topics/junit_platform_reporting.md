@@ -37,9 +37,14 @@ tasks.withType<Test>().configureEach {
 > **`excludeEngines("junit-vintage")` is mandatory**  
 > This module ships a `roborazzi-vintage` engine that runs your JUnit4 tests
 > itself. If you leave the stock `junit-vintage` engine enabled, **both** engines
-> discover the same tests and every test runs twice. This is silent — the build
-> still passes, so it is easy to miss — and the duplicate run writes a second,
-> suffixed golden image (e.g. `MyTest_2.png`).
+> discover the same tests and every test runs twice, writing a second, suffixed
+> golden image (e.g. `MyTest_2.png`). Because no valid configuration wants both
+> engines, the Roborazzi Gradle plugin **fails the build** with an error that
+> spells out the fix. Restricting execution to `includeEngines("roborazzi-vintage")`
+> instead of excluding the stock engine also works and is not flagged. If you must
+> keep the stock engine running for some reason, downgrade the error to a warning
+> with `roborazzi.suppress=junitPlatformReporting.doubleExecution` in
+> `gradle.properties`.
 
 ## What you get
 
@@ -55,10 +60,25 @@ in sync with what Roborazzi wrote.
 
 ## Troubleshooting
 
-| Symptom | Cause / fix |
-|---------|-------------|
-| No attachments in the report | Confirm Gradle is **9.4 or newer**. Below that, attachment rendering does not exist and the feature is a no-op. |
-| Every test runs twice | Add `excludeEngines("junit-vintage")` inside `useJUnitPlatform { ... }` (see Setup). |
+The Roborazzi Gradle plugin detects the common setup mistakes below and reports each
+with a message prefixed `Roborazzi JUnit Platform reporting:` that states the problem, its
+impact, a copy-pasteable fix, and the diagnostic's stable **id**. If you see one, follow it —
+the message already contains the exact change to make.
+
+Each diagnostic can be suppressed by listing its id (comma-separated) in the Roborazzi-wide
+`roborazzi.suppress` property. Ids are namespaced by feature. Suppressing a **warning**
+silences it entirely; suppressing the **error** (`junitPlatformReporting.doubleExecution`)
+downgrades it to a warning rather than silencing it. For example, in `gradle.properties`:
+
+```properties
+roborazzi.suppress=junitPlatformReporting.oldGradle,junitPlatformReporting.notJUnitPlatform
+```
+
+| Symptom | Id | Severity | Cause / fix |
+|---------|----|----------|-------------|
+| No attachments in the report | `junitPlatformReporting.oldGradle` | Warning | Confirm Gradle is **9.4 or newer**. Below that, attachment rendering does not exist and the feature is a no-op. |
+| Nothing is attached at all | `junitPlatformReporting.notJUnitPlatform` | Warning | The dependency is present but the `Test` task is not on the JUnit Platform. Add the `useJUnitPlatform { ... }` block from [Setup](#setup). |
+| Every test runs twice | `junitPlatformReporting.doubleExecution` | **Build error** | The stock `junit-vintage` engine still runs. Add `excludeEngines("junit-vintage")` inside `useJUnitPlatform { ... }` (see Setup), or restrict to `includeEngines("roborazzi-vintage")`. |
 
 ## Limitations
 
