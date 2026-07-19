@@ -178,9 +178,9 @@ private fun LocaleSample() {
   }
 }
 
-@Preview
+@Preview(locale = "en")
 @Composable
-fun PreviewLocaleDefault() {
+fun PreviewLocaleEn() {
   LocaleSample()
 }
 

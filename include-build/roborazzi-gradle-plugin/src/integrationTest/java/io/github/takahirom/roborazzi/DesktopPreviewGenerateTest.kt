@@ -209,11 +209,12 @@ class DesktopPreviewGenerateTest {
           "but was #${Integer.toHexString(darkCenter)}"
       }
 
-      // locale: the ja variant differs from the default-locale variant.
-      val localeDefault = imageContaining("PreviewLocaleDefault")
+      // locale: en and ja variants render different language tags, deterministically
+      // regardless of the host machine's default locale.
+      val localeEn = imageContaining("PreviewLocaleEn")
       val localeJa = imageContaining("PreviewLocaleJa")
-      assert(!imagesEqual(localeDefault, localeJa)) {
-        "Expected PreviewLocaleJa to differ from PreviewLocaleDefault"
+      assert(!imagesEqual(localeEn, localeJa)) {
+        "Expected PreviewLocaleJa to differ from PreviewLocaleEn"
       }
     }
   }

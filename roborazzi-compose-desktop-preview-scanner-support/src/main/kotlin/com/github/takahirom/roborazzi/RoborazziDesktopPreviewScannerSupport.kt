@@ -285,22 +285,26 @@ class DefaultDesktopComposePreviewTester(
     val surfaceHeight = if (previewInfo.heightDp > 0) maxOf(DEFAULT_SURFACE_HEIGHT, previewInfo.heightDp) else DEFAULT_SURFACE_HEIGHT
 
     // Locale on desktop is read from java.util.Locale.getDefault() (there is no
-    // LocalLocale), so set it before composing and restore it afterwards.
-    val localeToApply = parseAndroidLocale(previewInfo.locale)
-    val previousLocale = Locale.getDefault()
-    if (localeToApply != null) {
-      Locale.setDefault(localeToApply)
-    }
-    try {
-      runDesktopComposeUiTest(width = surfaceWidth, height = surfaceHeight) {
-        if (manualClockOptions != null) {
-          mainClock.autoAdvance = false
-        }
-        with(capturer) { capture(parameter) }
-      }
-    } finally {
+    // LocalLocale), so set it before composing and restore it afterwards. The JVM
+    // default locale is process-global, so captures are serialized under a lock to
+    // stay correct if tests ever run concurrently in one JVM.
+    synchronized(localeCaptureLock) {
+      val localeToApply = parseAndroidLocale(previewInfo.locale)
+      val previousLocale = Locale.getDefault()
       if (localeToApply != null) {
-        Locale.setDefault(previousLocale)
+        Locale.setDefault(localeToApply)
+      }
+      try {
+        runDesktopComposeUiTest(width = surfaceWidth, height = surfaceHeight) {
+          if (manualClockOptions != null) {
+            mainClock.autoAdvance = false
+          }
+          with(capturer) { capture(parameter) }
+        }
+      } finally {
+        if (localeToApply != null) {
+          Locale.setDefault(previousLocale)
+        }
       }
     }
   }
@@ -435,6 +439,9 @@ fun ComposeUiTest.advanceMainClockFor(parameter: DefaultDesktopComposePreviewTes
     mainClock.advanceTimeBy(manualClockOptions.advanceTimeMillis)
   }
 }
+
+// The JVM default locale is process-global; see the locale handling in test().
+private val localeCaptureLock = Any()
 
 // Default raster surface size of runDesktopComposeUiTest(width = 1024, height = 768).
 private const val DEFAULT_SURFACE_WIDTH = 1024
