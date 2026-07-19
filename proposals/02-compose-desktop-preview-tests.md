@@ -218,8 +218,9 @@ Separate track: upstream issue on ComposablePreviewScanner requesting a lower
   iOS would require scanning at build time on the host JVM and code-generating one test
   function per preview (direct static calls). Rendering shares the same pipeline as
   desktop, so this stays feasible, but it is a separate proposal.
-- **Preview parameters**: `AndroidPreviewInfo.widthDp`/`heightDp` and friends are not
-  applied initially; previews render wrap-content. A parity table in the docs marks
-  Android-only preview options as "supported later".
+- **Preview parameters**: `AndroidPreviewInfo.widthDp`/`heightDp`, `fontScale`,
+  `showBackground`/`backgroundColor`, `locale`, and the `uiMode` dark bit are now applied
+  on desktop (previews still render wrap-content when no size is specified). `device` stays
+  not applicable, as desktop has no device configuration. See the parity table in the docs.
 - Commonizing `DesktopComposePreviewTester` with the Android `ComposePreviewTester`:
   revisit only after custom-tester demand materializes on both platforms.

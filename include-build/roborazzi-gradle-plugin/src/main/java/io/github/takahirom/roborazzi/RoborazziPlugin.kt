@@ -709,6 +709,24 @@ abstract class RoborazziPlugin : Plugin<Project> {
         roborazziExtension = extension,
       )
     }
+    // Fail fast with guidance when the desktop preview generator is enabled in a
+    // project without any Kotlin JVM target (e.g. a plain Android project): the
+    // KMP/JVM plugin hooks would otherwise silently never fire and the
+    // recordRoborazziDesktop task would simply not exist.
+    project.afterEvaluate {
+      if (extension.generateComposePreviewDesktopTests.enable.orNull == true &&
+        !project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform") &&
+        !project.plugins.hasPlugin("org.jetbrains.kotlin.jvm")
+      ) {
+        error(
+          "Roborazzi: generateComposePreviewDesktopTests is enabled, but this project applies neither " +
+            "the Kotlin Multiplatform plugin (org.jetbrains.kotlin.multiplatform) nor the Kotlin JVM plugin " +
+            "(org.jetbrains.kotlin.jvm), so there is no JVM target to generate desktop preview tests for. " +
+            "Compose Desktop preview tests need a Kotlin Multiplatform project with a JVM target such as " +
+            "jvm(\"desktop\"). For an Android-only project, use generateComposePreviewRobolectricTests instead."
+        )
+      }
+    }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
       val kotlinMppExtension = checkNotNull(
         project.extensions.findByType(

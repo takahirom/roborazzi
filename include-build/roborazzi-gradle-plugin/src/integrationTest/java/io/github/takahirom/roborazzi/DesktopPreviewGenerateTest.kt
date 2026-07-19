@@ -1,5 +1,7 @@
 package io.github.takahirom.roborazzi
 
+import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
 import org.gradle.testkit.runner.BuildResult
 import org.junit.Rule
 import org.junit.Test
@@ -172,6 +174,65 @@ class DesktopPreviewGenerateTest {
   }
 
   @Test
+  fun whenEnabledOnAndroidOnlyProjectShouldFailWithGuidance() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.useAndroidOnlyProject = true
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("no JVM target to generate desktop preview tests for"))
+        assert(output.contains("jvm(\"desktop\")"))
+        assert(output.contains("use generateComposePreviewRobolectricTests instead"))
+      }
+    }
+  }
+
+  @Test
+  fun whenPreviewAnnotationOptionsShouldBeApplied() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      record()
+
+      // widthDp/heightDp: density is 1 on desktop, so 300dp x 150dp -> exactly 300x150 px.
+      val fixedSize = imageContaining("PreviewFixedSize")
+      assert(fixedSize.width == 300 && fixedSize.height == 150) {
+        "Expected PreviewFixedSize to be 300x150 px, but was ${fixedSize.width}x${fixedSize.height}"
+      }
+
+      // fontScale: the 2x preview renders taller than its default-scale sibling.
+      val fontDefault = imageContaining("PreviewFontScaleDefault")
+      val fontLarge = imageContaining("PreviewFontScaleLarge")
+      assert(fontLarge.height > fontDefault.height) {
+        "Expected PreviewFontScaleLarge (${fontLarge.height}px tall) to be taller than " +
+          "PreviewFontScaleDefault (${fontDefault.height}px tall)"
+      }
+
+      // showBackground + backgroundColor = 0xFF0000FF: a blue pixel is present.
+      val background = imageContaining("PreviewBackgroundBlue")
+      assert(hasBluePixel(background)) {
+        "Expected PreviewBackgroundBlue to contain a blue background pixel"
+      }
+
+      // uiMode dark bit: the dark preview draws its dark-theme background (black), because
+      // the night bit sets LocalSystemTheme = Dark, so isSystemInDarkTheme() is true.
+      // (We don't compare against PreviewUiModeLight: on a machine whose OS is in dark mode
+      // the ambient LocalSystemTheme is already Dark, so the light variant would match.)
+      val uiDark = imageContaining("PreviewUiModeDark")
+      val darkCenter = uiDark.getRGB(uiDark.width / 2, uiDark.height / 2)
+      assert(isDark(darkCenter)) {
+        "Expected PreviewUiModeDark center pixel to be dark (night bit applied), " +
+          "but was #${Integer.toHexString(darkCenter)}"
+      }
+
+      // locale: en and ja variants render different language tags, deterministically
+      // regardless of the host machine's default locale.
+      val localeEn = imageContaining("PreviewLocaleEn")
+      val localeJa = imageContaining("PreviewLocaleJa")
+      assert(!imagesEqual(localeEn, localeJa)) {
+        "Expected PreviewLocaleJa to differ from PreviewLocaleEn"
+      }
+    }
+  }
+
+  @Test
   fun whenGeneratedTestClassCountIs2ShouldGenerateMultipleTestClasses() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.generatedTestClassCount = 2
@@ -208,10 +269,46 @@ class DesktopPreviewModule(
     var enableRobolectricPreviewTests = false
     var separateOutputDirs = false
     var annotationFilterExcludeBinaryName: String? = null
+    var useAndroidOnlyProject = false
 
     fun write() {
       val file = projectFolder.root.resolve(PATH)
       file.parentFile.mkdirs()
+
+      if (useAndroidOnlyProject) {
+        // A plain Android project (no Kotlin Multiplatform / Kotlin JVM plugin) with
+        // the desktop preview generator enabled: must fail fast with guidance.
+        file.writeText(
+          """
+            plugins {
+                id("com.android.application")
+                id("org.jetbrains.kotlin.android")
+                id("io.github.takahirom.roborazzi")
+            }
+
+            android {
+                namespace = "com.github.takahirom.preview.tests"
+                compileSdk = libs.versions.compileSdk.get().toInt()
+                defaultConfig {
+                    minSdk = 24
+                }
+            }
+
+            roborazzi {
+              generateComposePreviewDesktopTests {
+                enable = true
+                packages = listOf("com.github.takahirom.preview.tests")
+              }
+            }
+
+            repositories {
+                mavenCentral()
+                google()
+            }
+          """.trimIndent()
+        )
+        return
+      }
 
       val previewScannerSupportDependency = if (includePreviewScannerSupportDependency) {
         // replaced by dependency substitution
@@ -423,6 +520,17 @@ class DesktopPreviewModule(
     }
   }
 
+  fun imageContaining(nameFragment: String): BufferedImage {
+    val images =
+      testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+        .orEmpty()
+        .filter { it.name.contains(nameFragment) && it.name.endsWith(".png") }
+    assert(images.size == 1) {
+      "Expected exactly one screenshot containing '$nameFragment', but found: ${images.map { it.name }}"
+    }
+    return ImageIO.read(images.single())
+  }
+
   fun checkHasPrivatePreviewImages() {
     val privateImages =
       testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
@@ -451,4 +559,34 @@ class DesktopPreviewModule(
       "Expected generated test class $className.kt to exist at ${generatedFile.absolutePath}"
     }
   }
+}
+
+private fun hasBluePixel(image: BufferedImage): Boolean {
+  for (y in 0 until image.height) {
+    for (x in 0 until image.width) {
+      val rgb = image.getRGB(x, y)
+      val r = (rgb shr 16) and 0xFF
+      val g = (rgb shr 8) and 0xFF
+      val b = rgb and 0xFF
+      if (b > 200 && r < 60 && g < 60) return true
+    }
+  }
+  return false
+}
+
+private fun isDark(rgb: Int): Boolean {
+  val r = (rgb shr 16) and 0xFF
+  val g = (rgb shr 8) and 0xFF
+  val b = rgb and 0xFF
+  return r < 60 && g < 60 && b < 60
+}
+
+private fun imagesEqual(a: BufferedImage, b: BufferedImage): Boolean {
+  if (a.width != b.width || a.height != b.height) return false
+  for (y in 0 until a.height) {
+    for (x in 0 until a.width) {
+      if (a.getRGB(x, y) != b.getRGB(x, y)) return false
+    }
+  }
+  return true
 }

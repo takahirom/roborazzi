@@ -1,13 +1,29 @@
 package com.github.takahirom.roborazzi
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.InternalComposeUiApi
+import androidx.compose.ui.LocalSystemTheme
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.SystemTheme
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.runDesktopComposeUiTest
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import io.github.takahirom.roborazzi.captureRoboImage
 import java.io.File
+import java.util.Locale
 import org.junit.rules.TestRule
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
@@ -145,6 +161,13 @@ class DefaultDesktopComposePreviewTester(
   /**
    * Parameters for capturing a preview screenshot.
    *
+   * [content] is the fully decorated composable to render: the raw [preview] wrapped
+   * with the `@Preview` annotation options (requiredSize for widthDp/heightDp, a
+   * background for showBackground/backgroundColor, [LocalDensity] for fontScale and
+   * [LocalSystemTheme] for the dark uiMode bit). Custom [Capturer] implementations
+   * should call `setContent(parameter.content)` (not `parameter.preview`) so these
+   * options are honored; [preview] is kept only for naming/reference.
+   *
    * [manualClockOptions] is set when the preview is annotated with
    * [RoboComposePreviewOptions] and this capture is one of its time-based variations;
    * the tester has already set `mainClock.autoAdvance = false` in that case.
@@ -154,6 +177,7 @@ class DefaultDesktopComposePreviewTester(
     val filePath: String,
     val roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
     val manualClockOptions: ManualClockOptions? = null,
+    val content: @Composable () -> Unit = { preview() },
   )
 
   /**
@@ -162,7 +186,7 @@ class DefaultDesktopComposePreviewTester(
   class DefaultCapturer : Capturer {
     @OptIn(ExperimentalTestApi::class)
     override fun ComposeUiTest.capture(parameter: CaptureParameter) {
-      setContent { parameter.preview() }
+      setContent(parameter.content)
       advanceMainClockFor(parameter)
       onRoot().captureRoboImage(
         filePath = parameter.filePath,
@@ -250,12 +274,98 @@ class DefaultDesktopComposePreviewTester(
       preview = preview,
       filePath = filePath,
       manualClockOptions = manualClockOptions,
+      content = decoratedPreviewContent(preview),
     )
-    runDesktopComposeUiTest {
-      if (manualClockOptions != null) {
-        mainClock.autoAdvance = false
+
+    val previewInfo = preview.previewInfo
+    // Density is kept at 1f (see decoratedPreviewContent), so 1dp == 1px. Enlarge the
+    // default 1024x768 raster surface only when the requested size would not fit, so
+    // captureToImage() can crop the full requiredSize root bounds.
+    val surfaceWidth = if (previewInfo.widthDp > 0) maxOf(DEFAULT_SURFACE_WIDTH, previewInfo.widthDp) else DEFAULT_SURFACE_WIDTH
+    val surfaceHeight = if (previewInfo.heightDp > 0) maxOf(DEFAULT_SURFACE_HEIGHT, previewInfo.heightDp) else DEFAULT_SURFACE_HEIGHT
+
+    // Locale on desktop is read from java.util.Locale.getDefault() (there is no
+    // LocalLocale), so set it before composing and restore it afterwards. The JVM
+    // default locale is process-global, so captures are serialized under a lock to
+    // stay correct if tests ever run concurrently in one JVM.
+    synchronized(localeCaptureLock) {
+      val localeToApply = parseAndroidLocale(previewInfo.locale)
+      val previousLocale = Locale.getDefault()
+      if (localeToApply != null) {
+        Locale.setDefault(localeToApply)
       }
-      with(capturer) { capture(parameter) }
+      try {
+        runDesktopComposeUiTest(width = surfaceWidth, height = surfaceHeight) {
+          if (manualClockOptions != null) {
+            mainClock.autoAdvance = false
+          }
+          with(capturer) { capture(parameter) }
+        }
+      } finally {
+        if (localeToApply != null) {
+          Locale.setDefault(previousLocale)
+        }
+      }
+    }
+  }
+
+  /**
+   * Wraps the raw preview with its `@Preview` annotation options. The `device` option is
+   * not applicable on desktop and is ignored.
+   */
+  @OptIn(InternalComposeUiApi::class)
+  private fun decoratedPreviewContent(
+    preview: ComposablePreview<AndroidPreviewInfo>
+  ): @Composable () -> Unit {
+    val info = preview.previewInfo
+    val widthDp = info.widthDp
+    val heightDp = info.heightDp
+    val fontScale = info.fontScale
+    val showBackground = info.showBackground
+    val backgroundColor = info.backgroundColor
+    // android.content.res.Configuration is Android-only, so its UI_MODE_NIGHT_MASK
+    // (0x30) and UI_MODE_NIGHT_YES (0x20) constants are inlined here.
+    val nightMode = (info.uiMode and UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
+
+    return {
+      val sizeModifier = when {
+        // widthDp/heightDp > 0 means specified; -1/unset keeps wrap-content behavior.
+        widthDp > 0 && heightDp > 0 -> Modifier.requiredSize(widthDp.dp, heightDp.dp)
+        widthDp > 0 -> Modifier.requiredWidth(widthDp.dp)
+        heightDp > 0 -> Modifier.requiredHeight(heightDp.dp)
+        else -> Modifier
+      }
+      val backgroundModifier = if (showBackground) {
+        // Match the Android semantics: default to white when no color is specified.
+        val color = if (backgroundColor != 0L) Color(backgroundColor.toInt()) else Color.White
+        Modifier.background(color)
+      } else {
+        Modifier
+      }
+      val body: @Composable () -> Unit = {
+        if (sizeModifier == Modifier && backgroundModifier == Modifier) {
+          preview()
+        } else {
+          Box(modifier = sizeModifier.then(backgroundModifier)) {
+            preview()
+          }
+        }
+      }
+      val providedValues = buildList {
+        // DeviceConfigurationOverride.FontScale throws on desktop, so drive fontScale
+        // (and keep density at 1f) via LocalDensity instead.
+        if (fontScale != 1f) add(LocalDensity provides Density(1f, fontScale))
+        // Provide the dark theme only when the night bit is set; otherwise leave the
+        // default so isSystemInDarkTheme() and resource qualifiers behave normally.
+        if (nightMode) add(LocalSystemTheme provides SystemTheme.Dark)
+      }
+      if (providedValues.isEmpty()) {
+        body()
+      } else {
+        CompositionLocalProvider(*providedValues.toTypedArray()) {
+          body()
+        }
+      }
     }
   }
 
@@ -327,6 +437,35 @@ class DefaultDesktopComposePreviewTester(
 fun ComposeUiTest.advanceMainClockFor(parameter: DefaultDesktopComposePreviewTester.CaptureParameter) {
   parameter.manualClockOptions?.let { manualClockOptions ->
     mainClock.advanceTimeBy(manualClockOptions.advanceTimeMillis)
+  }
+}
+
+// The JVM default locale is process-global; see the locale handling in test().
+private val localeCaptureLock = Any()
+
+// Default raster surface size of runDesktopComposeUiTest(width = 1024, height = 768).
+private const val DEFAULT_SURFACE_WIDTH = 1024
+private const val DEFAULT_SURFACE_HEIGHT = 768
+
+// android.content.res.Configuration is Android-only. These mirror its
+// UI_MODE_NIGHT_MASK / UI_MODE_NIGHT_YES constant values for use on desktop.
+private const val UI_MODE_NIGHT_MASK = 0x30
+private const val UI_MODE_NIGHT_YES = 0x20
+
+/**
+ * Parses an Android-style `@Preview` locale string into a [Locale], or null when blank.
+ * Accepts language only ("ja"), the Android resource region form ("ja-rJP") and the
+ * BCP47-ish form ("ja-JP").
+ */
+internal fun parseAndroidLocale(locale: String): Locale? {
+  if (locale.isBlank()) return null
+  val parts = locale.split("-", "_")
+  val language = parts[0]
+  val region = parts.getOrNull(1)?.removePrefix("r")
+  return if (region.isNullOrBlank()) {
+    Locale(language)
+  } else {
+    Locale(language, region)
   }
 }
 
