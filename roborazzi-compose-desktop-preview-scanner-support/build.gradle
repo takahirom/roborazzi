@@ -35,6 +35,10 @@ dependencies {
   api project(":roborazzi-compose-desktop")
   api project(":roborazzi-annotations")
 
+  // Needed to decorate previews with the @Preview annotation options
+  // (Box/requiredSize/background) when applying widthDp/heightDp/showBackground.
+  implementation libs.compose.foundation.desktop
+
   // Consumers add ComposablePreviewScanner themselves (same contract as
   // roborazzi-compose-preview-scanner-support on Android).
   compileOnly libs.composable.preview.scanner

@@ -112,6 +112,7 @@ commons-compress = { module = "org.apache.commons:commons-compress", version.ref
 compose-gradle-plugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "composeMultiplatform" }
 kotlin-compose-compiler-gradle-plugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlinComposeCompiler" }
 compose-ui-graphics-desktop = { module = "org.jetbrains.compose.ui:ui-graphics-desktop", version.ref = "composeMultiplatform" }
+compose-foundation-desktop = { module = "org.jetbrains.compose.foundation:foundation-desktop", version.ref = "composeMultiplatform" }
 compose-ui-test-junit4-desktop = { module = "org.jetbrains.compose.ui:ui-test-junit4-desktop", version.ref = "composeMultiplatform" }
 dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-differ" }
 google-android-material = { module = "com.google.android.material:material", version.ref = "google-android-material" }
