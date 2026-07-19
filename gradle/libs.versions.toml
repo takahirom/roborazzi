@@ -110,6 +110,7 @@ kim = { module = "com.ashampoo:kim", version.ref = "kim" }
 android-tools-build-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
 compose-gradle-plugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "composeMultiplatform" }
+kotlin-compose-compiler-gradle-plugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlinComposeCompiler" }
 compose-ui-graphics-desktop = { module = "org.jetbrains.compose.ui:ui-graphics-desktop", version.ref = "composeMultiplatform" }
 compose-ui-test-junit4-desktop = { module = "org.jetbrains.compose.ui:ui-test-junit4-desktop", version.ref = "composeMultiplatform" }
 dropbox-differ = { module = "com.dropbox.differ:differ", version.ref = "dropbox-differ" }

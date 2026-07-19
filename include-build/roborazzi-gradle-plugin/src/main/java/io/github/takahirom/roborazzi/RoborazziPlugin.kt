@@ -92,6 +92,15 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   fun generateComposePreviewRobolectricTests(action: GenerateComposePreviewRobolectricTestsExtension.() -> Unit) {
     action(generateComposePreviewRobolectricTests)
   }
+
+  @ExperimentalRoborazziApi
+  val generateComposePreviewDesktopTests: GenerateComposePreviewDesktopTestsExtension =
+    objects.newInstance(GenerateComposePreviewDesktopTestsExtension::class.java)
+
+  @ExperimentalRoborazziApi
+  fun generateComposePreviewDesktopTests(action: GenerateComposePreviewDesktopTestsExtension.() -> Unit) {
+    action(generateComposePreviewDesktopTests)
+  }
 }
 
 open class RoborazziCompareExtension @Inject constructor(objects: ObjectFactory) {
@@ -695,6 +704,10 @@ abstract class RoborazziPlugin : Plugin<Project> {
         variantName = "jvm",
         testTaskName = "test",
       )
+      generateComposePreviewDesktopTestsForJvmIfNeeded(
+        project = project,
+        roborazziExtension = extension,
+      )
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
       val kotlinMppExtension = checkNotNull(
@@ -727,6 +740,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
           }
         }
       }
+      generateComposePreviewDesktopTestsForKmpIfNeeded(
+        project = project,
+        roborazziExtension = extension,
+        kotlinMppExtension = kotlinMppExtension,
+      )
     }
   }
 

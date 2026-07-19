@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 rootProject.name = "integration-test-project"
 include(":app")
 include(":sample-generate-preview-tests")
+include(":sample-generate-preview-desktop-tests")
 include(":sample-kmp-library")
 
 includeBuild(roborazziRootPath) {
@@ -29,6 +30,8 @@ includeBuild(roborazziRootPath) {
     substitute(module("io.github.takahirom.roborazzi:roborazzi")).using(project(":roborazzi"))
     substitute(module("io.github.takahirom.roborazzi:roborazzi-compose")).using(project(":roborazzi-compose"))
     substitute(module("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support")).using(project(":roborazzi-compose-preview-scanner-support"))
+    substitute(module("io.github.takahirom.roborazzi:roborazzi-compose-desktop")).using(project(":roborazzi-compose-desktop"))
+    substitute(module("io.github.takahirom.roborazzi:roborazzi-compose-desktop-preview-scanner-support")).using(project(":roborazzi-compose-desktop-preview-scanner-support"))
     substitute(module("io.github.takahirom.roborazzi:roborazzi-junit-rule")).using(project(":roborazzi-junit-rule"))
   }
 }
