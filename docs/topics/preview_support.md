@@ -137,6 +137,15 @@ target, without Robolectric. Previews are scanned with ComposablePreviewScanner'
 `androidx.compose.ui.tooling.preview.Preview` annotation on the classpath, so previews
 declared in `commonMain` are captured too.
 
+### Robolectric or Desktop — trade-offs
+
+- **Fidelity**: Robolectric renders with the Android framework; desktop renders with the
+  host's Skia, so the same preview produces different images — goldens are per-platform.
+- **Speed**: desktop tests run roughly 4–6x faster than the Robolectric ones ([benchmark](https://github.com/takahirom/roborazzi/pull/903)).
+- **Adoption cost**: requires a Kotlin Multiplatform JVM target. For an Android-only
+  project that means a KMP migration first — stick with the Robolectric preview tests
+  there. Desktop tests shine for already-multiplatform code and Desktop-only apps.
+
 Enable it in your `build.gradle.kts`:
 
 ```kotlin
