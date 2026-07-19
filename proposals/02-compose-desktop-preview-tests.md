@@ -114,13 +114,17 @@ class DefaultDesktopComposePreviewTester(
 
   data class CaptureParameter(
     val preview: ComposablePreview<AndroidPreviewInfo>,
-    val filePath: String,            // precomputed default output path
+    val filePath: String,            // precomputed default output path (incl. _TIME_Xms suffix)
     val roborazziOptions: RoborazziOptions,
+    val manualClockOptions: ManualClockOptions?,  // set for @RoboComposePreviewOptions variations
   )
 
   class DefaultCapturer : Capturer {
     override fun ComposeUiTest.capture(parameter: CaptureParameter) {
       setContent { parameter.preview() }
+      // Keeps @RoboComposePreviewOptions manual clock variations working; the tester
+      // has already disabled mainClock.autoAdvance for them.
+      advanceMainClockFor(parameter)
       onRoot().captureRoboImage(parameter.filePath, parameter.roborazziOptions)
     }
   }
