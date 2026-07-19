@@ -22,7 +22,8 @@ class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
   fun runTask(
     task: String,
     buildType: BuildType,
-    additionalParameters: Array<String>
+    additionalParameters: Array<String>,
+    gradleVersion: String? = null
   ): BuildResult {
     val buildResult = GradleRunner.create()
       .withProjectDir(testProjectDir.root)
@@ -45,6 +46,10 @@ class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
 //          "GRADLE_USER_HOME" to File(testProjectDir.root, "gradle").absolutePath,
         )
       )
+      // Only pin the Gradle distribution when a specific version is requested. When
+      // null, TestKit uses the version that is running the build (the wrapper), so
+      // existing tests keep their current behavior.
+      .let { if (gradleVersion != null) it.withGradleVersion(gradleVersion) else it }
       .let {
         if (buildType == BuildType.BuildAndFail) {
           it.buildAndFail()
@@ -90,6 +95,11 @@ class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
 class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir: TemporaryFolder) {
 
   var buildDirName = "build"
+
+  // When set, all tasks launched through this module run on the given Gradle
+  // distribution (via GradleRunner.withGradleVersion). Null keeps the default
+  // (the version running the integrationTest build, i.e. the wrapper).
+  var gradleVersion: String? = null
 
   fun record(): BuildResult {
     val task = "recordRoborazziDebug"
@@ -247,7 +257,8 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     val buildResult = rootProject.runTask(
       "app:" + task,
       buildType,
-      additionalParameters
+      additionalParameters,
+      gradleVersion = gradleVersion
     )
     return buildResult
   }
@@ -258,6 +269,16 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     var customOutputDirPath: String? = null
     var customCompareOutputDirPath: String? = null
     var separateOutputDirs = false
+
+    // When true, add the roborazzi-junit-platform-reporting dependency and switch the
+    // unit test task to the JUnit Platform so captured images are published via
+    // EngineExecutionListener.fileEntryPublished(). See RoborazziVintageTestEngine.
+    var enableJUnitPlatformReporting = false
+
+    // Only meaningful when enableJUnitPlatformReporting is true. When true, exclude the
+    // stock junit-vintage engine so only roborazzi-vintage runs the tests. When false,
+    // both engines discover the same tests (the documented double-execution footgun).
+    var excludeVintageEngine = true
 
     init {
       addIncludeBuild()
@@ -384,6 +405,30 @@ dependencies {
           """
             roborazzi {
               separateOutputDirs.set(true)
+            }
+
+          """.trimIndent()
+        )
+      }
+      if (enableJUnitPlatformReporting) {
+        val excludeEnginesBlock = if (excludeVintageEngine) {
+          """
+            useJUnitPlatform {
+              excludeEngines("junit-vintage")
+            }
+          """.trimIndent()
+        } else {
+          "useJUnitPlatform()"
+        }
+        buildFile.appendText(
+          """
+
+            dependencies {
+              testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-platform-reporting")
+              testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.12.2")
+            }
+            tasks.withType<Test>().configureEach {
+              $excludeEnginesBlock
             }
 
           """.trimIndent()

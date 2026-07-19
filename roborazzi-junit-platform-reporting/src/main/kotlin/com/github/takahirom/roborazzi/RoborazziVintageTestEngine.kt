@@ -58,11 +58,15 @@ class RoborazziVintageTestEngine : TestEngine {
   }
 
   override fun execute(request: ExecutionRequest) {
-    @Suppress("DEPRECATION")
-    val wrappedRequest = ExecutionRequest(
+    // Use the official ExecutionRequest.create(...) factory (Platform 1.11+) rather than
+    // the deprecated public constructor, and carry the original request's
+    // outputDirectoryProvider through so nothing downstream (e.g. Gradle's file
+    // publishing) loses it.
+    val wrappedRequest = ExecutionRequest.create(
       request.rootTestDescriptor,
       FilePublishingEngineExecutionListener(request.engineExecutionListener),
-      request.configurationParameters
+      request.configurationParameters,
+      request.outputDirectoryProvider
     )
     delegate.execute(wrappedRequest)
   }
