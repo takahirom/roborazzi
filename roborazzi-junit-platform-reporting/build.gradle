@@ -1,0 +1,15 @@
+plugins {
+  id 'org.jetbrains.kotlin.jvm'
+}
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  pluginManager.apply("com.vanniktech.maven.publish")
+}
+
+dependencies {
+  // roborazzi-core is substituted by the include-build (see settings.gradle),
+  // so this resolves to the local :roborazzi-core project.
+  implementation "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
+  // JUnit Platform 1.12.0+ is required for the FileEntry / fileEntryPublished() API.
+  // junit-vintage-engine 5.12.x transitively brings junit-platform-engine 1.12.x.
+  implementation 'org.junit.vintage:junit-vintage-engine:5.12.2'
+}
