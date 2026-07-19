@@ -107,11 +107,12 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
-    val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
+    val packagesExpr =
+      scanPackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
     val includePrivatePreviewsExpr = includePrivatePreviews.get()
     val annotationFilterExpr = when (val filter = annotationFilter.orNull) {
-      is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
-      is AnnotationFilter.Include -> "AnnotationFilter.Include(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
+      is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
+      is AnnotationFilter.Include -> "AnnotationFilter.Include(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
       null -> "null"
     }
     val testClassCount = generatedTestClassCount.get()
@@ -127,9 +128,13 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     val directory = File(testDir, packageName.replace(".", "/"))
     directory.mkdirs()
 
-    // Delete old generated test files to avoid conflicts when changing generatedTestClassCount
-    directory.listFiles()?.filter { it.extension == "kt" }?.forEach { it.delete() }
-    val testerQualifiedClassNameString = testerQualifiedClassName.get()
+    // Delete old generated test files to avoid conflicts when changing
+    // generatedTestClassCount. Scoped to this task's class name prefix so files
+    // from another generator sharing the directory are never wiped.
+    directory.listFiles()
+      ?.filter { it.extension == "kt" && it.name.startsWith(baseClassName) }
+      ?.forEach { it.delete() }
+    val testerQualifiedClassNameString = testerQualifiedClassName.get().escapeForKotlinStringLiteral()
 
     if (testClassCount == 1) {
       generateTestClass(
@@ -160,6 +165,26 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     }
   }
 
+  /**
+   * Escapes a configured string for embedding in a generated Kotlin string literal.
+   * Without this, values like the documented nested annotation name
+   * `com.example.Outer$Inner` would be interpreted as string templates and break
+   * the generated test's compilation.
+   */
+  private fun String.escapeForKotlinStringLiteral(): String = buildString {
+    for (c in this@escapeForKotlinStringLiteral) {
+      when (c) {
+        '\\' -> append("\\\\")
+        '"' -> append("\\\"")
+        '$' -> append("\\$")
+        '\n' -> append("\\n")
+        '\r' -> append("\\r")
+        '\t' -> append("\\t")
+        else -> append(c)
+      }
+    }
+  }
+
   private fun generateTestClass(
     directory: File,
     packageName: String,
@@ -171,45 +196,54 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     shardIndex: Int?,
     totalShards: Int
   ) {
+    // Shards are assigned after sorting by a stable identifier: neither ClassGraph
+    // order nor a custom tester's order is guaranteed to be identical across the
+    // independently-initialized test JVMs, and index-based sharding on differing
+    // orders would drop or duplicate previews.
     val valuesFunction = if (shardIndex == null) {
-      "previews"
+      "testParameters"
     } else {
-      "previews.filterIndexed { index, _ -> index % $totalShards == $shardIndex }"
+      "testParameters.sortedBy { it.toString() }" +
+        ".filterIndexed { index, _ -> index % $totalShards == $shardIndex }"
     }
 
     File(directory, "$className.kt").writeText(
       """
             package $packageName
+            import org.junit.Rule
             import org.junit.Test
+            import org.junit.rules.TestRule
             import org.junit.runner.RunWith
             import org.junit.runners.Parameterized
-            import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
-            import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
             import com.github.takahirom.roborazzi.*
 
 
             @RunWith(Parameterized::class)
             @OptIn(InternalRoborazziApi::class, ExperimentalRoborazziApi::class)
             class $className(
-                private val preview: ComposablePreview<AndroidPreviewInfo>,
+                private val testParameter: DesktopPreviewTestParameter,
             ) {
                 private val tester = getDesktopComposePreviewTester("$testerQualifiedClassNameString")
+                private val testLifecycleOptions = tester.options().testLifecycleOptions as DesktopComposePreviewTester.Options.JUnit4TestLifecycleOptions
+
+                @get:Rule
+                val rule: TestRule = testLifecycleOptions.testRuleFactory()
 
                 @Test
                 fun test() {
-                  tester.test(preview)
+                  tester.test(testParameter)
                 }
 
                 companion object {
                     // lazy for performance
-                    val previews: List<ComposablePreview<AndroidPreviewInfo>> by lazy {
+                    val testParameters: List<DesktopPreviewTestParameter> by lazy {
                         setupDefaultOptions()
                         val tester = getDesktopComposePreviewTester("$testerQualifiedClassNameString")
-                        tester.previews()
+                        tester.testParameters()
                     }
                     @JvmStatic
                     @Parameterized.Parameters(name = "{0}")
-                    fun values(): List<ComposablePreview<AndroidPreviewInfo>> = $valuesFunction
+                    fun values(): List<DesktopPreviewTestParameter> = $valuesFunction
 
                     fun setupDefaultOptions() {
                         DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(

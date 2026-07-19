@@ -15,10 +15,10 @@ class DesktopPreviewScanTest {
         ),
       ),
     )
-    val previews = tester.previews()
-    assertTrue(previews.isNotEmpty(), "No previews found by DesktopComposePreviewTester")
-    previews.forEach { preview ->
-      tester.test(preview)
+    val testParameters = tester.testParameters()
+    assertTrue(testParameters.isNotEmpty(), "No previews found by DesktopComposePreviewTester")
+    testParameters.forEach { testParameter ->
+      tester.test(testParameter)
     }
   }
 }

@@ -1328,11 +1328,20 @@ roborazzi {
 }
 ```
 
-Add the dependencies to the JVM target's test source set:
+Add the dependencies to the JVM target's test source set. If your previews use the
+Roborazzi marker annotations (`@RoboPreviewExclude`, `@RoboComposePreviewOptions`, ...),
+also add `roborazzi-annotations` to the source set that declares the previews
+(usually `commonMain` — test dependencies do not flow into main source sets):
 
 ```kotlin
 kotlin {
   sourceSets {
+    val commonMain by getting {
+      dependencies {
+        // Only needed when previews use the Roborazzi marker annotations
+        implementation("io.github.takahirom.roborazzi:roborazzi-annotations:[version]")
+      }
+    }
     val desktopTest by getting {
       dependencies {
         implementation("io.github.takahirom.roborazzi:roborazzi-compose-desktop-preview-scanner-support:[version]")
@@ -1344,9 +1353,13 @@ kotlin {
 }
 ```
 
+Plain JVM projects (`org.jetbrains.kotlin.jvm`) are also supported: add the same
+dependencies with `testImplementation(...)` and use the `Jvm` task names
+(`recordRoborazziJvm`, `compareRoborazziJvm`, `verifyRoborazziJvm`).
+
 Then run the desktop Roborazzi tasks:
 
-```
+```shell
 ./gradlew recordRoborazziDesktop
 ./gradlew compareRoborazziDesktop
 ./gradlew verifyRoborazziDesktop
@@ -1379,6 +1392,9 @@ control, interactions, wrapping the content in a theme — stays possible:
 class MyDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester(
   capturer = DefaultDesktopComposePreviewTester.Capturer { parameter ->
     setContent { MyTheme { parameter.preview() } }
+    // Keep @RoboComposePreviewOptions manualClockOptions working: without this,
+    // time-suffixed captures would all show the initial state.
+    advanceMainClockFor(parameter)
     onRoot().captureRoboImage(parameter.filePath, parameter.roborazziOptions)
   }
 )
@@ -1388,7 +1404,25 @@ Reference your tester in the Gradle configuration with
 `testerQualifiedClassName = "com.example.MyDesktopPreviewTester"` (the class needs a
 parameterless constructor). If you need to change scanning or file naming as well,
 implement `DesktopComposePreviewTester` by delegating to the default tester and
-override the corresponding method.
+override the corresponding method (`testParameters()` / `test()`).
+
+To wrap each generated test in a JUnit `TestRule` (a `TestWatcher`, retry rule, etc.),
+override `options()` and provide a `testRuleFactory`:
+
+```kotlin
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
+class MyDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester() {
+  override fun options(): DesktopComposePreviewTester.Options =
+    DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(
+      testLifecycleOptions = DesktopComposePreviewTester.Options.JUnit4TestLifecycleOptions(
+        testRuleFactory = { MyWatcherRule() }
+      )
+    )
+}
+```
+
+Unlike the Robolectric tester there is no compose rule factory: Compose Desktop's test
+harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 
 ### Feature parity with the Android preview support
 
@@ -1397,7 +1431,10 @@ override the corresponding method.
 | Generated preview tests | ✅ | ✅ |
 | `packages`, `includePrivatePreviews`, `testerQualifiedClassName`, `generatedTestClassCount` | ✅ | ✅ |
 | `annotationFilter` (`@RoboPreviewInclude` / `@RoboPreviewExclude`) | ✅ | ✅ |
-| `@RoboComposePreviewOptions` (`manualClockOptions`) | ✅ | ✅ |
+| `@PreviewParameter` (`PreviewParameterProvider`, one capture per value) | ✅ | ✅ |
+| `@RoboComposePreviewOptions` (`manualClockOptions`, one test per variation) | ✅ | ✅ |
+| Custom JUnit `TestRule` around generated tests (`testRuleFactory`) | ✅ | ✅ |
+| Compose rule factory (`composeRuleFactory`) | ✅ | Not applicable (function-scoped harness) |
 | `@Preview` annotation options (`widthDp`, `fontScale`, `uiMode`, ...) | ✅ (see below) | Not yet — previews render wrap-content |
 | `robolectricConfig` (device qualifiers, SDK) | ✅ | Not applicable |
 
