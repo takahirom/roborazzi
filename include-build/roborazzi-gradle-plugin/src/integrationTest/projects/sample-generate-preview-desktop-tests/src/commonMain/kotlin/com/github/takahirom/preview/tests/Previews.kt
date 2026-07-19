@@ -11,6 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
@@ -76,6 +78,18 @@ fun PreviewDelayed() {
 fun PreviewExcluded() {
   MaterialTheme {
     Text(text = "This preview should be excluded")
+  }
+}
+
+class NameProvider : PreviewParameterProvider<String> {
+  override val values: Sequence<String> = sequenceOf("Takahiro", "Sergio")
+}
+
+@Preview
+@Composable
+fun PreviewWithParameter(@PreviewParameter(NameProvider::class) name: String) {
+  MaterialTheme {
+    Text(text = "Hello, $name!")
   }
 }
 

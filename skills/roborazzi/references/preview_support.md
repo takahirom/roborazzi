@@ -255,6 +255,7 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 | Generated preview tests | ✅ | ✅ |
 | `packages`, `includePrivatePreviews`, `testerQualifiedClassName`, `generatedTestClassCount` | ✅ | ✅ |
 | `annotationFilter` (`@RoboPreviewInclude` / `@RoboPreviewExclude`) | ✅ | ✅ |
+| `@PreviewParameter` (`PreviewParameterProvider`, one capture per value) | ✅ | ✅ |
 | `@RoboComposePreviewOptions` (`manualClockOptions`, one test per variation) | ✅ | ✅ |
 | Custom JUnit `TestRule` around generated tests (`testRuleFactory`) | ✅ | ✅ |
 | Compose rule factory (`composeRuleFactory`) | ✅ | Not applicable (function-scoped harness) |

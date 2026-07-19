@@ -126,6 +126,17 @@ class DesktopPreviewGenerateTest {
   }
 
   @Test
+  fun whenPreviewParameterProviderShouldCaptureEachValue() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      record()
+
+      // One screenshot per PreviewParameterProvider value.
+      checkHasImageContaining("PreviewWithParameter_0")
+      checkHasImageContaining("PreviewWithParameter_1")
+    }
+  }
+
+  @Test
   fun whenManualClockOptionsShouldCaptureTimeVariations() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       record()
