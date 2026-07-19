@@ -8,6 +8,7 @@ import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import io.github.takahirom.roborazzi.captureRoboImage
 import java.io.File
+import org.junit.rules.TestRule
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.screenshotid.AndroidPreviewScreenshotIdBuilder
@@ -30,8 +31,21 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 @ExperimentalRoborazziApi
 interface DesktopComposePreviewTester {
   data class Options(
+    val testLifecycleOptions: TestLifecycleOptions = JUnit4TestLifecycleOptions(),
     val scanOptions: ScanOptions = ScanOptions(packages = emptyList()),
   ) {
+    interface TestLifecycleOptions
+
+    data class JUnit4TestLifecycleOptions(
+      /**
+       * Factory for the JUnit [TestRule] wrapped around each generated test
+       * (e.g. a TestWatcher, retry rule, or environment setup). Unlike the
+       * Robolectric tester there is no compose rule factory: Compose Desktop's
+       * test harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
+       */
+      val testRuleFactory: () -> TestRule = { TestRule { base, _ -> base } },
+    ) : TestLifecycleOptions
+
     data class ScanOptions(
       /**
        * The packages to scan for composable previews.
@@ -54,20 +68,50 @@ interface DesktopComposePreviewTester {
   fun options(): Options = defaultOptionsFromPlugin
 
   /**
-   * Retrieves a list of composable previews from the packages in [Options.ScanOptions].
+   * Retrieves the test parameters: one per preview, or one per
+   * `@RoboComposePreviewOptions` manual clock variation of a preview.
    */
-  fun previews(): List<ComposablePreview<AndroidPreviewInfo>>
+  fun testParameters(): List<DesktopPreviewTestParameter>
 
   /**
-   * Performs a test on a single composable preview.
-   * Note: This method will not be called on the same instance as [previews].
+   * Performs a test for a single test parameter.
+   * Note: This method will not be called on the same instance as [testParameters].
    */
-  fun test(preview: ComposablePreview<AndroidPreviewInfo>)
+  fun test(testParameter: DesktopPreviewTestParameter)
 
   companion object {
     // Should be replaced with the actual default options from the plugin.
     @InternalRoborazziApi
     var defaultOptionsFromPlugin = Options()
+  }
+}
+
+/**
+ * A single desktop preview test case.
+ *
+ * Deliberately not a data class so fields can be added without breaking binary
+ * compatibility (no copy/componentN surface).
+ */
+@ExperimentalRoborazziApi
+class DesktopPreviewTestParameter(
+  val preview: ComposablePreview<AndroidPreviewInfo>,
+  /**
+   * The `@RoboComposePreviewOptions` manual clock variation this test captures,
+   * or null for a plain single capture.
+   */
+  val manualClockOptions: ManualClockOptions? = null,
+) {
+  /**
+   * Used as the JUnit Parameterized test name, so each manual clock variation
+   * appears as its own test.
+   */
+  override fun toString(): String {
+    return buildString {
+      append(preview)
+      if (manualClockOptions != null) {
+        append("_TIME_${manualClockOptions.advanceTimeMillis}ms")
+      }
+    }
   }
 }
 
@@ -129,7 +173,7 @@ class DefaultDesktopComposePreviewTester(
 
   override fun options(): DesktopComposePreviewTester.Options = options
 
-  override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
+  override fun testParameters(): List<DesktopPreviewTestParameter> {
     val scanOptions = options().scanOptions
     val scanner = AndroidComposablePreviewScanner()
       .scanPackageTrees(*scanOptions.packages.toTypedArray())
@@ -140,7 +184,7 @@ class DefaultDesktopComposePreviewTester(
           it
         }
       }
-    return when (val filter = scanOptions.annotationFilter) {
+    val previews = when (val filter = scanOptions.annotationFilter) {
       is AnnotationFilter.Exclude -> scanner.excludeIfAnnotatedWithAnyOf(
         *filter.annotations.toAnnotationClasses()
       )
@@ -151,59 +195,67 @@ class DefaultDesktopComposePreviewTester(
 
       null -> scanner
     }.getPreviews()
+
+    // One test parameter per @RoboComposePreviewOptions manual clock variation, so
+    // each variation runs (and is reported) as its own test, matching the
+    // Robolectric preview tests.
+    return previews.flatMap { preview ->
+      val manualClockVariations: List<ManualClockOptions?> =
+        annotationOptionsFor(preview).manualClockOptions.toList().ifEmpty { listOf(null) }
+      manualClockVariations.map { manualClockOptions ->
+        DesktopPreviewTestParameter(
+          preview = preview,
+          manualClockOptions = manualClockOptions,
+        )
+      }
+    }
   }
 
   @OptIn(ExperimentalTestApi::class)
-  override fun test(preview: ComposablePreview<AndroidPreviewInfo>) {
+  override fun test(testParameter: DesktopPreviewTestParameter) {
+    val preview = testParameter.preview
+    val manualClockOptions = testParameter.manualClockOptions
     val pathPrefix =
       if (roborazziRecordFilePathStrategy() == RoborazziRecordFilePathStrategy.RelativePathFromCurrentDirectory) {
         roborazziSystemPropertyOutputDirectory() + File.separator
       } else {
         ""
       }
-    // Same naming as the Robolectric preview tests (FQCN + screenshot id), so the
-    // same preview produces the same file name on Android and desktop.
+    // Same naming as the Robolectric preview tests (FQCN + screenshot id +
+    // _TIME_Xms variation suffix), so the same preview produces the same file
+    // name on Android and desktop.
     val name = roborazziDefaultNamingStrategy().generateOutputName(
       preview.declaringClass,
       createScreenshotIdFor(preview)
     )
+    val suffix = if (manualClockOptions != null) {
+      "_TIME_${manualClockOptions.advanceTimeMillis}ms"
+    } else {
+      ""
+    }
+    val filePath = "$pathPrefix$name$suffix.${provideRoborazziContext().imageExtension}"
 
-    // One capture per @RoboComposePreviewOptions manual clock variation, with the
-    // same _TIME_Xms file name suffix as the Robolectric preview tests. Previews
-    // without the annotation produce a single capture without a suffix.
-    val manualClockVariations: List<ManualClockOptions?> =
-      annotationOptionsFor(preview).manualClockOptions.toList().ifEmpty { listOf(null) }
+    roborazziDebugLog {
+      "DefaultDesktopComposePreviewTester.test():\n" +
+        "  filePathStrategy: ${roborazziRecordFilePathStrategy()}\n" +
+        "  outputDirectory: ${roborazziSystemPropertyOutputDirectory()}\n" +
+        "  pathPrefix: \"$pathPrefix\"\n" +
+        "  name: \"$name\"\n" +
+        "  manualClockOptions: $manualClockOptions\n" +
+        "  imageExtension: ${provideRoborazziContext().imageExtension}\n" +
+        "  filePath: $filePath"
+    }
 
-    manualClockVariations.forEach { manualClockOptions ->
-      val suffix = if (manualClockOptions != null) {
-        "_TIME_${manualClockOptions.advanceTimeMillis}ms"
-      } else {
-        ""
+    val parameter = CaptureParameter(
+      preview = preview,
+      filePath = filePath,
+      manualClockOptions = manualClockOptions,
+    )
+    runDesktopComposeUiTest {
+      if (manualClockOptions != null) {
+        mainClock.autoAdvance = false
       }
-      val filePath = "$pathPrefix$name$suffix.${provideRoborazziContext().imageExtension}"
-
-      roborazziDebugLog {
-        "DefaultDesktopComposePreviewTester.test():\n" +
-          "  filePathStrategy: ${roborazziRecordFilePathStrategy()}\n" +
-          "  outputDirectory: ${roborazziSystemPropertyOutputDirectory()}\n" +
-          "  pathPrefix: \"$pathPrefix\"\n" +
-          "  name: \"$name\"\n" +
-          "  manualClockOptions: $manualClockOptions\n" +
-          "  imageExtension: ${provideRoborazziContext().imageExtension}\n" +
-          "  filePath: $filePath"
-      }
-
-      val parameter = CaptureParameter(
-        preview = preview,
-        filePath = filePath,
-        manualClockOptions = manualClockOptions,
-      )
-      runDesktopComposeUiTest {
-        if (manualClockOptions != null) {
-          mainClock.autoAdvance = false
-        }
-        with(capturer) { capture(parameter) }
-      }
+      with(capturer) { capture(parameter) }
     }
   }
 

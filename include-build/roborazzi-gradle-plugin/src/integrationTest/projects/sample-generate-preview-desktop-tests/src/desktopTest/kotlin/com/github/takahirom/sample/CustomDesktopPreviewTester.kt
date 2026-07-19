@@ -2,14 +2,29 @@ package com.github.takahirom.sample
 
 import com.github.takahirom.roborazzi.DefaultDesktopComposePreviewTester
 import com.github.takahirom.roborazzi.DesktopComposePreviewTester
+import com.github.takahirom.roborazzi.DesktopPreviewTestParameter
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
-import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
-import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
+import com.github.takahirom.roborazzi.InternalRoborazziApi
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 
-@OptIn(ExperimentalRoborazziApi::class)
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 class CustomDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester() {
-  override fun previews(): List<ComposablePreview<AndroidPreviewInfo>> {
-    println("CustomDesktopPreviewTester previews() is called")
-    return DefaultDesktopComposePreviewTester().previews()
+  override fun options(): DesktopComposePreviewTester.Options =
+    DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(
+      testLifecycleOptions = DesktopComposePreviewTester.Options.JUnit4TestLifecycleOptions(
+        testRuleFactory = {
+          object : TestWatcher() {
+            override fun starting(description: Description) {
+              println("CustomDesktopPreviewTester JUnit4TestLifecycleOptions starting")
+            }
+          }
+        }
+      )
+    )
+
+  override fun testParameters(): List<DesktopPreviewTestParameter> {
+    println("CustomDesktopPreviewTester testParameters() is called")
+    return DefaultDesktopComposePreviewTester().testParameters()
   }
 }

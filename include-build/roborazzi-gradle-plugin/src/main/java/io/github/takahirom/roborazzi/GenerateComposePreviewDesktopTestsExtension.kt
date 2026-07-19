@@ -201,45 +201,49 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     // independently-initialized test JVMs, and index-based sharding on differing
     // orders would drop or duplicate previews.
     val valuesFunction = if (shardIndex == null) {
-      "previews"
+      "testParameters"
     } else {
-      "previews.sortedBy { \"\${it.declaringClass}.\${it.methodName}_\${it.previewIndex ?: 0}\" }" +
+      "testParameters.sortedBy { it.toString() }" +
         ".filterIndexed { index, _ -> index % $totalShards == $shardIndex }"
     }
 
     File(directory, "$className.kt").writeText(
       """
             package $packageName
+            import org.junit.Rule
             import org.junit.Test
+            import org.junit.rules.TestRule
             import org.junit.runner.RunWith
             import org.junit.runners.Parameterized
-            import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
-            import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
             import com.github.takahirom.roborazzi.*
 
 
             @RunWith(Parameterized::class)
             @OptIn(InternalRoborazziApi::class, ExperimentalRoborazziApi::class)
             class $className(
-                private val preview: ComposablePreview<AndroidPreviewInfo>,
+                private val testParameter: DesktopPreviewTestParameter,
             ) {
                 private val tester = getDesktopComposePreviewTester("$testerQualifiedClassNameString")
+                private val testLifecycleOptions = tester.options().testLifecycleOptions as DesktopComposePreviewTester.Options.JUnit4TestLifecycleOptions
+
+                @get:Rule
+                val rule: TestRule = testLifecycleOptions.testRuleFactory()
 
                 @Test
                 fun test() {
-                  tester.test(preview)
+                  tester.test(testParameter)
                 }
 
                 companion object {
                     // lazy for performance
-                    val previews: List<ComposablePreview<AndroidPreviewInfo>> by lazy {
+                    val testParameters: List<DesktopPreviewTestParameter> by lazy {
                         setupDefaultOptions()
                         val tester = getDesktopComposePreviewTester("$testerQualifiedClassNameString")
-                        tester.previews()
+                        tester.testParameters()
                     }
                     @JvmStatic
                     @Parameterized.Parameters(name = "{0}")
-                    fun values(): List<ComposablePreview<AndroidPreviewInfo>> = $valuesFunction
+                    fun values(): List<DesktopPreviewTestParameter> = $valuesFunction
 
                     fun setupDefaultOptions() {
                         DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(

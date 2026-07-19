@@ -92,7 +92,9 @@ class DesktopPreviewGenerateTest {
       buildGradle.useCustomTester = true
 
       record {
-        assert(output.contains("CustomDesktopPreviewTester previews() is called"))
+        assert(output.contains("CustomDesktopPreviewTester testParameters() is called"))
+        // The custom testRuleFactory rule is wrapped around each generated test.
+        assert(output.contains("CustomDesktopPreviewTester JUnit4TestLifecycleOptions starting"))
       }
 
       checkHasImages()

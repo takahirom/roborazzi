@@ -61,20 +61,36 @@ The existing `ComposePreviewTester` API is coupled to Android
 (`androidx.compose.ui.test.junit4` rules, `ActivityScenario`), and desktop rendering is
 function-scoped (`runDesktopComposeUiTest`) rather than rule-based, so the desktop tester
 is a separate interface — no forced commonization. It mirrors the Robolectric tester's
-shape (options / previews / test, parameterless constructor, instantiated via reflection
-by the generator) but drops the `TestParameter` wrapper, which only existed to carry
-JUnit rules:
+shape (options / testParameters / test, parameterless constructor, instantiated via
+reflection by the generator). Test cases are carried by a lightweight
+`DesktopPreviewTestParameter` (deliberately not a data class, so fields can be added
+without breaking binary compatibility), and manual clock variations expand to one test
+parameter each — matching the Robolectric tests' per-variation granularity. JUnit
+`TestRule` injection is available via `JUnit4TestLifecycleOptions.testRuleFactory`;
+unlike Android there is no compose rule factory, because Compose Desktop has no
+rule-based harness:
 
 ```kotlin
 @ExperimentalRoborazziApi
 interface DesktopComposePreviewTester {
   data class Options(
+    val testLifecycleOptions: TestLifecycleOptions = JUnit4TestLifecycleOptions(),
     val scanOptions: ScanOptions = ScanOptions(packages = emptyList()),
-  )
+  ) {
+    interface TestLifecycleOptions
+    data class JUnit4TestLifecycleOptions(
+      val testRuleFactory: () -> TestRule = { TestRule { base, _ -> base } },
+    ) : TestLifecycleOptions
+  }
   fun options(): Options
-  fun previews(): List<ComposablePreview<AndroidPreviewInfo>>
-  fun test(preview: ComposablePreview<AndroidPreviewInfo>)
+  fun testParameters(): List<DesktopPreviewTestParameter>
+  fun test(testParameter: DesktopPreviewTestParameter)
 }
+
+class DesktopPreviewTestParameter(
+  val preview: ComposablePreview<AndroidPreviewInfo>,
+  val manualClockOptions: ManualClockOptions? = null,
+)
 ```
 
 `ComposablePreview<AndroidPreviewInfo>` is exposed as-is (no typealias cosmetics): the

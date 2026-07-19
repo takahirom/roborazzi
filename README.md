@@ -1404,7 +1404,25 @@ Reference your tester in the Gradle configuration with
 `testerQualifiedClassName = "com.example.MyDesktopPreviewTester"` (the class needs a
 parameterless constructor). If you need to change scanning or file naming as well,
 implement `DesktopComposePreviewTester` by delegating to the default tester and
-override the corresponding method.
+override the corresponding method (`testParameters()` / `test()`).
+
+To wrap each generated test in a JUnit `TestRule` (a `TestWatcher`, retry rule, etc.),
+override `options()` and provide a `testRuleFactory`:
+
+```kotlin
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
+class MyDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester() {
+  override fun options(): DesktopComposePreviewTester.Options =
+    DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(
+      testLifecycleOptions = DesktopComposePreviewTester.Options.JUnit4TestLifecycleOptions(
+        testRuleFactory = { MyWatcherRule() }
+      )
+    )
+}
+```
+
+Unlike the Robolectric tester there is no compose rule factory: Compose Desktop's test
+harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 
 ### Feature parity with the Android preview support
 
@@ -1413,7 +1431,9 @@ override the corresponding method.
 | Generated preview tests | ✅ | ✅ |
 | `packages`, `includePrivatePreviews`, `testerQualifiedClassName`, `generatedTestClassCount` | ✅ | ✅ |
 | `annotationFilter` (`@RoboPreviewInclude` / `@RoboPreviewExclude`) | ✅ | ✅ |
-| `@RoboComposePreviewOptions` (`manualClockOptions`) | ✅ | ✅ |
+| `@RoboComposePreviewOptions` (`manualClockOptions`, one test per variation) | ✅ | ✅ |
+| Custom JUnit `TestRule` around generated tests (`testRuleFactory`) | ✅ | ✅ |
+| Compose rule factory (`composeRuleFactory`) | ✅ | Not applicable (function-scoped harness) |
 | `@Preview` annotation options (`widthDp`, `fontScale`, `uiMode`, ...) | ✅ (see below) | Not yet — previews render wrap-content |
 | `robolectricConfig` (device qualifiers, SDK) | ✅ | Not applicable |
 
