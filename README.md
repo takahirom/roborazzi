@@ -1435,8 +1435,18 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 | `@RoboComposePreviewOptions` (`manualClockOptions`, one test per variation) | ✅ | ✅ |
 | Custom JUnit `TestRule` around generated tests (`testRuleFactory`) | ✅ | ✅ |
 | Compose rule factory (`composeRuleFactory`) | ✅ | Not applicable (function-scoped harness) |
-| `@Preview` annotation options (`widthDp`, `fontScale`, `uiMode`, ...) | ✅ (see below) | Not yet — previews render wrap-content |
+| `@Preview` annotation options (`widthDp`/`heightDp`, `fontScale`, `showBackground`/`backgroundColor`, `locale`, `uiMode` dark bit) | ✅ (see below) | ✅ |
+| `@Preview(device = ...)` | ✅ | Not applicable (no device configuration on desktop) |
 | `robolectricConfig` (device qualifiers, SDK) | ✅ | Not applicable |
+
+On Compose Desktop the `@Preview` annotation options are applied as follows:
+
+- `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box (density is `1`, so 1dp equals 1px). When neither is specified the preview still renders wrap-content.
+- `fontScale`: applied through `LocalDensity` (density stays `1`), because `DeviceConfigurationOverride.FontScale` is unsupported on desktop.
+- `showBackground`/`backgroundColor`: draws a background behind the preview, defaulting to white when `showBackground = true` but no color is given.
+- `locale`: sets `java.util.Locale.getDefault()` for the capture and restores it afterwards. Accepts `"ja"`, `"ja-rJP"`, and `"ja-JP"` forms.
+- `uiMode`: only the night bit is honored (dark mode via `LocalSystemTheme`); other configuration bits are ignored.
+- `device`: not applicable, as desktop has no device configuration.
 
 ## Annotation-based Capture Control
 
