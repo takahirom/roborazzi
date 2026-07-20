@@ -52,6 +52,17 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenNestedNamingStrategyAndRecordRunImagesShouldBeInNestedSubdirectory() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      addNamingStrategyGradleProperty("testNestedPackageDirAndClassAndMethod")
+
+      record()
+
+      checkHasNestedPackageDirImages()
+    }
+  }
+
+  @Test
   fun whenIncludePrivatePreviewsAndRecordRunImagesShouldBeRecorded() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.isIncludePrivatePreviews = true
@@ -460,6 +471,11 @@ class PreviewModule(
     }
   }
 
+  fun addNamingStrategyGradleProperty(namingStrategy: String) {
+    val file = testProjectDir.root.resolve("gradle.properties")
+    file.appendText("\nroborazzi.record.namingStrategy=$namingStrategy")
+  }
+
   fun record(buildType: BuildType = BuildType.Build, checks: BuildResult.() -> Unit = {}) {
     val result = runTask("recordRoborazziDebug", buildType)
     result.checks()
@@ -497,6 +513,19 @@ class PreviewModule(
     )
 
     assert(images?.isEmpty() == true)
+  }
+
+  fun checkHasNestedPackageDirImages() {
+    // With testNestedPackageDirAndClassAndMethod, the preview's package becomes a
+    // nested directory tree under the output dir, so goldens land in
+    // build/outputs/roborazzi/com/github/takahirom/preview/tests/.
+    val nestedDir = testProjectDir.root.resolve(
+      "$moduleName/build/outputs/roborazzi/com/github/takahirom/preview/tests"
+    )
+    val images = nestedDir.listFiles().orEmpty().filter { it.name.endsWith(".png") }
+    assert(images.isNotEmpty()) {
+      "Expected preview images in nested dir ${nestedDir.absolutePath}, but found none"
+    }
   }
 
   fun checkHasPrivatePreviewImages() {

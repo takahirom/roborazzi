@@ -542,6 +542,11 @@ class MainActivity : ComponentActivity() {
     file.appendText("\nroborazzi.record.filePathStrategy=relativePathFromRoborazziContextOutputDirectory")
   }
 
+  fun addNamingStrategyGradleProperty(namingStrategy: String) {
+    val file = testProjectDir.root.resolve("gradle.properties")
+    file.appendText("\nroborazzi.record.namingStrategy=$namingStrategy")
+  }
+
   fun removeCompareOutputDir() {
     if(!testProjectDir.root.resolve("app/build/custom_compare_outputDirectoryPath")
       .deleteRecursively()){
