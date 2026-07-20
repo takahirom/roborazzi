@@ -23,7 +23,8 @@ internal object AndroidRoborazziConfigurator {
     project: Project,
     extension: RoborazziExtension,
     configureRoborazziTasks: (variantName: String, testTaskName: String) -> Unit,
-    findTestTaskProvider: (testTaskName: String) -> TaskCollection<Test>
+    findTestTaskProvider: (testTaskName: String) -> TaskCollection<Test>,
+    suppressedDiagnostics: Set<String>
   ) {
     val componentsExtension = project.extensions.getByType(ApplicationAndroidComponentsExtension::class.java)
     componentsExtension.configureComponents(
@@ -31,12 +32,14 @@ internal object AndroidRoborazziConfigurator {
       extension = extension,
       useTestVariantName = false,
       configureRoborazziTasks = configureRoborazziTasks,
-      findTestTaskProvider = findTestTaskProvider
+      findTestTaskProvider = findTestTaskProvider,
+      suppressedDiagnostics = suppressedDiagnostics
     )
     verifyGenerateComposePreviewRobolectricTestsForAndroid(
       project = project,
       androidExtension = project.extensions.getByType(CommonExtension::class.java),
-      extension = extension.generateComposePreviewRobolectricTests
+      extension = extension.generateComposePreviewRobolectricTests,
+      suppressedDiagnostics = suppressedDiagnostics
     )
   }
 
@@ -44,7 +47,8 @@ internal object AndroidRoborazziConfigurator {
     project: Project,
     extension: RoborazziExtension,
     configureRoborazziTasks: (variantName: String, testTaskName: String) -> Unit,
-    findTestTaskProvider: (testTaskName: String) -> TaskCollection<Test>
+    findTestTaskProvider: (testTaskName: String) -> TaskCollection<Test>,
+    suppressedDiagnostics: Set<String>
   ) {
     val componentsExtension = project.extensions.getByType(LibraryAndroidComponentsExtension::class.java)
     componentsExtension.configureComponents(
@@ -52,12 +56,14 @@ internal object AndroidRoborazziConfigurator {
       extension = extension,
       useTestVariantName = false,
       configureRoborazziTasks = configureRoborazziTasks,
-      findTestTaskProvider = findTestTaskProvider
+      findTestTaskProvider = findTestTaskProvider,
+      suppressedDiagnostics = suppressedDiagnostics
     )
     verifyGenerateComposePreviewRobolectricTestsForAndroid(
       project = project,
       androidExtension = project.extensions.getByType(CommonExtension::class.java),
-      extension = extension.generateComposePreviewRobolectricTests
+      extension = extension.generateComposePreviewRobolectricTests,
+      suppressedDiagnostics = suppressedDiagnostics
     )
   }
 
@@ -65,7 +71,8 @@ internal object AndroidRoborazziConfigurator {
     project: Project,
     extension: RoborazziExtension,
     configureRoborazziTasks: (variantName: String, testTaskName: String) -> Unit,
-    findTestTaskProvider: (testTaskName: String) -> TaskCollection<Test>
+    findTestTaskProvider: (testTaskName: String) -> TaskCollection<Test>,
+    suppressedDiagnostics: Set<String>
   ) {
     // Since AGP 8.10+, AndroidComponentsExtension can be used with com.android.kotlin.multiplatform.library
     // Note: This plugin uses a single-variant architecture (no build types or product flavors)
@@ -75,7 +82,8 @@ internal object AndroidRoborazziConfigurator {
       extension = extension,
       useTestVariantName = true,
       configureRoborazziTasks = configureRoborazziTasks,
-      findTestTaskProvider = findTestTaskProvider
+      findTestTaskProvider = findTestTaskProvider,
+      suppressedDiagnostics = suppressedDiagnostics
     )
 
     // Get KotlinMultiplatformAndroidLibraryTarget from KotlinMultiplatformExtension
@@ -95,7 +103,8 @@ internal object AndroidRoborazziConfigurator {
           project = project,
           kmpTarget = androidTarget,
           extension = extension.generateComposePreviewRobolectricTests,
-          testTaskProvider = testTaskProvider
+          testTaskProvider = testTaskProvider,
+          suppressedDiagnostics = suppressedDiagnostics
         )
       }
     }
@@ -106,7 +115,8 @@ internal object AndroidRoborazziConfigurator {
     extension: RoborazziExtension,
     useTestVariantName: Boolean,
     configureRoborazziTasks: (variantName: String, testTaskName: String) -> Unit,
-    findTestTaskProvider: (testTaskName: String) -> TaskCollection<Test>
+    findTestTaskProvider: (testTaskName: String) -> TaskCollection<Test>,
+    suppressedDiagnostics: Set<String>
   ) {
     onVariants { variant ->
       // AGP 9.0: unitTest is now on HasUnitTest interface, not Variant
@@ -117,7 +127,8 @@ internal object AndroidRoborazziConfigurator {
         project = project,
         variant = variant,
         extension = extension.generateComposePreviewRobolectricTests,
-        testTaskProvider = findTestTaskProvider(testTaskName)
+        testTaskProvider = findTestTaskProvider(testTaskName),
+        suppressedDiagnostics = suppressedDiagnostics
       )
 
       // e.g. testDebugUnitTest -> recordRoborazziDebug

@@ -26,7 +26,8 @@ internal fun generateComposePreviewRobolectricTestsIfNeeded(
   project: Project,
   variant: Variant,
   extension: GenerateComposePreviewRobolectricTestsExtension,
-  testTaskProvider: TaskCollection<Test>
+  testTaskProvider: TaskCollection<Test>,
+  suppressedDiagnostics: Set<String>
 ) {
   if ((extension.enable.orNull) != true) {
     return
@@ -45,7 +46,7 @@ internal fun generateComposePreviewRobolectricTestsIfNeeded(
     check((variant as? HasUnitTest)?.unitTest != null) {
       "Roborazzi: Please enable unit tests for the variant '${variant.name}' in the 'build.gradle' file."
     }
-    verifyTestConfig(testTaskProvider, logger)
+    verifyTestConfig(testTaskProvider, logger, suppressedDiagnostics)
   }
 }
 
@@ -183,7 +184,8 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
 internal fun verifyGenerateComposePreviewRobolectricTestsForAndroid(
   project: Project,
   androidExtension: CommonExtension<*, *, *, *, *, *>,
-  extension: GenerateComposePreviewRobolectricTestsExtension
+  extension: GenerateComposePreviewRobolectricTestsExtension,
+  suppressedDiagnostics: Set<String>
 ) {
   val logger = project.logger
   project.afterEvaluate {
@@ -192,7 +194,7 @@ internal fun verifyGenerateComposePreviewRobolectricTestsForAndroid(
     }
     verifyLibraryDependencies(project)
     verifyComposablePreviewScannerVersion(project)
-    verifyAndroidConfig(androidExtension, logger)
+    verifyAndroidConfig(androidExtension, logger, suppressedDiagnostics)
   }
 }
 
@@ -200,7 +202,8 @@ internal fun verifyGenerateComposePreviewRobolectricTestsForKmp(
   project: Project,
   kmpTarget: KotlinMultiplatformAndroidLibraryTarget,
   extension: GenerateComposePreviewRobolectricTestsExtension,
-  testTaskProvider: TaskCollection<Test>
+  testTaskProvider: TaskCollection<Test>,
+  suppressedDiagnostics: Set<String>
 ) {
   val logger = project.logger
   project.afterEvaluate {
@@ -218,10 +221,15 @@ internal fun verifyGenerateComposePreviewRobolectricTestsForKmp(
             }
           }
         """.trimIndent()
-        logger.warn(
-          "Roborazzi: Please set 'isIncludeAndroidResources = true' in withHostTest block in the 'build.gradle.kts' file. " +
-            "This is advisable to avoid issues with ActivityNotFoundException.\n" +
-            "Example:\n$example"
+        reportPreviewDiagnostic(
+          logger = logger,
+          suppressedDiagnostics = suppressedDiagnostics,
+          diagnosticId = PreviewIncludeAndroidResourcesDiagnosticId,
+          severity = PreviewDiagnosticSeverity.WARNING,
+          messageBody =
+            "Roborazzi: Please set 'isIncludeAndroidResources = true' in withHostTest block in the 'build.gradle.kts' file. " +
+              "This is advisable to avoid issues with ActivityNotFoundException.\n" +
+              "Example:\n$example"
         )
       }
     }
@@ -231,13 +239,14 @@ internal fun verifyGenerateComposePreviewRobolectricTestsForKmp(
     }
     verifyLibraryDependencies(project)
     verifyComposablePreviewScannerVersion(project)
-    verifyTestConfig(testTaskProvider, logger)
+    verifyTestConfig(testTaskProvider, logger, suppressedDiagnostics)
   }
 }
 
 private fun verifyTestConfig(
   testTaskProvider: TaskCollection<Test>,
-  logger: Logger
+  logger: Logger,
+  suppressedDiagnostics: Set<String>
 ) {
   testTaskProvider.configureEach { testTask ->
     if (testTask.systemProperties["roborazzi.record.filePathStrategy"] != "relativePathFromRoborazziContextOutputDirectory") {
@@ -260,11 +269,16 @@ private fun verifyTestConfig(
           }
         }
       """.trimIndent()
-      logger.warn(
-        "Roborazzi: Please set 'robolectric.pixelCopyRenderMode = hardware' (Robolectric 4.12.2+) in the 'testOptions' block in the 'build.gradle' file. " +
-          "This is advisable to avoid issues with the fidelity of the images.\n" +
-          "Please refer to 'https://github.com/takahirom/roborazzi?tab=readme-ov-file#q-the-images-taken-from-roborazzi-seem-broken' for more information.\n" +
-          "Example:\n$example"
+      reportPreviewDiagnostic(
+        logger = logger,
+        suppressedDiagnostics = suppressedDiagnostics,
+        diagnosticId = PreviewPixelCopyRenderModeDiagnosticId,
+        severity = PreviewDiagnosticSeverity.WARNING,
+        messageBody =
+          "Roborazzi: Please set 'robolectric.pixelCopyRenderMode = hardware' (Robolectric 4.12.2+) in the 'testOptions' block in the 'build.gradle' file. " +
+            "This is advisable to avoid issues with the fidelity of the images.\n" +
+            "Please refer to 'https://github.com/takahirom/roborazzi?tab=readme-ov-file#q-the-images-taken-from-roborazzi-seem-broken' for more information.\n" +
+            "Example:\n$example"
       )
     }
   }
@@ -279,11 +293,20 @@ private fun verifyLibraryDependencies(
   verifyLibraryDependenciesInternal(dependencies)
 }
 
-private fun verifyAndroidConfig(androidExtension: CommonExtension<*, *, *, *, *, *>, logger: Logger) {
+private fun verifyAndroidConfig(
+  androidExtension: CommonExtension<*, *, *, *, *, *>,
+  logger: Logger,
+  suppressedDiagnostics: Set<String>
+) {
   if (!androidExtension.testOptions.unitTests.isIncludeAndroidResources) {
-    logger.warn(
-      "Roborazzi: Please set 'android.testOptions.unitTests.isIncludeAndroidResources = true' in the 'build.gradle' file. " +
-        "This is advisable to avoid issues with ActivityNotFoundException."
+    reportPreviewDiagnostic(
+      logger = logger,
+      suppressedDiagnostics = suppressedDiagnostics,
+      diagnosticId = PreviewIncludeAndroidResourcesDiagnosticId,
+      severity = PreviewDiagnosticSeverity.WARNING,
+      messageBody =
+        "Roborazzi: Please set 'android.testOptions.unitTests.isIncludeAndroidResources = true' in the 'build.gradle' file. " +
+          "This is advisable to avoid issues with ActivityNotFoundException."
     )
   }
 }
