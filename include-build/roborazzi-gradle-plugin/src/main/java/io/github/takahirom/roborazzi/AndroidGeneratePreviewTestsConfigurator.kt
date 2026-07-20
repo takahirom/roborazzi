@@ -207,7 +207,14 @@ internal fun verifyGenerateComposePreviewRobolectricTestsForKmp(
 ) {
   val logger = project.logger
   project.afterEvaluate {
-    // KMP library specific check - always check isIncludeAndroidResources
+    // Mirror the Android path (verifyGenerateComposePreviewRobolectricTestsForAndroid): all
+    // preview diagnostics are gated on the feature being enabled. Emitting the
+    // isIncludeAndroidResources warning while preview generation is disabled would advise
+    // (and, once it becomes a build error, break) ordinary KMP users who never opted in.
+    if ((extension.enable.orNull) != true) {
+      return@afterEvaluate
+    }
+    // KMP library specific check: isIncludeAndroidResources on the host-test compilation.
     kmpTarget.compilations.withType(
       com.android.build.api.dsl.KotlinMultiplatformAndroidHostTestCompilation::class.java
     ).all { compilation ->
@@ -232,10 +239,6 @@ internal fun verifyGenerateComposePreviewRobolectricTestsForKmp(
               "Example:\n$example"
         )
       }
-    }
-
-    if ((extension.enable.orNull) != true) {
-      return@afterEvaluate
     }
     verifyLibraryDependencies(project)
     verifyComposablePreviewScannerVersion(project)

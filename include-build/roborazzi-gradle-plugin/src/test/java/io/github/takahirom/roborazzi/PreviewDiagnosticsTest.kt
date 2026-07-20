@@ -86,4 +86,55 @@ class PreviewDiagnosticsTest {
     )
     assertTrue("a suppressed error downgrades to a warning", suppressed is PreviewDiagnosticAction.Warn)
   }
+
+  @Test
+  fun errorFooterExplainsDowngradeAndDropsTheFutureErrorNotice() {
+    // The ERROR footer must not claim the diagnostic "will become a build error in a future
+    // release" (it already is one) and must offer the downgrade escape hatch, matching the
+    // wording of junitPlatformReporting's error diagnostics.
+    val failMessage = (previewDiagnosticAction(
+      suppressedDiagnostics = emptySet(),
+      diagnosticId = PreviewPixelCopyRenderModeDiagnosticId,
+      severity = PreviewDiagnosticSeverity.ERROR,
+      messageBody = body,
+    ) as PreviewDiagnosticAction.Fail).message
+
+    assertTrue("keeps the original body", failMessage.contains(body))
+    assertTrue(
+      "names the diagnostic id",
+      failMessage.contains("Diagnostic id: $PreviewPixelCopyRenderModeDiagnosticId"),
+    )
+    assertTrue(
+      "explains the downgrade escape hatch",
+      failMessage.contains("To downgrade this error to a warning"),
+    )
+    assertTrue(
+      "shows the suppress property",
+      failMessage.contains("roborazzi.suppress=$PreviewPixelCopyRenderModeDiagnosticId"),
+    )
+    assertTrue(
+      "does not talk about silencing a warning",
+      !failMessage.contains("To silence this warning"),
+    )
+    assertTrue(
+      "does not announce a future error-ization",
+      !failMessage.contains("This will become a build error in a future release"),
+    )
+
+    // A suppressed ERROR is reported as a warning but keeps the ERROR footer wording.
+    val downgraded = (previewDiagnosticAction(
+      suppressedDiagnostics = setOf(PreviewPixelCopyRenderModeDiagnosticId),
+      diagnosticId = PreviewPixelCopyRenderModeDiagnosticId,
+      severity = PreviewDiagnosticSeverity.ERROR,
+      messageBody = body,
+    ) as PreviewDiagnosticAction.Warn).message
+    assertTrue(
+      "downgraded error keeps the downgrade wording",
+      downgraded.contains("To downgrade this error to a warning"),
+    )
+    assertTrue(
+      "downgraded error does not announce a future error-ization",
+      !downgraded.contains("This will become a build error in a future release"),
+    )
+  }
 }
