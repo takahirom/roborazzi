@@ -136,7 +136,7 @@ if the current setting is intentional.
 
 Each diagnostic can be suppressed by listing its id (comma-separated) in the Roborazzi-wide
 `roborazzi.suppress` Gradle property — the same mechanism used by the
-[JUnit Platform reporting diagnostics](junit-platform-reporting.html#troubleshooting). Ids are
+[JUnit Platform reporting diagnostics](https://takahirom.github.io/roborazzi/junit-platform-reporting.html#troubleshooting). Ids are
 namespaced by feature. Suppressing a **warning** silences it entirely; once a diagnostic is
 promoted to an **error**, suppressing it downgrades it to a warning rather than silencing it.
 For example, in `gradle.properties`:
