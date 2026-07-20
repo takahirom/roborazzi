@@ -70,13 +70,14 @@ with a message prefixed `Roborazzi JUnit Platform reporting:` that states the pr
 impact, a copy-pasteable fix, and the diagnostic's stable **id**. If you see one, follow it —
 the message already contains the exact change to make.
 
-Every diagnostic is a **build error**: once the reporting module is on the classpath you have
-asked for attachments, so a configuration that cannot produce them fails the build loudly
-rather than warning and moving on. Listing a diagnostic's id (comma-separated) in the
-Roborazzi-wide `roborazzi.suppress` property **downgrades that error to a warning** — the
-message still surfaces, but the build no longer fails. This is an escape hatch for migration,
-not a way to silence the diagnostic entirely. Ids are namespaced by feature. For example, in
-`gradle.properties`:
+Every **setup diagnostic** below is a **build error**: once the reporting module is on the
+classpath you have asked for attachments, so a configuration that cannot produce them fails
+the build loudly rather than warning and moving on. (The parallel-execution notice under
+[Limitations](#limitations) is different — it is a runtime warning, not a setup error.)
+Listing a diagnostic's id (comma-separated) in the Roborazzi-wide `roborazzi.suppress`
+property **downgrades that error to a warning** — the message still surfaces, but the build
+no longer fails. This is an escape hatch for migration, not a way to silence the diagnostic
+entirely. Ids are namespaced by feature. For example, in `gradle.properties`:
 
 ```properties
 roborazzi.suppress=junitPlatformReporting.oldGradle,junitPlatformReporting.notJUnitPlatform
