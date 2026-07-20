@@ -655,6 +655,42 @@ class RoborazziGradleProjectTest {
   }
 
   @Test
+  fun nestedNamingStrategyKeepsCompareImagesDistinctWithSeparateCompareDir() {
+    // Same collision scenario as above, but the compare output directory is a
+    // SEPARATE directory from the golden output directory. The golden's package
+    // subtree must still be mirrored under the compare dir so the two same-named
+    // classes do not collide on one flat _compare image. This only applies to the
+    // explicit *Dir naming strategies (the signal that subdirectories are package
+    // structure); a custom filePath under other strategies keeps the leaf-name
+    // placement (covered by compareWithCustomPath).
+    val compareDir = "app/build/custom_compare_outputDirectoryPath"
+    val pkgARelative =
+      "com/github/takahirom/integration_test_project/pkga/SameNameTest"
+    val pkgBRelative =
+      "com/github/takahirom/integration_test_project/pkgb/SameNameTest"
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      addNamingStrategyGradleProperty("testNestedPackageDirAndClassAndMethod")
+      buildGradle.customCompareOutputDirPath = "build/custom_compare_outputDirectoryPath"
+      removeTests()
+      addSameSimpleNameTestsInDifferentPackages()
+
+      record()
+      checkRecordedFileExists("app/$defaultRoborazziOutputDir/$pkgARelative.testCapture.png")
+      checkRecordedFileExists("app/$defaultRoborazziOutputDir/$pkgBRelative.testCapture.png")
+
+      changeScreen()
+      compare()
+
+      checkResultsSummaryFileExists()
+      // The _compare images mirror the golden package tree under the separate compare dir.
+      checkRecordedFileExists("$compareDir/$pkgARelative.testCapture_compare.png")
+      checkRecordedFileExists("$compareDir/$pkgBRelative.testCapture_compare.png")
+      // The flat, colliding location must not be used.
+      checkRecordedFileNotExists("$compareDir/SameNameTest.testCapture_compare.png")
+    }
+  }
+
+  @Test
   fun compareWithCustomPath() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
       removeTests()
