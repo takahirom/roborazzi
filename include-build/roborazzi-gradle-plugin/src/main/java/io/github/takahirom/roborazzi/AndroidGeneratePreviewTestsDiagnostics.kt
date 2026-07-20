@@ -40,23 +40,46 @@ internal sealed interface PreviewDiagnosticAction {
   data class Fail(val message: String) : PreviewDiagnosticAction
 }
 
-// The tail appended to every preview diagnostic message: the forthcoming-error notice, the
-// diagnostic id, and how to suppress it. Stable, greppable wording. Returned as a standalone
-// trimMargin'd block that callers concatenate onto the (independently formatted) message body.
-private fun previewSuppressionFooter(diagnosticId: String): String =
-  """
-    |  This will become a build error in a future release. Suppress it if intentional.
-    |  Diagnostic id: $diagnosticId
-    |  To silence this warning, add to gradle.properties (comma-separate multiple ids):
-    |    ${RoborazziDiagnosticSuppression.PROPERTY}=$diagnosticId
-  """.trimMargin()
+// The tail appended to every preview diagnostic message: the diagnostic id and how to change
+// its behavior. Severity-dependent so it stays truthful once a diagnostic is promoted from
+// WARNING to ERROR (a single-line change at the call site):
+//  - WARNING keeps the original advisory wording: it announces the forthcoming error-ization
+//    and explains that listing the id silences the warning.
+//  - ERROR drops the "will become a build error" line (it already is one) and, matching
+//    junitPlatformReporting's suppressionFooter, explains that listing the id downgrades the
+//    error to a warning rather than silencing it.
+// Stable, greppable wording. Returned as a standalone trimMargin'd block that callers
+// concatenate onto the (independently formatted) message body.
+private fun previewSuppressionFooter(
+  diagnosticId: String,
+  severity: PreviewDiagnosticSeverity,
+): String = when (severity) {
+  PreviewDiagnosticSeverity.WARNING ->
+    """
+      |  This will become a build error in a future release. Suppress it if intentional.
+      |  Diagnostic id: $diagnosticId
+      |  To silence this warning, add to gradle.properties (comma-separate multiple ids):
+      |    ${RoborazziDiagnosticSuppression.PROPERTY}=$diagnosticId
+    """.trimMargin()
+
+  PreviewDiagnosticSeverity.ERROR ->
+    """
+      |  Diagnostic id: $diagnosticId
+      |  To downgrade this error to a warning, add to gradle.properties (comma-separate multiple ids):
+      |    ${RoborazziDiagnosticSuppression.PROPERTY}=$diagnosticId
+    """.trimMargin()
+}
 
 /**
  * Builds the full diagnostic text: the human-readable [messageBody] (kept from the original
- * advisory warnings) followed by the shared suppression footer.
+ * advisory warnings) followed by the [severity]-appropriate suppression footer.
  */
-internal fun previewDiagnosticMessage(diagnosticId: String, messageBody: String): String =
-  messageBody.trimEnd() + "\n" + previewSuppressionFooter(diagnosticId)
+internal fun previewDiagnosticMessage(
+  diagnosticId: String,
+  severity: PreviewDiagnosticSeverity,
+  messageBody: String,
+): String =
+  messageBody.trimEnd() + "\n" + previewSuppressionFooter(diagnosticId, severity)
 
 /**
  * Resolves a preview diagnostic to an action, honoring roborazzi.suppress:
@@ -76,7 +99,10 @@ internal fun previewDiagnosticAction(
 ): PreviewDiagnosticAction {
   val suppressed =
     RoborazziDiagnosticSuppression.isSuppressed(suppressedDiagnostics, diagnosticId)
-  val message = previewDiagnosticMessage(diagnosticId, messageBody)
+  // The message carries the severity-appropriate footer. A suppressed ERROR is reported as a
+  // Warn but keeps the ERROR footer ("To downgrade this error to a warning ..."), matching
+  // junitPlatformReporting: it is a downgraded error, not an ordinary advisory warning.
+  val message = previewDiagnosticMessage(diagnosticId, severity, messageBody)
   return when (severity) {
     PreviewDiagnosticSeverity.WARNING ->
       if (suppressed) PreviewDiagnosticAction.Silence else PreviewDiagnosticAction.Warn(message)
