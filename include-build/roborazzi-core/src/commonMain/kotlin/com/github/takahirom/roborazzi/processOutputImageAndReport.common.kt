@@ -125,9 +125,10 @@ fun processOutputImageAndReport(
       }
 
       val result: CaptureResult = if (changed) {
-        val comparisonFilePath = resolveOutputPath(
-          compareOptions.outputDirectoryPath,
-          goldenFilePath.nameWithoutExtension + "_compare." + goldenFilePath.extension
+        val comparisonFilePath = resolveComparisonImagePath(
+          compareOutputDirectoryPath = compareOptions.outputDirectoryPath,
+          goldenFilePath = goldenFilePath,
+          suffix = "_compare",
         )
         val comparisonCanvas = comparisonCanvasFactory(
           goldenRoboCanvas = goldenRoboCanvas,
@@ -152,9 +153,10 @@ fun processOutputImageAndReport(
           // If record option is enabled, we should save the actual file as the golden file.
           goldenFilePath
         } else {
-          resolveOutputPath(
-            compareOptions.outputDirectoryPath,
-            goldenFilePath.nameWithoutExtension + "_actual." + goldenFilePath.extension
+          resolveComparisonImagePath(
+            compareOutputDirectoryPath = compareOptions.outputDirectoryPath,
+            goldenFilePath = goldenFilePath,
+            suffix = "_actual",
           )
         }
         newRoboCanvas
@@ -257,4 +259,70 @@ fun processOutputImageAndReport(
 
 private fun resolveOutputPath(directoryPath: String, fileName: String): String {
   return roborazziToAbsolutePath(Path(directoryPath, fileName).toString())
+}
+
+/**
+ * Resolves the path of a generated `_compare` / `_actual` image so that it mirrors
+ * the golden's subdirectory structure under [compareOutputDirectoryPath].
+ *
+ * Historically these paths were built only from the golden's leaf file name
+ * ([nameWithoutExtension]). That collides under the subdirectory naming strategies
+ * ([DefaultFileNameGenerator.DefaultNamingStrategy.TestPackageDirAndClassAndMethod]
+ * and [DefaultFileNameGenerator.DefaultNamingStrategy.TestNestedPackageDirAndClassAndMethod]):
+ * two goldens with the same simple class + method name in different packages, e.g.
+ * `com/a/FooTest.test.png` and `com/b/FooTest.test.png`, share the same leaf name
+ * and would overwrite each other's single flat `FooTest.test_compare.png`.
+ *
+ * The golden's subdirectory (relative to the directory that contains it) is
+ * preserved so the comparison image lands next to its golden. For the flat naming
+ * strategies the golden sits directly in the output directory, so the resolved
+ * subdirectory is empty and the result is byte-for-byte identical to the previous
+ * leaf-name behavior.
+ */
+private fun resolveComparisonImagePath(
+  compareOutputDirectoryPath: String,
+  goldenFilePath: String,
+  suffix: String,
+): String {
+  val comparisonFileName =
+    goldenFilePath.nameWithoutExtension + suffix + "." + goldenFilePath.extension
+  val subdirectory = goldenSubdirectoryUnder(
+    baseDirectoryPath = compareOutputDirectoryPath,
+    goldenFilePath = goldenFilePath,
+  )
+  val relativePath = if (subdirectory.isEmpty()) {
+    comparisonFileName
+  } else {
+    Path(subdirectory, comparisonFileName).toString()
+  }
+  return resolveOutputPath(compareOutputDirectoryPath, relativePath)
+}
+
+/**
+ * Returns the golden's parent directory relative to [baseDirectoryPath], or an
+ * empty string when the golden sits directly in that directory or is not located
+ * under it at all.
+ *
+ * The base is intentionally the compare output directory (not the golden's output
+ * directory): in every supported subdirectory-naming layout the compare output
+ * directory and the golden's output directory are the same directory, so the
+ * relative result is exactly the package subdirectory produced by the naming
+ * strategy. For the three flat naming strategies the golden sits directly in the
+ * output directory, so this returns "" and the caller falls back to the historical
+ * leaf-name placement — byte-for-byte unchanged. It also returns "" when the
+ * golden lives outside the compare output directory (e.g. a custom `filePath` whose
+ * compare directory differs from the golden directory), again preserving the
+ * previous leaf-name behavior instead of leaking the golden's own subdirectories.
+ */
+private fun goldenSubdirectoryUnder(
+  baseDirectoryPath: String,
+  goldenFilePath: String,
+): String {
+  val goldenParent = Path(roborazziToAbsolutePath(goldenFilePath)).parent ?: return ""
+  val basePath = Path(roborazziToAbsolutePath(baseDirectoryPath))
+  val relative = goldenParent.relativeTo(basePath).toString()
+  // An empty relative means the golden is directly in the base directory; a
+  // relative escaping the base ("..") means the golden is not under it. Both map
+  // to the historical leaf-name placement.
+  return if (relative.isEmpty() || relative.startsWith("..")) "" else relative
 }
