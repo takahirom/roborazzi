@@ -60,10 +60,11 @@ internal class FilePublishingEngineExecutionListener(
               else -> "application/octet-stream"
             }
             delegate.fileEntryPublished(testDescriptor, FileEntry.from(file.toPath(), mediaType))
-          } catch (t: Throwable) {
+          } catch (e: Exception) {
             // A failure to publish one image must not fail the test or drop the
-            // remaining images; log and continue.
-            logger.log(Level.WARNING, "Roborazzi: failed to publish captured image $path", t)
+            // remaining images; log and continue. Fatal Errors (e.g. VirtualMachineError)
+            // are not caught here so they propagate.
+            logger.log(Level.WARNING, "Roborazzi: failed to publish captured image $path", e)
           }
         }
       }

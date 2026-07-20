@@ -657,8 +657,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
             // The set of diagnostic ids to suppress, read from the roborazzi.suppress
             // Gradle property at configuration time (a Gradle property is a Configuration
             // Cache input) and captured as a plain Set<String> so the doFirst action holds
-            // no Project reference. A suppressed warning is silenced entirely; a suppressed
-            // error (doubleExecution) is downgraded to a warning rather than fully silenced.
+            // no Project reference. Every JUnit Platform reporting diagnostic is a build
+            // error; listing its id here downgrades that error to a warning rather than
+            // silencing it, so the message still surfaces.
             val suppressedDiagnostics =
               RoborazziDiagnosticSuppression.parse(roborazziProperties)
             test.doFirst("Roborazzi JUnit Platform reporting diagnostics") { task ->

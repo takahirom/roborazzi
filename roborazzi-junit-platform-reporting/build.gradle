@@ -5,6 +5,15 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")
 }
 
+// Expose the module version through the jar manifest so RoborazziVintageTestEngine can
+// report it via TestEngine.getVersion() (reads Package.implementationVersion, which comes
+// from the manifest's Implementation-Version attribute). Empty when run from classes dirs.
+tasks.named('jar', Jar) {
+  manifest {
+    attributes('Implementation-Version': VERSION_NAME)
+  }
+}
+
 dependencies {
   // roborazzi-core is substituted by the include-build (see settings.gradle),
   // so this resolves to the local :roborazzi-core project.
