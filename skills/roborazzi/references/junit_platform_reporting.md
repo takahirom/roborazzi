@@ -13,8 +13,13 @@ in a custom engine that publishes each captured image through JUnit Platform's
 
 ## Requirements
 
-* **Gradle 9.4+.** On older Gradle the tests still run and pass normally, but no
-  attachments appear — the platform's file-publishing call is a silent no-op.
+* **Gradle 9.4+.** On older Gradle the platform's file-publishing call is a silent
+  no-op, so no attachments can appear. Because adding this module is an explicit
+  request for attachments, the Roborazzi Gradle plugin **fails the build** on Gradle
+  below 9.4 rather than degrading silently. If you cannot upgrade the wrapper yet,
+  downgrade the error to a warning with
+  `roborazzi.suppress=junitPlatformReporting.oldGradle` in `gradle.properties`; the
+  tests then run and pass normally, just without attachments.
 * **JUnit4 / Robolectric tests** (the engine wraps JUnit Vintage). This is the
   usual Roborazzi setup on Android/Robolectric.
 
@@ -29,7 +34,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   useJUnitPlatform {
-    // Required. See the warning below.
+    // Required. See the note below.
     excludeEngines("junit-vintage")
   }
 }
@@ -66,10 +71,13 @@ with a message prefixed `Roborazzi JUnit Platform reporting:` that states the pr
 impact, a copy-pasteable fix, and the diagnostic's stable **id**. If you see one, follow it —
 the message already contains the exact change to make.
 
-Each diagnostic can be suppressed by listing its id (comma-separated) in the Roborazzi-wide
-`roborazzi.suppress` property. Ids are namespaced by feature. Suppressing a **warning**
-silences it entirely; suppressing the **error** (`junitPlatformReporting.doubleExecution`)
-downgrades it to a warning rather than silencing it. For example, in `gradle.properties`:
+Every diagnostic is a **build error**: once the reporting module is on the classpath you have
+asked for attachments, so a configuration that cannot produce them fails the build loudly
+rather than warning and moving on. Listing a diagnostic's id (comma-separated) in the
+Roborazzi-wide `roborazzi.suppress` property **downgrades that error to a warning** — the
+message still surfaces, but the build no longer fails. This is an escape hatch for migration,
+not a way to silence the diagnostic entirely. Ids are namespaced by feature. For example, in
+`gradle.properties`:
 
 ```properties
 roborazzi.suppress=junitPlatformReporting.oldGradle,junitPlatformReporting.notJUnitPlatform
@@ -77,9 +85,9 @@ roborazzi.suppress=junitPlatformReporting.oldGradle,junitPlatformReporting.notJU
 
 | Symptom | Id | Severity | Cause / fix |
 |---------|----|----------|-------------|
-| No attachments in the report | `junitPlatformReporting.oldGradle` | Warning | Confirm Gradle is **9.4 or newer**. Below that, attachment rendering does not exist and the feature is a no-op. |
-| Nothing is attached at all | `junitPlatformReporting.notJUnitPlatform` | Warning | The dependency is present but the `Test` task is not on the JUnit Platform. Add the `useJUnitPlatform { ... }` block from [Setup](#setup). |
-| Nothing is attached, but the task **is** on the JUnit Platform | `junitPlatformReporting.engineNotSelected` | Warning | Unlike `notJUnitPlatform`, the platform is active — but `roborazzi-vintage` was filtered out of the execution set, so the attaching engine never runs. It is either listed in `excludeEngines(...)`, or an `includeEngines(...)` restricts execution to engines that do not include it. Remove `roborazzi-vintage` from `excludeEngines`, or add `"roborazzi-vintage"` to `includeEngines`. |
+| No attachments in the report | `junitPlatformReporting.oldGradle` | **Build error** | Confirm Gradle is **9.4 or newer**. Below that, attachment rendering does not exist and the feature is a no-op. |
+| Nothing is attached at all | `junitPlatformReporting.notJUnitPlatform` | **Build error** | The dependency is present but the `Test` task is not on the JUnit Platform. Add the `useJUnitPlatform { ... }` block from [Setup](#setup). |
+| Nothing is attached, but the task **is** on the JUnit Platform | `junitPlatformReporting.engineNotSelected` | **Build error** | Unlike `notJUnitPlatform`, the platform is active — but `roborazzi-vintage` was filtered out of the execution set, so the attaching engine never runs. It is either listed in `excludeEngines(...)`, or an `includeEngines(...)` restricts execution to engines that do not include it. Remove `roborazzi-vintage` from `excludeEngines`, or add `"roborazzi-vintage"` to `includeEngines`. |
 | Every test runs twice | `junitPlatformReporting.doubleExecution` | **Build error** | The stock `junit-vintage` engine still runs. Add `excludeEngines("junit-vintage")` inside `useJUnitPlatform { ... }` (see Setup), or restrict to `includeEngines("roborazzi-vintage")`. |
 
 ## Limitations

@@ -19,8 +19,8 @@ import java.io.File
 class JUnitPlatformReportingTest {
 
   private companion object {
-    // Stable prefix the plugin puts on every JUnit Platform reporting setup warning. Kept
-    // in sync with JUnitPlatformReportingLogPrefix in RoborazziPlugin.kt.
+    // Stable prefix the plugin puts on every JUnit Platform reporting setup diagnostic. Kept
+    // in sync with JUnitPlatformReportingLogPrefix in JUnitPlatformReportingDiagnostics.kt.
     const val JUNIT_PLATFORM_REPORTING_LOG_PREFIX = "Roborazzi JUnit Platform reporting:"
 
     // The diagnostics run in the test task's doFirst, which only executes when the task is
@@ -135,38 +135,55 @@ class JUnitPlatformReportingTest {
 
   /**
    * (b) Older Gradle (predating the 9.4 test-report attachments) with reporting enabled:
-   * the same record -> failing verify scenario must still run to completion. The verify
-   * is expected to fail (that is the scenario), but the reporting integration must not
-   * add any failure of its own even though this Gradle cannot render attachments; the
-   * platform's fileEntryPublished() default is a no-op there.
+   * that Gradle cannot render attachments (the platform's fileEntryPublished() is a no-op),
+   * so the reporting module cannot do its job. Adding the dependency is an explicit request
+   * for attachments, so the plugin fails the build with an error that names the 9.4
+   * requirement rather than silently producing no attachments. Suppressing the id downgrades
+   * the error to a warning: the build then completes and records normally, for teams that
+   * have not yet upgraded the wrapper.
    *
    * We cannot use Gradle 8.13 (AGP 8.13's nominal minimum) here: the shared integration
    * test project's root build.gradle.kts uses Test.failOnNoDiscoveredTests, which is a
    * Gradle 9.0+ API, so the project fails to even configure on 8.13 (unresolved
    * reference) for reasons unrelated to this module. Gradle 9.0.0 is therefore the
    * oldest version the project supports, and it is still below the 9.4 attachment
-   * threshold, so it exercises the graceful-degradation path.
+   * threshold, so it exercises this path. Both invocations reuse the same 9.0.0
+   * distribution so it is downloaded at most once.
    */
   @Test
-  fun runsWithoutErrorOnOldGradle() {
+  fun failsBuildOnOldGradleAndSuppressDowngradesToWarning() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
       gradleVersion = "9.0.0"
       buildGradle.enableJUnitPlatformReporting = true
-      recordWithParams(NO_BUILD_CACHE)
-      changeScreen()
-      // The verify still fails on the changed image, but the build must not fail for any
-      // other reason (e.g. an exception thrown from the reporting listener).
-      val result = verifyAndFail(NO_BUILD_CACHE)
-      result.shouldDetectChangedPngCapture()
 
-      // On Gradle below 9.4 the plugin warns that attachments will not render, telling the
-      // (human or AI) reader that the feature is a no-op until the wrapper is upgraded.
-      assert(result.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
-        "Expected a JUnit Platform reporting warning on old Gradle, but found none.\n${result.output}"
+      // Without suppression the build fails with the old-Gradle error before tests run.
+      val failure = recordAndFail(NO_BUILD_CACHE)
+      assert(failure.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected a JUnit Platform reporting error on old Gradle, but found none.\n${failure.output}"
       }
-      assert(result.output.contains("require Gradle 9.4+")) {
-        "Expected the Gradle version warning to name the 9.4 requirement.\n${result.output}"
+      assert(failure.output.contains("require Gradle 9.4+")) {
+        "Expected the old-Gradle error to name the 9.4 requirement.\n${failure.output}"
       }
+      assert(failure.output.contains("Diagnostic id: junitPlatformReporting.oldGradle")) {
+        "Expected the error to print its stable, namespaced diagnostic id.\n${failure.output}"
+      }
+      assert(failure.output.contains("roborazzi.suppress=junitPlatformReporting.oldGradle")) {
+        "Expected the error to explain how to downgrade it via the roborazzi.suppress property.\n${failure.output}"
+      }
+
+      // Suppressing the id downgrades the error to a warning: the build completes and records
+      // the golden even though attachments cannot render on this Gradle.
+      val suppressed =
+        recordWithParams("-Proborazzi.suppress=junitPlatformReporting.oldGradle", NO_BUILD_CACHE)
+      assert(suppressed.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected the downgraded old-Gradle warning to still surface, but found none.\n${suppressed.output}"
+      }
+      assert(suppressed.output.contains("require Gradle 9.4+")) {
+        "Expected the downgraded warning to name the 9.4 requirement.\n${suppressed.output}"
+      }
+      checkRecordedFileExists(
+        "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture.png"
+      )
     }
   }
 
@@ -264,27 +281,40 @@ class JUnitPlatformReportingTest {
   /**
    * (d) The reporting dependency is on the test classpath but the Test task was never
    * switched to the JUnit Platform (no useJUnitPlatform). roborazzi-vintage therefore never
-   * runs and the whole feature is silently off.
-   *
-   * The plugin must warn about this, and the tests must still run normally on plain JUnit4:
-   * exactly once (no double execution) so a single golden is recorded and no _2 variant is
-   * written.
+   * runs and the whole feature is off, so the plugin fails the build with an error naming the
+   * problem. Suppressing the id downgrades the error to a warning: the build then completes
+   * and the tests run normally on plain JUnit4 — exactly once (no double execution), so a
+   * single golden is recorded and no _2 variant is written.
    */
   @Test
-  fun warnsAndRunsOnceWithoutJUnitPlatform() {
+  fun failsBuildWithoutJUnitPlatformAndSuppressRunsOnce() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
       buildGradle.enableJUnitPlatformReporting = true
       buildGradle.applyJUnitPlatform = false
-      val result = recordWithParams(NO_BUILD_CACHE)
 
-      assert(result.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
-        "Expected a JUnit Platform reporting warning when useJUnitPlatform is missing, but found none.\n${result.output}"
+      // Without suppression the build fails because the task is not on the JUnit Platform.
+      val failure = recordAndFail(NO_BUILD_CACHE)
+      assert(failure.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected a JUnit Platform reporting error when useJUnitPlatform is missing, but found none.\n${failure.output}"
       }
-      assert(result.output.contains("does not run on the JUnit Platform")) {
-        "Expected the warning to explain that the task is not on the JUnit Platform.\n${result.output}"
+      assert(failure.output.contains("does not run on the JUnit Platform")) {
+        "Expected the error to explain that the task is not on the JUnit Platform.\n${failure.output}"
+      }
+      assert(failure.output.contains("Diagnostic id: junitPlatformReporting.notJUnitPlatform")) {
+        "Expected the error to print its stable, namespaced diagnostic id.\n${failure.output}"
       }
 
-      // Plain JUnit4 runs the single test exactly once (no second engine, no _2 golden).
+      // Suppressing the id downgrades the error to a warning (the message still surfaces),
+      // and the build completes: plain JUnit4 runs the single test once, no second engine,
+      // no _2 golden.
+      val suppressed =
+        recordWithParams("-Proborazzi.suppress=junitPlatformReporting.notJUnitPlatform", NO_BUILD_CACHE)
+      assert(suppressed.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected the downgraded notJUnitPlatform warning to still surface, but found none.\n${suppressed.output}"
+      }
+      assert(suppressed.output.contains("does not run on the JUnit Platform")) {
+        "Expected the downgraded warning to explain that the task is not on the JUnit Platform.\n${suppressed.output}"
+      }
       val xml = junitXml()
       assert(xml.contains("tests=\"1\"")) {
         "Expected the single test to run once on plain JUnit4, i.e. tests=\"1\".\n$xml"
@@ -299,93 +329,53 @@ class JUnitPlatformReportingTest {
   }
 
   /**
-   * (e) Suppressing a warning id silences it entirely. Same setup as (d) — the reporting
-   * dependency present but the Test task not on the JUnit Platform, which normally warns
-   * (notJUnitPlatform) — but with roborazzi.suppress=junitPlatformReporting.notJUnitPlatform
-   * no diagnostic must appear, and the build still records normally.
-   */
-  @Test
-  fun suppressingWarningSilencesIt() {
-    RoborazziGradleRootProject(testProjectDir).appModule.apply {
-      buildGradle.enableJUnitPlatformReporting = true
-      buildGradle.applyJUnitPlatform = false
-      val result =
-        recordWithParams("-Proborazzi.suppress=junitPlatformReporting.notJUnitPlatform", NO_BUILD_CACHE)
-
-      assert(!result.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
-        "Expected the notJUnitPlatform warning to be fully silenced by suppression, but found a diagnostic.\n${result.output}"
-      }
-      // The test still runs and records normally on plain JUnit4.
-      checkRecordedFileExists(
-        "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture.png"
-      )
-    }
-  }
-
-  /**
    * (f) excludeEngines("roborazzi-vintage") is a misconfiguration, not a double execution:
    * the stock junit-vintage engine still runs the tests, but roborazzi-vintage is filtered
-   * out of the execution set, so no images are published — yet each test runs only once.
+   * out of the execution set, so no images are ever published. That inert configuration is
+   * now a build error (engineNotSelected), not a warning — but it must NOT be misreported as
+   * the doubleExecution error the old implementation false-positived here.
    *
-   * The old implementation false-positived here and failed the build with the
-   * doubleExecution error. This must no longer happen: the build must succeed (record does
-   * not fail), no doubleExecution diagnostic appears, and the plugin instead emits the
-   * engineNotSelected warning. Because roborazzi-vintage never runs, only the stock engine
-   * records the single golden and no _2 duplicate is written.
+   * Suppressing the engineNotSelected id downgrades the error to a warning: the build then
+   * completes. Because roborazzi-vintage never runs, only the stock engine records the single
+   * golden and no _2 duplicate is written.
    */
   @Test
-  fun doesNotFailOnExcludeRoborazziVintage() {
+  fun failsBuildOnExcludeRoborazziVintageAndSuppressDowngradesToWarning() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
       buildGradle.enableJUnitPlatformReporting = true
       buildGradle.excludeRoborazziVintageEngine = true
-      // recordWithParams uses BuildType.Build, so a build failure would throw here; the fact
-      // that this returns at all proves the old doubleExecution false-positive is gone.
-      val result = recordWithParams(NO_BUILD_CACHE)
 
-      // No double-execution diagnostic (the removed false positive).
-      assert(!result.output.contains("Diagnostic id: junitPlatformReporting.doubleExecution")) {
-        "Expected no doubleExecution diagnostic for excludeEngines(\"roborazzi-vintage\"), but found one.\n${result.output}"
+      // Without suppression the build fails with the engineNotSelected error.
+      val failure = recordAndFail(NO_BUILD_CACHE)
+      // It must be the engineNotSelected error, not the doubleExecution false positive.
+      assert(!failure.output.contains("Diagnostic id: junitPlatformReporting.doubleExecution")) {
+        "Expected no doubleExecution diagnostic for excludeEngines(\"roborazzi-vintage\"), but found one.\n${failure.output}"
       }
-      // The engineNotSelected warning is emitted instead.
-      assert(result.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
-        "Expected a JUnit Platform reporting warning, but found none.\n${result.output}"
+      assert(failure.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected a JUnit Platform reporting error, but found none.\n${failure.output}"
       }
-      assert(result.output.contains("the roborazzi-vintage engine is not in the selected engine set")) {
-        "Expected the engineNotSelected warning body text.\n${result.output}"
+      assert(failure.output.contains("the roborazzi-vintage engine is not in the selected engine set")) {
+        "Expected the engineNotSelected error body text.\n${failure.output}"
       }
-      assert(result.output.contains("Diagnostic id: junitPlatformReporting.engineNotSelected")) {
-        "Expected the engineNotSelected warning to print its stable, namespaced diagnostic id.\n${result.output}"
+      assert(failure.output.contains("Diagnostic id: junitPlatformReporting.engineNotSelected")) {
+        "Expected the engineNotSelected error to print its stable, namespaced diagnostic id.\n${failure.output}"
       }
 
-      // Only the stock engine ran, so a single golden was recorded and there is no _2 duplicate.
+      // Suppressing the id downgrades the error to a warning (still surfaced), and the build
+      // completes: only the stock engine ran, so a single golden was recorded and no _2.
+      val suppressed =
+        recordWithParams("-Proborazzi.suppress=junitPlatformReporting.engineNotSelected", NO_BUILD_CACHE)
+      assert(suppressed.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected the downgraded engineNotSelected warning to still surface, but found none.\n${suppressed.output}"
+      }
+      assert(suppressed.output.contains("the roborazzi-vintage engine is not in the selected engine set")) {
+        "Expected the downgraded warning body text.\n${suppressed.output}"
+      }
       checkRecordedFileExists(
         "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture.png"
       )
       checkRecordedFileNotExists(
         "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture_2.png"
-      )
-    }
-  }
-
-  /**
-   * (g) Suppressing the engineNotSelected id silences it entirely:
-   * roborazzi.suppress=junitPlatformReporting.engineNotSelected. Same setup as (f), but no
-   * diagnostic must appear, and the build still records normally.
-   */
-  @Test
-  fun suppressingEngineNotSelectedSilencesIt() {
-    RoborazziGradleRootProject(testProjectDir).appModule.apply {
-      buildGradle.enableJUnitPlatformReporting = true
-      buildGradle.excludeRoborazziVintageEngine = true
-      val result =
-        recordWithParams("-Proborazzi.suppress=junitPlatformReporting.engineNotSelected", NO_BUILD_CACHE)
-
-      assert(!result.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
-        "Expected the engineNotSelected warning to be fully silenced by suppression, but found a diagnostic.\n${result.output}"
-      }
-      // The stock engine still runs and records normally.
-      checkRecordedFileExists(
-        "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture.png"
       )
     }
   }
