@@ -1,11 +1,10 @@
 package com.github.takahirom.roborazzi
 
 /**
- * Specify the naming strategy for the recorded image.
- * Default: roborazzi.record.namingStrategy=testPackageAndClassAndMethod
- * If set to testPackageAndClassAndMethod, the file name will be com.example.MyTest.testMethod.png
- * If set to escapedTestPackageAndClassAndMethod, the file name will be com_example_MyTest.testMethod.png
- * If set to testClassAndMethod, the file name will be MyTest.testMethod.png
+ * Specify the file path strategy for the recorded image.
+ * Default: roborazzi.record.filePathStrategy=relativePathFromCurrentDirectory
+ * If set to relativePathFromCurrentDirectory, the image will be saved in the relative path from the current directory.
+ * If set to relativePathFromRoborazziContextOutputDirectory, the image will be saved in the relative path from the output directory of the Roborazzi context.
  */
 @ExperimentalRoborazziApi
 fun roborazziRecordFilePathStrategy(): RoborazziRecordFilePathStrategy {
@@ -31,6 +30,8 @@ fun roborazziRecordFilePathStrategy(): RoborazziRecordFilePathStrategy {
  * If you specify testPackageAndClassAndMethod, the file name will be com.example.MyTest.testMethod.png
  * If you specify escapedTestPackageAndClassAndMethod, the file name will be com_example_MyTest.testMethod.png
  * If you specify testClassAndMethod, the file name will be MyTest.testMethod.png
+ * If you specify testPackageDirAndClassAndMethod, the file will be saved as com.example/MyTest.testMethod.png (package as a single directory)
+ * If you specify testNestedPackageDirAndClassAndMethod, the file will be saved as com/example/MyTest.testMethod.png (package as nested directories)
  */
 fun roborazziDefaultNamingStrategy(): DefaultFileNameGenerator.DefaultNamingStrategy {
   return DefaultFileNameGenerator.DefaultNamingStrategy

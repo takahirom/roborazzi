@@ -40,6 +40,8 @@ This option enables you to define the naming strategy for the recorded image. Th
 - If you choose `testPackageAndClassAndMethod`, the file name will be `com.example.MyTest.testMethod.png`.
 - If you choose `escapedTestPackageAndClassAndMethod`, the file name will be `com_example_MyTest.testMethod.png`.
 - If you choose `testClassAndMethod`, the file name will be `MyTest.testMethod.png`.
+- If you choose `testPackageDirAndClassAndMethod`, the file will be saved as `com.example/MyTest.testMethod.png` (the package becomes a single directory level).
+- If you choose `testNestedPackageDirAndClassAndMethod`, the file will be saved as `com/example/MyTest.testMethod.png` (the package becomes nested directories).
 
 ```properties
 roborazzi.record.namingStrategy=testClassAndMethod

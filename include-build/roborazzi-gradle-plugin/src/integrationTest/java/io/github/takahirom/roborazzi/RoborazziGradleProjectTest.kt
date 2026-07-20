@@ -556,6 +556,140 @@ class RoborazziGradleProjectTest {
     }
   }
 
+  private val nestedScreenshotAndName
+    get() =
+      "app/$defaultRoborazziOutputDir/com/github/takahirom/integration_test_project/RoborazziTest"
+
+  @Test
+  fun nestedNamingStrategyRecordsIntoNestedSubdirectoryAndCleansUp() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      addNamingStrategyGradleProperty("testNestedPackageDirAndClassAndMethod")
+      removeTests()
+      addRuleTest()
+      record()
+
+      checkResultsSummaryFileExists()
+      // The package becomes a nested directory tree, not a dotted file name.
+      checkRecordedFileExists("$nestedScreenshotAndName.testCapture.png")
+      checkRecordedFileNotExists("$screenshotAndName.testCapture.png")
+
+      // Removing the original test and recording with cleanup removes the stale
+      // nested golden while keeping the newly recorded ones (cleanup walks nested dirs).
+      removeTests()
+      addMultipleTest()
+      recordWithCleanupOldScreenshots()
+
+      checkRecordedFileNotExists("$nestedScreenshotAndName.testCapture.png")
+      checkRecordedFileExists("$nestedScreenshotAndName.testCapture1.png")
+      checkRecordedFileExists("$nestedScreenshotAndName.testCapture2.png")
+
+      // Comparing against the freshly recorded nested goldens should succeed.
+      compare()
+      checkResultsSummaryFileExists()
+    }
+  }
+
+  @Test
+  fun nestedNamingStrategyWithSharedOutputAndCompareDir() {
+    // Exercises the RoborazziPlugin overlap detection (input dir == compare output
+    // dir, RoborazziPlugin.kt around line 497) together with the nested naming
+    // strategy. The tracked input FileCollection only contains the top output
+    // directory itself (files(".")), so nested subdirectories add no leaf entries
+    // to the overlap check and it still matches at the directory level. The build
+    // completes without a Gradle "overlapping outputs" error, confirming nested
+    // naming does not break the check.
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      addNamingStrategyGradleProperty("testNestedPackageDirAndClassAndMethod")
+      buildGradle.customCompareOutputDirPath = "build/custom_compare_outputDirectoryPath"
+      buildGradle.customOutputDirPath = "build/custom_compare_outputDirectoryPath"
+      removeTests()
+      addRuleTest()
+
+      record()
+      changeScreen()
+      compare()
+
+      checkResultsSummaryFileExists()
+      // The golden lands in the nested package directory tree.
+      checkRecordedFileExists("app/build/custom_compare_outputDirectoryPath/com/github/takahirom/integration_test_project/RoborazziTest.testCapture.png")
+      // The _compare image mirrors the golden's nested relative path under the
+      // compare output dir (processOutputImageAndReport.common.kt preserves the
+      // golden's subdirectory), so it is nested alongside the golden rather than
+      // flat at the compare output dir root.
+      checkRecordedFileExists("app/build/custom_compare_outputDirectoryPath/com/github/takahirom/integration_test_project/RoborazziTest.testCapture_compare.png")
+      checkRecordedFileNotExists("app/build/custom_compare_outputDirectoryPath/RoborazziTest.testCapture_compare.png")
+    }
+  }
+
+  @Test
+  fun nestedNamingStrategyKeepsCompareImagesDistinctAcrossPackages() {
+    // Two test classes share the same simple class name + method name in different
+    // packages. Under the nested strategy their goldens land in different package
+    // directories but share the leaf file name "SameNameTest.testCapture". The
+    // _compare (and _actual) images must be written next to each golden; otherwise
+    // both collapse to a single flat "SameNameTest.testCapture_compare.png" and one
+    // silently overwrites the other.
+    val pkgABase =
+      "app/$defaultRoborazziOutputDir/com/github/takahirom/integration_test_project/pkga/SameNameTest"
+    val pkgBBase =
+      "app/$defaultRoborazziOutputDir/com/github/takahirom/integration_test_project/pkgb/SameNameTest"
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      addNamingStrategyGradleProperty("testNestedPackageDirAndClassAndMethod")
+      removeTests()
+      addSameSimpleNameTestsInDifferentPackages()
+
+      record()
+      checkRecordedFileExists("$pkgABase.testCapture.png")
+      checkRecordedFileExists("$pkgBBase.testCapture.png")
+
+      changeScreen()
+      compare()
+
+      checkResultsSummaryFileExists()
+      // Two DISTINCT _compare images, each nested next to its golden.
+      checkRecordedFileExists("$pkgABase.testCapture_compare.png")
+      checkRecordedFileExists("$pkgBBase.testCapture_compare.png")
+      // The old flat, colliding location must not be used.
+      checkRecordedFileNotExists("app/$defaultRoborazziOutputDir/SameNameTest.testCapture_compare.png")
+    }
+  }
+
+  @Test
+  fun nestedNamingStrategyKeepsCompareImagesDistinctWithSeparateCompareDir() {
+    // Same collision scenario as above, but the compare output directory is a
+    // SEPARATE directory from the golden output directory. The golden's package
+    // subtree must still be mirrored under the compare dir so the two same-named
+    // classes do not collide on one flat _compare image. This only applies to the
+    // explicit *Dir naming strategies (the signal that subdirectories are package
+    // structure); a custom filePath under other strategies keeps the leaf-name
+    // placement (covered by compareWithCustomPath).
+    val compareDir = "app/build/custom_compare_outputDirectoryPath"
+    val pkgARelative =
+      "com/github/takahirom/integration_test_project/pkga/SameNameTest"
+    val pkgBRelative =
+      "com/github/takahirom/integration_test_project/pkgb/SameNameTest"
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      addNamingStrategyGradleProperty("testNestedPackageDirAndClassAndMethod")
+      buildGradle.customCompareOutputDirPath = "build/custom_compare_outputDirectoryPath"
+      removeTests()
+      addSameSimpleNameTestsInDifferentPackages()
+
+      record()
+      checkRecordedFileExists("app/$defaultRoborazziOutputDir/$pkgARelative.testCapture.png")
+      checkRecordedFileExists("app/$defaultRoborazziOutputDir/$pkgBRelative.testCapture.png")
+
+      changeScreen()
+      compare()
+
+      checkResultsSummaryFileExists()
+      // The _compare images mirror the golden package tree under the separate compare dir.
+      checkRecordedFileExists("$compareDir/$pkgARelative.testCapture_compare.png")
+      checkRecordedFileExists("$compareDir/$pkgBRelative.testCapture_compare.png")
+      // The flat, colliding location must not be used.
+      checkRecordedFileNotExists("$compareDir/SameNameTest.testCapture_compare.png")
+    }
+  }
+
   @Test
   fun compareWithCustomPath() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
