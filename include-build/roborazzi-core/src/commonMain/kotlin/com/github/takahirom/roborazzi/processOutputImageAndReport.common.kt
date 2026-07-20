@@ -299,30 +299,50 @@ private fun resolveComparisonImagePath(
 }
 
 /**
- * Returns the golden's parent directory relative to [baseDirectoryPath], or an
- * empty string when the golden sits directly in that directory or is not located
- * under it at all.
+ * Returns the golden's package subdirectory to reproduce under the compare output
+ * directory, or an empty string to fall back to the historical leaf-name placement.
  *
- * The base is intentionally the compare output directory (not the golden's output
- * directory): in every supported subdirectory-naming layout the compare output
- * directory and the golden's output directory are the same directory, so the
- * relative result is exactly the package subdirectory produced by the naming
- * strategy. For the three flat naming strategies the golden sits directly in the
- * output directory, so this returns "" and the caller falls back to the historical
- * leaf-name placement — byte-for-byte unchanged. It also returns "" when the
- * golden lives outside the compare output directory (e.g. a custom `filePath` whose
- * compare directory differs from the golden directory), again preserving the
- * previous leaf-name behavior instead of leaking the golden's own subdirectories.
+ * Resolution order:
+ * 1. Relative to the compare output directory ([baseDirectoryPath]). In the default
+ *    and shared-directory layouts the compare output directory and the golden output
+ *    directory are the same directory, so this yields exactly the package
+ *    subdirectory produced by the naming strategy. For the three flat naming
+ *    strategies the golden sits directly there, so this is empty (leaf-name,
+ *    byte-for-byte unchanged).
+ * 2. Only when the compare output directory is a SEPARATE directory that does not
+ *    contain the golden AND the active strategy is one of the directory-encoding
+ *    `*Dir` strategies, relative to the Roborazzi output directory. A path alone
+ *    cannot distinguish a package subdirectory (naming strategy) from a
+ *    user-supplied custom `filePath` subdirectory, so the explicitly configured
+ *    `*Dir` strategy is the signal that the subdirectories are package structure and
+ *    must be mirrored. For every other strategy this second step is skipped, so a
+ *    custom `filePath` keeps the historical leaf-name placement (see
+ *    compareWithCustomPath).
  */
+@OptIn(ExperimentalRoborazziApi::class)
 private fun goldenSubdirectoryUnder(
   baseDirectoryPath: String,
   goldenFilePath: String,
 ): String {
   val goldenParent = Path(roborazziToAbsolutePath(goldenFilePath)).parent ?: return ""
-  val basePath = Path(roborazziToAbsolutePath(baseDirectoryPath))
-  val relative = goldenParent.relativeTo(basePath).toString()
-  // An empty relative means the golden is directly in the base directory; a
-  // relative escaping the base ("..") means the golden is not under it. Both map
-  // to the historical leaf-name placement.
-  return if (relative.isEmpty() || relative.startsWith("..")) "" else relative
+  val underCompareDir = relativeSubdirectoryOrNull(goldenParent, baseDirectoryPath)
+  if (underCompareDir != null) return underCompareDir
+  // The golden is not located under the compare output directory. Mirror its
+  // package subtree only for the directory-encoding naming strategies.
+  if (roborazziIsSubdirectoryNamingStrategy()) {
+    val underOutputDir =
+      relativeSubdirectoryOrNull(goldenParent, roborazziSystemPropertyOutputDirectory())
+    if (underOutputDir != null) return underOutputDir
+  }
+  return ""
+}
+
+/**
+ * The path of [goldenParent] relative to [baseDirectoryPath], or null when the
+ * golden sits directly in that directory (no subdirectory) or is not located under
+ * it at all (a relative path escaping it with "..").
+ */
+private fun relativeSubdirectoryOrNull(goldenParent: Path, baseDirectoryPath: String): String? {
+  val relative = goldenParent.relativeTo(Path(roborazziToAbsolutePath(baseDirectoryPath))).toString()
+  return if (relative.isEmpty() || relative.startsWith("..")) null else relative
 }
