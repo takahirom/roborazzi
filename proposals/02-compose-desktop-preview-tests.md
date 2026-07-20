@@ -117,7 +117,7 @@ class DefaultDesktopComposePreviewTester(
     val filePath: String,            // precomputed default output path (incl. _TIME_Xms suffix)
     val roborazziOptions: RoborazziOptions,
     val manualClockOptions: ManualClockOptions?,  // set for @RoboComposePreviewOptions variations
-    val content: @Composable () -> Unit,          // preview wrapped with its @Preview options
+    val content: @Composable () -> Unit = { preview() },  // preview wrapped with its @Preview options
   )
 
   class DefaultCapturer : Capturer {
