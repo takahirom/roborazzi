@@ -117,11 +117,13 @@ class DefaultDesktopComposePreviewTester(
     val filePath: String,            // precomputed default output path (incl. _TIME_Xms suffix)
     val roborazziOptions: RoborazziOptions,
     val manualClockOptions: ManualClockOptions?,  // set for @RoboComposePreviewOptions variations
+    val content: @Composable () -> Unit = { preview() },  // preview wrapped with its @Preview options
   )
 
   class DefaultCapturer : Capturer {
     override fun ComposeUiTest.capture(parameter: CaptureParameter) {
-      setContent { parameter.preview() }
+      // content (not preview) so the @Preview annotation options are honored.
+      setContent(parameter.content)
       // Keeps @RoboComposePreviewOptions manual clock variations working; the tester
       // has already disabled mainClock.autoAdvance for them.
       advanceMainClockFor(parameter)
@@ -206,6 +208,10 @@ Android library module to KMP.
 3. `generateComposePreviewDesktopTests` extension: target resolution, annotation
    filters, `includePrivatePreviews`, mixed-module configuration error, integration tests.
 4. `@RoboComposePreviewOptions` (`manualClockOptions`) support via desktop `mainClock`.
+5. Docs (Compose Desktop section, trade-offs, parity table) and a review-fix pass.
+6. `@Preview` annotation options on desktop (widthDp/heightDp, fontScale,
+   showBackground/backgroundColor, locale, uiMode dark bit) + fail-fast guidance when
+   enabled without a Kotlin JVM target.
 
 Each PR updates docs and runs `./gradlew generateReadme`.
 
