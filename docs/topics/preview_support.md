@@ -125,6 +125,31 @@ annotationFilter = AnnotationFilter.Exclude("com.example.MyExcludeAnnotation")
 annotationFilter = AnnotationFilter.Include("com.example.MyIncludeAnnotation")
 ```
 
+## Preview generation diagnostics
+
+When `generateComposePreviewRobolectricTests` is enabled, the plugin checks a few settings
+that make preview screenshot tests reliable and reports each missing one as a warning prefixed
+`Roborazzi:`. The message states the problem, a copy-pasteable fix, and the diagnostic's
+stable **id**. These are currently **warnings** (they do not fail the build), but each message
+announces that it **will become a build error in a future release** — fix it, or suppress it
+if the current setting is intentional.
+
+Each diagnostic can be suppressed by listing its id (comma-separated) in the Roborazzi-wide
+`roborazzi.suppress` Gradle property — the same mechanism used by the
+[JUnit Platform reporting diagnostics](https://takahirom.github.io/roborazzi/junit-platform-reporting.html#troubleshooting). Ids are
+namespaced by feature. Suppressing a **warning** silences it entirely; once a diagnostic is
+promoted to an **error**, suppressing it downgrades it to a warning rather than silencing it.
+For example, in `gradle.properties`:
+
+```properties
+roborazzi.suppress=preview.includeAndroidResources,preview.pixelCopyRenderMode
+```
+
+| Symptom | Id | Severity | Cause / fix |
+|---------|----|----------|-------------|
+| Tests hit `ActivityNotFoundException` | `preview.includeAndroidResources` | Warning | Android resources are not included in unit tests. Set `android.testOptions.unitTests.isIncludeAndroidResources = true` (for a KMP library, `isIncludeAndroidResources = true` inside the `withHostTest { }` block). |
+| Screenshots look broken / low fidelity | `preview.pixelCopyRenderMode` | Warning | Set `robolectric.pixelCopyRenderMode = hardware` (Robolectric 4.12.2+) in the `testOptions` block. |
+
 ## Annotation-based Capture Control
 
 To enable fine-grained control over screenshot timing in Compose Previews, add the annotations dependency:
