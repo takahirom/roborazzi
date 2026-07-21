@@ -6,19 +6,17 @@
 The `roborazzi-junit-platform-reporting` module attaches Roborazzi's captured
 images (golden / actual / compare) to the **standard Gradle `Test` task report** —
 the HTML report and the JUnit XML — so you can open a failing test and see its
-screenshots inline, with no extra upload step. It works by wrapping JUnit Vintage
+screenshots inline. It works by wrapping JUnit Vintage
 in a custom engine that publishes each captured image through JUnit Platform's
 `fileEntryPublished()` API, which Gradle 9.4+ renders as test attachments.
 
 ## Requirements
 
-* **Gradle 9.4+.** On older Gradle the platform's file-publishing call is a silent
-  no-op, so no attachments can appear. Because adding this module is an explicit
-  request for attachments, the Roborazzi Gradle plugin **fails the build** on Gradle
-  below 9.4 rather than degrading silently. If you cannot upgrade the wrapper yet,
-  downgrade the error to a warning with
-  `roborazzi.suppress=junitPlatformReporting.oldGradle` in `gradle.properties`; the
-  tests then run and pass normally, just without attachments.
+* **Gradle 9.4+.** Attachment rendering doesn't exist below 9.4, so the plugin
+  **fails the build** there (adding the module is an explicit request for
+  attachments). If you cannot upgrade yet, downgrade the error to a warning with
+  `roborazzi.suppress=junitPlatformReporting.oldGradle` — tests then run normally,
+  just without attachments.
 * **JUnit4 / Robolectric tests** (the engine wraps JUnit Vintage). This is the
   usual Roborazzi setup on Android/Robolectric.
 
@@ -39,17 +37,10 @@ tasks.withType<Test>().configureEach {
 }
 ```
 
-> **`excludeEngines("junit-vintage")` is mandatory**\
-> This module ships a `roborazzi-vintage` engine that runs your JUnit4 tests
-> itself. If you leave the stock `junit-vintage` engine enabled, **both** engines
-> discover the same tests and every test runs twice, writing a second, suffixed
-> golden image (e.g. `MyTest_2.png`). Because no valid configuration wants both
-> engines, the Roborazzi Gradle plugin **fails the build** with an error that
-> spells out the fix. Restricting execution to `includeEngines("roborazzi-vintage")`
-> instead of excluding the stock engine also works and is not flagged. If you must
-> keep the stock engine running for some reason, downgrade the error to a warning
-> with `roborazzi.suppress=junitPlatformReporting.doubleExecution` in
-> `gradle.properties`.
+> **Why exclude `junit-vintage`?**\
+> The module's `roborazzi-vintage` engine runs your JUnit4 tests itself; leaving
+> the stock engine enabled would run every test twice, so the plugin fails the
+> build. `includeEngines("roborazzi-vintage")` works as an alternative.
 
 ## What you get
 
@@ -59,25 +50,15 @@ tasks.withType<Test>().configureEach {
   per image. CI systems that parse JUnit XML — such as **GitLab CI** and **Azure
   DevOps** — read these markers and show the screenshots on the test result.
 
-Gradle 9.4+ does not copy the images into the report directory; the attachments
-reference the original files under `build/outputs/roborazzi`, so the report stays
-in sync with what Roborazzi wrote.
+Attachments reference the original files under `build/outputs/roborazzi`; Gradle
+does not copy them into the report directory.
 
 ## Troubleshooting
 
-The Roborazzi Gradle plugin detects the common setup mistakes below and reports each
-with a message prefixed `Roborazzi JUnit Platform reporting:` that states the problem, its
-impact, a copy-pasteable fix, and the diagnostic's stable **id**. If you see one, follow it —
-the message already contains the exact change to make.
-
-Every **setup diagnostic** below is a **build error**: once the reporting module is on the
-classpath you have asked for attachments, so a configuration that cannot produce them fails
-the build loudly rather than warning and moving on. (The parallel-execution notice under
-[Limitations](#limitations) is different — it is a runtime warning, not a setup error.)
-Listing a diagnostic's id (comma-separated) in the Roborazzi-wide `roborazzi.suppress`
-property **downgrades that error to a warning** — the message still surfaces, but the build
-no longer fails. This is an escape hatch for migration, not a way to silence the diagnostic
-entirely. Ids are namespaced by feature. For example, in `gradle.properties`:
+The plugin detects the setup mistakes below and **fails the build** with a
+self-contained message: problem, impact, copy-pasteable fix, and a stable **id**.
+If a check doesn't apply to your situation, list its id (comma-separated) in the
+Roborazzi-wide `roborazzi.suppress` property to downgrade the error to a warning:
 
 ```properties
 roborazzi.suppress=junitPlatformReporting.oldGradle,junitPlatformReporting.notJUnitPlatform
@@ -85,9 +66,9 @@ roborazzi.suppress=junitPlatformReporting.oldGradle,junitPlatformReporting.notJU
 
 | Symptom | Id | Severity | Cause / fix |
 |---------|----|----------|-------------|
-| No attachments in the report | `junitPlatformReporting.oldGradle` | **Build error** | Confirm Gradle is **9.4 or newer**. Below that, attachment rendering does not exist and the feature is a no-op. |
+| No attachments in the report | `junitPlatformReporting.oldGradle` | **Build error** | Gradle must be **9.4 or newer**; below that, attachment rendering does not exist. |
 | Nothing is attached at all | `junitPlatformReporting.notJUnitPlatform` | **Build error** | The dependency is present but the `Test` task is not on the JUnit Platform. Add the `useJUnitPlatform { ... }` block from [Setup](#setup). |
-| Nothing is attached, but the task **is** on the JUnit Platform | `junitPlatformReporting.engineNotSelected` | **Build error** | Unlike `notJUnitPlatform`, the platform is active — but `roborazzi-vintage` was filtered out of the execution set, so the attaching engine never runs. It is either listed in `excludeEngines(...)`, or an `includeEngines(...)` restricts execution to engines that do not include it. Remove `roborazzi-vintage` from `excludeEngines`, or add `"roborazzi-vintage"` to `includeEngines`. |
+| Nothing is attached, but the task **is** on the JUnit Platform | `junitPlatformReporting.engineNotSelected` | **Build error** | Engine filters leave `roborazzi-vintage` out (excluded, or missing from `includeEngines(...)`). Put it back in the selected set. |
 | Every test runs twice | `junitPlatformReporting.doubleExecution` | **Build error** | The stock `junit-vintage` engine still runs. Add `excludeEngines("junit-vintage")` inside `useJUnitPlatform { ... }` (see Setup), or restrict to `includeEngines("roborazzi-vintage")`. |
 
 ## Limitations
