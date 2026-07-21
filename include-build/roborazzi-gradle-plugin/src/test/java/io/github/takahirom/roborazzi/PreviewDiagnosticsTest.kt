@@ -1,6 +1,7 @@
 package io.github.takahirom.roborazzi
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -112,13 +113,13 @@ class PreviewDiagnosticsTest {
       "shows the suppress property",
       failMessage.contains("roborazzi.suppress=$PreviewPixelCopyRenderModeDiagnosticId"),
     )
-    assertTrue(
+    assertFalse(
       "does not talk about silencing a warning",
-      !failMessage.contains("To silence this warning"),
+      failMessage.contains("To silence this warning"),
     )
-    assertTrue(
+    assertFalse(
       "does not announce a future error-ization",
-      !failMessage.contains("This will become a build error in a future release"),
+      failMessage.contains("This will become a build error in a future release"),
     )
 
     // A suppressed ERROR is reported as a warning but keeps the ERROR footer wording.
@@ -132,9 +133,9 @@ class PreviewDiagnosticsTest {
       "downgraded error keeps the downgrade wording",
       downgraded.contains("To downgrade this error to a warning"),
     )
-    assertTrue(
+    assertFalse(
       "downgraded error does not announce a future error-ization",
-      !downgraded.contains("This will become a build error in a future release"),
+      downgraded.contains("This will become a build error in a future release"),
     )
   }
 }
