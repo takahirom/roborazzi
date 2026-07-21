@@ -142,6 +142,12 @@ fun processOutputImageAndReport(
             contextData = contextData,
             imageIoFormat = recordOptions.imageIoFormat,
           )
+        roborazziReportCapturedImage(roborazziToAbsolutePath(comparisonFilePath))
+        // Also attach the existing golden so a report viewer can compare golden vs
+        // actual vs compare. Skipped when there is no golden on record yet (Added).
+        if (isGoldenFilePresent) {
+          roborazziReportCapturedImage(roborazziToAbsolutePath(goldenFilePath))
+        }
         roborazziDebugLog {
           "processOutputImageAndReport(): compareCanvas is saved " +
             "compareFile:$comparisonFilePath"
@@ -164,6 +170,7 @@ fun processOutputImageAndReport(
             contextData = contextData,
             imageIoFormat = recordOptions.imageIoFormat,
           )
+        roborazziReportCapturedImage(roborazziToAbsolutePath(actualFilePath))
         // The current-run output image was written (the `_actual`, or the golden
         // for a recording task type). Signal it before the report, which throws
         // on a failing verify.
@@ -237,6 +244,7 @@ fun processOutputImageAndReport(
       contextData = contextData,
       imageIoFormat = recordOptions.imageIoFormat,
     )
+    roborazziReportCapturedImage(roborazziToAbsolutePath(goldenFilePath))
     // The recording task type writes the golden, which is also the annotated
     // image's source.
     reportActualImageWritten(true)

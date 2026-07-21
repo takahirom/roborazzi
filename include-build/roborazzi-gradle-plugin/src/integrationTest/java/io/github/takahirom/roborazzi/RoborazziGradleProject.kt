@@ -22,7 +22,8 @@ class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
   fun runTask(
     task: String,
     buildType: BuildType,
-    additionalParameters: Array<String>
+    additionalParameters: Array<String>,
+    gradleVersion: String? = null
   ): BuildResult {
     val buildResult = GradleRunner.create()
       .withProjectDir(testProjectDir.root)
@@ -45,6 +46,10 @@ class RoborazziGradleRootProject(val testProjectDir: TemporaryFolder) {
 //          "GRADLE_USER_HOME" to File(testProjectDir.root, "gradle").absolutePath,
         )
       )
+      // Only pin the Gradle distribution when a specific version is requested. When
+      // null, TestKit uses the version that is running the build (the wrapper), so
+      // existing tests keep their current behavior.
+      .let { if (gradleVersion != null) it.withGradleVersion(gradleVersion) else it }
       .let {
         if (buildType == BuildType.BuildAndFail) {
           it.buildAndFail()
@@ -91,9 +96,24 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
 
   var buildDirName = "build"
 
+  // When set, all tasks launched through this module run on the given Gradle
+  // distribution (via GradleRunner.withGradleVersion). Null keeps the default
+  // (the version running the integrationTest build, i.e. the wrapper).
+  var gradleVersion: String? = null
+
   fun record(): BuildResult {
     val task = "recordRoborazziDebug"
     return runTask(task)
+  }
+
+  fun recordAndFail(vararg additionalParameters: String): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(task, BuildType.BuildAndFail, arrayOf(*additionalParameters))
+  }
+
+  fun recordWithParams(vararg additionalParameters: String): BuildResult {
+    val task = "recordRoborazziDebug"
+    return runTask(task, additionalParameters = arrayOf(*additionalParameters))
   }
 
   fun recordWithCleanupOldScreenshots(): BuildResult {
@@ -166,9 +186,9 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     return runTask(task)
   }
 
-  fun verifyAndFail(): BuildResult {
+  fun verifyAndFail(vararg additionalParameters: String): BuildResult {
     val task = "verifyRoborazziDebug"
-    return runTask(task, BuildType.BuildAndFail)
+    return runTask(task, BuildType.BuildAndFail, arrayOf(*additionalParameters))
   }
 
   fun BuildResult.shouldDetectChangedPngCapture() {
@@ -247,7 +267,8 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     val buildResult = rootProject.runTask(
       "app:" + task,
       buildType,
-      additionalParameters
+      additionalParameters,
+      gradleVersion = gradleVersion
     )
     return buildResult
   }
@@ -258,6 +279,40 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     var customOutputDirPath: String? = null
     var customCompareOutputDirPath: String? = null
     var separateOutputDirs = false
+
+    // When true, add the roborazzi-junit-platform-reporting dependency and switch the
+    // unit test task to the JUnit Platform so captured images are published via
+    // EngineExecutionListener.fileEntryPublished(). See RoborazziVintageTestEngine.
+    var enableJUnitPlatformReporting = false
+
+    // Only meaningful when enableJUnitPlatformReporting is true. When true, exclude the
+    // stock junit-vintage engine so only roborazzi-vintage runs the tests. When false,
+    // both engines discover the same tests (the documented double-execution footgun).
+    var excludeVintageEngine = true
+
+    // Only meaningful when enableJUnitPlatformReporting is true. When true, the unit test
+    // task is switched to the JUnit Platform via useJUnitPlatform. When false, the
+    // reporting dependency is on the classpath but the task keeps running plain JUnit4, so
+    // roborazzi-vintage never runs (the "dependency present, platform not enabled" setup
+    // mistake the plugin diagnoses).
+    var applyJUnitPlatform = true
+
+    // Only meaningful when enableJUnitPlatformReporting and applyJUnitPlatform are true.
+    // When true, restrict execution to roborazzi-vintage via includeEngines instead of
+    // excluding junit-vintage. This keeps the stock engine out of the execution set, so it
+    // is a correct alternative setup the plugin must NOT flag. Takes precedence over
+    // excludeVintageEngine.
+    var includeRoborazziVintageEngine = false
+
+    // Only meaningful when enableJUnitPlatformReporting and applyJUnitPlatform are true.
+    // When true, emit `excludeEngines("roborazzi-vintage")`, so the stock junit-vintage
+    // engine still runs the tests but roborazzi-vintage is filtered out of the execution
+    // set. This is a misconfiguration: images are never published, yet there is no double
+    // execution. The plugin must NOT report doubleExecution here (the old implementation
+    // false-positived and errored); it should emit the engineNotSelected warning instead.
+    // Placed before excludeVintageEngine in the when-branch so it wins over that flag's
+    // default of true.
+    var excludeRoborazziVintageEngine = false
 
     init {
       addIncludeBuild()
@@ -388,6 +443,53 @@ dependencies {
 
           """.trimIndent()
         )
+      }
+      if (enableJUnitPlatformReporting) {
+        buildFile.appendText(
+          """
+
+            dependencies {
+              testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-platform-reporting")
+              testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.12.2")
+            }
+
+          """.trimIndent()
+        )
+        if (applyJUnitPlatform) {
+          val excludeEnginesBlock = when {
+            includeRoborazziVintageEngine ->
+              """
+              useJUnitPlatform {
+                includeEngines("roborazzi-vintage")
+              }
+              """.trimIndent()
+
+            excludeRoborazziVintageEngine ->
+              """
+              useJUnitPlatform {
+                excludeEngines("roborazzi-vintage")
+              }
+              """.trimIndent()
+
+            excludeVintageEngine ->
+              """
+              useJUnitPlatform {
+                excludeEngines("junit-vintage")
+              }
+              """.trimIndent()
+
+            else -> "useJUnitPlatform()"
+          }
+          buildFile.appendText(
+            """
+
+              tasks.withType<Test>().configureEach {
+                $excludeEnginesBlock
+              }
+
+            """.trimIndent()
+          )
+        }
       }
     }
   }

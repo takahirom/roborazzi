@@ -657,6 +657,24 @@ abstract class RoborazziPlugin : Plugin<Project> {
               // Do nothing
             }
           })
+          // Diagnose roborazzi-junit-platform-reporting setup mistakes. Runs in a
+          // doFirst so that inspecting the test runtime classpath and the resolved test
+          // framework options never forces configuration resolution at configuration
+          // time; the task parameter is used (not the captured `test`) so no Task
+          // reference is captured, keeping the action Configuration Cache safe.
+          if (test is Test) {
+            // The set of diagnostic ids to suppress, read from the roborazzi.suppress
+            // Gradle property at configuration time (a Gradle property is a Configuration
+            // Cache input) and captured as a plain Set<String> so the doFirst action holds
+            // no Project reference. Every JUnit Platform reporting diagnostic is a build
+            // error; listing its id here downgrades that error to a warning rather than
+            // silencing it, so the message still surfaces.
+            val suppressedDiagnostics =
+              RoborazziDiagnosticSuppression.parse(roborazziProperties)
+            test.doFirst("Roborazzi JUnit Platform reporting diagnostics") { task ->
+              diagnoseJUnitPlatformReporting(task as Test, suppressedDiagnostics)
+            }
+          }
           test.finalizedBy(finalizeTestRoborazziTask)
         }
 
