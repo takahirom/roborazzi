@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.AccessibilityAction
 import androidx.compose.ui.semantics.CollectionInfo
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.SemanticsConfiguration
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -172,8 +173,13 @@ private fun semanticsValueToString(value: Any?): String = buildString {
             // Save space if we there is text only in the object
             append(value)
         }
+    } else if (value is CustomAccessibilityAction) {
+        // Label only: the action lambda's toString carries JVM runtime identity
+        // (JIT address / identityHashCode), which changes on every run and would
+        // break the deterministic-output contract of the UI tree dump.
+        append("CustomAccessibilityAction(label=${value.label})")
     } else if (value is Iterable<*>) {
-        append(value.sortedBy { it.toString() })
+        append(value.map { semanticsValueToString(it) }.sorted())
     } else if (value is CollectionInfo) {
         append("(rowCount=${value.rowCount}, columnCount=${value.columnCount})")
     } else {

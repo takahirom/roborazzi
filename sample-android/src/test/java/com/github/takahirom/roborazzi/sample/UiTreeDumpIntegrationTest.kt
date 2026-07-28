@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.unit.dp
 import androidx.test.espresso.Espresso.onView
@@ -93,6 +96,79 @@ class UiTreeDumpIntegrationTest {
 
     imageFile.delete()
     sidecarFile.delete()
+  }
+
+  @Test
+  fun customActionsAreSerializedWithoutLambdaRuntimeIdentity() {
+    composeTestRule.setContent {
+      Text(
+        text = "Login",
+        modifier = Modifier
+          .testTag("login_button")
+          .semantics {
+            // Reverse-alphabetical declaration order so the assertion below
+            // actually exercises the deterministic sorting.
+            customActions = listOf(
+              CustomAccessibilityAction("Second action") { true },
+              CustomAccessibilityAction("More actions") { true },
+            )
+          }
+      )
+    }
+
+    val prefix =
+      "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.customActions"
+    val imageFile = File("$prefix.png")
+    val sidecarFile = File("$prefix.uitree.json")
+    val annotatedFile = File("$prefix.annotated.png")
+    val secondImageFile = File("${prefix}2.png")
+    val secondSidecarFile = File("${prefix}2.uitree.json")
+    val secondAnnotatedFile = File("${prefix}2.annotated.png")
+    val allFiles = listOf(
+      imageFile, sidecarFile, annotatedFile,
+      secondImageFile, secondSidecarFile, secondAnnotatedFile,
+    )
+    allFiles.forEach { it.delete() }
+
+    onView(isRoot()).captureRoboImage(
+      file = imageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        uiTreeDumpOptions = UiTreeDumpOptions(),
+      ),
+    )
+
+    val json = sidecarFile.readText()
+
+    // The action labels are preserved with a stable, label-only, sorted
+    // rendering, so the sidecar stays byte-identical across runs.
+    assertTrue(
+      "expected label-only CustomActions rendering in:\n$json",
+      json.contains(
+        "\"CustomActions\": \"[CustomAccessibilityAction(label=More actions), " +
+          "CustomAccessibilityAction(label=Second action)]\""
+      )
+    )
+
+    // No JVM runtime identity (lambda class name / identityHashCode) may leak
+    // into the JSON — that would make re-recording the same UI produce a diff.
+    val identityLeak = Regex("@[0-9a-fA-F]{4,}|Lambda|Function0").find(json)
+    assertTrue(
+      "runtime identity leaked into the sidecar (${identityLeak?.value}):\n$json",
+      identityLeak == null
+    )
+
+    // Recording the same UI again yields a byte-identical sidecar.
+    onView(isRoot()).captureRoboImage(
+      file = secondImageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        uiTreeDumpOptions = UiTreeDumpOptions(),
+      ),
+    )
+    assertEquals(json, secondSidecarFile.readText())
+
+    allFiles.forEach { it.delete() }
   }
 
   @Test
