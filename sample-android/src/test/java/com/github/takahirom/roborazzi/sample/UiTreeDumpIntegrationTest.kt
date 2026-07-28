@@ -106,9 +106,11 @@ class UiTreeDumpIntegrationTest {
         modifier = Modifier
           .testTag("login_button")
           .semantics {
+            // Reverse-alphabetical declaration order so the assertion below
+            // actually exercises the deterministic sorting.
             customActions = listOf(
-              CustomAccessibilityAction("More actions") { true },
               CustomAccessibilityAction("Second action") { true },
+              CustomAccessibilityAction("More actions") { true },
             )
           }
       )
@@ -119,7 +121,14 @@ class UiTreeDumpIntegrationTest {
     val imageFile = File("$prefix.png")
     val sidecarFile = File("$prefix.uitree.json")
     val annotatedFile = File("$prefix.annotated.png")
-    listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
+    val secondImageFile = File("${prefix}2.png")
+    val secondSidecarFile = File("${prefix}2.uitree.json")
+    val secondAnnotatedFile = File("${prefix}2.annotated.png")
+    val allFiles = listOf(
+      imageFile, sidecarFile, annotatedFile,
+      secondImageFile, secondSidecarFile, secondAnnotatedFile,
+    )
+    allFiles.forEach { it.delete() }
 
     onView(isRoot()).captureRoboImage(
       file = imageFile,
@@ -131,8 +140,8 @@ class UiTreeDumpIntegrationTest {
 
     val json = sidecarFile.readText()
 
-    // The action labels are preserved with a stable, label-only rendering
-    // (declaration order), so the sidecar stays byte-identical across runs.
+    // The action labels are preserved with a stable, label-only, sorted
+    // rendering, so the sidecar stays byte-identical across runs.
     assertTrue(
       "expected label-only CustomActions rendering in:\n$json",
       json.contains(
@@ -149,7 +158,17 @@ class UiTreeDumpIntegrationTest {
       identityLeak == null
     )
 
-    listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
+    // Recording the same UI again yields a byte-identical sidecar.
+    onView(isRoot()).captureRoboImage(
+      file = secondImageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        uiTreeDumpOptions = UiTreeDumpOptions(),
+      ),
+    )
+    assertEquals(json, secondSidecarFile.readText())
+
+    allFiles.forEach { it.delete() }
   }
 
   @Test
