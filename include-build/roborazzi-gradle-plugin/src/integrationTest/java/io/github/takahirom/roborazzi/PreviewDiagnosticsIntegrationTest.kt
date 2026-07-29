@@ -1,5 +1,7 @@
 package io.github.takahirom.roborazzi
 
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -51,21 +53,33 @@ class PreviewDiagnosticsIntegrationTest {
 
       val output = configureAndReportDiagnostics().output
 
-      assert(output.contains("Diagnostic id: $INCLUDE_ANDROID_RESOURCES_ID")) {
-        "Expected the includeAndroidResources warning with its diagnostic id.\n$output"
+      assertTrue(
+        "Expected the includeAndroidResources warning with its diagnostic id.\n$output",
+        output.contains("Diagnostic id: $INCLUDE_ANDROID_RESOURCES_ID"),
+      )
+      assertTrue(
+        "Expected the pixelCopyRenderMode warning with its diagnostic id.\n$output",
+        output.contains("Diagnostic id: $PIXEL_COPY_RENDER_MODE_ID"),
+      )
+      // Each diagnostic's own footer must carry the forthcoming-error notice (the notice line
+      // immediately precedes the "Diagnostic id:" line). A plain contains() would pass if only
+      // one of the two warnings kept its footer. The pixelCopyRenderMode warning fires once per
+      // Test task variant, so total occurrence counts are not stable — anchor per id instead.
+      for (id in listOf(INCLUDE_ANDROID_RESOURCES_ID, PIXEL_COPY_RENDER_MODE_ID)) {
+        assertTrue(
+          "Expected the forthcoming-error notice in the footer of $id.\n$output",
+          Regex(Regex.escape(FUTURE_ERROR_NOTICE) + """\s*Diagnostic id: """ + Regex.escape(id))
+            .containsMatchIn(output),
+        )
       }
-      assert(output.contains("Diagnostic id: $PIXEL_COPY_RENDER_MODE_ID")) {
-        "Expected the pixelCopyRenderMode warning with its diagnostic id.\n$output"
-      }
-      assert(output.contains(FUTURE_ERROR_NOTICE)) {
-        "Expected the forthcoming-error notice in the warning footer.\n$output"
-      }
-      assert(output.contains("$SUPPRESS_PROPERTY=$INCLUDE_ANDROID_RESOURCES_ID")) {
-        "Expected the footer to show how to suppress the includeAndroidResources warning.\n$output"
-      }
-      assert(output.contains("$SUPPRESS_PROPERTY=$PIXEL_COPY_RENDER_MODE_ID")) {
-        "Expected the footer to show how to suppress the pixelCopyRenderMode warning.\n$output"
-      }
+      assertTrue(
+        "Expected the footer to show how to suppress the includeAndroidResources warning.\n$output",
+        output.contains("$SUPPRESS_PROPERTY=$INCLUDE_ANDROID_RESOURCES_ID"),
+      )
+      assertTrue(
+        "Expected the footer to show how to suppress the pixelCopyRenderMode warning.\n$output",
+        output.contains("$SUPPRESS_PROPERTY=$PIXEL_COPY_RENDER_MODE_ID"),
+      )
     }
   }
 
@@ -83,9 +97,10 @@ class PreviewDiagnosticsIntegrationTest {
       val output =
         configureAndReportDiagnostics("-Proborazzi.suppress=$INCLUDE_ANDROID_RESOURCES_ID").output
 
-      assert(!output.contains("Diagnostic id: $INCLUDE_ANDROID_RESOURCES_ID")) {
-        "Expected the includeAndroidResources warning to be silenced by roborazzi.suppress.\n$output"
-      }
+      assertFalse(
+        "Expected the includeAndroidResources warning to be silenced by roborazzi.suppress.\n$output",
+        output.contains("Diagnostic id: $INCLUDE_ANDROID_RESOURCES_ID"),
+      )
     }
   }
 
@@ -103,9 +118,10 @@ class PreviewDiagnosticsIntegrationTest {
 
       val output = configureAndReportDiagnostics().output
 
-      assert(!output.contains("Diagnostic id: preview.")) {
-        "Expected no preview diagnostic when preview generation is disabled.\n$output"
-      }
+      assertFalse(
+        "Expected no preview diagnostic when preview generation is disabled.\n$output",
+        output.contains("Diagnostic id: preview."),
+      )
     }
   }
 
@@ -121,9 +137,10 @@ class PreviewDiagnosticsIntegrationTest {
 
       val output = configureAndReportDiagnostics().output
 
-      assert(!output.contains("Diagnostic id: preview.")) {
-        "Expected no preview diagnostic when the project is correctly configured.\n$output"
-      }
+      assertFalse(
+        "Expected no preview diagnostic when the project is correctly configured.\n$output",
+        output.contains("Diagnostic id: preview."),
+      )
     }
   }
 }

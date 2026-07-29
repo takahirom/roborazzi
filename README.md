@@ -1423,7 +1423,7 @@ roborazzi.suppress=preview.includeAndroidResources,preview.pixelCopyRenderMode
 | Symptom | Id | Severity | Cause / fix |
 |---------|----|----------|-------------|
 | Tests hit `ActivityNotFoundException` | `preview.includeAndroidResources` | Warning | Android resources are not included in unit tests. Set `android.testOptions.unitTests.isIncludeAndroidResources = true` (for a KMP library, `isIncludeAndroidResources = true` inside the `withHostTest { }` block). |
-| Screenshots look broken / low fidelity | `preview.pixelCopyRenderMode` | Warning | Set `robolectric.pixelCopyRenderMode = hardware` (Robolectric 4.12.2+) in the `testOptions` block. |
+| Screenshots look broken / low fidelity | `preview.pixelCopyRenderMode` | Warning | Set the `robolectric.pixelCopyRenderMode` system property to `hardware` (Robolectric 4.12.2+): `android { testOptions { unitTests.all { it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware" } } }`. |
 
 ## Annotation-based Capture Control
 
