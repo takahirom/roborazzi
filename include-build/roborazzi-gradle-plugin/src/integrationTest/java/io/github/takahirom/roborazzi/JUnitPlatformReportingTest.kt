@@ -188,6 +188,124 @@ class JUnitPlatformReportingTest {
   }
 
   /**
+   * (b2) Shift-left: when the reporting module is a declared test dependency, the setup is
+   * diagnosed during the configuration phase, so the build fails before any task runs. Proven by
+   * requesting `help` — a task that has nothing to do with testing and never realizes a test
+   * action — and still getting the doubleExecution error.
+   *
+   * Suppressing the id must downgrade the configuration-phase error to a warning exactly as it
+   * does at execution time, since both layers report through the same code path: `help` then
+   * succeeds with the message still printed.
+   */
+  @Test
+  fun failsDuringConfigurationPhaseOnDoubleExecution() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.enableJUnitPlatformReporting = true
+      buildGradle.excludeVintageEngine = false
+
+      val failure = helpAndFail()
+      assert(failure.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected the diagnostic to fail `help` during the configuration phase, but found none.\n${failure.output}"
+      }
+      assert(failure.output.contains("every test runs twice")) {
+        "Expected the configuration-phase error to explain the double execution.\n${failure.output}"
+      }
+      assert(failure.output.contains("Diagnostic id: junitPlatformReporting.doubleExecution")) {
+        "Expected the configuration-phase error to print its stable, namespaced diagnostic id.\n${failure.output}"
+      }
+      // The test task never executed, so the failure cannot have come from its doFirst.
+      assert(!failure.output.contains("> Task :app:testDebugUnitTest")) {
+        "Expected `help` not to execute the test task at all.\n${failure.output}"
+      }
+
+      // Suppression works the same in the configuration phase: `help` succeeds, message stays.
+      // Run with the Configuration Cache on so the same invocation also proves that the new
+      // configuration-phase work reports normally while a CC entry is being stored, and does not
+      // introduce a CC incompatibility.
+      val suppressed = helpWithParams(
+        "-Proborazzi.suppress=junitPlatformReporting.doubleExecution",
+        "--configuration-cache"
+      )
+      assert(suppressed.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected the downgraded configuration-phase warning to still surface.\n${suppressed.output}"
+      }
+      assert(suppressed.output.contains("every test runs twice")) {
+        "Expected the downgraded configuration-phase warning to explain the double execution.\n${suppressed.output}"
+      }
+      assert(suppressed.output.contains("Configuration cache entry stored")) {
+        "Expected the Configuration Cache entry to be stored.\n${suppressed.output}"
+      }
+      assert(!suppressed.output.contains("problems were found storing the configuration cache")) {
+        "Expected no Configuration Cache problems from the configuration-phase diagnostics.\n${suppressed.output}"
+      }
+    }
+  }
+
+  /**
+   * (b3) False-positive guard for the hook choice. A convention plugin (or the user's own build
+   * script) commonly calls useJUnitPlatform from inside `afterEvaluate`. The configuration-phase
+   * diagnostics must observe the finished configuration, not an intermediate state: reporting
+   * notJUnitPlatform here would break a perfectly correct build. Uses `projectsEvaluated`, which
+   * runs after every project's `afterEvaluate`, so nothing is reported and the record succeeds.
+   */
+  @Test
+  fun doesNotFlagUseJUnitPlatformConfiguredInAfterEvaluate() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.enableJUnitPlatformReporting = true
+      buildGradle.configureJUnitPlatformInAfterEvaluate = true
+
+      // `help` exercises the configuration phase on its own, isolating the hook-ordering question
+      // from anything that happens at execution time.
+      val help = helpWithParams()
+      assert(!help.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected no diagnostic when useJUnitPlatform is applied from afterEvaluate.\n${help.output}"
+      }
+
+      val result = recordWithParams(NO_BUILD_CACHE)
+      assert(!result.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected no diagnostic on the record run either.\n${result.output}"
+      }
+      checkRecordedFileExists(
+        "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture.png"
+      )
+      checkRecordedFileNotExists(
+        "app/build/outputs/roborazzi/com.github.takahirom.integration_test_project.RoborazziTest.testCapture_2.png"
+      )
+    }
+  }
+
+  /**
+   * (b4) The execution-time backstop layer. When the reporting module is not declared in a test
+   * configuration, the configuration-phase declared-dependency scan cannot see it (that is the
+   * transitive case), so the diagnostics must still fire from the test task's doFirst. `help`
+   * therefore succeeds — nothing is diagnosed during configuration — while the record run fails
+   * with the same doubleExecution error.
+   */
+  @Test
+  fun failsAtExecutionTimeWhenReportingModuleIsNotDeclaredInATestConfiguration() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.enableJUnitPlatformReporting = true
+      buildGradle.declareJUnitPlatformReportingIndirectly = true
+      buildGradle.excludeVintageEngine = false
+
+      // Configuration alone cannot detect the module, so `help` must pass.
+      val help = helpWithParams()
+      assert(!help.output.contains(JUNIT_PLATFORM_REPORTING_LOG_PREFIX)) {
+        "Expected no configuration-phase diagnostic when the module is not declared in a test configuration.\n${help.output}"
+      }
+
+      // The test task's classpath does contain the module, so the backstop layer reports it.
+      val failure = recordAndFail(NO_BUILD_CACHE)
+      assert(failure.output.contains("every test runs twice")) {
+        "Expected the execution-time backstop to report the double execution.\n${failure.output}"
+      }
+      assert(failure.output.contains("Diagnostic id: junitPlatformReporting.doubleExecution")) {
+        "Expected the backstop error to print its stable, namespaced diagnostic id.\n${failure.output}"
+      }
+    }
+  }
+
+  /**
    * (c) The excludeEngines footgun is now a build error. With reporting enabled and
    * useJUnitPlatform but WITHOUT excludeEngines("junit-vintage"), both the stock
    * junit-vintage engine and roborazzi-vintage would discover the same JUnit4 tests and run
@@ -265,6 +383,13 @@ class JUnitPlatformReportingTest {
       }
       assert(result.output.contains("every test runs twice")) {
         "Expected the warning to explain the double execution.\n${result.output}"
+      }
+      // Reported once, not twice. Both the configuration-phase and the execution-time layer see
+      // this project, so this is the guard that the execution-time layer really does stand down
+      // once the configuration-phase one has detected the module from the declared dependencies.
+      val warningCount = Regex("every test runs twice").findAll(result.output).count()
+      assert(warningCount == 1) {
+        "Expected the double-execution warning exactly once, but found it $warningCount times.\n${result.output}"
       }
       // With the error relaxed to a warning, both engines still run, so the test executes
       // twice and Roborazzi writes the _2 variant.

@@ -72,6 +72,16 @@ roborazzi.suppress=junitPlatformReporting.oldGradle,junitPlatformReporting.notJU
 | Nothing is attached, but the task **is** on the JUnit Platform | `junitPlatformReporting.engineNotSelected` | **Build error** | Engine filters leave `roborazzi-vintage` out (excluded, or missing from `includeEngines(...)`). Put it back in the selected set. |
 | Every test runs twice | `junitPlatformReporting.doubleExecution` | **Build error** | The stock `junit-vintage` engine still runs. Add `excludeEngines("junit-vintage")` inside `useJUnitPlatform { ... }` (see Setup), or restrict to `includeEngines("roborazzi-vintage")`. |
 
+### When the checks run
+
+If you declare `roborazzi-junit-platform-reporting` in a test configuration
+(`testImplementation`, `testRuntimeOnly`, and the like), the checks run in the
+**configuration phase**, so a mistake fails the build before any task
+runs — even for an invocation such as `./gradlew help`. If the module reaches
+the test classpath only transitively, through another dependency, the checks run
+when the test task **executes** instead, which also means they say nothing when
+that task is `UP-TO-DATE` or served `FROM-CACHE`.
+
 ## Limitations
 
 * Concurrent in-JVM test execution is **not supported** (the module relies on

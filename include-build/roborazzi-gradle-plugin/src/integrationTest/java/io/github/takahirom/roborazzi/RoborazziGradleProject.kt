@@ -116,6 +116,17 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     return runTask(task, additionalParameters = arrayOf(*additionalParameters))
   }
 
+  // Runs a task that is not a Roborazzi/test task at all (`help`). Used to prove that the
+  // configuration-phase diagnostics fire regardless of which task was requested — nothing about
+  // `help` touches the test task, so a failure here can only come from the configuration phase.
+  fun helpAndFail(vararg additionalParameters: String): BuildResult {
+    return runTask("help", BuildType.BuildAndFail, arrayOf(*additionalParameters))
+  }
+
+  fun helpWithParams(vararg additionalParameters: String): BuildResult {
+    return runTask("help", additionalParameters = arrayOf(*additionalParameters))
+  }
+
   fun recordWithCleanupOldScreenshots(): BuildResult {
     val task = "recordRoborazziDebug"
     return runTask(task, additionalParameters = arrayOf("-Proborazzi.cleanupOldScreenshots=true"))
@@ -314,6 +325,24 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     // default of true.
     var excludeRoborazziVintageEngine = false
 
+    // Only meaningful when enableJUnitPlatformReporting and applyJUnitPlatform are true. When
+    // true, the `tasks.withType<Test>()` block that calls useJUnitPlatform is wrapped in
+    // `afterEvaluate { }`, mimicking a convention plugin that configures the test framework late.
+    // The configuration-phase diagnostics must not false-positive on this: a hook that ran before
+    // the user's afterEvaluate would still see a plain JUnit4 task and report notJUnitPlatform.
+    var configureJUnitPlatformInAfterEvaluate = false
+
+    // Only meaningful when enableJUnitPlatformReporting is true. When true, the reporting module
+    // is declared on a custom configuration that `testRuntimeOnly` merely extends from, instead of
+    // on a test configuration directly. `Configuration.getDependencies()` is declared-only (it
+    // does not include inherited dependencies), so the plugin's configuration-phase
+    // declared-dependency scan cannot see the module here, while the resolved test runtime
+    // classpath still contains its jar. That is the shape of the case the configuration-phase
+    // layer is blind to by design — a module that arrives without a direct test-scoped
+    // declaration, as also happens when another library brings it in transitively — so it is what
+    // exercises the execution-time backstop layer.
+    var declareJUnitPlatformReportingIndirectly = false
+
     init {
       addIncludeBuild()
     }
@@ -445,13 +474,28 @@ dependencies {
         )
       }
       if (enableJUnitPlatformReporting) {
-        buildFile.appendText(
+        val reportingDependencyBlock = if (declareJUnitPlatformReportingIndirectly) {
           """
+            val roborazziReportingIndirect by configurations.creating
+            configurations.named("testRuntimeOnly") { extendsFrom(roborazziReportingIndirect) }
 
+            dependencies {
+              roborazziReportingIndirect("io.github.takahirom.roborazzi:roborazzi-junit-platform-reporting")
+              testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.12.2")
+            }
+          """.trimIndent()
+        } else {
+          """
             dependencies {
               testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-platform-reporting")
               testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.12.2")
             }
+          """.trimIndent()
+        }
+        buildFile.appendText(
+          """
+
+            $reportingDependencyBlock
 
           """.trimIndent()
         )
@@ -480,14 +524,28 @@ dependencies {
 
             else -> "useJUnitPlatform()"
           }
-          buildFile.appendText(
+          val configureTestTasksBlock =
             """
-
-              tasks.withType<Test>().configureEach {
-                $excludeEnginesBlock
-              }
-
+            tasks.withType<Test>().configureEach {
+              $excludeEnginesBlock
+            }
             """.trimIndent()
+          buildFile.appendText(
+            if (configureJUnitPlatformInAfterEvaluate) {
+              """
+
+                afterEvaluate {
+                  $configureTestTasksBlock
+                }
+
+              """.trimIndent()
+            } else {
+              """
+
+                $configureTestTasksBlock
+
+              """.trimIndent()
+            }
           )
         }
       }
