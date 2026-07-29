@@ -705,7 +705,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
 
     // The set of diagnostic ids to suppress, read from the roborazzi.suppress Gradle property
     // at configuration time (a Gradle property is a Configuration Cache input) and captured as
-    // a plain Set<String> via RoborazziDiagnosticSuppression.
+    // a plain Set<String>. Shared with the JUnit Platform reporting diagnostics via
+    // RoborazziDiagnosticSuppression. Preview diagnostics fire in afterEvaluate, so this
+    // config-time read is Configuration Cache safe.
     val suppressedDiagnostics =
       RoborazziDiagnosticSuppression.parse(
         project.providers.gradlePropertiesPrefixedBy("roborazzi").get()
@@ -726,7 +728,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
         project = project,
         extension = extension,
         configureRoborazziTasks = ::configureRoborazziTasks,
-        findTestTaskProvider = { testTaskName -> findTestTaskProvider(Test::class, testTaskName) }
+        findTestTaskProvider = { testTaskName -> findTestTaskProvider(Test::class, testTaskName) },
+        suppressedDiagnostics = suppressedDiagnostics
       )
     }
     project.pluginManager.withPlugin("com.android.library") {
@@ -734,7 +737,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
         project = project,
         extension = extension,
         configureRoborazziTasks = ::configureRoborazziTasks,
-        findTestTaskProvider = { testTaskName -> findTestTaskProvider(Test::class, testTaskName) }
+        findTestTaskProvider = { testTaskName -> findTestTaskProvider(Test::class, testTaskName) },
+        suppressedDiagnostics = suppressedDiagnostics
       )
     }
     project.pluginManager.withPlugin("com.android.kotlin.multiplatform.library") {
@@ -742,7 +746,8 @@ abstract class RoborazziPlugin : Plugin<Project> {
         project = project,
         extension = extension,
         configureRoborazziTasks = ::configureRoborazziTasks,
-        findTestTaskProvider = { testTaskName -> findTestTaskProvider(Test::class, testTaskName) }
+        findTestTaskProvider = { testTaskName -> findTestTaskProvider(Test::class, testTaskName) },
+        suppressedDiagnostics = suppressedDiagnostics
       )
     }
     fun computeVariantName(targetName: String, testRunName: String): String {
