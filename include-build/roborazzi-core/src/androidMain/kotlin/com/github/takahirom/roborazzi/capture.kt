@@ -306,6 +306,16 @@ sealed interface RoboComponent : RoboComponentTree {
             } ?: listOf()
           }
 
+          // The compose content path (captureRoboImage { content() }) hands the
+          // AndroidComposeView itself to the visitor. It is a ViewGroup but not an
+          // AbstractComposeView, so without this branch the traversal would stop at
+          // its (non-semantics) Android child views. https://github.com/takahirom/roborazzi/issues/913
+          hasCompose && platformNode is ViewRootForTest -> {
+            platformNode.semanticsOwner.rootSemanticsNode.let {
+              listOf(Compose(it, roborazziOptions, windowOffset))
+            }
+          }
+
           platformNode is ViewGroup -> {
             (0 until platformNode.childCount).map {
               View(
