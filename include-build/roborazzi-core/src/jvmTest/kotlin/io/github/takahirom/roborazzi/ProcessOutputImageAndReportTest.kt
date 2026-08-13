@@ -9,6 +9,7 @@ import com.github.takahirom.roborazzi.RoboCanvas
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.processOutputImageAndReport
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -135,12 +136,16 @@ class ProcessOutputImageAndReportTest {
     // subtree must still be mirrored under the compare directory; falling back
     // to the flat leaf name would let same-named classes in different packages
     // overwrite each other's _compare image.
-    System.setProperty("roborazzi.record.namingStrategy", "testNestedPackageDirAndClassAndMethod")
+    val previousNamingStrategy = System.getProperty("roborazzi.record.namingStrategy")
     val ruleOutputDir = temporaryFolder.newFolder("rule_output")
     val compareDir = temporaryFolder.newFolder("compare_output")
-    com.github.takahirom.roborazzi.provideRoborazziContext()
-      .setRuleOverrideOutputDirectory(ruleOutputDir.absolutePath)
     try {
+      System.setProperty(
+        "roborazzi.record.namingStrategy",
+        "testNestedPackageDirAndClassAndMethod"
+      )
+      com.github.takahirom.roborazzi.provideRoborazziContext()
+        .setRuleOverrideOutputDirectory(ruleOutputDir.absolutePath)
       val goldenFile = File(ruleOutputDir, "com/example/pkga/FooTest.test.png")
       goldenFile.parentFile.mkdirs()
       goldenFile.writeText("fake golden")
@@ -176,8 +181,16 @@ class ProcessOutputImageAndReportTest {
           if (flat.exists()) " (it was written flat at ${flat.path})" else "",
         mirrored.exists()
       )
+      assertFalse(
+        "The _compare image must not be written flat at ${flat.path}",
+        flat.exists()
+      )
     } finally {
-      System.clearProperty("roborazzi.record.namingStrategy")
+      if (previousNamingStrategy == null) {
+        System.clearProperty("roborazzi.record.namingStrategy")
+      } else {
+        System.setProperty("roborazzi.record.namingStrategy", previousNamingStrategy)
+      }
       com.github.takahirom.roborazzi.provideRoborazziContext()
         .clearRuleOverrideOutputDirectory()
     }
