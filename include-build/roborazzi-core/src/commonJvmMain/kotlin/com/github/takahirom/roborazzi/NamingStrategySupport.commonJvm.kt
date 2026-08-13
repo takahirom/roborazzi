@@ -8,3 +8,8 @@ internal actual fun roborazziIsSubdirectoryNamingStrategy(): Boolean {
     else -> false
   }
 }
+
+@OptIn(ExperimentalRoborazziApi::class)
+internal actual fun roborazziContextOutputDirectory(): String {
+  return provideRoborazziContext().outputDirectory
+}

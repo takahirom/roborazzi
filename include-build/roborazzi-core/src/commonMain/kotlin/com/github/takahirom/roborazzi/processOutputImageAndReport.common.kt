@@ -311,7 +311,9 @@ private fun resolveComparisonImagePath(
  *    byte-for-byte unchanged).
  * 2. Only when the compare output directory is a SEPARATE directory that does not
  *    contain the golden AND the active strategy is one of the directory-encoding
- *    `*Dir` strategies, relative to the Roborazzi output directory. A path alone
+ *    `*Dir` strategies, relative to the effective Roborazzi output directory
+ *    (the RoborazziRule override when active, the property default otherwise —
+ *    see [roborazziContextOutputDirectory]). A path alone
  *    cannot distinguish a package subdirectory (naming strategy) from a
  *    user-supplied custom `filePath` subdirectory, so the explicitly configured
  *    `*Dir` strategy is the signal that the subdirectories are package structure and
@@ -331,7 +333,7 @@ private fun goldenSubdirectoryUnder(
   // package subtree only for the directory-encoding naming strategies.
   if (roborazziIsSubdirectoryNamingStrategy()) {
     val underOutputDir =
-      relativeSubdirectoryOrNull(goldenParent, roborazziSystemPropertyOutputDirectory())
+      relativeSubdirectoryOrNull(goldenParent, roborazziContextOutputDirectory())
     if (underOutputDir != null) return underOutputDir
   }
   return ""

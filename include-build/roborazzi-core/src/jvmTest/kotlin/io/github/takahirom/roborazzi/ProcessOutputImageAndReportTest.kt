@@ -127,4 +127,59 @@ class ProcessOutputImageAndReportTest {
       reportedResult is CaptureResult.Added
     )
   }
+
+  @Test
+  fun whenRuleOverridesOutputDirectoryComparisonImageShouldMirrorPackageSubtreeUnderSeparateCompareDir() {
+    // A RoborazziRule can override the output directory. With a *Dir naming
+    // strategy and a SEPARATE compare output directory, the golden's package
+    // subtree must still be mirrored under the compare directory; falling back
+    // to the flat leaf name would let same-named classes in different packages
+    // overwrite each other's _compare image.
+    System.setProperty("roborazzi.record.namingStrategy", "testNestedPackageDirAndClassAndMethod")
+    val ruleOutputDir = temporaryFolder.newFolder("rule_output")
+    val compareDir = temporaryFolder.newFolder("compare_output")
+    com.github.takahirom.roborazzi.provideRoborazziContext()
+      .setRuleOverrideOutputDirectory(ruleOutputDir.absolutePath)
+    try {
+      val goldenFile = File(ruleOutputDir, "com/example/pkga/FooTest.test.png")
+      goldenFile.parentFile.mkdirs()
+      goldenFile.writeText("fake golden")
+
+      processOutputImageAndReport(
+        newRoboCanvas = FakeRoboCanvas(),
+        goldenFile = goldenFile,
+        roborazziOptions = RoborazziOptions(
+          taskType = RoborazziTaskType.Compare,
+          compareOptions = RoborazziOptions.CompareOptions(
+            outputDirectoryPath = compareDir.absolutePath,
+          ),
+          reportOptions = RoborazziOptions.ReportOptions(
+            captureResultReporter = object : RoborazziOptions.CaptureResultReporter {
+              override fun report(
+                captureResult: CaptureResult,
+                roborazziTaskType: RoborazziTaskType
+              ) {
+              }
+            }
+          )
+        ),
+        emptyCanvasFactory = { _, _, _, _ -> FakeRoboCanvas() },
+        canvasFactoryFromFile = { _, _ -> FakeRoboCanvas() },
+        comparisonCanvasFactory = { _, _, _, _ -> FakeRoboCanvas() },
+      )
+
+      val mirrored = File(compareDir, "com/example/pkga/FooTest.test_compare.png")
+      val flat = File(compareDir, "FooTest.test_compare.png")
+      assertTrue(
+        "Expected the _compare image to mirror the golden's package subtree at " +
+          "${mirrored.path}, but it was not written there" +
+          if (flat.exists()) " (it was written flat at ${flat.path})" else "",
+        mirrored.exists()
+      )
+    } finally {
+      System.clearProperty("roborazzi.record.namingStrategy")
+      com.github.takahirom.roborazzi.provideRoborazziContext()
+        .clearRuleOverrideOutputDirectory()
+    }
+  }
 }

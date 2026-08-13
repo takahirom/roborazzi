@@ -9,3 +9,11 @@ package com.github.takahirom.roborazzi
  * always requires an explicit file path) return `false`.
  */
 internal expect fun roborazziIsSubdirectoryNamingStrategy(): Boolean
+
+/**
+ * The effective Roborazzi output directory the naming strategy writes goldens
+ * under: the RoborazziRule override when one is active, otherwise the
+ * `roborazzi.output.dir` property default. RoborazziContext is JVM-only, so
+ * commonMain reads it through this expect/actual.
+ */
+internal expect fun roborazziContextOutputDirectory(): String
