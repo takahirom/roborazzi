@@ -9,6 +9,7 @@ import com.github.takahirom.roborazzi.RoboCanvas
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.processOutputImageAndReport
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -126,5 +127,72 @@ class ProcessOutputImageAndReportTest {
       "Expected CaptureResult.Added for a brand-new golden but was ${reportedResult?.let { it::class.simpleName }}",
       reportedResult is CaptureResult.Added
     )
+  }
+
+  @Test
+  fun whenRuleOverridesOutputDirectoryComparisonImageShouldMirrorPackageSubtreeUnderSeparateCompareDir() {
+    // A RoborazziRule can override the output directory. With a *Dir naming
+    // strategy and a SEPARATE compare output directory, the golden's package
+    // subtree must still be mirrored under the compare directory; falling back
+    // to the flat leaf name would let same-named classes in different packages
+    // overwrite each other's _compare image.
+    val previousNamingStrategy = System.getProperty("roborazzi.record.namingStrategy")
+    val ruleOutputDir = temporaryFolder.newFolder("rule_output")
+    val compareDir = temporaryFolder.newFolder("compare_output")
+    try {
+      System.setProperty(
+        "roborazzi.record.namingStrategy",
+        "testNestedPackageDirAndClassAndMethod"
+      )
+      com.github.takahirom.roborazzi.provideRoborazziContext()
+        .setRuleOverrideOutputDirectory(ruleOutputDir.absolutePath)
+      val goldenFile = File(ruleOutputDir, "com/example/pkga/FooTest.test.png")
+      goldenFile.parentFile.mkdirs()
+      goldenFile.writeText("fake golden")
+
+      processOutputImageAndReport(
+        newRoboCanvas = FakeRoboCanvas(),
+        goldenFile = goldenFile,
+        roborazziOptions = RoborazziOptions(
+          taskType = RoborazziTaskType.Compare,
+          compareOptions = RoborazziOptions.CompareOptions(
+            outputDirectoryPath = compareDir.absolutePath,
+          ),
+          reportOptions = RoborazziOptions.ReportOptions(
+            captureResultReporter = object : RoborazziOptions.CaptureResultReporter {
+              override fun report(
+                captureResult: CaptureResult,
+                roborazziTaskType: RoborazziTaskType
+              ) {
+              }
+            }
+          )
+        ),
+        emptyCanvasFactory = { _, _, _, _ -> FakeRoboCanvas() },
+        canvasFactoryFromFile = { _, _ -> FakeRoboCanvas() },
+        comparisonCanvasFactory = { _, _, _, _ -> FakeRoboCanvas() },
+      )
+
+      val mirrored = File(compareDir, "com/example/pkga/FooTest.test_compare.png")
+      val flat = File(compareDir, "FooTest.test_compare.png")
+      assertTrue(
+        "Expected the _compare image to mirror the golden's package subtree at " +
+          "${mirrored.path}, but it was not written there" +
+          if (flat.exists()) " (it was written flat at ${flat.path})" else "",
+        mirrored.exists()
+      )
+      assertFalse(
+        "The _compare image must not be written flat at ${flat.path}",
+        flat.exists()
+      )
+    } finally {
+      if (previousNamingStrategy == null) {
+        System.clearProperty("roborazzi.record.namingStrategy")
+      } else {
+        System.setProperty("roborazzi.record.namingStrategy", previousNamingStrategy)
+      }
+      com.github.takahirom.roborazzi.provideRoborazziContext()
+        .clearRuleOverrideOutputDirectory()
+    }
   }
 }

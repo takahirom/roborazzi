@@ -456,7 +456,9 @@ public final class com/github/takahirom/roborazzi/DefaultFileNameGenerator$Defau
 	public static final field Companion Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy$Companion;
 	public static final field EscapedTestPackageAndClassAndMethod Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
 	public static final field TestClassAndMethod Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
+	public static final field TestNestedPackageDirAndClassAndMethod Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
 	public static final field TestPackageAndClassAndMethod Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
+	public static final field TestPackageDirAndClassAndMethod Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
 	public final fun generateOutputName (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getOptionName ()Ljava/lang/String;
