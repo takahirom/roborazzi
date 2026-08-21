@@ -551,8 +551,9 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
  * what deciding whether a newly captured frame changed usually amounts to.
  *
  * Equal pixels always mean the comparator would have found no differences, so nothing is missed by
- * returning early. Images whose pixels differ are handed to the comparator as before, including the
- * ones it treats as equal anyway, such as transparent pixels differing in their color channels.
+ * returning early, as long as the two images read those pixels the same way. Images whose pixels
+ * differ are handed to the comparator as before, including the ones it treats as equal anyway, such
+ * as transparent pixels differing in their color channels.
  */
 internal fun identicalComparisonResult(
   left: BufferedImage,
@@ -561,6 +562,12 @@ internal fun identicalComparisonResult(
   val width = left.width
   val height = left.height
   if (right.width != width || right.height != height || left.type != right.type) {
+    return null
+  }
+  // Equal types are not enough for a custom one: TYPE_CUSTOM is what every image whose layout the
+  // standard types do not describe reports, and two of them can pack the same integer into
+  // different colors through the channel masks of their color models.
+  if (left.type == BufferedImage.TYPE_CUSTOM) {
     return null
   }
   val leftPixels = left.packedIntPixelsOrNull() ?: return null
