@@ -107,9 +107,10 @@ class IdenticalComparisonResultTest {
 
   @Test
   fun reportsNoDifferences_forCroppedSubImages() {
-    // A cropped canvas is a sub image, whose rows are strided over the larger parent array.
-    val left = image { x, y -> pixel(x, y) }.getSubimage(0, 0, WIDTH - 5, HEIGHT - 3)
-    val right = image { x, y -> pixel(x, y) }.getSubimage(0, 0, WIDTH - 5, HEIGHT - 3)
+    // A cropped canvas is a sub image, whose rows are strided over the larger parent array and
+    // start at an offset into it, from a crop that begins away from the parent's own origin.
+    val left = image { x, y -> pixel(x, y) }.getSubimage(CROP_X, CROP_Y, WIDTH - 5, HEIGHT - 3)
+    val right = image { x, y -> pixel(x, y) }.getSubimage(CROP_X, CROP_Y, WIDTH - 5, HEIGHT - 3)
 
     val pixels = assertNotNull(left.packedIntPixelsOrNull())
     assertEquals(left.getRGB(2, 3), pixels.data[pixels.rowStart(3) + 2])
@@ -187,6 +188,10 @@ class IdenticalComparisonResultTest {
   private companion object {
     const val WIDTH = 16
     const val HEIGHT = 12
+
+    // A crop away from the parent's origin, so that both translation terms are non zero.
+    const val CROP_X = 2
+    const val CROP_Y = 3
 
     // Channel masks assigned to different channels by each of the two custom color models.
     const val A_HIGH = 0xFF000000.toInt()
