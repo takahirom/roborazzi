@@ -19,6 +19,8 @@ import java.awt.font.TextLayout
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
+import java.awt.image.DataBufferInt
+import java.awt.image.SinglePixelPackedSampleModel
 import java.io.File
 
 class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: Int) : RoboCanvas {
@@ -244,8 +246,10 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
   ): ImageComparator.ComparisonResult {
     other as AwtRoboCanvas
     val otherImage = other.bufferedImage
+    val image = croppedImage.scale(resizeScale)
+    identicalComparisonResult(image, otherImage)?.let { return it }
     return imageComparator.compare(
-      DifferBufferedImage(croppedImage.scale(resizeScale)),
+      DifferBufferedImage(image),
       DifferBufferedImage(otherImage)
     )
   }
@@ -535,6 +539,98 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
       return diffImage
     }
   }
+}
+
+/**
+ * Returns a result reporting no differences when the two images are already pixel for pixel
+ * identical, or null when they are not or cannot be checked this way.
+ *
+ * Going through [ImageComparator] walks every pixel of both images and allocates a color for each
+ * one, while comparing the backing rasters answers the same question a row at a time. Identical
+ * images are the common case: it is what a passing screenshot test compares against its golden, and
+ * what deciding whether a newly captured frame changed usually amounts to.
+ *
+ * Equal pixels always mean the comparator would have found no differences, so nothing is missed by
+ * returning early, as long as the two images read those pixels the same way. Images whose pixels
+ * differ are handed to the comparator as before, including the ones it treats as equal anyway, such
+ * as transparent pixels differing in their color channels.
+ */
+internal fun identicalComparisonResult(
+  left: BufferedImage,
+  right: BufferedImage
+): ImageComparator.ComparisonResult? {
+  val width = left.width
+  val height = left.height
+  if (right.width != width || right.height != height || left.type != right.type) {
+    return null
+  }
+  // Equal types are not enough for a custom one: TYPE_CUSTOM is what every image whose layout the
+  // standard types do not describe reports, and two of them can pack the same integer into
+  // different colors through the channel masks of their color models.
+  if (left.type == BufferedImage.TYPE_CUSTOM) {
+    return null
+  }
+  val leftPixels = left.packedIntPixelsOrNull() ?: return null
+  val rightPixels = right.packedIntPixelsOrNull() ?: return null
+  for (y in 0 until height) {
+    val leftRow = leftPixels.rowStart(y)
+    val rightRow = rightPixels.rowStart(y)
+    if (
+      !leftPixels.data.regionMatches(leftRow, rightPixels.data, rightRow, width)
+    ) {
+      return null
+    }
+  }
+  return ImageComparator.ComparisonResult(
+    pixelDifferences = 0,
+    pixelCount = width * height,
+    width = width,
+    height = height,
+  )
+}
+
+/**
+ * A view of an image's pixels as one packed int each. Rows are addressed through a stride because
+ * the array may belong to a larger image, which is the case for the sub image a cropped canvas is.
+ */
+internal class PackedIntPixels(val data: IntArray, private val base: Int, private val stride: Int) {
+  fun rowStart(y: Int): Int = base + y * stride
+}
+
+private fun IntArray.regionMatches(
+  fromIndex: Int,
+  other: IntArray,
+  otherFromIndex: Int,
+  length: Int
+): Boolean =
+  java.util.Arrays.equals(
+    this,
+    fromIndex,
+    fromIndex + length,
+    other,
+    otherFromIndex,
+    otherFromIndex + length
+  )
+
+/**
+ * This image's pixels, or null when they are not laid out as one packed int each, in which case
+ * they cannot be compared as integers.
+ */
+internal fun BufferedImage.packedIntPixelsOrNull(): PackedIntPixels? {
+  val raster = raster
+  val sampleModel = raster.sampleModel
+  if (sampleModel !is SinglePixelPackedSampleModel) return null
+  val dataBuffer = raster.dataBuffer
+  if (dataBuffer !is DataBufferInt) return null
+  if (dataBuffer.numBanks != 1) return null
+  val stride = sampleModel.scanlineStride
+  val base = dataBuffer.offset -
+    raster.sampleModelTranslateY * stride -
+    raster.sampleModelTranslateX
+  if (base < 0) return null
+  // Guard against a layout where the last row would run past the end of the array.
+  if (base + (height - 1).coerceAtLeast(0) * stride + width > dataBuffer.size) return null
+  return PackedIntPixels(dataBuffer.data, base, stride)
 }
 
 private fun BufferedImage.scale(scale: Double): BufferedImage {
