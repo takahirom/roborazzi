@@ -4,6 +4,7 @@ import com.github.takahirom.roborazzi.AnnotationFilter
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -128,6 +129,11 @@ private fun setupGenerateComposePreviewDesktopTestsTask(
   testSourceSet.kotlin.srcDir(generateTestsTask.flatMap { it.outputDir })
   testTaskProvider.configure {
     it.inputs.dir(generateTestsTask.flatMap { it.outputDir })
+      // Name the property and normalize by relative path so the checkout location
+      // does not become part of the build cache key (relocatability).
+      // https://github.com/takahirom/roborazzi/issues/918
+      .withPropertyName("roborazziGeneratedPreviewTests")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
   }
 }
 

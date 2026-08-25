@@ -9,6 +9,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskCollection
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.testing.Test
 import com.github.takahirom.roborazzi.AnnotationFilter
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
@@ -177,6 +178,11 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   // It seems that the addGeneratedSourceDirectory does not affect the inputs.dir and does not invalidate the task.
   testTaskProvider.configureEach {
     it.inputs.dir(generateTestsTask.flatMap { it.outputDir })
+      // Name the property and normalize by relative path so the checkout location
+      // does not become part of the build cache key (relocatability).
+      // https://github.com/takahirom/roborazzi/issues/918
+      .withPropertyName("roborazziGeneratedPreviewTests")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
   }
 }
 
