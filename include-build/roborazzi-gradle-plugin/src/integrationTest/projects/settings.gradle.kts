@@ -34,6 +34,7 @@ includeBuild(roborazziRootPath) {
     substitute(module("io.github.takahirom.roborazzi:roborazzi-compose-desktop-preview-scanner-support")).using(project(":roborazzi-compose-desktop-preview-scanner-support"))
     substitute(module("io.github.takahirom.roborazzi:roborazzi-annotations")).using(project(":roborazzi-annotations"))
     substitute(module("io.github.takahirom.roborazzi:roborazzi-junit-rule")).using(project(":roborazzi-junit-rule"))
+    substitute(module("io.github.takahirom.roborazzi:roborazzi-junit-platform-reporting")).using(project(":roborazzi-junit-platform-reporting"))
   }
 }
 
