@@ -71,7 +71,7 @@ class PopupWindowCaptureTest {
   private val nestedPopupColor = Color.YELLOW
 
   @Test
-  fun popupWindowInDialogIsDrawnBelowItsAnchor() {
+  fun popupWindowInDialogShouldBeBelowItsAnchorNearScreenCenter() {
     lateinit var anchorSize: Pair<Int, Int>
     ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
       val anchor = anchorView(activity)
@@ -112,7 +112,7 @@ class PopupWindowCaptureTest {
 
   // A popup anchored in the activity window must keep working: its parent window is the screen.
   @Test
-  fun popupWindowInActivityIsDrawnBelowItsAnchor() {
+  fun popupWindowInActivityShouldBeBelowItsAnchorAtScreenLeftTop() {
     lateinit var anchorSize: Pair<Int, Int>
     ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
       val anchor = anchorView(activity)
@@ -132,7 +132,7 @@ class PopupWindowCaptureTest {
   }
 
   @Test
-  fun composeDropdownMenuInDialogIsDrawnBelowItsAnchor() {
+  fun composeDropdownMenuInDialogShouldBeBelowItsAnchorNearScreenCenter() {
     composeTestRule.setContent {
       Dialog(onDismissRequest = {}) {
         Box(
@@ -165,7 +165,7 @@ class PopupWindowCaptureTest {
   // so it is placed against the activity window rather than against the outer popup. This pins that
   // behaviour down so the parent lookup keeps matching the window the framework actually used.
   @Test
-  fun popupWindowAnchoredInAnotherPopupWindowIsDrawnBelowItsAnchor() {
+  fun popupWindowAnchoredInAnotherPopupWindowShouldBeBelowItsAnchorAtScreenLeft() {
     lateinit var nestedAnchorRect: Rect
     ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
       val anchor = anchorView(activity)
@@ -211,7 +211,7 @@ class PopupWindowCaptureTest {
 
   // A Compose DropdownMenu anchored in the activity window must keep working too.
   @Test
-  fun composeDropdownMenuInActivityIsDrawnBelowItsAnchor() {
+  fun composeDropdownMenuInActivityShouldBeBelowItsAnchorAtScreenLeftTop() {
     composeTestRule.setContent {
       Box(
         Modifier
@@ -262,7 +262,7 @@ class PopupWindowCaptureTest {
 
   // A popup that laid itself out in screen coordinates must not be offset by its parent window.
   @Test
-  fun popupWindowLaidOutInScreenInDialogKeepsScreenCoordinates() {
+  fun popupWindowLaidOutInScreenInDialogShouldStayAtScreenLeftBottom() {
     ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
       val anchor = anchorView(activity)
       AlertDialog.Builder(activity)
