@@ -39,9 +39,10 @@ val hasCompose = try {
 private fun resolveWindowRects(rootsOrderByDepth: List<Root>): List<Pair<Root, Rect>> {
   val screenDecorView = rootsOrderByDepth.firstOrNull()?.decorView ?: return emptyList()
   val screenRect = Rect(0, 0, screenDecorView.width, screenDecorView.height)
-  // A sub-window's layout params token is the window token of the decor view it is anchored in.
-  // Note that an app window's own layout params token is the activity token, so only the decor
-  // view window token can identify a parent.
+  // A sub-window's layout params token is the application window token of its anchor, which is the
+  // window token of the decor view of the activity or the dialog the anchor lives in. Note that an
+  // app window's own layout params token is the activity token instead, so a parent can only be
+  // identified through its decor view window token.
   val indexByWindowToken = rootsOrderByDepth.indices
     .mapNotNull { index -> rootsOrderByDepth[index].decorView.windowToken?.let { it to index } }
     .toMap()

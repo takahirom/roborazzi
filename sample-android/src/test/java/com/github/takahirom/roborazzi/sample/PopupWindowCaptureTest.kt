@@ -2,6 +2,7 @@ package com.github.takahirom.roborazzi.sample
 
 import android.app.Activity
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Rect
 import android.util.DisplayMetrics
@@ -29,6 +30,7 @@ import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
+import com.github.takahirom.roborazzi.RoborazziTaskType
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.fetchRobolectricWindowRoots
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -41,6 +43,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import java.io.File
 import kotlin.math.roundToInt
 
 /**
@@ -84,9 +87,21 @@ class PopupWindowCaptureTest {
       anchorSize = anchor.width to anchor.height
     }
 
-    captureScreenRoboImage()
+    // Assert on the PNG captureScreenRoboImage actually writes, which is what #921 reports on.
+    // A plain test run has no task type, so recording has to be requested explicitly.
+    val recordedFile = File.createTempFile("popup-in-dialog", ".png")
+    captureScreenRoboImage(
+      file = recordedFile,
+      roborazziOptions = RoborazziOptions(taskType = RoborazziTaskType.Record),
+    )
+    val recorded = requireNotNull(BitmapFactory.decodeFile(recordedFile.absolutePath)) {
+      "captureScreenRoboImage did not write an image to $recordedFile"
+    }
+    val recordedPopupRect = assertPopupIsBelowAnchor(recorded, anchorSize)
+
     val screen = screenComponent()
     val popupRect = assertPopupIsBelowAnchor(requireNotNull(screen.image), anchorSize)
+    assertEquals("recorded image and composited image", popupRect, recordedPopupRect)
     // The tree traversal used by the ui tree dump has to agree with the composited image.
     assertEquals("popup window rect in the component tree", popupRect, screen.children.last().rect)
   }
