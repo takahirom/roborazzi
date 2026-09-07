@@ -4,8 +4,11 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Rect
+import android.util.DisplayMetrics
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.PopupWindow
 import android.widget.TextView
@@ -38,6 +41,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import kotlin.math.roundToInt
 
 /**
  * A popup window (PopupWindow, Spinner drop-down, Compose Popup/DropdownMenu) is a sub-window:
@@ -60,6 +64,8 @@ class PopupWindowCaptureTest {
 
   private val anchorColor = Color.GREEN
   private val popupColor = Color.MAGENTA
+  private val nestedAnchorColor = Color.BLUE
+  private val nestedPopupColor = Color.YELLOW
 
   @Test
   fun popupWindowInDialogIsDrawnBelowItsAnchor() {
@@ -136,6 +142,54 @@ class PopupWindowCaptureTest {
     assertDropdownMenuIsAlignedWithAnchor(requireNotNull(screenComponent().image))
   }
 
+  // A PopupWindow anchored inside another PopupWindow still reports the application window token,
+  // so it is placed against the activity window rather than against the outer popup. This pins that
+  // behaviour down so the parent lookup keeps matching the window the framework actually used.
+  @Test
+  fun popupWindowAnchoredInAnotherPopupWindowIsDrawnBelowItsAnchor() {
+    lateinit var nestedAnchorRect: Rect
+    ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
+      val anchor = anchorView(activity)
+      activity.findViewById<ViewGroup>(android.R.id.content).addView(anchor)
+      shadowOf(activity.mainLooper).idle()
+
+      // The nested anchor sits at the bottom of the outer popup so that the nested popup drops
+      // outside of it and is not painted over by the outer popup.
+      val nestedAnchor = TextView(activity).apply {
+        setBackgroundColor(nestedAnchorColor)
+        layoutParams = FrameLayout.LayoutParams(NESTED_ANCHOR_WIDTH, NESTED_ANCHOR_HEIGHT).apply {
+          gravity = Gravity.BOTTOM or Gravity.START
+        }
+      }
+      val outerContent = FrameLayout(activity).apply {
+        setBackgroundColor(Color.CYAN)
+        addView(nestedAnchor)
+      }
+      PopupWindow(outerContent, POPUP_WIDTH, POPUP_HEIGHT).apply {
+        // A higher sub-window type than the nested popup below, which uses TYPE_APPLICATION_PANEL.
+        windowLayoutType = WindowManager.LayoutParams.TYPE_APPLICATION_SUB_PANEL
+      }.showAsDropDown(anchor)
+      shadowOf(activity.mainLooper).idle()
+
+      PopupWindow(popupContentView(activity).apply { setBackgroundColor(nestedPopupColor) },
+        NESTED_POPUP_WIDTH, NESTED_POPUP_HEIGHT).showAsDropDown(nestedAnchor)
+      shadowOf(activity.mainLooper).idle()
+      nestedAnchorRect = Rect(0, 0, nestedAnchor.width, nestedAnchor.height)
+    }
+
+    captureScreenRoboImage()
+    val bitmap = requireNotNull(screenComponent().image)
+    val anchorRect = requireNotNull(boundingBoxOf(bitmap, nestedAnchorColor)) {
+      "nested anchor not found in the captured screen"
+    }
+    val popupRect = requireNotNull(boundingBoxOf(bitmap, nestedPopupColor)) {
+      "nested popup not found in the captured screen"
+    }
+    assertEquals("nested anchor width", nestedAnchorRect.width(), anchorRect.width())
+    assertEquals("nested popup left", anchorRect.left, popupRect.left)
+    assertEquals("nested popup top", anchorRect.bottom, popupRect.top)
+  }
+
   // A Compose DropdownMenu anchored in the activity window must keep working too.
   @Test
   fun composeDropdownMenuInActivityIsDrawnBelowItsAnchor() {
@@ -172,13 +226,44 @@ class PopupWindowCaptureTest {
     val menuItemRect = requireNotNull(boundingBoxOf(bitmap, popupColor)) {
       "dropdown menu item not found in the captured screen"
     }
-    // The menu is placed against the anchor, not against the screen origin.
-    // Menu padding keeps it from lining up exactly with the anchor, so check the band it falls in.
+    // The menu is placed against the anchor, not against the screen origin. Menu padding keeps it
+    // from lining up exactly with the anchor, so allow a bounded gap instead of an exact match.
+    fun Int.dpToPx() = (this * bitmap.density / DisplayMetrics.DENSITY_DEFAULT.toFloat()).roundToInt()
+    val markerSize = MENU_ITEM_SIZE_DP.dpToPx()
+    assertEquals("menu marker width", markerSize, menuItemRect.width())
+    assertEquals("menu marker height", markerSize, menuItemRect.height())
     assertTrue(
-      "dropdown menu $menuItemRect should be aligned with its anchor $anchorRect",
+      "dropdown menu $menuItemRect should be just below its anchor $anchorRect",
       menuItemRect.left >= anchorRect.left &&
         menuItemRect.right <= anchorRect.right &&
-        menuItemRect.top >= anchorRect.top
+        menuItemRect.top >= anchorRect.bottom &&
+        menuItemRect.top - anchorRect.bottom <= MAX_MENU_GAP_DP.dpToPx()
+    )
+  }
+
+  // A popup that laid itself out in screen coordinates must not be offset by its parent window.
+  @Test
+  fun popupWindowLaidOutInScreenInDialogKeepsScreenCoordinates() {
+    ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
+      val anchor = anchorView(activity)
+      AlertDialog.Builder(activity)
+        .setTitle("Dialog with a popup")
+        .setView(FrameLayout(activity).apply { addView(anchor) })
+        .show()
+      shadowOf(activity.mainLooper).idle()
+
+      PopupWindow(popupContentView(activity), POPUP_WIDTH, POPUP_HEIGHT)
+        .apply { setIsLaidOutInScreen(true) }
+        .showAtLocation(anchor, Gravity.TOP or Gravity.START, SCREEN_X, SCREEN_Y)
+      shadowOf(activity.mainLooper).idle()
+    }
+
+    captureScreenRoboImage()
+    val bitmap = requireNotNull(screenComponent().image)
+    assertEquals(
+      "popup laid out in screen coordinates",
+      Rect(SCREEN_X, SCREEN_Y, SCREEN_X + POPUP_WIDTH, SCREEN_Y + POPUP_HEIGHT),
+      boundingBoxOf(bitmap, popupColor)
     )
   }
 
@@ -187,7 +272,10 @@ class PopupWindowCaptureTest {
     val popupRect = boundingBoxOf(bitmap, popupColor)
     assertNotNull("anchor not found in the captured screen", anchorRect)
     assertNotNull("popup not found in the captured screen", popupRect)
+    // The anchor must be fully visible, otherwise a popup overlapping it would shrink the measured
+    // anchor rect and still satisfy the position assertions below.
     assertEquals("anchor width", anchorSize.first, anchorRect!!.width())
+    assertEquals("anchor height", anchorSize.second, anchorRect.height())
     assertEquals("popup left", anchorRect.left, popupRect!!.left)
     assertEquals("popup top", anchorRect.bottom, popupRect.top)
     assertEquals("popup width", POPUP_WIDTH, popupRect.width())
@@ -236,5 +324,13 @@ class PopupWindowCaptureTest {
     private const val POPUP_WIDTH = 300
     private const val POPUP_HEIGHT = 150
     private const val MENU_ITEM_SIZE_DP = 24
+    private const val NESTED_ANCHOR_WIDTH = 100
+    private const val NESTED_ANCHOR_HEIGHT = 40
+    private const val NESTED_POPUP_WIDTH = 120
+    private const val NESTED_POPUP_HEIGHT = 60
+    private const val SCREEN_X = 20
+    private const val SCREEN_Y = 600
+    // The menu item is inset by the menu's own padding; anything larger means a wrong window offset.
+    private const val MAX_MENU_GAP_DP = 32
   }
 }

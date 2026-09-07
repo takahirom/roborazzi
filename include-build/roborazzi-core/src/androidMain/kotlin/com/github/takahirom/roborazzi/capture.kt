@@ -39,42 +39,62 @@ val hasCompose = try {
 private fun resolveWindowRects(rootsOrderByDepth: List<Root>): List<Pair<Root, Rect>> {
   val screenDecorView = rootsOrderByDepth.firstOrNull()?.decorView ?: return emptyList()
   val screenRect = Rect(0, 0, screenDecorView.width, screenDecorView.height)
-  val resolved = mutableListOf<Pair<Root, Rect>>()
-  rootsOrderByDepth.forEach { root ->
+  // A sub-window's layout params token is the window token of the decor view it is anchored in.
+  // Note that an app window's own layout params token is the activity token, so only the decor
+  // view window token can identify a parent.
+  val indexByWindowToken = rootsOrderByDepth.indices
+    .mapNotNull { index -> rootsOrderByDepth[index].decorView.windowToken?.let { it to index } }
+    .toMap()
+  val resolvedRects = arrayOfNulls<Rect>(rootsOrderByDepth.size)
+
+  // Parents are resolved on demand so that the result does not depend on the order of the roots.
+  fun resolveAt(index: Int, resolving: Set<Int>): Rect {
+    resolvedRects[index]?.let { return it }
+    val root = rootsOrderByDepth[index]
     val layoutParams = root.windowLayoutParams.get()
-    val decorView = root.decorView
-    // A sub-window's layout params token is the window token of the decor view it is anchored in.
-    // The roots are sorted by window type, so app windows and same-type sub-windows are resolved
-    // before the sub-windows anchored in them. A sub-window anchored in a higher-typed sub-window
-    // is not resolved and falls back to the screen.
-    val parentRect = if (layoutParams.type in SUB_WINDOW_TYPES) {
-      val parent = resolved.lastOrNull { (candidate, _) ->
-        val windowToken = candidate.decorView.windowToken
-        windowToken != null && windowToken == layoutParams.token
-      }
-      if (parent == null) {
-        roborazziDebugLog {
-          "Roborazzi: could not find the parent window of the sub-window $decorView. " +
-            "Falling back to the screen as its container."
+    // FLAG_LAYOUT_IN_SCREEN means the window laid itself out in screen coordinates, e.g. a
+    // PopupWindow with setIsLaidOutInScreen(true), so its x/y are already screen relative.
+    val laidOutInScreen =
+      (layoutParams.flags and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN) != 0
+    val parentRect = if (layoutParams.type in SUB_WINDOW_TYPES && !laidOutInScreen) {
+      val parentIndex = indexByWindowToken[layoutParams.token]
+      when {
+        parentIndex == null || parentIndex == index -> {
+          roborazziDebugLog {
+            "Roborazzi: could not find the parent window of the sub-window ${root.decorView}. " +
+              "Falling back to the screen as its container."
+          }
+          null
         }
+
+        parentIndex in resolving -> {
+          roborazziDebugLog {
+            "Roborazzi: the parent windows of the sub-window ${root.decorView} form a cycle. " +
+              "Falling back to the screen as its container."
+          }
+          null
+        }
+
+        else -> resolveAt(parentIndex, resolving + index)
       }
-      parent?.second
     } else {
       null
     }
     val outRect = Rect()
     Gravity.apply(
       layoutParams.gravity,
-      decorView.width,
-      decorView.height,
+      root.decorView.width,
+      root.decorView.height,
       parentRect ?: screenRect,
       layoutParams.x,
       layoutParams.y,
       outRect
     )
-    resolved.add(root to outRect)
+    resolvedRects[index] = outRect
+    return outRect
   }
-  return resolved
+
+  return rootsOrderByDepth.mapIndexed { index, root -> root to resolveAt(index, emptySet()) }
 }
 
 private val SUB_WINDOW_TYPES =
