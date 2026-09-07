@@ -87,8 +87,12 @@ class PopupWindowCaptureTest {
       anchorSize = anchor.width to anchor.height
     }
 
+    // The default capture feeds the golden of the record/compare tasks, so the screen shows up in
+    // the screenshot diff of a pull request.
+    captureScreenRoboImage()
+
     // Assert on the PNG captureScreenRoboImage actually writes, which is what #921 reports on.
-    // A plain test run has no task type, so recording has to be requested explicitly.
+    // A plain test run has no task type, so recording has to be requested explicitly here.
     val recordedFile = File.createTempFile("popup-in-dialog", ".png")
     captureScreenRoboImage(
       file = recordedFile,
