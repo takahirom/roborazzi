@@ -27,6 +27,80 @@ val hasCompose = try {
   false
 }
 
+/**
+ * Resolves the screen rect of every window, ordered as [rootsOrderByDepth].
+ *
+ * A sub-window such as a [android.widget.PopupWindow], a Spinner drop-down or a Compose Popup
+ * stores its layout params x/y relative to the window its anchor lives in, not to the screen.
+ * Placing one with the screen as the container puts it at the wrong place whenever the parent
+ * window is not at the screen origin, e.g. a popup opened from inside a dialog.
+ * https://github.com/takahirom/roborazzi/issues/921
+ */
+private fun resolveWindowRects(rootsOrderByDepth: List<Root>): List<Pair<Root, Rect>> {
+  val screenDecorView = rootsOrderByDepth.firstOrNull()?.decorView ?: return emptyList()
+  val screenRect = Rect(0, 0, screenDecorView.width, screenDecorView.height)
+  // A sub-window's layout params token is the application window token of its anchor, which is the
+  // window token of the decor view of the activity or the dialog the anchor lives in. Note that an
+  // app window's own layout params token is the activity token instead, so a parent can only be
+  // identified through its decor view window token.
+  val indexByWindowToken = rootsOrderByDepth.indices
+    .mapNotNull { index -> rootsOrderByDepth[index].decorView.windowToken?.let { it to index } }
+    .toMap()
+  val resolvedRects = arrayOfNulls<Rect>(rootsOrderByDepth.size)
+
+  // Parents are resolved on demand so that the result does not depend on the order of the roots.
+  fun resolveAt(index: Int, resolving: Set<Int>): Rect {
+    resolvedRects[index]?.let { return it }
+    val root = rootsOrderByDepth[index]
+    val layoutParams = root.windowLayoutParams.get()
+    // FLAG_LAYOUT_IN_SCREEN means the window laid itself out in screen coordinates, e.g. a
+    // PopupWindow with setIsLaidOutInScreen(true), so its x/y are already screen relative.
+    val laidOutInScreen =
+      (layoutParams.flags and WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN) != 0
+    val parentRect = if (layoutParams.type in SUB_WINDOW_TYPES && !laidOutInScreen) {
+      val parentIndex = indexByWindowToken[layoutParams.token]
+      when {
+        parentIndex == null || parentIndex == index -> {
+          roborazziDebugLog {
+            "Roborazzi: could not find the parent window of the sub-window ${root.decorView}. " +
+              "Falling back to the screen as its container."
+          }
+          null
+        }
+
+        parentIndex in resolving -> {
+          roborazziDebugLog {
+            "Roborazzi: the parent windows of the sub-window ${root.decorView} form a cycle. " +
+              "Falling back to the screen as its container."
+          }
+          null
+        }
+
+        else -> resolveAt(parentIndex, resolving + index)
+      }
+    } else {
+      null
+    }
+    val outRect = Rect()
+    Gravity.apply(
+      layoutParams.gravity,
+      root.decorView.width,
+      root.decorView.height,
+      parentRect ?: screenRect,
+      layoutParams.x,
+      layoutParams.y,
+      outRect
+    )
+    resolvedRects[index] = outRect
+    return outRect
+  }
+
+  return rootsOrderByDepth.mapIndexed { index, root -> root to resolveAt(index, emptySet()) }
+}
+
+private val SUB_WINDOW_TYPES =
+  WindowManager.LayoutParams.FIRST_SUB_WINDOW..WindowManager.LayoutParams.LAST_SUB_WINDOW
+
 private fun Rect.toRoboRect(): RoboRect = RoboRect(left, top, right, bottom)
 
 private fun RoboRect.toAndroidRect(): Rect = Rect(left, top, right, bottom)
@@ -48,11 +122,17 @@ sealed interface RoboComponent : RoboComponentTree {
     override val height: Int = rootsOrderByDepth.maxOfOrNull {
       it.decorView.height
     } ?: 0
+    /**
+     * Each window paired with the screen rect it occupies.
+     * Sub-windows are placed inside their parent window, so this has to be resolved once and
+     * shared by the drawing and the tree traversal below.
+     */
+    private val windowRects: List<Pair<Root, Rect>> = resolveWindowRects(rootsOrderByDepth)
+
     override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
       val bitmap = Bitmap.createBitmap(width, height, roborazziOptions.recordOptions.pixelBitConfig.toBitmapConfig())
       val canvas = Canvas(bitmap)
-      val screenDecorView = rootsOrderByDepth.first().decorView
-      rootsOrderByDepth.forEach { root ->
+      windowRects.forEach { (root, outRect) ->
         val layoutParams = root.windowLayoutParams.get()
         val decorView = root.decorView
         if ((layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND) != 0) {
@@ -61,16 +141,6 @@ sealed interface RoboComponent : RoboComponentTree {
           val paint = Paint().apply { this.color = color }
           canvas.drawRect(Rect(0, 0, width, height), paint)
         }
-        val outRect = Rect()
-        Gravity.apply(
-          layoutParams.gravity,
-          root.decorView.width,
-          root.decorView.height,
-          Rect(0, 0, screenDecorView.width, screenDecorView.height),
-          layoutParams.x,
-          layoutParams.y,
-          outRect
-        )
         decorView.fetchImage(
           recordOptions = roborazziOptions.recordOptions,
         )?.let {
@@ -88,22 +158,9 @@ sealed interface RoboComponent : RoboComponentTree {
     }
     override val rect: Rect = bounds.toAndroidRect()
     override val children: List<RoboComponent> by lazy {
-      val screenDecorView = rootsOrderByDepth.first().decorView
-      rootsOrderByDepth.map { root ->
-        val layoutParams = root.windowLayoutParams.get()
-        val decorView = root.decorView
-        val outRect = Rect()
-        Gravity.apply(
-          layoutParams.gravity,
-          root.decorView.width,
-          root.decorView.height,
-          Rect(0, 0, screenDecorView.width, screenDecorView.height),
-          layoutParams.x,
-          layoutParams.y,
-          outRect
-        )
+      windowRects.map { (root, outRect) ->
         View(
-          decorView, roborazziOptions, outRect
+          root.decorView, roborazziOptions, outRect
         )
       }
     }
