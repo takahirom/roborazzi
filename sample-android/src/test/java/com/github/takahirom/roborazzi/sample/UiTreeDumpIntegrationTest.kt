@@ -9,6 +9,7 @@ import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -172,6 +173,83 @@ class UiTreeDumpIntegrationTest {
   }
 
   @Test
+  fun unstableDefaultToStringValuesAreSerializedWithoutIdentityHash() {
+    // Reproduces the general case behind #923: any semantics value whose type doesn't override
+    // toString() falls back to the JVM's default "<ClassName>@<hex identity hash>" rendering --
+    // the same bug #911 fixed, but for CustomAccessibilityAction specifically. A concrete
+    // real-world instance is the Shape androidx.compose.foundation sets internally on some
+    // scrollable containers (e.g. VerticalScrollableClipShape), which has no custom toString();
+    // this test reproduces the underlying defect directly via a plain custom semantics value so
+    // it doesn't depend on which Compose foundation version does or doesn't set that Shape.
+    // A fresh instance is created on every composition, so its identity hash would differ
+    // between the two captures below unless it's stripped.
+    composeTestRule.setContent {
+      Text(
+        text = "Item",
+        modifier = Modifier
+          .testTag("item")
+          .semantics {
+            this[UnstableToStringTestKey] = ValueWithUnstableDefaultToString()
+          }
+      )
+    }
+
+    val prefix =
+      "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.unstableToString"
+    val imageFile = File("$prefix.png")
+    val sidecarFile = File("$prefix.uitree.json")
+    val annotatedFile = File("$prefix.annotated.png")
+    val secondImageFile = File("${prefix}2.png")
+    val secondSidecarFile = File("${prefix}2.uitree.json")
+    val secondAnnotatedFile = File("${prefix}2.annotated.png")
+    val allFiles = listOf(
+      imageFile, sidecarFile, annotatedFile,
+      secondImageFile, secondSidecarFile, secondAnnotatedFile,
+    )
+    allFiles.forEach { it.delete() }
+
+    onView(isRoot()).captureRoboImage(
+      file = imageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        uiTreeDumpOptions = UiTreeDumpOptions(),
+      ),
+    )
+
+    val json = sidecarFile.readText()
+
+    // The identity hash is stripped, leaving just the stable class name.
+    assertTrue(
+      "expected identity-hash-free class name in:\n$json",
+      json.contains(
+        "\"UnstableToStringTestValue\": " +
+          "\"com.github.takahirom.roborazzi.sample.ValueWithUnstableDefaultToString\""
+      )
+    )
+
+    // No JVM runtime identity (default Object#toString() identity hash / lambda class name)
+    // may leak into the JSON -- that would make re-recording the same UI produce a diff.
+    val identityLeak = Regex("@[0-9a-fA-F]{4,}|Lambda|Function0").find(json)
+    assertTrue(
+      "runtime identity leaked into the sidecar (${identityLeak?.value}):\n$json",
+      identityLeak == null
+    )
+
+    // Recording the same UI again yields a byte-identical sidecar, even though composition
+    // created a brand new (differently-hashed) value instance for this second capture.
+    onView(isRoot()).captureRoboImage(
+      file = secondImageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        uiTreeDumpOptions = UiTreeDumpOptions(),
+      ),
+    )
+    assertEquals(json, secondSidecarFile.readText())
+
+    allFiles.forEach { it.delete() }
+  }
+
+  @Test
   fun writesAnnotatedImageMatchingSidecarNumbering() {
     composeTestRule.setContent {
       Column {
@@ -266,3 +344,9 @@ class UiTreeDumpIntegrationTest {
     listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
   }
 }
+
+private val UnstableToStringTestKey = SemanticsPropertyKey<Any>("UnstableToStringTestValue")
+
+// Deliberately has no toString() override, so it falls back to the JVM's default
+// "<ClassName>@<hex identity hash>" rendering -- the case semanticsValueToString() must sanitize.
+private class ValueWithUnstableDefaultToString

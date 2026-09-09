@@ -183,7 +183,27 @@ private fun semanticsValueToString(value: Any?): String = buildString {
     } else if (value is CollectionInfo) {
         append("(rowCount=${value.rowCount}, columnCount=${value.columnCount})")
     } else {
-        append(value)
+        append(value.toStableString())
+    }
+}
+
+/**
+ * The JVM's default `Object#toString()` rendering: `<FullyQualifiedClassName>@<hex identity
+ * hash>` (e.g. `androidx.compose.foundation.VerticalScrollableClipShape@5fb48f31`). Types that
+ * don't override `toString()` fall back to this, and the hash half changes on every run
+ * regardless of whether the UI changed — the same trap #911 fixed for
+ * [CustomAccessibilityAction], just via a different type. Matched by regex rather than
+ * special-cased per type so any future semantics value with an unstable default `toString()` is
+ * covered automatically.
+ */
+private val DefaultObjectToStringIdentityHash = Regex("^[\\w.$]+@[0-9a-f]{1,8}$")
+
+private fun Any?.toStableString(): String {
+    val rendered = toString()
+    return if (DefaultObjectToStringIdentityHash.matches(rendered)) {
+        rendered.substringBeforeLast('@')
+    } else {
+        rendered
     }
 }
 
