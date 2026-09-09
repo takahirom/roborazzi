@@ -182,6 +182,11 @@ class UiTreeDumpIntegrationTest {
    * doesn't depend on which Compose foundation version does or doesn't set that `Shape`. A fresh
    * instance is created on every composition, so its identity hash would differ between the two
    * captures below unless it's stripped.
+   *
+   * Also covers the inverse: a value with a genuinely custom `toString()` that merely resembles
+   * the default format ([ValueWithCustomToStringResemblingDefault]) must be left untouched --
+   * `toStableString()` has to check that a rendering *is* the default for that specific instance,
+   * not just that it looks like it could be.
    */
   @Test
   fun unstableDefaultToStringValuesAreSerializedWithoutIdentityHash() {
@@ -192,6 +197,7 @@ class UiTreeDumpIntegrationTest {
           .testTag("item")
           .semantics {
             this[UnstableToStringTestKey] = ValueWithUnstableDefaultToString()
+            this[CustomToStringResemblingDefaultTestKey] = ValueWithCustomToStringResemblingDefault()
           }
       )
     }
@@ -229,10 +235,18 @@ class UiTreeDumpIntegrationTest {
       )
     )
 
+    // A custom toString() that merely resembles the default format (own class name + "@" +
+    // something hex-looking) is left untouched -- only the actual default rendering is stripped.
+    assertTrue(
+      "expected untouched custom toString() output in:\n$json",
+      json.contains("\"CustomToStringResemblingDefaultTestValue\": \"$CUSTOM_TO_STRING_RESEMBLING_DEFAULT\"")
+    )
 
     // No JVM runtime identity (default Object#toString() identity hash / lambda class name)
-    // may leak into the JSON -- that would make re-recording the same UI produce a diff.
-    val identityLeak = Regex("@[0-9a-fA-F]{4,}|Lambda|Function0").find(json)
+    // may leak into the JSON -- that would make re-recording the same UI produce a diff. Excludes
+    // the deliberately-preserved custom toString() above, which matches this shape on purpose.
+    val identityLeak = Regex("@[0-9a-fA-F]{4,}|Lambda|Function0")
+      .find(json.replace(CUSTOM_TO_STRING_RESEMBLING_DEFAULT, ""))
     assertTrue(
       "runtime identity leaked into the sidecar (${identityLeak?.value}):\n$json",
       identityLeak == null
@@ -356,3 +370,18 @@ private val UnstableToStringTestKey = SemanticsPropertyKey<Any>("UnstableToStrin
  * sanitize.
  */
 private class ValueWithUnstableDefaultToString
+
+private const val CUSTOM_TO_STRING_RESEMBLING_DEFAULT = "com.example.Token@f00d"
+
+private val CustomToStringResemblingDefaultTestKey =
+  SemanticsPropertyKey<Any>("CustomToStringResemblingDefaultTestValue")
+
+/**
+ * Overrides `toString()` with output that merely resembles the JVM's default
+ * `Object#toString()` format (its own class name followed by "@" and something hex-looking)
+ * without actually being it -- `toStableString()` must recognize this is *not* the unstable
+ * default rendering for this instance and leave it untouched.
+ */
+private class ValueWithCustomToStringResemblingDefault {
+  override fun toString() = CUSTOM_TO_STRING_RESEMBLING_DEFAULT
+}

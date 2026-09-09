@@ -194,21 +194,19 @@ private fun semanticsValueToString(value: Any?): String = buildString {
  * `androidx.compose.foundation.VerticalScrollableClipShape@5fb48f31`), is what any semantics
  * value type falls back to when it doesn't override `toString()`, and the hash half changes on
  * every run regardless of whether the UI changed -- the same trap #911 fixed for
- * [CustomAccessibilityAction], just via a different type. Detected by regex rather than
- * special-cased per type so any future semantics value with an unstable default `toString()` is
- * covered automatically.
+ * [CustomAccessibilityAction], just via a different type. Checked by recomputing the exact
+ * default rendering for [this] specific instance and comparing, rather than by shape (e.g. a
+ * regex), so a custom `toString()` override that merely resembles the default format (its own
+ * class name followed by "@" and something hex-looking) is never mistaken for it and mangled.
  */
 private fun Any?.toStableString(): String {
     val rendered = toString()
-    return if (DefaultObjectToStringIdentityHash.matches(rendered)) {
-        rendered.substringBeforeLast('@')
+    return if (this != null && rendered == "${javaClass.name}@${Integer.toHexString(hashCode())}") {
+        javaClass.name
     } else {
         rendered
     }
 }
-
-/** Matches [toStableString]'s default `Object#toString()` identity-hash rendering. */
-private val DefaultObjectToStringIdentityHash = Regex("^[\\w.$]+@[0-9a-f]{1,8}$")
 
 /**
  * Extracts the non-action, non-flag semantics into a name -> value map, using
