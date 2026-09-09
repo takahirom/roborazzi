@@ -172,17 +172,19 @@ class UiTreeDumpIntegrationTest {
     allFiles.forEach { it.delete() }
   }
 
+  /**
+   * Reproduces the general case behind #923: any semantics value whose type doesn't override
+   * `toString()` falls back to the JVM's default `<ClassName>@<hex identity hash>` rendering --
+   * the same bug #911 fixed, but for [CustomAccessibilityAction] specifically. A concrete
+   * real-world instance is the `Shape` androidx.compose.foundation sets internally on some
+   * scrollable containers (e.g. `VerticalScrollableClipShape`), which has no custom `toString()`;
+   * this test reproduces the underlying defect directly via a plain custom semantics value so it
+   * doesn't depend on which Compose foundation version does or doesn't set that `Shape`. A fresh
+   * instance is created on every composition, so its identity hash would differ between the two
+   * captures below unless it's stripped.
+   */
   @Test
   fun unstableDefaultToStringValuesAreSerializedWithoutIdentityHash() {
-    // Reproduces the general case behind #923: any semantics value whose type doesn't override
-    // toString() falls back to the JVM's default "<ClassName>@<hex identity hash>" rendering --
-    // the same bug #911 fixed, but for CustomAccessibilityAction specifically. A concrete
-    // real-world instance is the Shape androidx.compose.foundation sets internally on some
-    // scrollable containers (e.g. VerticalScrollableClipShape), which has no custom toString();
-    // this test reproduces the underlying defect directly via a plain custom semantics value so
-    // it doesn't depend on which Compose foundation version does or doesn't set that Shape.
-    // A fresh instance is created on every composition, so its identity hash would differ
-    // between the two captures below unless it's stripped.
     composeTestRule.setContent {
       Text(
         text = "Item",
@@ -226,6 +228,7 @@ class UiTreeDumpIntegrationTest {
           "\"com.github.takahirom.roborazzi.sample.ValueWithUnstableDefaultToString\""
       )
     )
+
 
     // No JVM runtime identity (default Object#toString() identity hash / lambda class name)
     // may leak into the JSON -- that would make re-recording the same UI produce a diff.
@@ -347,6 +350,9 @@ class UiTreeDumpIntegrationTest {
 
 private val UnstableToStringTestKey = SemanticsPropertyKey<Any>("UnstableToStringTestValue")
 
-// Deliberately has no toString() override, so it falls back to the JVM's default
-// "<ClassName>@<hex identity hash>" rendering -- the case semanticsValueToString() must sanitize.
+/**
+ * Deliberately has no `toString()` override, so it falls back to the JVM's default
+ * `<ClassName>@<hex identity hash>` rendering -- the case `semanticsValueToString()` must
+ * sanitize.
+ */
 private class ValueWithUnstableDefaultToString
