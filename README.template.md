@@ -14,6 +14,9 @@
 <!-- topic_github_actions -->
 <!-- end -->
 
+<!-- topic_junit_platform_reporting -->
+<!-- end -->
+
 <!-- topic_gif_and_video -->
 <!-- end -->
 <!-- topic_preview_support -->
