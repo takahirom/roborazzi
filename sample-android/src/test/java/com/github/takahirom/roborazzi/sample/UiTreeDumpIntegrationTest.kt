@@ -9,6 +9,7 @@ import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -171,6 +172,100 @@ class UiTreeDumpIntegrationTest {
     allFiles.forEach { it.delete() }
   }
 
+  /**
+   * Reproduces the general case behind #923: any semantics value whose type doesn't override
+   * `toString()` falls back to the JVM's default `<ClassName>@<hex identity hash>` rendering --
+   * the same bug #911 fixed, but for [CustomAccessibilityAction] specifically. A concrete
+   * real-world instance is the `Shape` androidx.compose.foundation sets internally on some
+   * scrollable containers (e.g. `VerticalScrollableClipShape`), which has no custom `toString()`;
+   * this test reproduces the underlying defect directly via a plain custom semantics value so it
+   * doesn't depend on which Compose foundation version does or doesn't set that `Shape`. A fresh
+   * instance is created on every composition, so its identity hash would differ between the two
+   * captures below unless it's stripped.
+   *
+   * Also covers the inverse: a value with a genuinely custom `toString()` that merely resembles
+   * the default format ([ValueWithCustomToStringResemblingDefault]) must be left untouched --
+   * `toStableString()` has to check that a rendering *is* the default for that specific instance,
+   * not just that it looks like it could be.
+   */
+  @Test
+  fun unstableDefaultToStringValuesAreSerializedWithoutIdentityHash() {
+    composeTestRule.setContent {
+      Text(
+        text = "Item",
+        modifier = Modifier
+          .testTag("item")
+          .semantics {
+            this[UnstableToStringTestKey] = ValueWithUnstableDefaultToString()
+            this[CustomToStringResemblingDefaultTestKey] = ValueWithCustomToStringResemblingDefault()
+          }
+      )
+    }
+
+    val prefix =
+      "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.unstableToString"
+    val imageFile = File("$prefix.png")
+    val sidecarFile = File("$prefix.uitree.json")
+    val annotatedFile = File("$prefix.annotated.png")
+    val secondImageFile = File("${prefix}2.png")
+    val secondSidecarFile = File("${prefix}2.uitree.json")
+    val secondAnnotatedFile = File("${prefix}2.annotated.png")
+    val allFiles = listOf(
+      imageFile, sidecarFile, annotatedFile,
+      secondImageFile, secondSidecarFile, secondAnnotatedFile,
+    )
+    allFiles.forEach { it.delete() }
+
+    onView(isRoot()).captureRoboImage(
+      file = imageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        uiTreeDumpOptions = UiTreeDumpOptions(),
+      ),
+    )
+
+    val json = sidecarFile.readText()
+
+    // The identity hash is stripped, leaving just the stable class name.
+    assertTrue(
+      "expected identity-hash-free class name in:\n$json",
+      json.contains(
+        "\"UnstableToStringTestValue\": " +
+          "\"com.github.takahirom.roborazzi.sample.ValueWithUnstableDefaultToString\""
+      )
+    )
+
+    // A custom toString() that merely resembles the default format (own class name + "@" +
+    // something hex-looking) is left untouched -- only the actual default rendering is stripped.
+    assertTrue(
+      "expected untouched custom toString() output in:\n$json",
+      json.contains("\"CustomToStringResemblingDefaultTestValue\": \"$CUSTOM_TO_STRING_RESEMBLING_DEFAULT\"")
+    )
+
+    // No JVM runtime identity (default Object#toString() identity hash / lambda class name)
+    // may leak into the JSON -- that would make re-recording the same UI produce a diff. Excludes
+    // the deliberately-preserved custom toString() above, which matches this shape on purpose.
+    val identityLeak = Regex("@[0-9a-fA-F]{4,}|Lambda|Function0")
+      .find(json.replace(CUSTOM_TO_STRING_RESEMBLING_DEFAULT, ""))
+    assertTrue(
+      "runtime identity leaked into the sidecar (${identityLeak?.value}):\n$json",
+      identityLeak == null
+    )
+
+    // Recording the same UI again yields a byte-identical sidecar, even though composition
+    // created a brand new (differently-hashed) value instance for this second capture.
+    onView(isRoot()).captureRoboImage(
+      file = secondImageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        uiTreeDumpOptions = UiTreeDumpOptions(),
+      ),
+    )
+    assertEquals(json, secondSidecarFile.readText())
+
+    allFiles.forEach { it.delete() }
+  }
+
   @Test
   fun writesAnnotatedImageMatchingSidecarNumbering() {
     composeTestRule.setContent {
@@ -265,4 +360,28 @@ class UiTreeDumpIntegrationTest {
 
     listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
   }
+}
+
+private val UnstableToStringTestKey = SemanticsPropertyKey<Any>("UnstableToStringTestValue")
+
+/**
+ * Deliberately has no `toString()` override, so it falls back to the JVM's default
+ * `<ClassName>@<hex identity hash>` rendering -- the case `semanticsValueToString()` must
+ * sanitize.
+ */
+private class ValueWithUnstableDefaultToString
+
+private const val CUSTOM_TO_STRING_RESEMBLING_DEFAULT = "com.example.Token@f00d"
+
+private val CustomToStringResemblingDefaultTestKey =
+  SemanticsPropertyKey<Any>("CustomToStringResemblingDefaultTestValue")
+
+/**
+ * Overrides `toString()` with output that merely resembles the JVM's default
+ * `Object#toString()` format (its own class name followed by "@" and something hex-looking)
+ * without actually being it -- `toStableString()` must recognize this is *not* the unstable
+ * default rendering for this instance and leave it untouched.
+ */
+private class ValueWithCustomToStringResemblingDefault {
+  override fun toString() = CUSTOM_TO_STRING_RESEMBLING_DEFAULT
 }
