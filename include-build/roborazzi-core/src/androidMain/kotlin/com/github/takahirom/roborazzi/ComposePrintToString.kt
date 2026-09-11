@@ -188,24 +188,21 @@ private fun semanticsValueToString(value: Any?): String = buildString {
 }
 
 /**
- * Renders [this] the way [semanticsValueToString]'s fallback branch does, stripping the JVM's
- * default `Object#toString()` identity-hash suffix when present. That default rendering,
- * `<FullyQualifiedClassName>@<hex identity hash>` (e.g.
+ * Renders [this] the way [semanticsValueToString]'s fallback branch does, dropping the JVM's
+ * default `Object#toString()` identity-hash suffix when it's actually in play. That default
+ * rendering, `<FullyQualifiedClassName>@<hex identity hash>` (e.g.
  * `androidx.compose.foundation.VerticalScrollableClipShape@5fb48f31`), is what any semantics
  * value type falls back to when it doesn't override `toString()`, and the hash half changes on
  * every run regardless of whether the UI changed -- the same trap #911 fixed for
- * [CustomAccessibilityAction], just via a different type. Checked by recomputing the exact
- * default rendering for [this] specific instance and comparing, rather than by shape (e.g. a
- * regex), so a custom `toString()` override that merely resembles the default format (its own
- * class name followed by "@" and something hex-looking) is never mistaken for it and mangled.
+ * [CustomAccessibilityAction], just via a different type. Checked by asking reflection which
+ * class actually declares [this]'s `toString()` method, rather than by matching the rendered
+ * text (shape or exact value), so a custom `toString()` override can never be mistaken for the
+ * unstable default and mangled -- no matter how closely its output happens to resemble it.
  */
 private fun Any?.toStableString(): String {
-    val rendered = toString()
-    return if (this != null && rendered == "${javaClass.name}@${Integer.toHexString(hashCode())}") {
-        javaClass.name
-    } else {
-        rendered
-    }
+    if (this == null) return "null"
+    val usesJvmDefaultToString = javaClass.getMethod("toString").declaringClass == Any::class.java
+    return if (usesJvmDefaultToString) javaClass.name else toString()
 }
 
 /**
