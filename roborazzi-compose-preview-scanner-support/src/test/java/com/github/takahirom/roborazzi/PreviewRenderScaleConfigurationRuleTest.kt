@@ -35,6 +35,14 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 class PreviewRenderScaleConfigurationRuleTest {
   @get:Rule val temporaryFolder = TemporaryFolder()
 
+  @Test fun copyingOptionsPreservesRenderScale() {
+    val options = ComposePreviewTester.Options().apply {
+      renderScale = 0.5f
+    }
+
+    assertEquals(0.5f, options.copy().renderScale)
+  }
+
   @Test fun blankDeviceIsScaledOnlyOnce() = capture(0.5f)
   @Test fun blankDeviceWithRoundedDensityIsScaledOnlyOnce() = capture(1f / 3f)
   @Test fun namedDeviceIsConfiguredBeforeLaunch() = capture(

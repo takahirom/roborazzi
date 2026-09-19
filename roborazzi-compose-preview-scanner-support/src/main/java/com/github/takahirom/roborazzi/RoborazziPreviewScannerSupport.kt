@@ -342,15 +342,23 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
   data class Options(
     val testLifecycleOptions: TestLifecycleOptions = JUnit4TestLifecycleOptions(),
     val scanOptions: ScanOptions = ScanOptions(emptyList()),
+    private var renderScaleValue: Float = 1f,
   ) {
+    init {
+      require(renderScaleValue.isFinite() && renderScaleValue > 0f) {
+        "renderScale must be finite and greater than 0, but was $renderScaleValue"
+      }
+    }
+
     /** Internal bridge used by generated Preview tests. */
     @InternalRoborazziApi
-    var renderScale: Float = 1f
+    var renderScale: Float
+      get() = renderScaleValue
       set(value) {
         require(value.isFinite() && value > 0f) {
           "renderScale must be finite and greater than 0, but was $value"
         }
-        field = value
+        renderScaleValue = value
       }
 
     interface TestLifecycleOptions
