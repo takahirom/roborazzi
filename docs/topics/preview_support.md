@@ -53,6 +53,8 @@ roborazzi {
 
 `renderScale` scales rendering density before capture while preserving logical dp dimensions.
 This may change density-qualified resource selection.
+Generated tests using the default Android tester apply the scaled configuration before Activity launch.
+For previews without a device, setup and capture use the original Robolectric configuration as the scale baseline.
 
 #### Advanced: Custom ComposePreviewTester Implementation
 

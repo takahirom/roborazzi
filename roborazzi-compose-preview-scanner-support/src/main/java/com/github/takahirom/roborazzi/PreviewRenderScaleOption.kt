@@ -10,6 +10,7 @@ import kotlin.math.roundToInt
 internal class PreviewRenderScaleOption(
   private val scale: Float,
   private val previewDevice: String = "",
+  private val baseConfiguration: android.content.res.Configuration? = null,
 ) : RoborazziComposeSetupOption {
   init {
     require(scale.isFinite() && scale > 0f) {
@@ -25,7 +26,8 @@ internal class PreviewRenderScaleOption(
     val device = previewDevice.takeIf { it.isNotBlank() }
       ?.let { DevicePreviewInfoParser.parse(it) }?.inDp()
     val resources = Resources.getSystem()
-    val density = device?.densityDpi ?: resources.displayMetrics.densityDpi
+    val configuration = baseConfiguration ?: resources.configuration
+    val density = device?.densityDpi ?: baseConfiguration?.densityDpi ?: resources.displayMetrics.densityDpi
     val scaledDensity = (density.toDouble() * scale).roundToInt().coerceAtLeast(1)
     // ShadowDisplayManager reconstructs dp from its already truncated pixel dimensions
     // for additive qualifiers. Supply the resolved dp explicitly to avoid losing another
@@ -33,7 +35,6 @@ internal class PreviewRenderScaleOption(
     val qualifiers = if (device != null) {
       RobolectricDeviceQualifierBuilder.build(device.copy(densityDpi = scaledDensity))
     } else {
-      val configuration = resources.configuration
       "w${configuration.screenWidthDp}dp-h${configuration.screenHeightDp}dp-${scaledDensity}dpi"
     }
     configBuilder.addRobolectricQualifier(qualifiers)
