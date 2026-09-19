@@ -120,6 +120,7 @@ public class com/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$J
 	public final fun getComposeTestRule ()Landroidx/compose/ui/test/junit4/ComposeContentTestRule;
 	public fun getComposeTestRuleFactory ()Lkotlin/jvm/functions/Function0;
 	public fun getPreview ()Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;
+	public final fun releaseComposeTestRuleAfter (Lkotlin/jvm/functions/Function0;)Lorg/junit/rules/TestRule;
 }
 
 public final class com/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$JUnit4TestParameter$AndroidPreviewJUnit4TestParameter : com/github/takahirom/roborazzi/ComposePreviewTester$TestParameter$JUnit4TestParameter {

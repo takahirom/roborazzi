@@ -220,9 +220,9 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 }
                 @Suppress("UNCHECKED_CAST")
                 @get:Rule
-                val rule = RuleChain.outerRule(
-                  testLifecycleOptions.testRuleFactory(composeTestRule)
-                )
+                val rule = junit4TestParameter.releaseComposeTestRuleAfter {
+                  RuleChain.outerRule(testLifecycleOptions.testRuleFactory(composeTestRule))
+                }
                 
                 @Category(RoborazziComposePreviewTestCategory::class)
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)

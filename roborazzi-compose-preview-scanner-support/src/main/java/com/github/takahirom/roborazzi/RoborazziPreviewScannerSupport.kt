@@ -401,8 +401,47 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
       open val composeTestRuleFactory: () -> ComposeContentTestRule,
       open val preview: ComposablePreview<T>
     ) : TestParameter<T>() {
-      val composeTestRule: ComposeContentTestRule by lazy {
-        composeTestRuleFactory()
+      private var cachedComposeTestRule: ComposeContentTestRule? = null
+
+      val composeTestRule: ComposeContentTestRule
+        get() = synchronized(this) {
+          cachedComposeTestRule ?: composeTestRuleFactory().also { cachedComposeTestRule = it }
+        }
+
+      /**
+       * Releases the parameter's reference after all supplied rule teardown has finished.
+       * Each sequential execution must construct a new rule chain. Overlapping executions
+       * using the same parameter, or reevaluating the returned statement, are unsupported.
+       */
+      @InternalRoborazziApi
+      fun releaseComposeTestRuleAfter(ruleFactory: () -> TestRule): TestRule {
+        val rule = try {
+          ruleFactory()
+        } catch (failure: Throwable) {
+          releaseComposeTestRule()
+          throw failure
+        }
+        return TestRule { base, description ->
+          val statement = try {
+            rule.apply(base, description)
+          } catch (failure: Throwable) {
+            releaseComposeTestRule()
+            throw failure
+          }
+          object : org.junit.runners.model.Statement() {
+            override fun evaluate() {
+              try {
+                statement.evaluate()
+              } finally {
+                releaseComposeTestRule()
+              }
+            }
+          }
+        }
+      }
+
+      private fun releaseComposeTestRule() = synchronized(this) {
+        cachedComposeTestRule = null
       }
 
       data class AndroidPreviewJUnit4TestParameter(
