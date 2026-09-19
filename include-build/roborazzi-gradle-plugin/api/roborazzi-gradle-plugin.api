@@ -33,6 +33,7 @@ public class io/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTest
 	public final fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
 	public final fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
 	public final fun getPackages ()Lorg/gradle/api/provider/ListProperty;
+	public final fun getRenderScale ()Lorg/gradle/api/provider/Property;
 	public final fun getRobolectricConfig ()Lorg/gradle/api/provider/MapProperty;
 	public final fun getTesterQualifiedClassName ()Lorg/gradle/api/provider/Property;
 	public final fun getUseScanOptionParametersInTester ()Lorg/gradle/api/provider/Property;
@@ -48,6 +49,7 @@ public abstract class io/github/takahirom/roborazzi/GenerateComposePreviewRobole
 	public abstract fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
 	public abstract fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
 	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getRenderScale ()Lorg/gradle/api/provider/Property;
 	public abstract fun getRobolectricConfig ()Lorg/gradle/api/provider/MapProperty;
 	public final fun getScanPackageTrees ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getTesterQualifiedClassName ()Lorg/gradle/api/provider/Property;

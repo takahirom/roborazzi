@@ -25,6 +25,19 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
     .convention(false)
 
   /**
+   * Experimental rendering scale for generated Compose Preview Robolectric tests.
+   *
+   * The scale is applied to the device density before Compose content is rendered, so the
+   * preview's logical dp dimensions are preserved while the surface pixel dimensions scale
+   * accordingly. This is independent of capture-time `resizeScale`, which resizes the captured
+   * bitmap. Density-qualified resources may resolve differently at the scaled density.
+   * Must be finite and positive. The resulting dpi is rounded to the nearest integer and
+   * clamped to a minimum of 1 dpi.
+   */
+  @ExperimentalRoborazziApi
+  val renderScale: Property<Float> = objects.property(Float::class.java).convention(1f)
+
+  /**
    * The package names to scan for the Composable Previews.
    */
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
@@ -102,6 +115,9 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   abstract val generatedTestClassCount: Property<Int>
 
   @get:Input
+  abstract val renderScale: Property<Float>
+
+  @get:Input
   @get:Optional
   @ExperimentalRoborazziApi
   abstract val annotationFilter: Property<AnnotationFilter>
@@ -109,6 +125,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   @TaskAction
   @OptIn(ExperimentalRoborazziApi::class)
   fun generateTests() {
+    val scale = validateRenderScale(renderScale.getOrElse(1f))
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
@@ -149,6 +166,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
         annotationFilterExpr = annotationFilterExpr,
         robolectricConfigString = robolectricConfigString,
         testerQualifiedClassNameString = testerQualifiedClassNameString,
+        renderScale = scale,
         shardIndex = null,
         totalShards = 1
       )
@@ -163,6 +181,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
           annotationFilterExpr = annotationFilterExpr,
           robolectricConfigString = robolectricConfigString,
           testerQualifiedClassNameString = testerQualifiedClassNameString,
+          renderScale = scale,
           shardIndex = shardIndex,
           totalShards = testClassCount
         )
@@ -179,6 +198,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     annotationFilterExpr: String,
     robolectricConfigString: String,
     testerQualifiedClassNameString: String,
+    renderScale: Float,
     shardIndex: Int?,
     totalShards: Int
   ) {
@@ -253,11 +273,18 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                               includePrivatePreviews = $includePrivatePreviewsExpr,
                               annotationFilter = $annotationFilterExpr,
                             )
-                        )
+                        )${if (renderScale == 1f) "" else ".apply { renderScale = ${renderScale}f }"}
                     }
                 }
             }
         """.trimIndent()
     )
   }
+}
+
+internal fun validateRenderScale(value: Float): Float {
+  require(value.isFinite() && value > 0f) {
+    "renderScale must be finite and greater than 0, but was $value"
+  }
+  return value
 }

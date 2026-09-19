@@ -71,9 +71,17 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 }
 
 @ExperimentalRoborazziApi
-fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): RoborazziComposeOptions {
+fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): RoborazziComposeOptions =
+  toRoborazziComposeOptions(renderScale = 1f)
+
+@OptIn(ExperimentalRoborazziApi::class)
+private fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(renderScale: Float): RoborazziComposeOptions {
   return RoborazziComposeOptions {
-    previewDevice(previewInfo.device)
+    if (renderScale == 1f) {
+      previewDevice(previewInfo.device)
+    } else {
+      addOption(PreviewRenderScaleOption(renderScale, previewInfo.device))
+    }
     size(
       widthDp = previewInfo.widthDp, heightDp = previewInfo.heightDp
     )
@@ -324,6 +332,16 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
     val testLifecycleOptions: TestLifecycleOptions = JUnit4TestLifecycleOptions(),
     val scanOptions: ScanOptions = ScanOptions(emptyList()),
   ) {
+    /** Internal bridge used by generated Preview tests. */
+    @InternalRoborazziApi
+    var renderScale: Float = 1f
+      set(value) {
+        require(value.isFinite() && value > 0f) {
+          "renderScale must be finite and greater than 0, but was $value"
+        }
+        field = value
+      }
+
     interface TestLifecycleOptions
 
     @Suppress("UNCHECKED_CAST")
@@ -630,7 +648,7 @@ class AndroidComposePreviewTester(
 
     @Suppress("USELESS_CAST")
     val roborazziComposeOptions =
-      (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions().builder()
+      (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions(options().renderScale).builder()
         .apply {
           if (activityScenarioProvider != null) {
             composeTestRule(junit4TestParameter.composeTestRule) {
