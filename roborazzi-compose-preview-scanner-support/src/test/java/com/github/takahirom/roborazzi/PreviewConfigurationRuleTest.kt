@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.test.core.app.ActivityScenario
 import java.lang.reflect.Proxy
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.fail
 import org.junit.Test
@@ -75,6 +76,7 @@ class PreviewConfigurationRuleTest {
       rule.apply(statement { fail("The body must not run") }, description).evaluate()
       fail("Expected invalid qualifier failure")
     } catch (_: IllegalArgumentException) { }
+    assertNull(parameter.renderScaleBaseConfiguration)
     assertRestored(original, 1f)
   }
 
