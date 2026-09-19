@@ -44,11 +44,18 @@ roborazzi {
     testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
     // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
     generatedTestClassCount = 4
+    // Experimental: scale render resolution while preserving logical dp size.
+    // renderScale = 1f / 3f
     // Filter previews by annotation. See "Filtering previews by annotation" below.
     annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
   }
 }
 ```
+
+`renderScale` scales rendering density before capture while preserving logical dp dimensions.
+This may change density-qualified resource selection.
+Generated tests using the default Android tester apply the scaled configuration before Activity launch.
+For previews without a device, setup and capture use the original Robolectric configuration as the scale baseline.
 
 #### Advanced: Custom ComposePreviewTester Implementation
 
