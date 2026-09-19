@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
+import org.robolectric.RuntimeEnvironment
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
@@ -23,6 +24,38 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
 // For Generated junit4 tests
 interface RoborazziComposePreviewTestCategory
+
+/**
+ * Applies the standard Android preview configuration before the generated test's rule chain
+ * launches its activity. Custom tester implementations retain their own configuration lifecycle.
+ */
+@InternalRoborazziApi
+@OptIn(ExperimentalRoborazziApi::class)
+fun createRoborazziPreviewConfigurationRule(
+  tester: ComposePreviewTester<*>,
+  testParameter: TestParameter<*>,
+): TestRule {
+  if (tester !is AndroidComposePreviewTester || testParameter !is AndroidPreviewJUnit4TestParameter) {
+    return TestRule { base, _ -> base }
+  }
+  return TestRule { base, _ ->
+    object : org.junit.runners.model.Statement() {
+      override fun evaluate() {
+        val qualifiers = RuntimeEnvironment.getQualifiers()
+        val fontScale = RuntimeEnvironment.getFontScale()
+        try {
+          testParameter.preview.toRoborazziComposeOptions().applySetup()
+          base.evaluate()
+        } finally {
+          RuntimeEnvironment.setQualifiers(qualifiers)
+          if (RuntimeEnvironment.getFontScale() != fontScale) {
+            RuntimeEnvironment.setFontScale(fontScale)
+          }
+        }
+      }
+    }
+  }
+}
 
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(

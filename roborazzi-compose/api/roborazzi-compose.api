@@ -93,6 +93,7 @@ public final class com/github/takahirom/roborazzi/RoborazziComposeOptions {
 	public static final field Companion Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Companion;
 	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun afterCapture ()V
+	public final fun applySetup ()V
 	public final fun beforeCapture ()V
 	public final fun builder ()Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
 	public final fun configured (Landroidx/test/core/app/ActivityScenario;Lkotlin/jvm/functions/Function2;)Lkotlin/jvm/functions/Function2;
