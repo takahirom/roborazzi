@@ -25,6 +25,9 @@ class CustomDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktop
 
   override fun testParameters(): List<DesktopPreviewTestParameter> {
     println("CustomDesktopPreviewTester testParameters() is called")
+    // Lets the integration tests observe what the plugin actually delivered to this JVM, rather
+    // than only that the test task ran.
+    println("CustomDesktopPreviewTester renderProfile defaultDevice=[${options().renderProfile.defaultDevice}]")
     return DefaultDesktopComposePreviewTester().testParameters()
   }
 }

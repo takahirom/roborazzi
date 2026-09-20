@@ -260,6 +260,71 @@ Roborazzi fails with a configuration error unless
 [`separateOutputDirs`](https://takahirom.github.io/roborazzi/build-setup.html#separate-output-directories-per-varianttarget-experimental)
 is enabled, which gives each task its own subdirectory.
 
+### Render profiles (experimental)
+
+A render profile decides how the desktop runtime sizes and scales previews. It is a
+property of a *test run*, not of a preview, so one module can capture the same previews
+more than once under different profiles.
+
+```kotlin
+roborazzi {
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.example.previews")
+    renderProfile = DesktopPreviewRenderProfile.AndroidCompatible
+  }
+}
+```
+
+The presets are:
+
+| Profile | What it does |
+|---|---|
+| `DesktopPreviewRenderProfile.Desktop` | The historical desktop behaviour: density 1, a canvas of at least 1024x768, and only `widthDp`/`heightDp` affect the size. |
+| `DesktopPreviewRenderProfile.AndroidCompatible` | Sizes previews the way the Robolectric runtime does, so the same preview can be compared between the two runtimes. |
+
+To vary a single axis, start from a preset and use `copy()`.
+
+#### Capturing the same previews under several profiles
+
+Give each profile its own Kotlin test run. Roborazzi already gives every test run of a
+JVM target its own set of tasks and, with `separateOutputDirs`, its own output directory,
+so the two sets of screenshots never overwrite each other:
+
+```kotlin
+kotlin {
+  jvm("desktop") {
+    testRuns.create("androidCompat")
+  }
+}
+
+roborazzi {
+  // required as soon as a target has more than one test run recording previews
+  separateOutputDirs = true
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.example.previews")
+    renderProfileByTestRun.put(
+      "androidCompat",
+      DesktopPreviewRenderProfile.AndroidCompatible,
+    )
+  }
+}
+```
+
+```bash
+./gradlew recordRoborazziDesktop              # build/outputs/roborazzi/desktop/
+./gradlew recordRoborazziDesktopAndroidCompat # build/outputs/roborazzi/desktopAndroidCompat/
+```
+
+`renderProfileByTestRun` is Kotlin Multiplatform only, because a Kotlin JVM project has a
+single `test` task and therefore no run to key a profile by. Use `renderProfile` there.
+
+A custom tester sees the profile as `options().renderProfile`. Build your options from
+`DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(...)`, as the examples below
+do: options constructed from scratch drop whatever the plugin configured, the profile
+included.
+
 ### Customizing the desktop tester
 
 `DefaultDesktopComposePreviewTester` accepts a `Capturer` whose receiver is the raw

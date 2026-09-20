@@ -470,6 +470,30 @@ public final class com/github/takahirom/roborazzi/DefaultFileNameGenerator$Defau
 	public final fun fromOptionName (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/DefaultFileNameGenerator$DefaultNamingStrategy;
 }
 
+public final class com/github/takahirom/roborazzi/DesktopPreviewRenderProfile : java/io/Serializable {
+	public static final field Companion Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile;Ljava/lang/String;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile;
+	public final fun encode ()Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultDevice ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/DesktopPreviewRenderProfile$Companion {
+	public final fun decode (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile;
+	public final fun getAndroidCompatible ()Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile;
+	public final fun getDefault ()Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile;
+	public final fun getDesktop ()Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile;
+}
+
+public final class com/github/takahirom/roborazzi/DesktopPreviewRenderProfileKt {
+	public static final field ROBORAZZI_DESKTOP_RENDER_PROFILE_PROPERTY Ljava/lang/String;
+	public static final fun roborazziSystemPropertyDesktopRenderProfile ()Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile;
+}
+
 public abstract interface class com/github/takahirom/roborazzi/EmptyCanvasFactory {
 	public abstract fun invoke (IIZI)Lcom/github/takahirom/roborazzi/RoboCanvas;
 }

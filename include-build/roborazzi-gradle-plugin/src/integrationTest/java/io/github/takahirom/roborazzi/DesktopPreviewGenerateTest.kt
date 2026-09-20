@@ -3,6 +3,7 @@ package io.github.takahirom.roborazzi
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -93,7 +94,8 @@ class DesktopPreviewGenerateTest {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.useCustomTester = true
 
-      record {
+      // A test task restored from the build cache prints nothing, so this assertion needs a real run.
+      record(additionalParameters = arrayOf("--no-build-cache")) {
         assert(output.contains("CustomDesktopPreviewTester testParameters() is called"))
         // The custom testRuleFactory rule is wrapped around each generated test.
         assert(output.contains("CustomDesktopPreviewTester JUnit4TestLifecycleOptions starting"))
@@ -247,6 +249,178 @@ class DesktopPreviewGenerateTest {
   }
 }
 
+private const val PROFILE = "com.github.takahirom.roborazzi.DesktopPreviewRenderProfile"
+
+/**
+ * A task restored from the build cache neither forks a test JVM nor prints anything, so these
+ * tests, which observe what the test JVM received, have to render for real.
+ */
+private val NO_BUILD_CACHE = arrayOf("--no-build-cache")
+
+/**
+ * The render profile is carried from the Gradle build to the forked test JVM as an encoded system
+ * property, so these tests assert what the test JVM actually received, not only that the task ran.
+ * The custom tester prints `options().renderProfile`, which is the value a tester really sees.
+ */
+class DesktopPreviewRenderProfileTest {
+  @get:Rule
+  val testProjectDir = TemporaryFolder()
+
+  @Test
+  fun whenNoRenderProfileIsConfiguredTheDefaultIsUsed() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.useCustomTester = true
+
+      record(additionalParameters = NO_BUILD_CACHE) {
+        assert(output.contains("renderProfile defaultDevice=[null]")) {
+          "Expected the default profile to reach the test JVM"
+        }
+      }
+    }
+  }
+
+  @Test
+  fun whenRenderProfileIsConfiguredItReachesTheTestJvm() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.useCustomTester = true
+      buildGradle.renderProfile = "$PROFILE.AndroidCompatible"
+
+      record(additionalParameters = NO_BUILD_CACHE) {
+        assert(output.contains("renderProfile defaultDevice=[id:pixel_4a]")) {
+          "Expected the configured profile to reach the test JVM"
+        }
+      }
+      checkHasImages()
+    }
+  }
+
+  @Test
+  fun whenDeviceNameContainsASpaceItSurvivesTheCommandLine() {
+    // Device names such as the ones behind @Preview(device = Devices.PIXEL_4A) contain spaces, and
+    // the profile travels on a forked JVM's command line.
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.useCustomTester = true
+      buildGradle.renderProfile = """$PROFILE.Desktop.copy(defaultDevice = "name:Pixel 4a")"""
+
+      record(additionalParameters = NO_BUILD_CACHE) {
+        assert(output.contains("renderProfile defaultDevice=[name:Pixel 4a]")) {
+          "Expected the device name to survive the command line unchanged"
+        }
+      }
+    }
+  }
+
+  @Test
+  fun whenAnExtraTestRunHasAProfileBothRunsRecordTheSamePreviews() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.separateOutputDirs = true
+      buildGradle.extraTestRuns = listOf("androidCompat")
+      buildGradle.renderProfileByTestRun = mapOf("androidCompat" to "$PROFILE.AndroidCompatible")
+
+      record(additionalParameters = NO_BUILD_CACHE)
+      recordVariant("DesktopAndroidCompat", additionalParameters = NO_BUILD_CACHE)
+
+      // Each run gets its own output directory, so the second profile adds baselines instead of
+      // overwriting the first one's.
+      checkHasImages("desktop")
+      checkHasImages("desktopAndroidCompat")
+      // An extra test run reuses the target's test compilation, so it must find the same generated
+      // tests. A run that discovered none would still be a green build.
+      val defaultRunTests = executedTestCount("desktopTest")
+      val extraRunTests = executedTestCount("desktopAndroidCompatTest")
+      assert(defaultRunTests > 0) { "The default test run executed no tests" }
+      assert(defaultRunTests == extraRunTests) {
+        "Expected the extra test run to execute the same $defaultRunTests tests, but it executed $extraRunTests"
+      }
+      // Both directories holding images is not evidence that the extra run used its own profile -
+      // it would hold them either way. The default run has no profile and so renders at the pinned
+      // density where 1dp is 1px, while AndroidCompatible renders on a 440dpi screen, so every
+      // preview has to come out 2.75x larger there. Comparing at ">= 2x" leaves room for the
+      // rounding of a text's measured size without leaving room for the profile being ignored.
+      val defaultSizes = recordedImageSizes("desktop")
+      val extraSizes = recordedImageSizes("desktopAndroidCompat")
+      assert(defaultSizes.keys == extraSizes.keys) {
+        "The two runs recorded different previews. Only default: " +
+          "${defaultSizes.keys - extraSizes.keys}; only extra: ${extraSizes.keys - defaultSizes.keys}"
+      }
+      val notDenser = defaultSizes.filterNot { (name, size) ->
+        val extra = extraSizes.getValue(name)
+        extra.first >= size.first * 2 && extra.second >= size.second * 2
+      }
+      assert(notDenser.isEmpty()) {
+        "These previews came out the same size in both runs, so the extra run did not render at " +
+          "its profile's density: " +
+          notDenser.keys.joinToString { "$it (${defaultSizes[it]} vs ${extraSizes[it]})" }
+      }
+    }
+  }
+
+  @Test
+  fun whenAnExtraTestRunUsesTheDesktopProfileItsDefaultDeviceStaysNull() {
+    // An axis left at its default must arrive as "unset", not as an empty string: the encoding
+    // travels through argv, where a marker value could be mangled rather than rejected.
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.useCustomTester = true
+      buildGradle.separateOutputDirs = true
+      buildGradle.extraTestRuns = listOf("explicitDesktop")
+      buildGradle.renderProfileByTestRun = mapOf("explicitDesktop" to "$PROFILE.Desktop")
+
+      recordVariant("DesktopExplicitDesktop", additionalParameters = NO_BUILD_CACHE) {
+        assert(output.contains("renderProfile defaultDevice=[null]")) {
+          "Expected an explicitly configured Desktop profile to arrive with no default device"
+        }
+      }
+    }
+  }
+
+  @Test
+  fun whenTheProfileChangesTheTestTaskRunsAgain() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      record(additionalParameters = NO_BUILD_CACHE)
+      record(additionalParameters = NO_BUILD_CACHE) {
+        assert(task(":${DesktopPreviewModule.moduleName}:desktopTest")?.outcome == TaskOutcome.UP_TO_DATE) {
+          "Expected the unchanged build to be up to date, but was ${task(":${DesktopPreviewModule.moduleName}:desktopTest")?.outcome}"
+        }
+      }
+
+      buildGradle.renderProfile = "$PROFILE.AndroidCompatible"
+
+      record(additionalParameters = NO_BUILD_CACHE) {
+        assert(task(":${DesktopPreviewModule.moduleName}:desktopTest")?.outcome == TaskOutcome.SUCCESS) {
+          "Expected a profile change to re-render, but the test task was " +
+            "${task(":${DesktopPreviewModule.moduleName}:desktopTest")?.outcome}"
+        }
+      }
+    }
+  }
+
+  @Test
+  fun whenRenderProfileByTestRunIsUsedWithoutSeparateOutputDirsItFails() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.extraTestRuns = listOf("androidCompat")
+      buildGradle.renderProfileByTestRun = mapOf("androidCompat" to "$PROFILE.AndroidCompatible")
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("renderProfileByTestRun needs"))
+        assert(output.contains("separateOutputDirs = true"))
+      }
+    }
+  }
+
+  @Test
+  fun whenRenderProfileByTestRunNamesAnUnknownTestRunItFails() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.separateOutputDirs = true
+      buildGradle.renderProfileByTestRun = mapOf("androidCompat" to "$PROFILE.AndroidCompatible")
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("renderProfileByTestRun names the test run(s) [androidCompat]"))
+        assert(output.contains("testRuns.create"))
+      }
+    }
+  }
+}
+
 class DesktopPreviewModule(
   val rootProject: RoborazziGradleRootProject,
   val testProjectDir: TemporaryFolder
@@ -270,6 +444,15 @@ class DesktopPreviewModule(
     var separateOutputDirs = false
     var annotationFilterExcludeBinaryName: String? = null
     var useAndroidOnlyProject = false
+
+    /** Extra Kotlin test runs to create on the desktop target, e.g. "androidCompat". */
+    var extraTestRuns: List<String> = emptyList()
+
+    /** Kotlin expression for the profile of the target's default test run, or null to leave it unset. */
+    var renderProfile: String? = null
+
+    /** Kotlin expressions for the profiles of extra test runs, keyed by test run name. */
+    var renderProfileByTestRun: Map<String, String> = emptyMap()
 
     fun write() {
       val file = projectFolder.root.resolve(PATH)
@@ -326,6 +509,9 @@ class DesktopPreviewModule(
       } else {
         ""
       }
+      val extraTestRunsExpr = extraTestRuns.joinToString("\n                ") {
+        """testRuns.create("$it")"""
+      }
       val desktopTargetAttribute = if (hasSecondJvmTarget) {
         """
                 attributes.attribute(Attribute.of("com.github.takahirom.roborazzi.sample.target", String::class.java), "desktop")
@@ -366,6 +552,7 @@ class DesktopPreviewModule(
         kotlin {
             jvm("desktop") {
                 $desktopTargetAttribute
+                $extraTestRunsExpr
             }
             $secondJvmTarget
 
@@ -433,6 +620,11 @@ class DesktopPreviewModule(
       } else {
         ""
       }
+      val renderProfileExpr = renderProfile?.let { """renderProfile = $it""" } ?: ""
+      val renderProfileByTestRunExpr =
+        renderProfileByTestRun.entries.joinToString("\n                  ") {
+          """renderProfileByTestRun.put("${it.key}", ${it.value})"""
+        }
       val separateOutputDirsExpr = if (separateOutputDirs) {
         """separateOutputDirs = true"""
       } else {
@@ -460,15 +652,52 @@ class DesktopPreviewModule(
                   $customTesterExpr
                   $generatedTestClassCountExpr
                   $annotationFilterExpr
+                  $renderProfileExpr
+                  $renderProfileByTestRunExpr
                 }
               }
           """.trimIndent()
     }
   }
 
-  fun record(buildType: BuildType = BuildType.Build, checks: BuildResult.() -> Unit = {}) {
-    val result = runTask("recordRoborazziDesktop", buildType)
+  fun record(
+    buildType: BuildType = BuildType.Build,
+    additionalParameters: Array<String> = arrayOf(),
+    checks: BuildResult.() -> Unit = {},
+  ) {
+    val result = runTask("recordRoborazziDesktop", buildType, additionalParameters)
     result.checks()
+  }
+
+  /**
+   * Records a named variant, e.g. "DesktopAndroidCompat" for the "androidCompat" test run of the
+   * "desktop" target.
+   */
+  fun recordVariant(
+    variantName: String,
+    buildType: BuildType = BuildType.Build,
+    additionalParameters: Array<String> = arrayOf(),
+    checks: BuildResult.() -> Unit = {},
+  ) {
+    val result = runTask("recordRoborazzi$variantName", buildType, additionalParameters)
+    result.checks()
+  }
+
+  /**
+   * The number of test cases the given test task actually executed.
+   *
+   * The fixture sets `failOnNoDiscoveredTests = false`, so a test run whose compilation carried no
+   * generated tests would otherwise look like a pass.
+   */
+  fun executedTestCount(testTaskName: String): Int {
+    val resultsDir = testProjectDir.root.resolve("$moduleName/build/test-results/$testTaskName")
+    val xmlFiles = resultsDir.listFiles()?.filter { it.name.endsWith(".xml") }.orEmpty()
+    assert(xmlFiles.isNotEmpty()) {
+      "Expected JUnit XML results in ${resultsDir.absolutePath}, but found none"
+    }
+    return xmlFiles.sumOf { file ->
+      Regex("tests=\"(\\d+)\"").findAll(file.readText()).sumOf { it.groupValues[1].toInt() }
+    }
   }
 
   private fun runTask(
@@ -559,6 +788,17 @@ class DesktopPreviewModule(
       "Expected generated test class $className.kt to exist at ${generatedFile.absolutePath}"
     }
   }
+
+  /** The size of every recorded screenshot, by file name, for asserting on what a profile did. */
+  fun recordedImageSizes(outputDirSuffix: String = ""): Map<String, Pair<Int, Int>> =
+    testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/$outputDirSuffix")
+      .listFiles()
+      .orEmpty()
+      .filter { it.name.endsWith(".png") }
+      .associate { file ->
+        val image = ImageIO.read(file)
+        file.name to (image.width to image.height)
+      }
 }
 
 private fun hasBluePixel(image: BufferedImage): Boolean {
