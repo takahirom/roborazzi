@@ -49,6 +49,13 @@ interface DesktopComposePreviewTester {
   data class Options(
     val testLifecycleOptions: TestLifecycleOptions = JUnit4TestLifecycleOptions(),
     val scanOptions: ScanOptions = ScanOptions(packages = emptyList()),
+    /**
+     * How previews are sized and scaled.
+     *
+     * The plugin passes the profile configured for this test run, so one module can capture the
+     * same previews under several profiles by giving each its own Kotlin test run.
+     */
+    val deviceProfile: DesktopPreviewDeviceProfile = DesktopPreviewDeviceProfile.Default,
   ) {
     interface TestLifecycleOptions
 
