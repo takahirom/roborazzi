@@ -107,6 +107,27 @@ public final class com/github/takahirom/roborazzi/DesktopComposePreviewTester$Op
 public abstract interface class com/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions {
 }
 
+public final class com/github/takahirom/roborazzi/DesktopPreviewRenderSpec {
+	public static final field $stable I
+	public static final field Companion Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec$Companion;
+	public fun <init> (IIF)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()F
+	public final fun copy (IIF)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec;IIFILjava/lang/Object;)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDensity ()F
+	public final fun getSurfaceHeight ()I
+	public final fun getSurfaceWidth ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/DesktopPreviewRenderSpec$Companion {
+	public final fun resolve (Lsergio/sastre/composable/preview/scanner/android/AndroidPreviewInfo;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec;
+}
+
 public final class com/github/takahirom/roborazzi/DesktopPreviewTestParameter {
 	public static final field $stable I
 	public fun <init> (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;Lcom/github/takahirom/roborazzi/annotations/ManualClockOptions;)V

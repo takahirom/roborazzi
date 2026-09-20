@@ -1,3 +1,4 @@
+import com.github.takahirom.roborazzi.DesktopPreviewDeviceProfile
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -41,6 +42,10 @@ roborazzi {
     packages = listOf("com.github.takahirom.preview.crossruntime")
     targetName = "desktop"
     generatedTestClassCount = 1
+    // The whole point of this module is comparing the two runtimes, so the desktop side has to
+    // interpret `device` and render at the device density. The default device matches the
+    // Pixel 4a qualifier the Robolectric side is configured with above.
+    deviceProfile = DesktopPreviewDeviceProfile.AndroidCompatible
   }
 }
 
@@ -143,13 +148,27 @@ afterEvaluate {
 }
 
 /**
- * Whether [compareCrossRuntimeOutputs] fails on a dimension mismatch.
+ * The previews whose dimensions the two runtimes are not expected to agree on yet.
  *
- * False for now: the desktop runtime pins density at 1 and ignores the `device` option, so every
- * preview that names a device or relies on the default device is a mismatch today. The change that
- * parses the device spec into a surface size and a density flips this to true.
+ * Every one of them is a text measurement difference, not a sizing one: the desktop runtime now
+ * resolves the same surface and density as Robolectric, so what is left is how wide and tall the
+ * two rasterizers believe a laid-out string is.
+ *
+ * - The two `fontScale = 2f` previews differ because Android applies non-linear font scaling from
+ *   API 34 while Compose Desktop scales linearly. Adding that converter removes both entries.
+ * - The three others are a few pixels of glyph advance in a wrapped `Button`/`Text`.
+ *
+ * [compareCrossRuntimeOutputs] fails both when a preview outside this list differs and when one
+ * inside it stops differing, so the list cannot rot.
  */
-val crossRuntimeDimensionsMustMatch = false
+val crossRuntimeKnownDifferences = setOf(
+  "DefaultButton",
+  "LargeFontParagraph.FONT_2_0f",
+  "LargeFontSizes.FONT_2_0f",
+  "TabletSpecButton.WIDTH_800DP_HEIGHT_1280DP_DPI_240",
+  "TabletSpecText.WIDTH_800DP_HEIGHT_1280DP_DPI_240",
+  "LandscapeSpecText.WIDTH_800DP_HEIGHT_1280DP_DPI_240_ORIENTATION_LANDSCAPE",
+)
 
 /**
  * Compares what the two runtimes produced for the same preview.
@@ -179,7 +198,7 @@ tasks.register("compareCrossRuntimeOutputs") {
   val androidDir = layout.buildDirectory.dir("outputs/roborazzi/debug")
   val desktopDir = layout.buildDirectory.dir("outputs/roborazzi/desktop")
   val reportFile = layout.buildDirectory.file("reports/cross-runtime/dimensions.md")
-  val mustMatch = crossRuntimeDimensionsMustMatch
+  val knownDifferences = crossRuntimeKnownDifferences
 
   // The recording tasks and their finalizers rewrite these directories while the build runs, so
   // snapshotting them as inputs races with the rewrite (the failure mode behind issue #830). This
@@ -209,6 +228,8 @@ tasks.register("compareCrossRuntimeOutputs") {
       return "${image.width}x${image.height}"
     }
 
+    fun shortNameOf(name: String): String = name.substringAfter("PreviewsKt.").removeSuffix(".png")
+
     val rows = names.map { name ->
       val androidSize = size(android[name])
       val desktopSize = size(desktop[name])
@@ -216,6 +237,10 @@ tasks.register("compareCrossRuntimeOutputs") {
     }
     val missing = rows.filter { it.second == "missing" || it.third == "missing" }
     val mismatched = rows.filter { it !in missing && it.second != it.third }
+    val unexpectedlyDifferent =
+      mismatched.filterNot { shortNameOf(it.first) in knownDifferences }
+    val unexpectedlyEqual = knownDifferences -
+      mismatched.map { shortNameOf(it.first) }.toSet()
 
     val report = buildString {
       appendLine("# Cross-runtime preview output")
@@ -223,8 +248,12 @@ tasks.register("compareCrossRuntimeOutputs") {
       appendLine("| preview | robolectric | desktop | |")
       appendLine("|---|---|---|---|")
       rows.forEach { (name, androidSize, desktopSize) ->
-        val shortName = name.substringAfter("PreviewsKt.").removeSuffix(".png")
-        val mark = if (androidSize == desktopSize) "same" else "differs"
+        val shortName = shortNameOf(name)
+        val mark = when {
+          androidSize == desktopSize -> "same"
+          shortName in knownDifferences -> "differs (known)"
+          else -> "differs"
+        }
         appendLine("| $shortName | $androidSize | $desktopSize | $mark |")
       }
       appendLine()
@@ -238,8 +267,13 @@ tasks.register("compareCrossRuntimeOutputs") {
     check(missing.isEmpty()) {
       "Previews captured by only one runtime: ${missing.joinToString { it.first }}"
     }
-    check(!mustMatch || mismatched.isEmpty()) {
-      "Dimensions differ between the runtimes for: ${mismatched.joinToString { it.first }}"
+    check(unexpectedlyDifferent.isEmpty()) {
+      "Dimensions differ between the runtimes for: " +
+        unexpectedlyDifferent.joinToString { "${shortNameOf(it.first)} (${it.second} vs ${it.third})" }
+    }
+    check(unexpectedlyEqual.isEmpty()) {
+      "These previews are listed in crossRuntimeKnownDifferences but the runtimes now agree on " +
+        "them: ${unexpectedlyEqual.joinToString()}. Remove them from the list."
     }
   }
 }

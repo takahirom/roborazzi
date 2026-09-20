@@ -277,19 +277,20 @@ class DefaultDesktopComposePreviewTester(
         "  filePath: $filePath"
     }
 
+    val previewInfo = preview.previewInfo
+    // How large the raster surface is and what a dp is worth on it both follow from the render
+    // profile, so they are resolved together before the preview is decorated.
+    val renderSpec = DesktopPreviewRenderSpec.resolve(previewInfo, options().deviceProfile)
+
     val parameter = CaptureParameter(
       preview = preview,
       filePath = filePath,
       manualClockOptions = manualClockOptions,
-      content = decoratedPreviewContent(preview),
+      content = decoratedPreviewContent(preview, renderSpec.density),
     )
 
-    val previewInfo = preview.previewInfo
-    // Density is kept at 1f (see decoratedPreviewContent), so 1dp == 1px. Enlarge the
-    // default 1024x768 raster surface only when the requested size would not fit, so
-    // captureToImage() can crop the full requiredSize root bounds.
-    val surfaceWidth = if (previewInfo.widthDp > 0) maxOf(DEFAULT_SURFACE_WIDTH, previewInfo.widthDp) else DEFAULT_SURFACE_WIDTH
-    val surfaceHeight = if (previewInfo.heightDp > 0) maxOf(DEFAULT_SURFACE_HEIGHT, previewInfo.heightDp) else DEFAULT_SURFACE_HEIGHT
+    val surfaceWidth = renderSpec.surfaceWidth
+    val surfaceHeight = renderSpec.surfaceHeight
 
     // Locale on desktop is read from java.util.Locale.getDefault() (there is no
     // LocalLocale), so set it before composing and restore it afterwards. The JVM
@@ -317,12 +318,16 @@ class DefaultDesktopComposePreviewTester(
   }
 
   /**
-   * Wraps the raw preview with its `@Preview` annotation options. The `device` option is
-   * not applicable on desktop and is ignored.
+   * Wraps the raw preview with its `@Preview` annotation options.
+   *
+   * The `device` option is applied by the caller rather than here: it decides the raster surface as
+   * well as the density, and [density] is the density it resolved. Under the default device profile
+   * that density is 1, which is why a profile-less build is unaffected by any of this.
    */
   @OptIn(InternalComposeUiApi::class)
   private fun decoratedPreviewContent(
-    preview: ComposablePreview<AndroidPreviewInfo>
+    preview: ComposablePreview<AndroidPreviewInfo>,
+    density: Float,
   ): @Composable () -> Unit {
     val info = preview.previewInfo
     val widthDp = info.widthDp
@@ -359,9 +364,11 @@ class DefaultDesktopComposePreviewTester(
         }
       }
       val providedValues = buildList {
-        // DeviceConfigurationOverride.FontScale throws on desktop, so drive fontScale
-        // (and keep density at 1f) via LocalDensity instead.
-        if (fontScale != 1f) add(LocalDensity provides Density(1f, fontScale))
+        // DeviceConfigurationOverride.FontScale throws on desktop, so drive both the device
+        // density and fontScale through LocalDensity instead.
+        if (density != 1f || fontScale != 1f) {
+          add(LocalDensity provides Density(density, fontScale))
+        }
         // Provide the dark theme only when the night bit is set; otherwise leave the
         // default so isSystemInDarkTheme() and resource qualifiers behave normally.
         if (nightMode) add(LocalSystemTheme provides SystemTheme.Dark)
@@ -451,8 +458,6 @@ fun ComposeUiTest.advanceMainClockFor(parameter: DefaultDesktopComposePreviewTes
 private val localeCaptureLock = Any()
 
 // Default raster surface size of runDesktopComposeUiTest(width = 1024, height = 768).
-private const val DEFAULT_SURFACE_WIDTH = 1024
-private const val DEFAULT_SURFACE_HEIGHT = 768
 
 // android.content.res.Configuration is Android-only. These mirror its
 // UI_MODE_NIGHT_MASK / UI_MODE_NIGHT_YES constant values for use on desktop.
