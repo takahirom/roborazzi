@@ -120,8 +120,14 @@ class PreviewConfigurationRuleTest {
   private fun parameter(previewInfo: AndroidPreviewInfo = info): AndroidPreviewJUnit4TestParameter {
     val preview = Proxy.newProxyInstance(ComposablePreview::class.java.classLoader,
       arrayOf(ComposablePreview::class.java)) { _, method, _ ->
-      check(method.name == "getPreviewInfo") { "Unexpected preview access: $method" }
-      previewInfo
+      when (method.name) {
+        "getPreviewInfo" -> previewInfo
+        // Read while resolving a per-preview renderScale override.
+        "getDeclaringClass" -> PreviewConfigurationRuleTest::class.java.name
+        "getMethodName" -> "previewWithoutOverride"
+        "getMethodParametersType" -> ""
+        else -> error("Unexpected preview access: $method")
+      }
     } as ComposablePreview<AndroidPreviewInfo>
     return AndroidPreviewJUnit4TestParameter(
       composeTestRuleFactory = { error("Configuration must not create a Compose rule") }, preview = preview

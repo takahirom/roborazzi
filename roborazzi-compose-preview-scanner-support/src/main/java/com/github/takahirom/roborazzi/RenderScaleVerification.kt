@@ -15,10 +15,21 @@ object RenderScaleVerification {
   private val appliedScales = mutableListOf<Double>()
   private var expectedScale: Double? = null
 
-  /** Records the scale this preview should be captured at, including a per-preview override. */
+  /**
+   * Records the scale this preview should be captured at, including a per-preview override.
+   *
+   * The configuration rule runs outside the test method, so this is set before [beforeTest] and
+   * must survive it. The rule drops it again with [clearExpectation] once the test has finished.
+   */
   @InternalRoborazziApi
   fun expect(scale: Double) {
     expectedScale = scale
+  }
+
+  /** Forgets the per-preview expectation so that it cannot leak into the next test. */
+  @InternalRoborazziApi
+  fun clearExpectation() {
+    expectedScale = null
   }
 
   internal fun markApplied(scale: Double) {
@@ -29,7 +40,6 @@ object RenderScaleVerification {
   @InternalRoborazziApi
   fun beforeTest() {
     appliedScales.clear()
-    expectedScale = null
   }
 
   /**
@@ -46,6 +56,9 @@ object RenderScaleVerification {
   fun afterTest(tester: ComposePreviewTester<*>) {
     val configuredScale =
       expectedScale ?: ComposePreviewTester.defaultOptionsFromPlugin.renderScale
+    // The expectation belongs to the preview that has just been captured, so drop it here as
+    // well as in the rule: a tester that never runs the rule must not inherit it.
+    clearExpectation()
     if (configuredScale == 1.0) return
     val applied = appliedScales.toList()
     if (applied.isNotEmpty() && applied.all { it == configuredScale }) return

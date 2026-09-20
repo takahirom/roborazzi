@@ -82,8 +82,9 @@ class RenderScaleVerificationTest {
   @Test fun passesWhenAPreviewOverridesTheConfiguredScale() {
     configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
 
-    RenderScaleVerification.beforeTest()
+    // The configuration rule runs outside the test method, so expect() comes first.
     RenderScaleVerification.expect(0.25)
+    RenderScaleVerification.beforeTest()
     preview.toRoborazziComposeOptions(renderScale = 0.25).applySetup()
 
     RenderScaleVerification.afterTest(tester)
@@ -92,8 +93,9 @@ class RenderScaleVerificationTest {
   @Test fun failsWhenACaptureIgnoresThePreviewOverride() {
     configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
 
-    RenderScaleVerification.beforeTest()
+    // The configuration rule runs outside the test method, so expect() comes first.
     RenderScaleVerification.expect(0.25)
+    RenderScaleVerification.beforeTest()
     preview.toRoborazziComposeOptions(renderScale = 0.5).applySetup()
 
     val message = assertFails()
@@ -107,6 +109,21 @@ class RenderScaleVerificationTest {
     RenderScaleVerification.beforeTest()
 
     RenderScaleVerification.afterTest(tester)
+  }
+
+  @Test fun forgetsThePreviewOverrideAfterTheTest() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+    RenderScaleVerification.expect(0.25)
+    RenderScaleVerification.beforeTest()
+    preview.toRoborazziComposeOptions(renderScale = 0.25).applySetup()
+    RenderScaleVerification.afterTest(tester)
+
+    // The next preview has no override, so it is held to the configured scale again.
+    RenderScaleVerification.beforeTest()
+    preview.toRoborazziComposeOptions(renderScale = 0.25).applySetup()
+
+    val message = assertFails()
+    assertTrue(message, message.contains("renderScale = 0.5"))
   }
 
   private fun assertFails(): String {

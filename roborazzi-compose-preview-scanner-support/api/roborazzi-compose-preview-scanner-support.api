@@ -147,6 +147,7 @@ public final class com/github/takahirom/roborazzi/RenderScaleVerification {
 	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RenderScaleVerification;
 	public final fun afterTest (Lcom/github/takahirom/roborazzi/ComposePreviewTester;)V
 	public final fun beforeTest ()V
+	public final fun clearExpectation ()V
 	public final fun expect (D)V
 }
 

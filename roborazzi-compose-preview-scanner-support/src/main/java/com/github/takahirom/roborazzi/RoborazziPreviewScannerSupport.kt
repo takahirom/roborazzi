@@ -60,6 +60,7 @@ fun createRoborazziPreviewConfigurationRule(
           base.evaluate()
         } finally {
           testParameter.renderScaleBaseConfiguration = null
+          RenderScaleVerification.clearExpectation()
           RuntimeEnvironment.setQualifiers(qualifiers)
           if (RuntimeEnvironment.getFontScale() != fontScale) {
             RuntimeEnvironment.setFontScale(fontScale)
@@ -90,8 +91,7 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 @InternalRoborazziApi
 fun ComposablePreview<*>.effectiveRenderScale(configuredScale: Double): Double {
   // getAnnotation() on the preview throws, see testParameters() for the same workaround.
-  val annotated = Class.forName(declaringClass).declaredMethods
-    .firstOrNull { it.name == methodName }
+  val annotated = declaringMethodOrNull()
     ?.getAnnotation(RoboComposePreviewOptions::class.java)
     ?.renderScale
     ?: INHERIT_RENDER_SCALE
@@ -100,6 +100,41 @@ fun ComposablePreview<*>.effectiveRenderScale(configuredScale: Double): Double {
     "renderScale must be finite and greater than 0, but $declaringClass.$methodName declares $annotated"
   }
   return annotated
+}
+
+/**
+ * The method this preview was declared by, or null when it cannot be resolved.
+ *
+ * The scanner reports a canonical-style class name (`com.example.Outer.Inner`), while
+ * `Class.forName` needs the binary name (`com.example.Outer$Inner`), so nested classes are
+ * retried with `$` separators. Overloaded previews share a method name, so the scanner's
+ * parameter type information picks between them.
+ */
+private fun ComposablePreview<*>.declaringMethodOrNull(): java.lang.reflect.Method? {
+  val declaring = loadDeclaringClass(declaringClass) ?: return null
+  val candidates = declaring.declaredMethods.filter { it.name == methodName }
+  if (candidates.size <= 1) return candidates.firstOrNull()
+  if (methodParametersType.isEmpty()) {
+    // A preview without parameters still carries the synthetic Composer arguments, so compare
+    // the counts instead of looking for an empty parameter list.
+    return candidates.minByOrNull { it.parameterTypes.size }
+  }
+  return candidates.firstOrNull { candidate ->
+    candidate.parameterTypes.any { methodParametersType.contains(it.simpleName) }
+  } ?: candidates.first()
+}
+
+private fun loadDeclaringClass(className: String): Class<*>? {
+  var candidate = className
+  while (true) {
+    try {
+      return Class.forName(candidate)
+    } catch (e: ClassNotFoundException) {
+      val lastDot = candidate.lastIndexOf('.')
+      if (lastDot < 0) return null
+      candidate = candidate.substring(0, lastDot) + '$' + candidate.substring(lastDot + 1)
+    }
+  }
 }
 
 @ExperimentalRoborazziApi
