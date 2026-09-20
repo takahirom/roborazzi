@@ -33,6 +33,7 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
       "sample-compose-v2",
       "sample-generate-preview-tests",
       "sample-generate-preview-tests-multiplatform",
+      "sample-generate-preview-tests-cross-runtime",
       "roborazzi-idea-plugin",
     ]
     // JVM ABI validation only; do not enable experimental klib (native/JS) validation.
