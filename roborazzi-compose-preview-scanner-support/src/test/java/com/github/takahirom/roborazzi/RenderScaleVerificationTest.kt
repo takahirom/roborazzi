@@ -57,12 +57,44 @@ class RenderScaleVerificationTest {
     }
   }
 
+  @Test fun failsWhenTheTesterAppliesADifferentScale() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+
+    RenderScaleVerification.beforeTest()
+    preview.toRoborazziComposeOptions(renderScale = 0.75).applySetup()
+
+    val message = assertFails()
+    assertTrue(message, message.contains("renderScale = 0.5"))
+    assertTrue(message, message.contains("applied 0.75 instead"))
+  }
+
+  @Test fun failsWhenOnlySomeCapturesUseTheConfiguredScale() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+
+    RenderScaleVerification.beforeTest()
+    preview.toRoborazziComposeOptions(renderScale = 0.5).applySetup()
+    preview.toRoborazziComposeOptions(renderScale = 0.75).applySetup()
+
+    val message = assertFails()
+    assertTrue(message, message.contains("applied 0.5, 0.75 instead"))
+  }
+
   @Test fun passesWhenRoborazziIsNotRecordingOrVerifying() {
     configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.None)
 
     RenderScaleVerification.beforeTest()
 
     RenderScaleVerification.afterTest(tester)
+  }
+
+  private fun assertFails(): String {
+    try {
+      RenderScaleVerification.afterTest(tester)
+    } catch (e: IllegalStateException) {
+      return requireNotNull(e.message)
+    }
+    fail("Expected the renderScale mismatch to be reported")
+    error("unreachable")
   }
 
   private fun configurePlugin(renderScale: Double, taskType: RoborazziTaskType) {

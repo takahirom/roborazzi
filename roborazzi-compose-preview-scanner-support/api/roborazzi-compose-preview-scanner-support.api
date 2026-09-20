@@ -142,6 +142,13 @@ public final class com/github/takahirom/roborazzi/ComposePreviewTester$TestParam
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/github/takahirom/roborazzi/RenderScaleVerification {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RenderScaleVerification;
+	public final fun afterTest (Lcom/github/takahirom/roborazzi/ComposePreviewTester;)V
+	public final fun beforeTest ()V
+}
+
 public final class com/github/takahirom/roborazzi/RoboComposePreviewOptionVariation {
 	public static final field $stable I
 	public fun <init> ()V

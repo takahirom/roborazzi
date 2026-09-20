@@ -41,7 +41,7 @@ internal class PreviewRenderScaleOption(
       "w${configuration.screenWidthDp}dp-h${configuration.screenHeightDp}dp-${scaledDensity}dpi"
     }
     configBuilder.addRobolectricQualifier(qualifiers)
-    RenderScaleVerification.markApplied()
+    RenderScaleVerification.markApplied(scale)
   }
 }
 
