@@ -53,6 +53,16 @@ import kotlinx.coroutines.awaitCancellation
 /** 411dp x 891dp at 420dpi: density 2.625, so the surface is 1078.875 x 2338.875 px. */
 private const val PHONE_SPEC = "spec:width=411dp,height=891dp,dpi=420"
 
+/**
+ * 201dp x 400dp at 440dpi: density 2.75, so 201dp is 552.75px - deliberately fractional.
+ *
+ * This is the fixture that pins down how the runtimes round. A single truncation of dp * density
+ * gives 552; reconstructing dp from already-truncated pixels first (552.75 -> 552 -> 200dp) gives
+ * 550. The two device sizes above cannot tell those apart, because one is exact and the other
+ * agrees by coincidence.
+ */
+private const val FRACTIONAL_SPEC = "spec:width=201dp,height=400dp,dpi=440"
+
 /** 800dp x 1280dp at 240dpi: density 1.5, an even pixel size to contrast with [PHONE_SPEC]. */
 private const val TABLET_SPEC = "spec:width=800dp,height=1280dp,dpi=240"
 
@@ -118,6 +128,12 @@ fun PhoneSpecCard() {
 }
 
 // --- Group: tablet spec ------------------------------------------------------------------------
+
+@Preview(device = FRACTIONAL_SPEC)
+@Composable
+fun FractionalSpecText() {
+  Labeled("Fractional device width")
+}
 
 @Preview(device = TABLET_SPEC)
 @Composable
