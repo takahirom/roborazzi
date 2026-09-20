@@ -33,10 +33,23 @@ internal class PreviewRenderScaleOption(
     // for additive qualifiers. Supply the resolved dp explicitly to avoid losing another
     // dp on each density change (e.g. 850dp at 440dpi -> 2337px -> 849dp).
     val qualifiers = if (device != null) {
-      RobolectricDeviceQualifierBuilder.build(device.copy(densityDpi = scaledDensity))
+      // Device.copy() is not binary compatible across the supported ComposablePreviewScanner
+      // versions (chinSize became a ChinSize after 0.7.0), so rewrite the dpi qualifier the
+      // builder already emits instead of rebuilding the Device.
+      RobolectricDeviceQualifierBuilder.build(device).withDensityDpi(scaledDensity)
     } else {
       "w${configuration.screenWidthDp}dp-h${configuration.screenHeightDp}dp-${scaledDensity}dpi"
     }
     configBuilder.addRobolectricQualifier(qualifiers)
   }
 }
+
+private val densityQualifierRegex = Regex("""(^|-)\d+dpi(?=-|$)""")
+
+/** Replaces the dpi qualifier in a Robolectric qualifier string, appending one if absent. */
+private fun String.withDensityDpi(dpi: Int): String =
+  if (densityQualifierRegex.containsMatchIn(this)) {
+    replace(densityQualifierRegex) { "${it.groupValues[1]}${dpi}dpi" }
+  } else {
+    "$this-${dpi}dpi"
+  }
