@@ -80,15 +80,15 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): RoborazziComposeOptions =
-  toRoborazziComposeOptions(renderScale = 1f)
+  toRoborazziComposeOptions(renderScale = 1.0)
 
 @OptIn(ExperimentalRoborazziApi::class)
 private fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(
-  renderScale: Float,
+  renderScale: Double,
   baseConfiguration: android.content.res.Configuration? = null,
 ): RoborazziComposeOptions {
   return RoborazziComposeOptions {
-    if (renderScale == 1f) {
+    if (renderScale == 1.0) {
       previewDevice(previewInfo.device)
     } else {
       addOption(PreviewRenderScaleOption(renderScale, previewInfo.device, baseConfiguration))
@@ -342,24 +342,18 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
   data class Options(
     val testLifecycleOptions: TestLifecycleOptions = JUnit4TestLifecycleOptions(),
     val scanOptions: ScanOptions = ScanOptions(emptyList()),
-    private var renderScaleValue: Float = 1f,
+    /**
+     * Scales rendering density while preserving the preview's logical dp dimensions.
+     * Override [options] with `super.options().copy(...)` so that the value configured in the
+     * Gradle extension is preserved.
+     */
+    val renderScale: Double = 1.0,
   ) {
     init {
-      require(renderScaleValue.isFinite() && renderScaleValue > 0f) {
-        "renderScale must be finite and greater than 0, but was $renderScaleValue"
+      require(renderScale.isFinite() && renderScale > 0.0) {
+        "renderScale must be finite and greater than 0, but was $renderScale"
       }
     }
-
-    /** Internal bridge used by generated Preview tests. */
-    @InternalRoborazziApi
-    var renderScale: Float
-      get() = renderScaleValue
-      set(value) {
-        require(value.isFinite() && value > 0f) {
-          "renderScale must be finite and greater than 0, but was $value"
-        }
-        renderScaleValue = value
-      }
 
     interface TestLifecycleOptions
 

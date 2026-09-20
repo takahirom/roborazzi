@@ -44,7 +44,7 @@ roborazzi {
     // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
     generatedTestClassCount = 4
     // Experimental: scale render resolution while preserving logical dp size.
-    // renderScale = 1f / 3f
+    // renderScale = 1.0 / 3
     // Filter previews by annotation. See "Filtering previews by annotation" below.
     annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
   }
@@ -55,6 +55,17 @@ roborazzi {
 This may change density-qualified resource selection.
 Generated tests using the default Android tester apply the scaled configuration before Activity launch.
 For previews without a device, setup and capture use the original Robolectric configuration as the scale baseline.
+
+`renderScale` is not the same as `resizeScale`:
+
+| Property | When it applies | What it changes |
+| --- | --- | --- |
+| `renderScale` | Before Compose renders | Device density. Logical dp dimensions are preserved, so a smaller surface is rendered. Density-qualified resources (`drawable-hdpi` and so on) may resolve differently. |
+| `resizeScale` (`RoborazziOptions.RecordOptions`, `roborazzi.record.resizeScale`) | After the screenshot is captured | Downsamples the captured bitmap. Rendering cost is unchanged. |
+
+Both change the recorded image dimensions at the same output paths, so existing golden images have to be recorded again after you set either of them.
+
+In the Groovy DSL, write the value as a `double` literal: `renderScale = 0.5d`. A bare `0.5` is a `BigDecimal` and fails to convert.
 
 #### Advanced: Custom ComposePreviewTester Implementation
 
@@ -85,6 +96,13 @@ class MyCustomComposePreviewTester :
 ```
 
 If you need to customize more than the capture behavior, such as the scan options or the test lifecycle, you can override `options()` or `test()` in the delegating class.
+
+`Options` is how the Gradle extension reaches your tester: the generated test assigns the configured values to `ComposePreviewTester.defaultOptionsFromPlugin`, and the default `options()` returns them. So when you override `options()`, derive the result with `super.options().copy(...)` instead of constructing a new `Options`, otherwise every setting the plugin configured is silently replaced by defaults. The same applies if you implement `test()` or the capture yourself: read the values from `options()` rather than assuming defaults.
+
+Two settings need extra care with a custom tester:
+
+- `includePrivatePreviews` and `annotationFilter` are consumed by `testParameters()`. Because a custom tester usually overrides it, the plugin rejects the combination unless you set `useScanOptionParametersInTester = true` and read `options().scanOptions` yourself.
+- `renderScale` is consumed at capture time, so the class-delegation pattern above keeps working. Only the pre-launch configuration optimization is skipped: a custom tester configures the environment at capture time, as before.
 
 Then reference your custom tester in the Gradle configuration:
 

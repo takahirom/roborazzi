@@ -8,12 +8,12 @@ import kotlin.math.roundToInt
 /** Resolves device dimensions before scaling density; participates in the single setup update. */
 @OptIn(ExperimentalRoborazziApi::class)
 internal class PreviewRenderScaleOption(
-  private val scale: Float,
+  private val scale: Double,
   private val previewDevice: String = "",
   private val baseConfiguration: android.content.res.Configuration? = null,
 ) : RoborazziComposeSetupOption {
   init {
-    require(scale.isFinite() && scale > 0f) {
+    require(scale.isFinite() && scale > 0.0) {
       "renderScale must be finite and greater than 0, but was $scale"
     }
   }

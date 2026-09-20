@@ -35,7 +35,7 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * clamped to a minimum of 1 dpi.
    */
   @ExperimentalRoborazziApi
-  val renderScale: Property<Float> = objects.property(Float::class.java).convention(1f)
+  val renderScale: Property<Double> = objects.property(Double::class.java).convention(1.0)
 
   /**
    * The package names to scan for the Composable Previews.
@@ -115,7 +115,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   abstract val generatedTestClassCount: Property<Int>
 
   @get:Input
-  abstract val renderScale: Property<Float>
+  abstract val renderScale: Property<Double>
 
   @get:Input
   @get:Optional
@@ -125,7 +125,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   @TaskAction
   @OptIn(ExperimentalRoborazziApi::class)
   fun generateTests() {
-    val scale = validateRenderScale(renderScale.getOrElse(1f))
+    val scale = validateRenderScale(renderScale.getOrElse(1.0))
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
@@ -198,10 +198,12 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     annotationFilterExpr: String,
     robolectricConfigString: String,
     testerQualifiedClassNameString: String,
-    renderScale: Float,
+    renderScale: Double,
     shardIndex: Int?,
     totalShards: Int
   ) {
+    val renderScaleArgument =
+      if (renderScale == 1.0) "" else "\n                            renderScale = $renderScale,"
     val valuesFunction = if (shardIndex == null) {
       "testParameters"
     } else {
@@ -272,8 +274,8 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                               packages = listOf($packagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
                               annotationFilter = $annotationFilterExpr,
-                            )
-                        )${if (renderScale == 1f) "" else ".apply { renderScale = ${renderScale}f }"}
+                            ),$renderScaleArgument
+                        )
                     }
                 }
             }
@@ -282,8 +284,8 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   }
 }
 
-internal fun validateRenderScale(value: Float): Float {
-  require(value.isFinite() && value > 0f) {
+internal fun validateRenderScale(value: Double): Double {
+  require(value.isFinite() && value > 0.0) {
     "renderScale must be finite and greater than 0, but was $value"
   }
   return value

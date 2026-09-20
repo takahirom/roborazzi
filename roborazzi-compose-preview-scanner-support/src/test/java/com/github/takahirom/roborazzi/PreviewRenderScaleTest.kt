@@ -44,27 +44,27 @@ class PreviewRenderScaleTest {
       }
     }).around(composeRule)
 
-  @Test fun defaultScale() = capture(1f)
-  @Test fun halfScale() = capture(0.5f)
-  @Test fun doubleScale() = capture(2f)
-  @Test fun resizeIsIndependent() = capture(0.5f, resizeScale = 0.5)
+  @Test fun defaultScale() = capture(1.0)
+  @Test fun halfScale() = capture(0.5)
+  @Test fun doubleScale() = capture(2.0)
+  @Test fun resizeIsIndependent() = capture(0.5, resizeScale = 0.5)
   @Test fun customPixelDevice() = capture(
-    0.5f, device = "spec:width=1080px,height=2340px,dpi=440", widthDp = 392, heightDp = 850, dpi = 440
+    0.5, device = "spec:width=1080px,height=2340px,dpi=440", widthDp = 392, heightDp = 850, dpi = 440
   )
   @Test fun namedDevice() = capture(
-    0.5f, device = "id:pixel_5", widthDp = 392, heightDp = 850, dpi = 440
+    0.5, device = "id:pixel_5", widthDp = 392, heightDp = 850, dpi = 440
   )
   @Test fun namedDeviceDefaultScale() = capture(
-    1f, device = "id:pixel_5", widthDp = 392, heightDp = 850, dpi = 440
+    1.0, device = "id:pixel_5", widthDp = 392, heightDp = 850, dpi = 440
   )
   @Test fun previewSizeOverridesDevice() = capture(
-    0.5f, device = "id:pixel_5", widthDp = 200, heightDp = 300, dpi = 440, explicitSize = true
+    0.5, device = "id:pixel_5", widthDp = 200, heightDp = 300, dpi = 440, explicitSize = true
   )
-  @Test fun oneThirdRoundsDensity() = capture(1f / 3f)
-  @Test fun densityIsClampedToOneDpi() = capture(0.001f)
+  @Test fun oneThirdRoundsDensity() = capture(1.0 / 3)
+  @Test fun densityIsClampedToOneDpi() = capture(0.001)
 
   private fun capture(
-    scale: Float,
+    scale: Double,
     resizeScale: Double = 1.0,
     device: String = "",
     widthDp: Int = 400,
@@ -120,9 +120,7 @@ class PreviewRenderScaleTest {
       ))
     }
     try {
-      ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options().apply {
-        renderScale = scale
-      }
+      ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options(renderScale = scale)
       tester.test(AndroidPreviewJUnit4TestParameter({ composeRule }, preview))
       val expectedDpi = kotlin.math.round(dpi * scale).toInt().coerceAtLeast(1)
       assertEquals(expectedDpi / 160f, density)

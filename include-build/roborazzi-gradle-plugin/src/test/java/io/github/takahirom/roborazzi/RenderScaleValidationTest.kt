@@ -7,33 +7,33 @@ import org.junit.Test
 class RenderScaleValidationTest {
   @Test
   fun validScaleIsAccepted() {
-    assertEquals(0.5f, validateRenderScale(0.5f))
+    assertEquals(0.5, validateRenderScale(0.5), 0.0)
   }
 
   @Test
   fun upscaleIsAccepted() {
-    assertEquals(2f, validateRenderScale(2f))
+    assertEquals(2.0, validateRenderScale(2.0), 0.0)
   }
 
   @Test
   fun zeroIsRejected() {
-    assertThrows(IllegalArgumentException::class.java) { validateRenderScale(0f) }
+    assertThrows(IllegalArgumentException::class.java) { validateRenderScale(0.0) }
   }
 
   @Test
   fun negativeIsRejected() {
-    assertThrows(IllegalArgumentException::class.java) { validateRenderScale(-0.5f) }
+    assertThrows(IllegalArgumentException::class.java) { validateRenderScale(-0.5) }
   }
 
   @Test
   fun nanIsRejected() {
-    assertThrows(IllegalArgumentException::class.java) { validateRenderScale(Float.NaN) }
+    assertThrows(IllegalArgumentException::class.java) { validateRenderScale(Double.NaN) }
   }
 
   @Test
   fun infinityIsRejected() {
     assertThrows(IllegalArgumentException::class.java) {
-      validateRenderScale(Float.POSITIVE_INFINITY)
+      validateRenderScale(Double.POSITIVE_INFINITY)
     }
   }
 }

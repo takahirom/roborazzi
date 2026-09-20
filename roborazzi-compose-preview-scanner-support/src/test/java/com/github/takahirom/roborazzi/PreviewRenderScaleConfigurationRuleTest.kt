@@ -36,24 +36,22 @@ class PreviewRenderScaleConfigurationRuleTest {
   @get:Rule val temporaryFolder = TemporaryFolder()
 
   @Test fun copyingOptionsPreservesRenderScale() {
-    val options = ComposePreviewTester.Options().apply {
-      renderScale = 0.5f
-    }
+    val options = ComposePreviewTester.Options(renderScale = 0.5)
 
-    assertEquals(0.5f, options.copy().renderScale)
+    assertEquals(0.5, options.copy().renderScale, 0.0)
   }
 
-  @Test fun blankDeviceIsScaledOnlyOnce() = capture(0.5f)
-  @Test fun blankDeviceWithRoundedDensityIsScaledOnlyOnce() = capture(1f / 3f)
+  @Test fun blankDeviceIsScaledOnlyOnce() = capture(0.5)
+  @Test fun blankDeviceWithRoundedDensityIsScaledOnlyOnce() = capture(1.0 / 3)
   @Test fun namedDeviceIsConfiguredBeforeLaunch() = capture(
-    1f / 3f, device = "id:pixel_5", widthDp = 392, heightDp = 850, dpi = 440
+    1.0 / 3, device = "id:pixel_5", widthDp = 392, heightDp = 850, dpi = 440
   )
   @Test fun pixelDeviceIsConfiguredBeforeLaunch() = capture(
-    0.5f, device = "spec:width=1080px,height=2340px,dpi=440", widthDp = 392, heightDp = 850, dpi = 440
+    0.5, device = "spec:width=1080px,height=2340px,dpi=440", widthDp = 392, heightDp = 850, dpi = 440
   )
 
   private fun capture(
-    scale: Float,
+    scale: Double,
     resizeScale: Double = 1.0,
     device: String = "",
     widthDp: Int = 400,
@@ -127,9 +125,7 @@ class PreviewRenderScaleConfigurationRuleTest {
     }
     application.registerActivityLifecycleCallbacks(observer)
     try {
-      ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options().apply {
-        renderScale = scale
-      }
+      ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options(renderScale = scale)
       val parameter = AndroidPreviewJUnit4TestParameter({ composeRule }, preview)
       val rules = parameter.releaseComposeTestRuleAfter {
         RuleChain.outerRule(createRoborazziPreviewConfigurationRule(tester, parameter))
