@@ -143,6 +143,29 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
   @ExperimentalRoborazziApi
   val deviceProfileByTestRun: MapProperty<String, DesktopPreviewDeviceProfile> =
     objects.mapProperty(String::class.java, DesktopPreviewDeviceProfile::class.java)
+
+  /**
+   * If true, previews that need the same Compose scene are captured without closing it in between.
+   *
+   * Opening a scene is a large part of what capturing one preview costs, so sharing it across the
+   * previews that can share it is where the time goes. Previews are only grouped when their surface
+   * size and locale match; a preview with `manualClockOptions` always gets a scene of its own,
+   * because the scene clock cannot be rewound for the next one.
+   *
+   * This changes the generated test class: it is run by
+   * [com.github.takahirom.roborazzi.DesktopPreviewSceneReuseRunner] rather than by JUnit's
+   * `Parameterized`, since a scene cannot be held open across test method invocations. Each preview
+   * is still reported as its own test, under the same name, so filters and reports do not change.
+   *
+   * Off by default while the behaviour settles. Two kinds of customization opt out of it silently
+   * on purpose: a custom `Capturer` owns `setContent`, so it cannot share a scene (this logs once
+   * and captures a scene per preview as before), and a custom tester that overrides only
+   * `test(testParameter)` keeps the per-preview default of `test(testParameters, listener)`. Give a
+   * custom tester the list overload if you want it to reuse scenes.
+   */
+  @ExperimentalRoborazziApi
+  val sceneReuse: Property<Boolean> = objects.property(Boolean::class.java)
+    .convention(false)
 }
 
 @CacheableTask
@@ -161,6 +184,9 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
 
   @get:Input
   abstract val generatedTestClassCount: Property<Int>
+
+  @get:Input
+  abstract val sceneReuse: Property<Boolean>
 
   @get:Input
   @get:Optional
@@ -212,7 +238,8 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
         annotationFilterExpr = annotationFilterExpr,
         testerQualifiedClassNameString = testerQualifiedClassNameString,
         shardIndex = null,
-        totalShards = 1
+        totalShards = 1,
+        sceneReuse = sceneReuse.get()
       )
     } else {
       repeat(testClassCount) { shardIndex ->
@@ -225,7 +252,8 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
           annotationFilterExpr = annotationFilterExpr,
           testerQualifiedClassNameString = testerQualifiedClassNameString,
           shardIndex = shardIndex,
-          totalShards = testClassCount
+          totalShards = testClassCount,
+          sceneReuse = sceneReuse.get()
         )
       }
     }
@@ -251,7 +279,15 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     }
   }
 
-  private fun generateTestClass(
+  /**
+   * Writes the scene-reusing variant of the test class.
+   *
+   * The class holds configuration only. All the running - collecting the previews, choosing this
+   * shard's slice, grouping previews by the scene they need, and reporting each one as its own test
+   * - lives in [com.github.takahirom.roborazzi.DesktopPreviewSceneReuseRunner], so the behaviour can
+   * be fixed in the library rather than in code generated into every project.
+   */
+  private fun generateSceneReuseTestClass(
     directory: File,
     packageName: String,
     className: String,
@@ -262,6 +298,80 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     shardIndex: Int?,
     totalShards: Int
   ) {
+    File(directory, "$className.kt").writeText(
+      """
+            package $packageName
+            import org.junit.rules.TestRule
+            import org.junit.runner.RunWith
+            import com.github.takahirom.roborazzi.*
+
+
+            @RunWith(DesktopPreviewSceneReuseRunner::class)
+            @OptIn(InternalRoborazziApi::class, ExperimentalRoborazziApi::class)
+            class $className : DesktopPreviewSceneReuseTest {
+                override fun createTester(): DesktopComposePreviewTester {
+                    setupDefaultOptions()
+                    return getDesktopComposePreviewTester("$testerQualifiedClassNameString")
+                }
+
+                override fun createTestRule(): TestRule {
+                    val testLifecycleOptions = createTester().options().testLifecycleOptions as DesktopComposePreviewTester.Options.JUnit4TestLifecycleOptions
+                    return testLifecycleOptions.testRuleFactory()
+                }
+
+                override val shardIndex: Int? = $shardIndex
+
+                override val totalShards: Int = $totalShards
+
+                companion object {
+                    fun setupDefaultOptions() {
+                        DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(
+                            deviceProfile = requireNotNull(roborazziSystemPropertyDesktopDeviceProfile()) {
+                              "Roborazzi: no desktop device profile reached the test JVM. The " +
+                                "Gradle plugin sets it from " +
+                                "generateComposePreviewDesktopTests.deviceProfile, so this means " +
+                                "the test task was not configured by the Roborazzi plugin."
+                            },
+                            sceneReuse = true,
+                            scanOptions = DesktopComposePreviewTester.Options.ScanOptions(
+                              packages = listOf($packagesExpr),
+                              includePrivatePreviews = $includePrivatePreviewsExpr,
+                              annotationFilter = $annotationFilterExpr,
+                            )
+                        )
+                    }
+                }
+            }
+        """.trimIndent()
+    )
+  }
+
+  private fun generateTestClass(
+    directory: File,
+    packageName: String,
+    className: String,
+    packagesExpr: String,
+    includePrivatePreviewsExpr: Boolean,
+    annotationFilterExpr: String,
+    testerQualifiedClassNameString: String,
+    shardIndex: Int?,
+    totalShards: Int,
+    sceneReuse: Boolean
+  ) {
+    if (sceneReuse) {
+      generateSceneReuseTestClass(
+        directory = directory,
+        packageName = packageName,
+        className = className,
+        packagesExpr = packagesExpr,
+        includePrivatePreviewsExpr = includePrivatePreviewsExpr,
+        annotationFilterExpr = annotationFilterExpr,
+        testerQualifiedClassNameString = testerQualifiedClassNameString,
+        shardIndex = shardIndex,
+        totalShards = totalShards
+      )
+      return
+    }
     // Shards are assigned after sorting by a stable identifier: neither ClassGraph
     // order nor a custom tester's order is guaranteed to be identical across the
     // independently-initialized test JVMs, and index-based sharding on differing

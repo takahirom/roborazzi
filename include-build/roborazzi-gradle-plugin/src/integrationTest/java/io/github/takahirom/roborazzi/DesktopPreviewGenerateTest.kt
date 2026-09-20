@@ -255,7 +255,7 @@ private const val PROFILE = "com.github.takahirom.roborazzi.DesktopPreviewDevice
  * A task restored from the build cache neither forks a test JVM nor prints anything, so these
  * tests, which observe what the test JVM received, have to render for real.
  */
-private val NO_BUILD_CACHE = arrayOf("--no-build-cache")
+internal val NO_BUILD_CACHE = arrayOf("--no-build-cache")
 
 /**
  * The device profile is carried from the Gradle build to the forked test JVM as an encoded system
@@ -480,6 +480,9 @@ class DesktopPreviewModule(
     var annotationFilterExcludeBinaryName: String? = null
     var useAndroidOnlyProject = false
 
+    /** Whether previews that need the same scene are captured without reopening it. */
+    var sceneReuse = false
+
     /** Extra Kotlin test runs to create on the desktop target, e.g. "androidCompat". */
     var extraTestRuns: List<String> = emptyList()
 
@@ -673,6 +676,7 @@ class DesktopPreviewModule(
         ""
       }
       val deviceProfileExpr = deviceProfile?.let { """deviceProfile = $it""" } ?: ""
+      val sceneReuseExpr = if (sceneReuse) """sceneReuse = true""" else ""
       val deviceProfileByTestRunExpr =
         deviceProfileByTestRun.entries.joinToString("\n                  ") {
           """deviceProfileByTestRun.put("${it.key}", ${it.value})"""
@@ -705,6 +709,7 @@ class DesktopPreviewModule(
                   $generatedTestClassCountExpr
                   $annotationFilterExpr
                   $deviceProfileExpr
+                  $sceneReuseExpr
                   $deviceProfileByTestRunExpr
                 }
               }
@@ -718,6 +723,15 @@ class DesktopPreviewModule(
     checks: BuildResult.() -> Unit = {},
   ) {
     val result = runTask("recordRoborazziDesktop", buildType, additionalParameters)
+    result.checks()
+  }
+
+  fun verify(
+    buildType: BuildType = BuildType.Build,
+    additionalParameters: Array<String> = arrayOf(),
+    checks: BuildResult.() -> Unit = {},
+  ) {
+    val result = runTask("verifyRoborazziDesktop", buildType, additionalParameters)
     result.checks()
   }
 
@@ -851,6 +865,84 @@ class DesktopPreviewModule(
         val image = ImageIO.read(file)
         file.name to (image.width to image.height)
       }
+
+  /** The source the plugin generated, so a test can assert which runner it selected. */
+  fun generatedTestClassText(className: String): String =
+    testProjectDir.root.resolve(
+      "$moduleName/build/generated/roborazzi/preview-screenshot/desktop/com/github/takahirom/roborazzi/$className.kt"
+    ).readText()
+
+  /** Every recorded screenshot, by file name, so two runs can be compared byte for byte. */
+  fun recordedImageBytes(outputDirSuffix: String = ""): Map<String, ByteArray> =
+    testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/$outputDirSuffix")
+      .listFiles()
+      .orEmpty()
+      .filter { it.name.endsWith(".png") }
+      .associate { it.name to it.readBytes() }
+
+  /**
+   * Deletes what an earlier recording in this project left behind.
+   *
+   * Nothing in the build removes an image the next run no longer captures, so a test that records
+   * twice and compares the two would be comparing the second run against the union of both, and a
+   * preview that stopped being captured would look like it was still there. The intermediate
+   * directory goes with it: it is what an empty output directory is restored from.
+   */
+  fun clearRecordedImages() {
+    listOf("build/outputs/roborazzi", "build/intermediates/roborazzi").forEach { path ->
+      testProjectDir.root.resolve("$moduleName/$path").deleteRecursively()
+    }
+  }
+
+  /** Replaces a recorded screenshot with a differently-sized one, to make its verify fail. */
+  fun corruptRecordedImage(nameFragment: String) {
+    val image = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/")
+      .listFiles()
+      .orEmpty()
+      .single { it.name.contains(nameFragment) && it.name.endsWith(".png") }
+    ImageIO.write(BufferedImage(7, 7, BufferedImage.TYPE_INT_ARGB), "png", image)
+  }
+
+  /** The names JUnit reported, which is what `--tests` filters and report diffs are written against. */
+  fun reportedTestCaseNames(testTaskName: String = "desktopTest"): Set<String> =
+    junitXmlFiles(testTaskName)
+      .flatMap { file ->
+        Regex("<testcase name=\"([^\"]+)\"").findAll(file.readText()).map { it.groupValues[1] }
+      }
+      .toSet()
+
+  /**
+   * The same names, kept apart by the report they came from, so a test can ask which class ran
+   * which preview rather than only which previews ran.
+   */
+  fun reportedTestCaseNamesByReport(testTaskName: String = "desktopTest"): Map<String, Set<String>> =
+    junitXmlFiles(testTaskName).associate { file ->
+      file.name to Regex("<testcase name=\"([^\"]+)\"")
+        .findAll(file.readText())
+        .map { it.groupValues[1] }
+        .toSet()
+    }
+
+  /** The subset of [reportedTestCaseNames] that JUnit reported as failed. */
+  fun failedTestCaseNames(testTaskName: String = "desktopTest"): Set<String> =
+    junitXmlFiles(testTaskName)
+      .flatMap { file ->
+        // A passing testcase is written self-closing; a failed one opens a tag with a
+        // <failure> child, so the last character before '>' tells them apart.
+        Regex("<testcase name=\"([^\"]+)\"[^>]*[^/]>")
+          .findAll(file.readText())
+          .map { it.groupValues[1] }
+      }
+      .toSet()
+
+  private fun junitXmlFiles(testTaskName: String): List<java.io.File> {
+    val resultsDir = testProjectDir.root.resolve("$moduleName/build/test-results/$testTaskName")
+    val xmlFiles = resultsDir.listFiles()?.filter { it.name.endsWith(".xml") }.orEmpty()
+    assert(xmlFiles.isNotEmpty()) {
+      "Expected JUnit XML results in ${resultsDir.absolutePath}, but found none"
+    }
+    return xmlFiles
+  }
 }
 
 private fun hasBluePixel(image: BufferedImage): Boolean {
