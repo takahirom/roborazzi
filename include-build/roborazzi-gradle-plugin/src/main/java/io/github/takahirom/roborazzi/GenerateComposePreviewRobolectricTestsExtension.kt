@@ -29,11 +29,16 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    *
    * The scale is applied to the device density before Compose content is rendered, so the
    * preview's logical dp dimensions are preserved while the surface pixel dimensions scale
-   * accordingly. This is independent of capture-time `resizeScale`, which resizes the captured
-   * bitmap. Density-qualified resources may resolve differently at the scaled density.
+   * accordingly. Density-qualified resources may resolve differently at the scaled density.
    * Only values expressed in dp and sp follow the density: anything drawn in raw pixels, such as
    * `drawLine(..., strokeWidth = 1f)` or a pixel offset, keeps its absolute pixel size and so
    * appears relatively thicker and shifted in the smaller image.
+   *
+   * This is independent of capture-time `resizeScale`, which downsamples the bitmap after the
+   * preview has been rendered at full resolution. `resizeScale` shrinks everything in the image
+   * uniformly, pixel-based drawing included, and saves file size but not rendering time;
+   * `renderScale` renders fewer pixels in the first place and so saves the rendering itself.
+   *
    * Must be finite and positive. The resulting dpi is rounded to the nearest integer and
    * clamped to a minimum of 1 dpi.
    *
