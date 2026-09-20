@@ -36,6 +36,7 @@ include ':sample-compose-desktop-jvm'
 include ':sample-compose-v2'
 include ':sample-generate-preview-tests'
 include ':sample-generate-preview-tests-multiplatform'
+include ':sample-generate-preview-tests-cross-runtime'
 
 includeBuild("include-build") {
   dependencySubstitution {
