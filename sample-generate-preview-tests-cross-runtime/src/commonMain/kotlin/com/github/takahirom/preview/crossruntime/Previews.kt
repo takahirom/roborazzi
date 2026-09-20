@@ -66,6 +66,15 @@ private const val FRACTIONAL_SPEC = "spec:width=201dp,height=400dp,dpi=440"
 /** 800dp x 1280dp at 240dpi: density 1.5, an even pixel size to contrast with [PHONE_SPEC]. */
 private const val TABLET_SPEC = "spec:width=800dp,height=1280dp,dpi=240"
 
+/**
+ * The same tablet, turned around. `orientation=landscape` contradicts the declared portrait
+ * dimensions, which is the one case where a runtime has to choose between trusting the keyword and
+ * trusting the order of the dimensions. Pinning it here keeps the two runtimes from choosing
+ * differently.
+ */
+private const val LANDSCAPE_SPEC =
+  "spec:width=800dp,height=1280dp,dpi=240,orientation=landscape"
+
 /** `Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL`, spelled out because
  * `android.content.res.Configuration` is not on the desktop classpath. */
 private const val NIGHT_MODE = 0x21
@@ -147,6 +156,12 @@ fun TabletSpecButton() {
   Surface {
     Button(onClick = {}, modifier = Modifier.padding(16.dp)) { Text("Tablet") }
   }
+}
+
+@Preview(device = LANDSCAPE_SPEC)
+@Composable
+fun LandscapeSpecText() {
+  Labeled("The tablet spec turned landscape")
 }
 
 // --- Group: font scale -------------------------------------------------------------------------
