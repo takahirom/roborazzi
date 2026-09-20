@@ -132,6 +132,31 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenRenderScaleIsSetImagesShouldBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.renderScale = 0.5
+
+      record()
+
+      checkHasImages()
+    }
+  }
+
+  @Test
+  fun whenACustomTesterDropsRenderScaleTheTestShouldFail() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.useCustomTester = true
+      buildGradle.renderScale = 0.5
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("renderScale = 0.5 is configured in generateComposePreviewRobolectricTests"))
+        assert(output.contains("com.github.takahirom.sample.CustomPreviewTester"))
+        assert(output.contains("toRoborazziComposeOptions(renderScale)"))
+      }
+    }
+  }
+
+  @Test
   fun whenCustomTesterAndIncludePrivatePreviewsWithoutUseScanOptionsShouldFail() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.useCustomTester = true
@@ -433,6 +458,7 @@ class PreviewModule(
     var isIncludePrivatePreviews = false
     var useCustomTester = false
     var useScanOptionParametersInTester = false
+    var renderScale: Double? = null
 
     private fun createRoborazziExtension(): String {
       val includePrivatePreviewsExpr = if (isIncludePrivatePreviews) {
@@ -450,6 +476,11 @@ class PreviewModule(
       } else {
         ""
       }
+      val renderScaleExpr = if (renderScale != null) {
+        """renderScale = $renderScale"""
+      } else {
+        ""
+      }
       val generatedTestClassCountExpr = if (generatedTestClassCount != null) {
         """generatedTestClassCount = $generatedTestClassCount"""
       } else {
@@ -463,6 +494,7 @@ class PreviewModule(
                   $includePrivatePreviewsExpr
                   $customTesterExpr
                   $useScanOptionParametersInTesterExpr
+                  $renderScaleExpr
                   $generatedTestClassCountExpr
                 }
               }

@@ -262,9 +262,11 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 $robolectricConfigString
                 @Test
                 fun test() {
+                  RenderScaleVerification.beforeTest()
                   tester.test(
                     testParameter = testParameter
                   )
+                  RenderScaleVerification.afterTest(tester)
                 }
                 
                 companion object {
