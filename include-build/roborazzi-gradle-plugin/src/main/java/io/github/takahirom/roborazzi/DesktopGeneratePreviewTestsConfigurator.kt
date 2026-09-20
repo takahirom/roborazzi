@@ -3,6 +3,7 @@ package io.github.takahirom.roborazzi
 import com.github.takahirom.roborazzi.AnnotationFilter
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.testing.Test
@@ -184,13 +185,22 @@ private fun failWhenMixedWithRobolectricPreviewTests(
 }
 
 private fun verifyDesktopLibraryDependencies(project: Project) {
-  val dependencies: Set<Pair<String?, String>> = project.configurations.flatMap { it.dependencies }
-    .map { it.group to it.name }
-    .toSet()
+  val declaredDependencies = project.configurations.flatMap { it.dependencies }
 
-  fun Set<Pair<String?, String>>.checkExists(libraryName: String) {
-    val libNameArray = libraryName.split(":")
-    if (!contains(libNameArray[0] to libNameArray[1])) {
+  fun hasDependency(libraryName: String): Boolean {
+    val (group, name) = libraryName.split(":")
+    return declaredDependencies.any { dependency ->
+      dependency.name == name &&
+        // A project dependency reports its target's group, which is only set once that project has
+        // been evaluated. In a composite build it often has not been, and the group then reads as
+        // the including build's default, so matching a project dependency on its name alone is the
+        // only reliable check.
+        (dependency.group == group || dependency is ProjectDependency)
+    }
+  }
+
+  fun checkExists(libraryName: String) {
+    if (!hasDependency(libraryName)) {
       val configurationNames =
         "'kotlin.sourceSets.<jvmTarget>Test.dependencies.implementation'(For KMP) or 'testImplementation'(For JVM Project)"
       error(
@@ -210,5 +220,5 @@ private fun verifyDesktopLibraryDependencies(project: Project) {
     "io.github.takahirom.roborazzi:roborazzi-compose-desktop-preview-scanner-support",
     "io.github.sergio-sastre.ComposablePreviewScanner:android",
   )
-  requiredLibraries.forEach { dependencies.checkExists(it) }
+  requiredLibraries.forEach { checkExists(it) }
 }
