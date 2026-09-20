@@ -33,6 +33,10 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * bitmap. Density-qualified resources may resolve differently at the scaled density.
    * Must be finite and positive. The resulting dpi is rounded to the nearest integer and
    * clamped to a minimum of 1 dpi.
+   *
+   * A custom [com.github.takahirom.roborazzi.ComposePreviewTester] that overrides `test()` has to
+   * pass `options().renderScale` to `preview.toRoborazziComposeOptions(renderScale)`. A tester that
+   * drops the value fails the generated test, so no opt-in flag is needed here.
    */
   @ExperimentalRoborazziApi
   val renderScale: Property<Double> = objects.property(Double::class.java).convention(1.0)

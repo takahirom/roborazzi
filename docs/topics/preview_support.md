@@ -102,7 +102,7 @@ If you need to customize more than the capture behavior, such as the scan option
 Two settings need extra care with a custom tester:
 
 - `includePrivatePreviews` and `annotationFilter` are consumed by `testParameters()`. Because a custom tester usually overrides it, the plugin rejects the combination unless you set `useScanOptionParametersInTester = true` and read `options().scanOptions` yourself.
-- `renderScale` is consumed at capture time, so the class-delegation pattern above keeps working. Only the pre-launch configuration optimization is skipped: a custom tester configures the environment at capture time, as before.
+- `renderScale` is consumed at capture time, so the class-delegation pattern above keeps working. If you override `test()` yourself, pass `options().renderScale` to `preview.toRoborazziComposeOptions(renderScale)`. A tester that drops the configured scale fails the generated test with an explanation, so a silently unscaled screenshot is not possible.
 
 Then reference your custom tester in the Gradle configuration:
 
