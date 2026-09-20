@@ -111,22 +111,40 @@ fun ComposablePreview<*>.effectiveRenderScale(configuredScale: Double): Double {
  *
  * The scanner reports a canonical-style class name (`com.example.Outer.Inner`), while
  * `Class.forName` needs the binary name (`com.example.Outer$Inner`), so nested classes are
- * retried with `$` separators. Overloaded previews share a method name, so the scanner's
- * parameter type information picks between them.
+ * retried with `$` separators. Overloaded previews share a method name, so the candidate whose
+ * source parameter types encode to the scanner's `methodParametersType` is the declaring one.
  */
 private fun ComposablePreview<*>.declaringMethodOrNull(): java.lang.reflect.Method? {
   val declaring = loadDeclaringClass(declaringClass) ?: return null
   val candidates = declaring.declaredMethods.filter { it.name == methodName }
   if (candidates.size <= 1) return candidates.firstOrNull()
-  if (methodParametersType.isEmpty()) {
-    // A preview without parameters still carries the synthetic Composer arguments, so compare
-    // the counts instead of looking for an empty parameter list.
-    return candidates.minByOrNull { it.parameterTypes.size }
-  }
-  return candidates.firstOrNull { candidate ->
-    candidate.parameterTypes.any { methodParametersType.contains(it.simpleName) }
-  } ?: candidates.first()
+  // Overloads differ in their parameters only, so an exact signature match is the only safe
+  // choice: a near match would read another overload's annotation.
+  return candidates.firstOrNull { it.sourceParameterTypesAsString() == methodParametersType }
 }
+
+/**
+ * The parameter types this method declares in the source, encoded the way the scanner encodes
+ * [ComposablePreview.methodParametersType].
+ */
+private fun java.lang.reflect.Method.sourceParameterTypesAsString(): String {
+  val types = genericParameterTypes.toMutableList()
+  // The compiler appends a Composer and one or more int bitmasks (`$changed`, `$default`) to
+  // every @Composable function, none of which the scanner reports.
+  while (types.isNotEmpty() && types.last() == Integer.TYPE) {
+    types.removeAt(types.lastIndex)
+  }
+  if (types.isNotEmpty() && (types.last() as? Class<*>)?.name == COMPOSER_CLASS_NAME) {
+    types.removeAt(types.lastIndex)
+  }
+  return types.joinToString("_") { type ->
+    type.typeName.replace(PACKAGE_PREFIX, "").replace(WHITESPACE, "_")
+  }
+}
+
+private const val COMPOSER_CLASS_NAME = "androidx.compose.runtime.Composer"
+private val PACKAGE_PREFIX = Regex("""\b[a-zA-Z_][a-zA-Z0-9_]*\.""")
+private val WHITESPACE = Regex("""\s+""")
 
 private fun loadDeclaringClass(className: String): Class<*>? {
   var candidate = className

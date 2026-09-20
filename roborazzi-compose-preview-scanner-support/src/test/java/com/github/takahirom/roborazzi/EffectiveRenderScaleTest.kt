@@ -22,7 +22,28 @@ class EffectiveRenderScaleTest {
     assertEquals(0.5, preview("overloaded", parameters = "").effectiveRenderScale(1.0), 0.0)
     assertEquals(
       0.25,
-      preview("overloaded", parameters = "java.lang.String").effectiveRenderScale(1.0),
+      preview("overloaded", parameters = "String").effectiveRenderScale(1.0),
+      0.0
+    )
+  }
+
+  @Test fun overloadsThatDifferInOneParameterTypeResolveSeparately() {
+    assertEquals(
+      0.5,
+      preview("sameArity", parameters = "String_int").effectiveRenderScale(1.0),
+      0.0
+    )
+    assertEquals(
+      0.25,
+      preview("sameArity", parameters = "String_boolean").effectiveRenderScale(1.0),
+      0.0
+    )
+  }
+
+  @Test fun anOverloadTheScannerDoesNotMatchKeepsTheConfiguredScale() {
+    assertEquals(
+      0.5,
+      preview("sameArity", parameters = "String_long").effectiveRenderScale(0.5),
       0.0
     )
   }
@@ -49,6 +70,12 @@ class EffectiveRenderScaleTest {
 
   @RoboComposePreviewOptions(renderScale = 0.25)
   @Composable fun overloaded(label: String) = Unit
+
+  @RoboComposePreviewOptions(renderScale = 0.5)
+  @Composable fun sameArity(label: String, count: Int) = Unit
+
+  @RoboComposePreviewOptions(renderScale = 0.25)
+  @Composable fun sameArity(label: String, enabled: Boolean) = Unit
 
   class Nested {
     @RoboComposePreviewOptions(renderScale = 0.25)
