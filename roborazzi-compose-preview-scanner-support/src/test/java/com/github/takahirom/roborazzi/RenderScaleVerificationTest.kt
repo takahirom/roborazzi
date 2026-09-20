@@ -79,6 +79,28 @@ class RenderScaleVerificationTest {
     assertTrue(message, message.contains("applied 0.5, 0.75 instead"))
   }
 
+  @Test fun passesWhenAPreviewOverridesTheConfiguredScale() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+
+    RenderScaleVerification.beforeTest()
+    RenderScaleVerification.expect(0.25)
+    preview.toRoborazziComposeOptions(renderScale = 0.25).applySetup()
+
+    RenderScaleVerification.afterTest(tester)
+  }
+
+  @Test fun failsWhenACaptureIgnoresThePreviewOverride() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+
+    RenderScaleVerification.beforeTest()
+    RenderScaleVerification.expect(0.25)
+    preview.toRoborazziComposeOptions(renderScale = 0.5).applySetup()
+
+    val message = assertFails()
+    assertTrue(message, message.contains("renderScale = 0.25"))
+    assertTrue(message, message.contains("applied 0.5 instead"))
+  }
+
   @Test fun passesWhenRoborazziIsNotRecordingOrVerifying() {
     configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.None)
 

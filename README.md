@@ -1246,6 +1246,18 @@ Both change the recorded image dimensions at the same output paths, so existing 
 
 In the Groovy DSL, write the value as a `double` literal: `renderScale = 0.5d`. A bare `0.5` is a `BigDecimal` and fails to convert.
 
+To scale a single preview differently, annotate it with `@RoboComposePreviewOptions(renderScale = ...)`. This is useful when only a few previews are large enough to be worth the loss of fidelity:
+
+```kotlin
+@RoboComposePreviewOptions(renderScale = 0.5)
+@Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
+@Composable
+fun TabletPreview() {
+}
+```
+
+Previews without the annotation keep the scale configured in the Gradle extension.
+
 #### Advanced: Custom ComposePreviewTester Implementation
 
 You can create a custom `ComposePreviewTester` to control the screenshot capture behavior, such as setting a custom image comparison threshold.

@@ -362,6 +362,20 @@ fun PreviewShowBackgroundWithBackgroundColor() {
   }
 }
 
+@RoboComposePreviewOptions(renderScale = 0.5)
+@Preview(widthDp = 400, heightDp = 400)
+@Composable
+fun PreviewWithHalfRenderScale() {
+  Card(
+    Modifier.fillMaxSize()
+  ) {
+    Text(
+      modifier = Modifier.padding(8.dp),
+      text = "Hello, World! Half render scale"
+    )
+  }
+}
+
 @RoboComposePreviewOptions
 @Preview
 @Composable

@@ -11,6 +11,7 @@ import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
+import com.github.takahirom.roborazzi.annotations.INHERIT_RENDER_SCALE
 import kotlinx.coroutines.test.StandardTestDispatcher
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
@@ -49,8 +50,12 @@ fun createRoborazziPreviewConfigurationRule(
           testParameter.renderScaleBaseConfiguration = android.content.res.Configuration(
             android.content.res.Resources.getSystem().configuration
           )
+          val effectiveScale = testParameter.preview.effectiveRenderScale(
+            tester.options().renderScale
+          )
+          RenderScaleVerification.expect(effectiveScale)
           testParameter.preview.toRoborazziComposeOptions(
-            tester.options().renderScale, testParameter.renderScaleBaseConfiguration
+            effectiveScale, testParameter.renderScaleBaseConfiguration
           ).applySetup()
           base.evaluate()
         } finally {
@@ -76,6 +81,25 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   captureRoboImage(filePath, roborazziOptions, roborazziComposeOptions) {
     composablePreview()
   }
+}
+
+/**
+ * The scale this preview is rendered at: its own [RoboComposePreviewOptions.renderScale] when it
+ * declares one, otherwise [configuredScale] from the Gradle extension.
+ */
+@InternalRoborazziApi
+fun ComposablePreview<*>.effectiveRenderScale(configuredScale: Double): Double {
+  // getAnnotation() on the preview throws, see testParameters() for the same workaround.
+  val annotated = Class.forName(declaringClass).declaredMethods
+    .firstOrNull { it.name == methodName }
+    ?.getAnnotation(RoboComposePreviewOptions::class.java)
+    ?.renderScale
+    ?: INHERIT_RENDER_SCALE
+  if (annotated == INHERIT_RENDER_SCALE) return configuredScale
+  require(annotated.isFinite() && annotated > 0.0) {
+    "renderScale must be finite and greater than 0, but $declaringClass.$methodName declares $annotated"
+  }
+  return annotated
 }
 
 @ExperimentalRoborazziApi
@@ -677,7 +701,8 @@ class AndroidComposePreviewTester(
     @Suppress("USELESS_CAST")
     val roborazziComposeOptions =
       (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions(
-        options().renderScale, testParameter.renderScaleBaseConfiguration
+        preview.effectiveRenderScale(options().renderScale),
+        testParameter.renderScaleBaseConfiguration
       ).builder()
         .apply {
           if (activityScenarioProvider != null) {

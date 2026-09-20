@@ -13,6 +13,13 @@ package com.github.takahirom.roborazzi
 @InternalRoborazziApi
 object RenderScaleVerification {
   private val appliedScales = mutableListOf<Double>()
+  private var expectedScale: Double? = null
+
+  /** Records the scale this preview should be captured at, including a per-preview override. */
+  @InternalRoborazziApi
+  fun expect(scale: Double) {
+    expectedScale = scale
+  }
 
   internal fun markApplied(scale: Double) {
     appliedScales += scale
@@ -22,6 +29,7 @@ object RenderScaleVerification {
   @InternalRoborazziApi
   fun beforeTest() {
     appliedScales.clear()
+    expectedScale = null
   }
 
   /**
@@ -36,7 +44,8 @@ object RenderScaleVerification {
   @OptIn(ExperimentalRoborazziApi::class)
   @InternalRoborazziApi
   fun afterTest(tester: ComposePreviewTester<*>) {
-    val configuredScale = ComposePreviewTester.defaultOptionsFromPlugin.renderScale
+    val configuredScale =
+      expectedScale ?: ComposePreviewTester.defaultOptionsFromPlugin.renderScale
     if (configuredScale == 1.0) return
     val applied = appliedScales.toList()
     if (applied.isNotEmpty() && applied.all { it == configuredScale }) return
