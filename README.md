@@ -1527,6 +1527,47 @@ A custom tester sees the profile as `options().renderProfile`. Build your option
 do: options constructed from scratch drop whatever the plugin configured, the profile
 included.
 
+#### Sharing a scene between previews
+
+Opening a Compose scene is a large part of what capturing one preview costs. `sceneReuse`
+captures the previews that need the same scene without closing it in between:
+
+```kotlin
+roborazzi {
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.example.previews")
+    sceneReuse = true
+  }
+}
+```
+
+The images do not change - the option is only about how long the run takes. Previews are
+grouped by what the scene itself carries, which is its surface size and the JVM locale;
+everything else a `@Preview` sets (font scale, night mode, the background) is given to the
+composition, so it never splits a group. `widthDp`/`heightDp` do resize the surface, the
+way the `w<n>dp`/`h<n>dp` qualifiers do on Robolectric, so a preview that sets either one
+is grouped by the size it asked for rather than the device's. A preview with
+`manualClockOptions` always gets a scene of its own: an infinite animation takes its phase
+from the scene's clock, and a test clock can be advanced but not rewound.
+
+Each preview is still reported as its own test, under the same name, so `--tests` filters
+and report diffs are unaffected. A preview that fails its comparison fails alone; the rest
+of its scene still runs. A `testRule` still wraps each preview separately, but it wraps the
+capture only: the scene around it is opened before the first preview's rule starts and
+closed after the last one's has finished, so a rule cannot set up or assert on anything
+that lives in the composition's creation or disposal.
+
+Two kinds of customization opt out of it. A custom `Capturer` owns `setContent`, so it
+cannot share a scene - Roborazzi logs this once and captures a scene per preview as
+before. A custom tester that overrides only `test(testParameter)` keeps the per-preview
+default; override `test(testParameters, listener)` to reuse scenes yourself. Overriding it
+means implementing it: with scene reuse on, the generated test calls that overload and
+nothing else, so a tester written as
+`class MyTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester(...)`
+hands the batch call straight to the delegate, and whatever the wrapper does around
+`test(testParameter)` is skipped.
+
 ### Customizing the desktop tester
 
 `DefaultDesktopComposePreviewTester` accepts a `Capturer` whose receiver is the raw

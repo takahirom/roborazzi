@@ -214,6 +214,7 @@ private fun setupGenerateComposePreviewDesktopTestsTask(
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(extension.testerQualifiedClassName)
     it.generatedTestClassCount.set(generatedTestClassCountProvider)
+    it.sceneReuse.set(extension.sceneReuse)
     it.annotationFilter.set(extension.annotationFilter.orElse(AnnotationFilter.Filter.RoboPreviewExclude))
   }
   // Registering the provider as a source directory carries the task dependency,

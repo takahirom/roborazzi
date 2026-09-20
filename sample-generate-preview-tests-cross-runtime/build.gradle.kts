@@ -46,6 +46,10 @@ roborazzi {
     // interpret `device` and render at the device density. The default device matches the
     // Pixel 4a qualifier the Robolectric side is configured with above.
     renderProfile = DesktopPreviewRenderProfile.AndroidCompatible
+    // Off by default, so this sample records what a project gets out of the box. Pass
+    // -Proborazzi.sceneReuse=true to capture the same previews with the scenes shared, which is
+    // how the two outputs are compared and how the speed-up is measured.
+    sceneReuse = providers.gradleProperty("roborazzi.sceneReuse").orNull.toBoolean()
   }
 }
 

@@ -261,6 +261,137 @@ Roborazzi fails with a configuration error unless
 [`separateOutputDirs`](https://takahirom.github.io/roborazzi/build-setup.html#separate-output-directories-per-varianttarget-experimental)
 is enabled, which gives each task its own subdirectory.
 
+### Render profiles (experimental)
+
+A render profile decides how the desktop runtime sizes and scales previews. It is a
+property of a *test run*, not of a preview, so one module can capture the same previews
+more than once under different profiles.
+
+```kotlin
+roborazzi {
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.example.previews")
+    renderProfile = DesktopPreviewRenderProfile.AndroidCompatible
+  }
+}
+```
+
+The presets are:
+
+| Profile | What it does |
+|---|---|
+| `DesktopPreviewRenderProfile.Desktop` | The historical desktop behaviour: density 1, a canvas of at least 1024x768, and only `widthDp`/`heightDp` affect the size. |
+| `DesktopPreviewRenderProfile.AndroidCompatible` | Sizes previews the way the Robolectric runtime does, so the same preview can be compared between the two runtimes. |
+
+To vary a single axis, start from a preset and use `copy()`.
+
+`Desktop` is the default, so an existing project keeps the screenshots it already has. It ignores
+`@Preview(device = ...)`, and it says so once per test run when a preview asks for a device, so
+that a preview naming a Pixel and coming out 1024x768 does not look like a bug.
+
+Under `AndroidCompatible`:
+
+- `@Preview(device = ...)` is parsed - `id:`, `name:` and `spec:` all work, with the same parser
+  the Robolectric runtime uses - and it decides both the raster surface and the density.
+- A preview that names no device is sized as the profile's `defaultDevice`. This stands in for the
+  Robolectric base configuration, so write your `qualifiers` in `@Preview` grammar: the default is
+  `spec:width=393dp,height=851dp,dpi=440`, which is `RobolectricDeviceQualifiers.Pixel4a`. Change
+  both together, or the two runtimes size device-less previews differently on purpose.
+- A `defaultDevice` given in dp makes the same dp -> px -> dp round trip the base configuration
+  makes, which is not a no-op: `width=411dp` at 420dpi is 1078px, reads back as 410dp, and renders
+  at 1076px. A device id such as `id:pixel_7` names a pixel-size entry instead and is converted
+  once. Prefer a `spec:` in dp for `defaultDevice`, since that is the form a qualifier takes.
+- `widthDp`/`heightDp` are dp at that density rather than raw pixels, so a 200dp box on a 440dpi
+  device is 550px wide on both runtimes.
+
+The surface size and the density the two runtimes use agree exactly, including for devices whose
+size is declared in pixels: the density round trip that Robolectric performs is reproduced rather
+than approximated. What does not agree is text measurement - Android bends font scale non-linearly from API 34, and
+glyph advances differ by a few pixels - so a preview whose size is driven by laid-out text can still
+come out a little wider or taller.
+
+#### Capturing the same previews under several profiles
+
+Give each profile its own Kotlin test run. Roborazzi already gives every test run of a
+JVM target its own set of tasks and, with `separateOutputDirs`, its own output directory,
+so the two sets of screenshots never overwrite each other:
+
+```kotlin
+kotlin {
+  jvm("desktop") {
+    testRuns.create("androidCompat")
+  }
+}
+
+roborazzi {
+  // required as soon as a target has more than one test run recording previews
+  separateOutputDirs = true
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.example.previews")
+    renderProfileByTestRun.put(
+      "androidCompat",
+      DesktopPreviewRenderProfile.AndroidCompatible,
+    )
+  }
+}
+```
+
+```bash
+./gradlew recordRoborazziDesktop              # build/outputs/roborazzi/desktop/
+./gradlew recordRoborazziDesktopAndroidCompat # build/outputs/roborazzi/desktopAndroidCompat/
+```
+
+`renderProfileByTestRun` is Kotlin Multiplatform only, because a Kotlin JVM project has a
+single `test` task and therefore no run to key a profile by. Use `renderProfile` there.
+
+A custom tester sees the profile as `options().renderProfile`. Build your options from
+`DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(...)`, as the examples below
+do: options constructed from scratch drop whatever the plugin configured, the profile
+included.
+
+#### Sharing a scene between previews
+
+Opening a Compose scene is a large part of what capturing one preview costs. `sceneReuse`
+captures the previews that need the same scene without closing it in between:
+
+```kotlin
+roborazzi {
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.example.previews")
+    sceneReuse = true
+  }
+}
+```
+
+The images do not change - the option is only about how long the run takes. Previews are
+grouped by what the scene itself carries, which is its surface size and the JVM locale;
+everything else a `@Preview` sets (font scale, night mode, the background) is given to the
+composition, so it never splits a group. `widthDp`/`heightDp` do resize the surface, the
+way the `w<n>dp`/`h<n>dp` qualifiers do on Robolectric, so a preview that sets either one
+is grouped by the size it asked for rather than the device's. A preview with
+`manualClockOptions` always gets a scene of its own: an infinite animation takes its phase
+from the scene's clock, and a test clock can be advanced but not rewound.
+
+Each preview is still reported as its own test, under the same name, so `--tests` filters
+and report diffs are unaffected. A preview that fails its comparison fails alone; the rest
+of its scene still runs. A `testRule` still wraps each preview separately, but it wraps the
+capture only: the scene around it is opened before the first preview's rule starts and
+closed after the last one's has finished, so a rule cannot set up or assert on anything
+that lives in the composition's creation or disposal.
+
+Two kinds of customization opt out of it. A custom `Capturer` owns `setContent`, so it
+cannot share a scene - Roborazzi logs this once and captures a scene per preview as
+before. A custom tester that overrides only `test(testParameter)` keeps the per-preview
+default; override `test(testParameters, listener)` to reuse scenes yourself. Overriding it
+means implementing it: with scene reuse on, the generated test calls that overload and
+nothing else, so a tester written as
+`class MyTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester(...)`
+hands the batch call straight to the delegate, and whatever the wrapper does around
+`test(testParameter)` is skipped.
+
 ### Customizing the desktop tester
 
 `DefaultDesktopComposePreviewTester` accepts a `Capturer` whose receiver is the raw
@@ -316,17 +447,17 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 | Custom JUnit `TestRule` around generated tests (`testRuleFactory`) | ✅ | ✅ |
 | Compose rule factory (`composeRuleFactory`) | ✅ | Not applicable (function-scoped harness) |
 | `@Preview` annotation options (`widthDp`/`heightDp`, `fontScale`, `showBackground`/`backgroundColor`, `locale`, `uiMode` dark bit) | ✅ (see below) | ✅ |
-| `@Preview(device = ...)` | ✅ | Not applicable (no device configuration on desktop) |
-| `robolectricConfig` (device qualifiers, SDK) | ✅ | Not applicable |
+| `@Preview(device = ...)` | ✅ | ✅ with `renderProfile = AndroidCompatible`; ignored under the default `Desktop` profile |
+| `robolectricConfig` (device qualifiers, SDK) | ✅ | Not applicable - the equivalent is the render profile's `defaultDevice` |
 
 On Compose Desktop the `@Preview` annotation options are applied as follows:
 
-- `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box (density is `1`, so 1dp equals 1px). When neither is specified the preview still renders wrap-content.
-- `fontScale`: applied through `LocalDensity` (density stays `1`), because `DeviceConfigurationOverride.FontScale` is unsupported on desktop.
+- `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box. Under the default `Desktop` profile density is `1`, so 1dp equals 1px; under `AndroidCompatible` they are dp at the device density. When neither is specified the preview still renders wrap-content.
+- `fontScale`: applied through `LocalDensity`, together with the density the render profile resolved, because `DeviceConfigurationOverride.FontScale` is unsupported on desktop.
 - `showBackground`/`backgroundColor`: draws a background behind the preview, defaulting to white when `showBackground = true` but no color is given.
 - `locale`: sets `java.util.Locale.getDefault()` for the capture and restores it afterwards. Accepts `"ja"`, `"ja-rJP"`, and `"ja-JP"` forms.
 - `uiMode`: only the night bit is honored (dark mode via `LocalSystemTheme`); other configuration bits are ignored.
-- `device`: not applicable, as desktop has no device configuration.
+- `device`: honored under the `AndroidCompatible` render profile, which turns it into the surface size and the density. The default `Desktop` profile ignores it. A spec the parser cannot read fails the test rather than being skipped, which is stricter than the Robolectric runtime - it ignores an unreadable spec and renders at the default size.
 
 ## Annotation-based Capture Control
 
