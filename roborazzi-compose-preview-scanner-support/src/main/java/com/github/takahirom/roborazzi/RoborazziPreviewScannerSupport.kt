@@ -82,6 +82,19 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): RoborazziComposeOptions =
   toRoborazziComposeOptions(renderScale = 1.0)
 
+/**
+ * Converts the preview's own `@Preview` settings into [RoborazziComposeOptions], scaling the
+ * rendering density by [renderScale].
+ *
+ * The default [AndroidComposePreviewTester.test] already applies the scale configured in the
+ * Gradle extension. Call this overload only when you implement `test()` yourself, passing
+ * `options().renderScale` so that the configured scale is not lost.
+ */
+@ExperimentalRoborazziApi
+fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(
+  renderScale: Double,
+): RoborazziComposeOptions = toRoborazziComposeOptions(renderScale, baseConfiguration = null)
+
 @OptIn(ExperimentalRoborazziApi::class)
 private fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(
   renderScale: Double,

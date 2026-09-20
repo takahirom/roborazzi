@@ -205,5 +205,6 @@ public final class com/github/takahirom/roborazzi/RoborazziPreviewScannerSupport
 	public static final fun manualAdvance (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;Landroidx/compose/ui/test/junit4/ComposeTestRule;J)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
 	public static final fun previewDevice (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions$Builder;
 	public static final fun toRoborazziComposeOptions (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;
+	public static final fun toRoborazziComposeOptions (Lsergio/sastre/composable/preview/scanner/core/preview/ComposablePreview;D)Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;
 }
 
