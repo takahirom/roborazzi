@@ -1,6 +1,7 @@
 package com.github.takahirom.roborazzi
 
 import kotlin.math.floor
+import kotlin.math.roundToInt
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.device.DevicePreviewInfoParser
 import sergio.sastre.composable.preview.scanner.android.device.domain.Device
@@ -29,20 +30,61 @@ data class DesktopPreviewRenderSpec(
     internal const val DEFAULT_SURFACE_WIDTH = 1024
     internal const val DEFAULT_SURFACE_HEIGHT = 768
 
-    @OptIn(ExperimentalRoborazziApi::class)
+    /**
+     * The spec a capture should use, recorded as the scale that reached it.
+     *
+     * The recording is what [DesktopRenderScaleVerification] reads, so a custom tester that sizes
+     * its own surface through this function passes the check without knowing it exists - which is
+     * the path the failure message tells it to take.
+     */
+    @OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
     fun resolve(
       previewInfo: AndroidPreviewInfo,
       profile: DesktopPreviewRenderProfile,
+      renderScale: Double = 1.0,
     ): DesktopPreviewRenderSpec {
+      DesktopRenderScaleVerification.markApplied(renderScale)
+      return resolveWithoutRecording(previewInfo, profile, renderScale)
+    }
+
+    /**
+     * The same sizing, for the callers that are not about to capture anything.
+     *
+     * Scene grouping resolves every preview up front to decide which ones share a surface. Letting
+     * that count as "the scale reached the capture" would leave the check passing for a tester that
+     * then captured at a different density, which is the one thing it is there to catch.
+     */
+    @OptIn(ExperimentalRoborazziApi::class)
+    internal fun resolveWithoutRecording(
+      previewInfo: AndroidPreviewInfo,
+      profile: DesktopPreviewRenderProfile,
+      renderScale: Double = 1.0,
+    ): DesktopPreviewRenderSpec {
+      require(renderScale.isFinite() && renderScale > 0.0) {
+        "renderScale must be finite and greater than 0, but was $renderScale"
+      }
       val defaultDevice = profile.defaultDevice
         // No default device means the historical behaviour: density is pinned at 1 so 1dp == 1px,
         // and `device` is ignored entirely - including when the preview declares one, so that a
         // profile-less build renders exactly what it rendered before render profiles existed.
-        ?: return DesktopPreviewRenderSpec(
-          surfaceWidth = enlarge(DEFAULT_SURFACE_WIDTH, previewInfo.widthDp),
-          surfaceHeight = enlarge(DEFAULT_SURFACE_HEIGHT, previewInfo.heightDp),
-          density = 1f,
-        )
+        //
+        // There is no Robolectric counterpart to copy the arithmetic from here, so the scale goes
+        // through the same integer dpi the other branch uses, reading the pinned density as
+        // 160dpi. At scale 1 that is 1f again, so the profile-less output is unchanged.
+        ?: run {
+          val density = scaledDensity(DENSITY_DEFAULT, renderScale)
+          return DesktopPreviewRenderSpec(
+            surfaceWidth = enlarge(
+              flooredPx(DEFAULT_SURFACE_WIDTH, density),
+              flooredPx(previewInfo.widthDp, density),
+            ),
+            surfaceHeight = enlarge(
+              flooredPx(DEFAULT_SURFACE_HEIGHT, density),
+              flooredPx(previewInfo.heightDp, density),
+            ),
+            density = density,
+          )
+        }
 
       // A blank `device` is what the scanner reports for a preview that declares none, and it is
       // the one case where the profile's default applies. Which of the two it is decides the
@@ -53,12 +95,20 @@ data class DesktopPreviewRenderSpec(
         "Roborazzi: could not parse the preview device \"$deviceSpec\". It has to be written in " +
           "the same grammar as @Preview(device = ...): \"id:...\", \"name:...\" or \"spec:...\"."
       }
-      val density = device.densityDpi * DENSITY_DEFAULT_SCALE
+      val density = scaledDensity(device.densityDpi, renderScale)
       val (rawWidthDp, rawHeightDp) = device.screenSizeDp()
       // A default written in dp is a base configuration and makes the dp -> px -> dp round trip; a
       // default written in pixels has already lost that fraction in `inDp()`, and rounding it a
       // second time would take it one dp too low (the Pixel 4a's 850dp would become 849).
-      val roundTrip = fromProfileDefault && device.dimensions.unit == DeviceUnit.DP
+      //
+      // A scale other than 1 skips the round trip because the Robolectric side skips it too: at
+      // scale 1 the base configuration is applied as the `@Config` device and the dp are read back
+      // from its truncated pixels, but a scaled run replaces it with an additive
+      // `w<n>dp-h<n>dp-<n>dpi` qualifier built from the dp the configuration carries, and those dp
+      // are the raw ones. Measured on the cross-runtime sample at the Pixel 4a default: 1078px at
+      // scale 1 (393 -> 1080 -> 392 -> 1078), 540px at scale 0.5 (393 at 220dpi), not 539.
+      val roundTrip =
+        fromProfileDefault && device.dimensions.unit == DeviceUnit.DP && renderScale == 1.0
       val deviceWidthDp = if (roundTrip) viaQualifier(rawWidthDp, density) else rawWidthDp
       val deviceHeightDp = if (roundTrip) viaQualifier(rawHeightDp, density) else rawHeightDp
 
@@ -67,6 +117,19 @@ data class DesktopPreviewRenderSpec(
         surfaceHeight = override(toPx(deviceHeightDp, density), toPx(previewInfo.heightDp, density)),
         density = density,
       )
+    }
+
+    /**
+     * Scales a device's dpi the way `PreviewRenderScaleOption` does on the Robolectric runtime.
+     *
+     * The scale is applied to the integer dpi and rounded there, not to the density, so that both
+     * runtimes render at a dpi Android could actually report. At scale 1 this returns the device's
+     * own density unchanged, down to the bit, because the multiplication is skipped.
+     */
+    private fun scaledDensity(densityDpi: Int, renderScale: Double): Float {
+      if (renderScale == 1.0) return densityDpi * DENSITY_DEFAULT_SCALE
+      val scaledDpi = (densityDpi * renderScale).roundToInt().coerceAtLeast(1)
+      return scaledDpi * DENSITY_DEFAULT_SCALE
     }
 
     /**
@@ -131,6 +194,9 @@ data class DesktopPreviewRenderSpec(
      * Robolectric runtime hands Compose.
      */
     private const val DENSITY_DEFAULT_SCALE = 1f / 160f
+
+    /** `DisplayMetrics.DENSITY_DEFAULT`: the dpi at which 1dp is 1px. */
+    private const val DENSITY_DEFAULT = 160
 
     /** `widthDp`/`heightDp` of -1 (unset) leave the surface alone. */
     private fun enlarge(surface: Int, requested: Int): Int =

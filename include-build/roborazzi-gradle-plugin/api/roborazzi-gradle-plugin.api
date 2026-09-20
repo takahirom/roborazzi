@@ -8,6 +8,7 @@ public class io/github/takahirom/roborazzi/GenerateComposePreviewDesktopTestsExt
 	public final fun getPackages ()Lorg/gradle/api/provider/ListProperty;
 	public final fun getRenderProfile ()Lorg/gradle/api/provider/Property;
 	public final fun getRenderProfileByTestRun ()Lorg/gradle/api/provider/MapProperty;
+	public final fun getRenderScale ()Lorg/gradle/api/provider/Property;
 	public final fun getSceneReuse ()Lorg/gradle/api/provider/Property;
 	public final fun getTargetName ()Lorg/gradle/api/provider/Property;
 	public final fun getTesterQualifiedClassName ()Lorg/gradle/api/provider/Property;
@@ -24,6 +25,7 @@ public abstract class io/github/takahirom/roborazzi/GenerateComposePreviewDeskto
 	public abstract fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
 	public abstract fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
 	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getRenderScale ()Lorg/gradle/api/provider/Property;
 	public abstract fun getScanPackageTrees ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getSceneReuse ()Lorg/gradle/api/provider/Property;
 	public abstract fun getTesterQualifiedClassName ()Lorg/gradle/api/provider/Property;

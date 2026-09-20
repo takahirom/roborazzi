@@ -391,6 +391,34 @@ nothing else, so a tester written as
 hands the batch call straight to the delegate, and whatever the wrapper does around
 `test(testParameter)` is skipped.
 
+#### Rendering at a smaller density
+
+`renderScale` is the same option as on the Robolectric generator above, and the two
+runtimes round it the same way, so a module that captures the same previews on both can
+scale both and keep comparing them:
+
+```kotlin
+roborazzi {
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.example.previews")
+    renderScale = 0.5
+  }
+}
+```
+
+The preview keeps its logical dp size and the density under it shrinks, so half the scale
+is a quarter of the pixels to rasterize. The scaled dpi is rounded to the nearest integer
+and clamped to at least 1, which is what a device's `dpi=` carries; the default `Desktop`
+profile names no device, so its pinned density is scaled as 160dpi, the dpi at which 1dp
+is 1px. Anything drawn in raw pixels keeps its absolute size and so looks relatively
+thicker in the smaller image, and existing goldens have to be recorded again.
+
+A custom tester that sizes its own surface has to pass the value on:
+`DesktopPreviewRenderSpec.resolve(previewInfo, renderProfile, options().renderScale)`. A
+tester that drops the configured scale fails the generated test with an explanation, so a
+silently unscaled screenshot is not possible.
+
 ### Customizing the desktop tester
 
 `DefaultDesktopComposePreviewTester` accepts a `Capturer` whose receiver is the raw
@@ -447,6 +475,7 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 | Compose rule factory (`composeRuleFactory`) | ✅ | Not applicable (function-scoped harness) |
 | `@Preview` annotation options (`widthDp`/`heightDp`, `fontScale`, `showBackground`/`backgroundColor`, `locale`, `uiMode` dark bit) | ✅ (see below) | ✅ |
 | `@Preview(device = ...)` | ✅ | ✅ with `renderProfile = AndroidCompatible`; ignored under the default `Desktop` profile |
+| `renderScale` | ✅ | ✅ |
 | `robolectricConfig` (device qualifiers, SDK) | ✅ | Not applicable - the equivalent is the render profile's `defaultDevice` |
 
 On Compose Desktop the `@Preview` annotation options are applied as follows:

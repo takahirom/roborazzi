@@ -43,8 +43,11 @@ internal data class DesktopPreviewSceneKey(
 internal fun desktopPreviewSceneKey(
   parameter: DesktopPreviewTestParameter,
   profile: DesktopPreviewRenderProfile,
+  renderScale: Double = 1.0,
 ): DesktopPreviewSceneKey {
-  val renderSpec = DesktopPreviewRenderSpec.resolve(parameter.preview.previewInfo, profile)
+  val renderSpec = DesktopPreviewRenderSpec.resolveWithoutRecording(
+    parameter.preview.previewInfo, profile, renderScale,
+  )
   return DesktopPreviewSceneKey(
     surfaceWidth = renderSpec.surfaceWidth,
     surfaceHeight = renderSpec.surfaceHeight,
@@ -66,11 +69,12 @@ internal fun desktopPreviewSceneKey(
 internal fun groupDesktopPreviewsByScene(
   parameters: List<DesktopPreviewTestParameter>,
   profile: DesktopPreviewRenderProfile,
+  renderScale: Double = 1.0,
 ): List<List<DesktopPreviewTestParameter>> {
   val groups = mutableListOf<MutableList<DesktopPreviewTestParameter>>()
   val indexByKey = mutableMapOf<DesktopPreviewSceneKey, Int>()
   parameters.forEach { parameter ->
-    val key = desktopPreviewSceneKey(parameter, profile)
+    val key = desktopPreviewSceneKey(parameter, profile, renderScale)
     if (!key.reusable) {
       groups.add(mutableListOf(parameter))
       return@forEach

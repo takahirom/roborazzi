@@ -164,6 +164,32 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
   @ExperimentalRoborazziApi
   val sceneReuse: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
+
+  /**
+   * Renders every preview at this fraction of its device density.
+   *
+   * The preview keeps its logical dp size and the raster surface shrinks with the density, so half
+   * the scale is a quarter of the pixels to rasterize. Only values expressed in dp and sp follow
+   * the density: anything drawn in raw pixels keeps its absolute size and so appears relatively
+   * thicker and shifted in the smaller image.
+   *
+   * `generateComposePreviewRobolectricTests` has the same option, and the two runtimes round the
+   * same way, so a module that captures the same previews on both runtimes can scale both and go
+   * on comparing them.
+   *
+   * With [renderProfile] left at a profile that has no default device, the desktop runtime has no
+   * device density to scale; the pinned `1dp == 1px` density is read as 160dpi and scaled through
+   * the same integer dpi, so a scale of 0.5 gives `1dp == 0.5px`.
+   *
+   * Must be finite and positive. The resulting dpi is rounded to the nearest integer and clamped
+   * to a minimum of 1 dpi.
+   *
+   * A custom [com.github.takahirom.roborazzi.DesktopComposePreviewTester] that sizes its own
+   * surface has to pass `options().renderScale` to `DesktopPreviewRenderSpec.resolve`. A tester
+   * that drops the value fails the generated test, so no opt-in flag is needed here.
+   */
+  @ExperimentalRoborazziApi
+  val renderScale: Property<Double> = objects.property(Double::class.java).convention(1.0)
 }
 
 @CacheableTask
@@ -187,6 +213,9 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
   abstract val sceneReuse: Property<Boolean>
 
   @get:Input
+  abstract val renderScale: Property<Double>
+
+  @get:Input
   @get:Optional
   @ExperimentalRoborazziApi
   abstract val annotationFilter: Property<AnnotationFilter>
@@ -194,6 +223,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
   @TaskAction
   @OptIn(ExperimentalRoborazziApi::class)
   fun generateTests() {
+    val scale = validateRenderScale(renderScale.getOrElse(1.0))
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
@@ -237,7 +267,8 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
         testerQualifiedClassNameString = testerQualifiedClassNameString,
         shardIndex = null,
         totalShards = 1,
-        sceneReuse = sceneReuse.get()
+        sceneReuse = sceneReuse.get(),
+        renderScale = scale
       )
     } else {
       repeat(testClassCount) { shardIndex ->
@@ -251,7 +282,8 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
           testerQualifiedClassNameString = testerQualifiedClassNameString,
           shardIndex = shardIndex,
           totalShards = testClassCount,
-          sceneReuse = sceneReuse.get()
+          sceneReuse = sceneReuse.get(),
+          renderScale = scale
         )
       }
     }
@@ -294,8 +326,11 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     annotationFilterExpr: String,
     testerQualifiedClassNameString: String,
     shardIndex: Int?,
-    totalShards: Int
+    totalShards: Int,
+    renderScale: Double
   ) {
+    val renderScaleArgument =
+      if (renderScale == 1.0) "" else "\n                            renderScale = $renderScale,"
     File(directory, "$className.kt").writeText(
       """
             package $packageName
@@ -326,7 +361,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
                         DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(
                             renderProfile = roborazziSystemPropertyDesktopRenderProfile()
                               ?: DesktopPreviewRenderProfile.Default,
-                            sceneReuse = true,
+                            sceneReuse = true,$renderScaleArgument
                             scanOptions = DesktopComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
@@ -350,7 +385,8 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     testerQualifiedClassNameString: String,
     shardIndex: Int?,
     totalShards: Int,
-    sceneReuse: Boolean
+    sceneReuse: Boolean,
+    renderScale: Double
   ) {
     if (sceneReuse) {
       generateSceneReuseTestClass(
@@ -362,10 +398,13 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
         annotationFilterExpr = annotationFilterExpr,
         testerQualifiedClassNameString = testerQualifiedClassNameString,
         shardIndex = shardIndex,
-        totalShards = totalShards
+        totalShards = totalShards,
+        renderScale = renderScale
       )
       return
     }
+    val renderScaleArgument =
+      if (renderScale == 1.0) "" else "\n                            renderScale = $renderScale,"
     // Shards are assigned after sorting by a stable identifier: neither ClassGraph
     // order nor a custom tester's order is guaranteed to be identical across the
     // independently-initialized test JVMs, and index-based sharding on differing
@@ -401,7 +440,9 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
 
                 @Test
                 fun test() {
+                  DesktopRenderScaleVerification.beforeTest()
                   tester.test(testParameter)
+                  DesktopRenderScaleVerification.afterTest(tester)
                 }
 
                 companion object {
@@ -418,7 +459,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
                     fun setupDefaultOptions() {
                         DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(
                             renderProfile = roborazziSystemPropertyDesktopRenderProfile()
-                              ?: DesktopPreviewRenderProfile.Default,
+                              ?: DesktopPreviewRenderProfile.Default,$renderScaleArgument
                             scanOptions = DesktopComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
