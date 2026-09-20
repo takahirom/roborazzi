@@ -249,6 +249,41 @@ class DesktopPreviewGenerateTest {
       checkHasGeneratedTestClass("RoborazziDesktopPreviewParameterizedTests1")
     }
   }
+
+  @Test
+  fun whenRenderScaleIsHalfThePreviewIsRecordedAtHalfTheDensity() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.renderScale = 0.5
+
+      record()
+
+      // The dp size is what the preview declares; the scale moves the density under it, so
+      // 300dp x 150dp at half of the profile's 160dpi is 150x75 px rather than 300x150.
+      val fixedSize = imageContaining("PreviewFixedSize")
+      assert(fixedSize.width == 150 && fixedSize.height == 75) {
+        "Expected PreviewFixedSize to be 150x75 px at renderScale = 0.5, but was " +
+          "${fixedSize.width}x${fixedSize.height}"
+      }
+    }
+  }
+
+  @Test
+  fun whenACustomTesterDropsRenderScaleTheTestShouldFail() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.useCustomTester = true
+      buildGradle.customTesterClassName =
+        "com.github.takahirom.sample.RenderScaleDroppingDesktopPreviewTester"
+      buildGradle.renderScale = 0.5
+
+      // Nothing about the capture itself fails, so without the verification this run would record
+      // full-density images under a configuration that asks for half.
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("renderScale = 0.5 is configured in generateComposePreviewDesktopTests"))
+        assert(output.contains("com.github.takahirom.sample.RenderScaleDroppingDesktopPreviewTester"))
+        assert(output.contains("DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile, renderScale)"))
+      }
+    }
+  }
 }
 
 private const val PROFILE = "com.github.takahirom.roborazzi.DesktopPreviewDeviceProfile"
@@ -511,6 +546,12 @@ class DesktopPreviewModule(
     /** Kotlin expressions for the profiles of extra test runs, keyed by test run name. */
     var deviceProfileByTestRun: Map<String, String> = emptyMap()
 
+    /** The fraction of the device density to render at, or null to leave the option unset. */
+    var renderScale: Double? = null
+
+    /** The custom tester to configure, used when [useCustomTester] is on. */
+    var customTesterClassName = "com.github.takahirom.sample.CustomDesktopPreviewTester"
+
     fun write() {
       val file = projectFolder.root.resolve(PATH)
       file.parentFile.mkdirs()
@@ -664,7 +705,7 @@ class DesktopPreviewModule(
         ""
       }
       val customTesterExpr = if (useCustomTester) {
-        """testerQualifiedClassName = "com.github.takahirom.sample.CustomDesktopPreviewTester""""
+        """testerQualifiedClassName = "$customTesterClassName""""
       } else {
         ""
       }
@@ -682,6 +723,7 @@ class DesktopPreviewModule(
       }
       val deviceProfileExpr = deviceProfile?.let { """deviceProfile = $it""" } ?: ""
       val sceneReuseExpr = if (sceneReuse) """sceneReuse = true""" else ""
+      val renderScaleExpr = renderScale?.let { """renderScale = $it""" } ?: ""
       val deviceProfileByTestRunExpr =
         deviceProfileByTestRun.entries.joinToString("\n                  ") {
           """deviceProfileByTestRun.put("${it.key}", ${it.value})"""
@@ -715,6 +757,7 @@ class DesktopPreviewModule(
                   $annotationFilterExpr
                   $deviceProfileExpr
                   $sceneReuseExpr
+                  $renderScaleExpr
                   $deviceProfileByTestRunExpr
                 }
               }

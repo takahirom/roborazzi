@@ -60,6 +60,7 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
     shardOfDesktopPreviews(
       testParameters = tester.testParameters(),
       profile = tester.options().deviceProfile,
+      renderScale = tester.options().renderScale,
       shardIndex = configuration.shardIndex,
       totalShards = configuration.totalShards,
     )
@@ -81,8 +82,14 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
     if (parameters.isEmpty()) throw NoTestsRemainException()
   }
 
+  @OptIn(InternalRoborazziApi::class)
   override fun run(notifier: RunNotifier) {
     if (parameters.isEmpty()) return
+    // Once per class rather than per preview: with scene reuse on a whole group is resolved
+    // before its first capture runs, so clearing between captures would discard the records of
+    // the previews behind it.
+    DesktopRenderScaleVerification.beforeTest()
+    val verificationTester = configuration.createTester()
     // DesktopPreviewTestParameter has no equals, so this is identity based, which is what is
     // wanted: two variations of one preview are two entries.
     val reported = mutableSetOf<DesktopPreviewTestParameter>()
@@ -98,6 +105,7 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
         // A fresh rule per preview, so a TestWatcher or a retry rule sees one test per preview
         // rather than one per scene.
         (configuration.createTestRule()?.apply(statement, description) ?: statement).evaluate()
+        DesktopRenderScaleVerification.afterTest(verificationTester)
       } catch (assumptionViolated: AssumptionViolatedException) {
         // A preview that decides it does not apply - Assume.assumeTrue in a rule, or a tester that
         // skips a configuration - is a skip on every other runner, so it has to be one here too
@@ -160,12 +168,13 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
 internal fun shardOfDesktopPreviews(
   testParameters: List<DesktopPreviewTestParameter>,
   profile: DesktopPreviewDeviceProfile,
+  renderScale: Double = 1.0,
   shardIndex: Int?,
   totalShards: Int,
 ): List<DesktopPreviewTestParameter> {
   // Resolving a device spec is not free, and a comparator is called O(n log n) times, so the keys
   // are computed once each.
-  val keys = testParameters.associateWith { desktopPreviewSceneKey(it, profile) }
+  val keys = testParameters.associateWith { desktopPreviewSceneKey(it, profile, renderScale) }
   val sorted = testParameters.sortedWith(
     compareBy(
       { keys.getValue(it).surfaceWidth },

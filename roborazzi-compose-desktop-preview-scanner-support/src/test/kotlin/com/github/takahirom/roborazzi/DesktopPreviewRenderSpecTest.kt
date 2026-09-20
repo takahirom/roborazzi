@@ -16,7 +16,8 @@ class DesktopPreviewRenderSpecTest {
   private fun resolve(
     previewInfo: AndroidPreviewInfo,
     profile: DesktopPreviewDeviceProfile = DesktopPreviewDeviceProfile.Pixel4a,
-  ) = DesktopPreviewRenderSpec.resolve(previewInfo, profile)
+    renderScale: Double = 1.0,
+  ) = DesktopPreviewRenderSpec.resolve(previewInfo, profile, renderScale)
 
   @Test
   fun `the Desktop profile keeps the historical 1024x768 surface at density 1`() {
@@ -224,5 +225,93 @@ class DesktopPreviewRenderSpecTest {
 
     assertEquals(IllegalArgumentException::class.java, failure?.javaClass)
     assert(failure!!.message!!.contains("pixel_4a")) { "Unexpected message: ${failure.message}" }
+  }
+
+  // --- renderScale ------------------------------------------------------------------------------
+  //
+  // Measured on the cross-runtime sample by recording `recordRoborazziDebug` with
+  // `-Proborazzi.renderScale=0.5`, with the Robolectric side on `RobolectricDeviceQualifiers.Pixel4a`
+  // and sdk 35. The widths below are the widths of the PNGs that run produced.
+
+  @Test
+  fun `a preview that names a device scales its density and floors the pixels`() {
+    // Measured: PhoneSpecText is 1078px wide at scale 1 and 539px at 0.5. 420dpi halves to 210,
+    // so 411dp * 1.3125 = 539.4 -> 539.
+    val phone = AndroidPreviewInfo(device = "spec:width=411dp,height=891dp,dpi=420")
+
+    assertEquals(1078, resolve(phone).surfaceWidth)
+    assertEquals(539, resolve(phone, renderScale = 0.5).surfaceWidth)
+    assertEquals(210 / 160f, resolve(phone, renderScale = 0.5).density)
+  }
+
+  @Test
+  fun `a scaled device-less preview floors the base dp against the scaled density`() {
+    // The scale moves the dpi, not the dp: 393 * 2.75 = 1080.75 -> 1080 at scale 1, and
+    // 393 * 1.375 = 540.375 -> 540 at 0.5. Measured as 540 on Robolectric, not 539.
+    assertEquals(1080, resolve(AndroidPreviewInfo()).surfaceWidth)
+    assertEquals(540, resolve(AndroidPreviewInfo(), renderScale = 0.5).surfaceWidth)
+  }
+
+  @Test
+  fun `widthDp and heightDp follow the scaled density too`() {
+    val wide = AndroidPreviewInfo(widthDp = 2000, heightDp = 120)
+
+    assertEquals(5500, resolve(wide).surfaceWidth)
+    assertEquals(2750, resolve(wide, renderScale = 0.5).surfaceWidth)
+    // Both axes are the preview's own, so the height follows the scaled density too.
+    assertEquals(165, resolve(wide, renderScale = 0.5).surfaceHeight)
+  }
+
+  @Test
+  fun `a third of the density rounds the dpi rather than the pixels`() {
+    // Measured at -Proborazzi.renderScale=0.3333333333333333: 420dpi * 1/3 is 140dpi exactly, so
+    // 411dp * 0.875 = 359.6 -> 359, while scaling the pixel count would give 359 from 1078 / 3 by
+    // a different route and 358 from the dp being re-derived. Pinning the dpi is what keeps the
+    // two runtimes together.
+    val phone = AndroidPreviewInfo(device = "spec:width=411dp,height=891dp,dpi=420")
+    val third = 1.0 / 3.0
+
+    assertEquals(140 / 160f, resolve(phone, renderScale = third).density)
+    assertEquals(359, resolve(phone, renderScale = third).surfaceWidth)
+  }
+
+  @Test
+  fun `a tiny scale still leaves a renderable dpi`() {
+    // (440 * 0.001).roundToInt() is 0, and a density of 0 makes every dimension 0 pixels wide.
+    val spec = resolve(AndroidPreviewInfo(), renderScale = 0.001)
+
+    assertEquals(1 / 160f, spec.density)
+    assertEquals(2, spec.surfaceWidth)
+  }
+
+  @Test
+  fun `the profile without a default device scales its pinned density as 160dpi`() {
+    val spec = resolve(
+      AndroidPreviewInfo(widthDp = 2000, heightDp = 120),
+      DesktopPreviewDeviceProfile.Desktop,
+      renderScale = 0.5,
+    )
+
+    // 1dp is half a pixel now, so the historical 1024x768 surface halves with it.
+    assertEquals(DesktopPreviewRenderSpec(1000, 384, 0.5f), spec)
+  }
+
+  @Test
+  fun `a scale of one changes nothing on the profile without a default device`() {
+    assertEquals(
+      resolve(AndroidPreviewInfo(), DesktopPreviewDeviceProfile.Desktop),
+      resolve(AndroidPreviewInfo(), DesktopPreviewDeviceProfile.Desktop, renderScale = 1.0),
+    )
+  }
+
+  @Test
+  fun `a scale that is not a number is rejected where it is configured`() {
+    listOf(0.0, -1.0, Double.NaN, Double.POSITIVE_INFINITY).forEach { scale ->
+      val failure = runCatching { resolve(AndroidPreviewInfo(), renderScale = scale) }.exceptionOrNull()
+      assertEquals(
+        "renderScale must be finite and greater than 0, but was $scale",
+        failure?.message,
+      )
+    }
   }
 }
