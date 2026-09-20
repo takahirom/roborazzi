@@ -339,12 +339,20 @@ class DefaultDesktopComposePreviewTester(
     // (0x30) and UI_MODE_NIGHT_YES (0x20) constants are inlined here.
     val nightMode = (info.uiMode and UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
 
+    // `requiredSize` rounds dp to the nearest pixel, but Android floors: the window is an integer
+    // number of pixels and `Modifier.size` is coerced into it. At density 1 the two agree, so this
+    // only ever moves a preview whose dp size is fractional in pixels - 201dp at 2.75 is 552.75px,
+    // which Android makes 552 and rounding makes 553. Asking for the floored pixel count back in dp
+    // makes `requiredSize` land on it exactly.
+    val widthAsAndroid = DesktopPreviewRenderSpec.flooredPx(widthDp, density) / density
+    val heightAsAndroid = DesktopPreviewRenderSpec.flooredPx(heightDp, density) / density
+
     return {
       val sizeModifier = when {
         // widthDp/heightDp > 0 means specified; -1/unset keeps wrap-content behavior.
-        widthDp > 0 && heightDp > 0 -> Modifier.requiredSize(widthDp.dp, heightDp.dp)
-        widthDp > 0 -> Modifier.requiredWidth(widthDp.dp)
-        heightDp > 0 -> Modifier.requiredHeight(heightDp.dp)
+        widthDp > 0 && heightDp > 0 -> Modifier.requiredSize(widthAsAndroid.dp, heightAsAndroid.dp)
+        widthDp > 0 -> Modifier.requiredWidth(widthAsAndroid.dp)
+        heightDp > 0 -> Modifier.requiredHeight(heightAsAndroid.dp)
         else -> Modifier
       }
       val backgroundModifier = if (showBackground) {

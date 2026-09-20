@@ -125,6 +125,7 @@ public final class com/github/takahirom/roborazzi/DesktopPreviewRenderSpec {
 }
 
 public final class com/github/takahirom/roborazzi/DesktopPreviewRenderSpec$Companion {
+	public final fun flooredPx (IF)I
 	public final fun resolve (Lsergio/sastre/composable/preview/scanner/android/AndroidPreviewInfo;Lcom/github/takahirom/roborazzi/DesktopPreviewRenderProfile;)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec;
 }
 
