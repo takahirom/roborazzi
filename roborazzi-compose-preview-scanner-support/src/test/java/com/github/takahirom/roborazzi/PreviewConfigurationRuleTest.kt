@@ -1,11 +1,15 @@
 package com.github.takahirom.roborazzi
 
 import android.content.res.Configuration
+import androidx.compose.runtime.Composable
 import androidx.test.core.app.ActivityScenario
 import java.lang.reflect.Proxy
+import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -101,6 +105,62 @@ class PreviewConfigurationRuleTest {
     }
   }
 
+  @Test fun recordsTheExpectationForCustomTesters() {
+    configurePlugin(renderScale = 0.5)
+    val custom = object : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
+      override fun testParameters() = emptyList<AndroidPreviewJUnit4TestParameter>()
+      override fun test(testParameter: AndroidPreviewJUnit4TestParameter) = Unit
+    }
+    val parameter = parameter(methodName = "previewWithOverride")
+
+    // A custom tester resolves and applies the per-preview scale itself, so the verification has
+    // to expect that scale rather than the one configured in Gradle.
+    createRoborazziPreviewConfigurationRule(custom, parameter).apply(statement {
+      RenderScaleVerification.beforeTest()
+      parameter.preview.toRoborazziComposeOptions(renderScale = 0.25).applySetup()
+      RenderScaleVerification.afterTest(custom)
+    }, description).evaluate()
+  }
+
+  @Test fun expectsTheScaleConfiguredInGradleRatherThanTheOneTheTesterReports() {
+    configurePlugin(renderScale = 0.5)
+    val dropping = object : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
+      override fun options() = super.options().copy(renderScale = 1.0)
+      override fun testParameters() = emptyList<AndroidPreviewJUnit4TestParameter>()
+      override fun test(testParameter: AndroidPreviewJUnit4TestParameter) = Unit
+    }
+    val parameter = parameter()
+
+    // A tester that drops the scale in options() must not lower the bar it is held to.
+    try {
+      createRoborazziPreviewConfigurationRule(dropping, parameter).apply(statement {
+        RenderScaleVerification.beforeTest()
+        parameter.preview.toRoborazziComposeOptions(renderScale = 1.0).applySetup()
+        RenderScaleVerification.afterTest(dropping)
+      }, description).evaluate()
+      fail("Expected the dropped renderScale to be reported")
+    } catch (e: IllegalStateException) {
+      assertTrue(e.message, requireNotNull(e.message).contains("renderScale = 0.5"))
+    }
+  }
+
+  @RoboComposePreviewOptions(renderScale = 0.25)
+  @Composable fun previewWithOverride() = Unit
+
+  private fun configurePlugin(renderScale: Double) {
+    ComposePreviewTester.defaultOptionsFromPlugin =
+      ComposePreviewTester.Options(renderScale = renderScale)
+    provideRoborazziContext().setRuleOverrideRoborazziOptions(
+      RoborazziOptions(taskType = RoborazziTaskType.Record)
+    )
+  }
+
+  @After fun resetPluginOptions() {
+    ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options()
+    provideRoborazziContext().clearRuleOverrideRoborazziOptions()
+    RenderScaleVerification.clearExpectation()
+  }
+
   private fun assertPreviewConfiguration() {
     val config = RuntimeEnvironment.getApplication().resources.configuration
     assertEquals(100, config.screenWidthDp)
@@ -117,14 +177,17 @@ class PreviewConfigurationRuleTest {
   }
 
   @Suppress("UNCHECKED_CAST")
-  private fun parameter(previewInfo: AndroidPreviewInfo = info): AndroidPreviewJUnit4TestParameter {
+  private fun parameter(
+    previewInfo: AndroidPreviewInfo = info,
+    methodName: String = "previewWithoutOverride",
+  ): AndroidPreviewJUnit4TestParameter {
     val preview = Proxy.newProxyInstance(ComposablePreview::class.java.classLoader,
       arrayOf(ComposablePreview::class.java)) { _, method, _ ->
       when (method.name) {
         "getPreviewInfo" -> previewInfo
         // Read while resolving a per-preview renderScale override.
         "getDeclaringClass" -> PreviewConfigurationRuleTest::class.java.name
-        "getMethodName" -> "previewWithoutOverride"
+        "getMethodName" -> methodName
         "getMethodParametersType" -> ""
         else -> error("Unexpected preview access: $method")
       }

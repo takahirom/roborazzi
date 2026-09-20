@@ -28,7 +28,10 @@ interface RoborazziComposePreviewTestCategory
 
 /**
  * Applies the standard Android preview configuration before the generated test's rule chain
- * launches its activity. Custom tester implementations retain their own configuration lifecycle.
+ * launches its activity, and records the scale the capture is expected to run at.
+ *
+ * Custom tester implementations retain their own configuration lifecycle, so only the expectation
+ * is recorded for them: they resolve and apply the scale themselves.
  */
 @InternalRoborazziApi
 @OptIn(ExperimentalRoborazziApi::class)
@@ -36,8 +39,30 @@ fun createRoborazziPreviewConfigurationRule(
   tester: ComposePreviewTester<*>,
   testParameter: TestParameter<*>,
 ): TestRule {
-  if (tester !is AndroidComposePreviewTester || testParameter !is AndroidPreviewJUnit4TestParameter) {
+  if (testParameter !is AndroidPreviewJUnit4TestParameter) {
     return TestRule { base, _ -> base }
+  }
+  // The expectation comes from the plugin rather than from tester.options(): a tester that drops
+  // the configured scale in options() is exactly what the verification has to catch. It is
+  // resolved when the test runs so that an invalid annotation fails the test that declares it.
+  val expectedScale = {
+    testParameter.preview.effectiveRenderScale(
+      ComposePreviewTester.defaultOptionsFromPlugin.renderScale
+    )
+  }
+  if (tester !is AndroidComposePreviewTester) {
+    return TestRule { base, _ ->
+      object : org.junit.runners.model.Statement() {
+        override fun evaluate() {
+          RenderScaleVerification.expect(expectedScale())
+          try {
+            base.evaluate()
+          } finally {
+            RenderScaleVerification.clearExpectation()
+          }
+        }
+      }
+    }
   }
   return TestRule { base, _ ->
     object : org.junit.runners.model.Statement() {
@@ -50,12 +75,10 @@ fun createRoborazziPreviewConfigurationRule(
           testParameter.renderScaleBaseConfiguration = android.content.res.Configuration(
             android.content.res.Resources.getSystem().configuration
           )
-          val effectiveScale = testParameter.preview.effectiveRenderScale(
-            tester.options().renderScale
-          )
-          RenderScaleVerification.expect(effectiveScale)
+          RenderScaleVerification.expect(expectedScale())
           testParameter.preview.toRoborazziComposeOptions(
-            effectiveScale, testParameter.renderScaleBaseConfiguration
+            testParameter.preview.effectiveRenderScale(tester.options().renderScale),
+            testParameter.renderScaleBaseConfiguration
           ).applySetup()
           base.evaluate()
         } finally {
