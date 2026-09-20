@@ -87,8 +87,12 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 /**
  * The scale this preview is rendered at: its own [RoboComposePreviewOptions.renderScale] when it
  * declares one, otherwise [configuredScale] from the Gradle extension.
+ *
+ * A custom [ComposePreviewTester] that captures the preview itself has to resolve the scale with
+ * this function, otherwise a per-preview override is silently ignored:
+ * `preview.toRoborazziComposeOptions(preview.effectiveRenderScale(options().renderScale))`.
  */
-@InternalRoborazziApi
+@ExperimentalRoborazziApi
 fun ComposablePreview<*>.effectiveRenderScale(configuredScale: Double): Double {
   // getAnnotation() on the preview throws, see testParameters() for the same workaround.
   val annotated = declaringMethodOrNull()
