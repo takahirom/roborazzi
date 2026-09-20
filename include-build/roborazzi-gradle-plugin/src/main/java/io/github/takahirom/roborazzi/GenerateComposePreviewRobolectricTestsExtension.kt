@@ -31,6 +31,9 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * preview's logical dp dimensions are preserved while the surface pixel dimensions scale
    * accordingly. This is independent of capture-time `resizeScale`, which resizes the captured
    * bitmap. Density-qualified resources may resolve differently at the scaled density.
+   * Only values expressed in dp and sp follow the density: anything drawn in raw pixels, such as
+   * `drawLine(..., strokeWidth = 1f)` or a pixel offset, keeps its absolute pixel size and so
+   * appears relatively thicker and shifted in the smaller image.
    * Must be finite and positive. The resulting dpi is rounded to the nearest integer and
    * clamped to a minimum of 1 dpi.
    *
