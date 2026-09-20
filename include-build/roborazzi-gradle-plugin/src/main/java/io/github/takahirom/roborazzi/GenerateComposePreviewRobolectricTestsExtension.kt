@@ -69,8 +69,18 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
     .convention(DEFAULT_TESTER_CLASS)
 
   /**
-   * If true, the scan options (like includePrivatePreviews) will be passed to the custom tester via scanOptions.
-   * If false (default), these options cannot be set when using a custom tester, and you must configure them directly in your tester implementation.
+   * Acknowledges that a custom tester applies the scan options itself.
+   *
+   * The scan options are always passed to the tester as `options().scanOptions`, whatever this
+   * property is set to. What they cannot do is apply themselves: [includePrivatePreviews] and
+   * [annotationFilter] take effect inside `testParameters()`, which a custom tester usually
+   * overrides, so the scanner call that would honour them is your code, not the plugin's.
+   *
+   * To stop that from failing silently, the plugin rejects the combination of a custom tester
+   * and those options. Set this to true to state that you read `options().scanOptions` in your
+   * own `testParameters()`, and the build proceeds.
+   *
+   * This has no effect with the default tester.
    */
   val useScanOptionParametersInTester: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
