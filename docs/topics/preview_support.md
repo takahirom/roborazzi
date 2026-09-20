@@ -43,8 +43,10 @@ roborazzi {
     testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
     // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
     generatedTestClassCount = 4
+
     // Experimental: scale render resolution while preserving logical dp size.
     // renderScale = 1.0 / 3
+
     // Filter previews by annotation. See "Filtering previews by annotation" below.
     annotationFilter = AnnotationFilter.Filter.RoboPreviewInclude
   }
