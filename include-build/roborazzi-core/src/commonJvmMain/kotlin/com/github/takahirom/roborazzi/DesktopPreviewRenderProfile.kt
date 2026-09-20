@@ -29,6 +29,15 @@ class DesktopPreviewRenderProfile private constructor(
   val defaultDevice: String?,
 ) : Serializable {
 
+  init {
+    // `DevicePreviewInfoParser.parse("")` answers with its own default device rather than failing,
+    // so a blank string would quietly mean something other than "no default device". `null` is the
+    // only way to say that.
+    require(defaultDevice == null || defaultDevice.isNotBlank()) {
+      "Roborazzi: defaultDevice must be null or a device spec, not blank."
+    }
+  }
+
   fun copy(
     defaultDevice: String? = this.defaultDevice,
   ): DesktopPreviewRenderProfile = DesktopPreviewRenderProfile(defaultDevice)
@@ -88,9 +97,15 @@ class DesktopPreviewRenderProfile private constructor(
      * Sizes previews the way the Robolectric runtime does, so the two runtimes can be compared
      * preview by preview. Previews that name no device are sized as a Pixel 4a, which is also
      * Robolectric's default.
+     *
+     * Written out as a spec rather than as `"id:pixel_4a"` because `defaultDevice` stands in for
+     * the Robolectric base configuration, and these are the dp that `RobolectricDeviceQualifiers`
+     * puts in that configuration. The scanner's own Pixel 4a is a pixel-table entry (1080x2340 at
+     * 440dpi) whose dp work out one lower, 392 rather than 393; both produce a 1078x2337 surface,
+     * but only the dp the qualifier actually carries survive a `renderScale` other than 1.
      */
     val AndroidCompatible: DesktopPreviewRenderProfile =
-      DesktopPreviewRenderProfile(defaultDevice = "id:pixel_4a")
+      DesktopPreviewRenderProfile(defaultDevice = "spec:width=393dp,height=851dp,dpi=440")
 
     /**
      * Used when no profile is configured.

@@ -289,11 +289,14 @@ Under `AndroidCompatible`:
 
 - `@Preview(device = ...)` is parsed - `id:`, `name:` and `spec:` all work, with the same parser
   the Robolectric runtime uses - and it decides both the raster surface and the density.
-- A preview that names no device is sized as the profile's `defaultDevice`, `id:pixel_4a` by
-  default, which is also Robolectric's default. Point `defaultDevice` somewhere else with
-  `AndroidCompatible.copy(defaultDevice = "id:pixel_7")`. Keep it in step with the `qualifiers`
-  the Robolectric side is configured with, or the two runtimes size device-less previews
-  differently on purpose.
+- A preview that names no device is sized as the profile's `defaultDevice`. This stands in for the
+  Robolectric base configuration, so write your `qualifiers` in `@Preview` grammar: the default is
+  `spec:width=393dp,height=851dp,dpi=440`, which is `RobolectricDeviceQualifiers.Pixel4a`. Change
+  both together, or the two runtimes size device-less previews differently on purpose.
+- A `defaultDevice` given in dp makes the same dp -> px -> dp round trip the base configuration
+  makes, which is not a no-op: `width=411dp` at 420dpi is 1078px, reads back as 410dp, and renders
+  at 1076px. A device id such as `id:pixel_7` names a pixel-size entry instead and is converted
+  once. Prefer a `spec:` in dp for `defaultDevice`, since that is the form a qualifier takes.
 - `widthDp`/`heightDp` are dp at that density rather than raw pixels, so a 200dp box on a 440dpi
   device is 550px wide on both runtimes.
 
@@ -408,7 +411,7 @@ On Compose Desktop the `@Preview` annotation options are applied as follows:
 - `showBackground`/`backgroundColor`: draws a background behind the preview, defaulting to white when `showBackground = true` but no color is given.
 - `locale`: sets `java.util.Locale.getDefault()` for the capture and restores it afterwards. Accepts `"ja"`, `"ja-rJP"`, and `"ja-JP"` forms.
 - `uiMode`: only the night bit is honored (dark mode via `LocalSystemTheme`); other configuration bits are ignored.
-- `device`: honored under the `AndroidCompatible` render profile, which turns it into the surface size and the density. The default `Desktop` profile ignores it.
+- `device`: honored under the `AndroidCompatible` render profile, which turns it into the surface size and the density. The default `Desktop` profile ignores it. A spec the parser cannot read fails the test rather than being skipped, which is stricter than the Robolectric runtime - it ignores an unreadable spec and renders at the default size.
 
 ## Annotation-based Capture Control
 

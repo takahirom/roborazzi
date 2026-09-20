@@ -5,6 +5,7 @@ import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.device.DevicePreviewInfoParser
 import sergio.sastre.composable.preview.scanner.android.device.domain.Device
 import sergio.sastre.composable.preview.scanner.android.device.domain.Orientation
+import sergio.sastre.composable.preview.scanner.android.device.domain.Unit as DeviceUnit
 
 /**
  * The raster surface and density a single preview is rendered at on the Compose Desktop runtime.
@@ -43,13 +44,23 @@ data class DesktopPreviewRenderSpec(
           density = 1f,
         )
 
-      val deviceSpec = previewInfo.device.ifBlank { defaultDevice }
+      // A blank `device` is what the scanner reports for a preview that declares none, and it is
+      // the one case where the profile's default applies. Which of the two it is decides the
+      // rounding below, so it has to be remembered rather than recomputed.
+      val fromProfileDefault = previewInfo.device.isBlank()
+      val deviceSpec = if (fromProfileDefault) defaultDevice else previewInfo.device
       val device = requireNotNull(DevicePreviewInfoParser.parse(deviceSpec)) {
         "Roborazzi: could not parse the preview device \"$deviceSpec\". It has to be written in " +
           "the same grammar as @Preview(device = ...): \"id:...\", \"name:...\" or \"spec:...\"."
       }
       val density = device.densityDpi * DENSITY_DEFAULT_SCALE
-      val (deviceWidthDp, deviceHeightDp) = device.screenSizeDp()
+      val (rawWidthDp, rawHeightDp) = device.screenSizeDp()
+      // A default written in dp is a base configuration and makes the dp -> px -> dp round trip; a
+      // default written in pixels has already lost that fraction in `inDp()`, and rounding it a
+      // second time would take it one dp too low (the Pixel 4a's 850dp would become 849).
+      val roundTrip = fromProfileDefault && device.dimensions.unit == DeviceUnit.DP
+      val deviceWidthDp = if (roundTrip) viaQualifier(rawWidthDp, density) else rawWidthDp
+      val deviceHeightDp = if (roundTrip) viaQualifier(rawHeightDp, density) else rawHeightDp
 
       return DesktopPreviewRenderSpec(
         surfaceWidth = override(toPx(deviceWidthDp, density), toPx(previewInfo.widthDp, density)),
@@ -57,6 +68,24 @@ data class DesktopPreviewRenderSpec(
         density = density,
       )
     }
+
+    /**
+     * Rounds a dp the way Robolectric's `@Config(qualifiers = ...)` path does, for the one device
+     * that arrives through it.
+     *
+     * The two runtimes reach a device-less preview differently. A preview that names a device gets
+     * an additive `w<n>dp` qualifier built from the parsed device, and the pixel size is a plain
+     * `floor(dp * density)`. A preview that names none is sized by the base configuration instead,
+     * and that configuration was itself written in dp, turned into pixels, and read back as dp -
+     * so the dp makes a full round trip before becoming the pixel size. The profile's
+     * `defaultDevice` stands in for exactly that base configuration.
+     *
+     * The round trip is not a no-op: `w411dp` at 420dpi is 1078px, which reads back as 410dp,
+     * which is 1076px - the number goals.md measured from Robolectric for the Pixel 6 qualifiers.
+     * For `w393dp` at 440dpi it is 1080 -> 392 -> 1078, the Pixel 4a number.
+     */
+    private fun viaQualifier(dp: Int, density: Float): Int =
+      floor(floor(dp * density) / density).toInt()
 
     /**
      * The device's screen in dp, the way the Robolectric runtime sees it.

@@ -286,7 +286,7 @@ class DesktopPreviewRenderProfileTest {
       buildGradle.renderProfile = "$PROFILE.AndroidCompatible"
 
       record(additionalParameters = NO_BUILD_CACHE) {
-        assert(output.contains("renderProfile defaultDevice=[id:pixel_4a]")) {
+        assert(output.contains("renderProfile defaultDevice=[spec:width=393dp,height=851dp,dpi=440]")) {
           "Expected the configured profile to reach the test JVM"
         }
       }
