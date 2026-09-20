@@ -291,13 +291,15 @@ Under `AndroidCompatible`:
   the Robolectric runtime uses - and it decides both the raster surface and the density.
 - A preview that names no device is sized as the profile's `defaultDevice`, `id:pixel_4a` by
   default, which is also Robolectric's default. Point `defaultDevice` somewhere else with
-  `AndroidCompatible.copy(defaultDevice = "spec:width=411dp,height=891dp,dpi=420")`.
+  `AndroidCompatible.copy(defaultDevice = "id:pixel_7")`. Keep it in step with the `qualifiers`
+  the Robolectric side is configured with, or the two runtimes size device-less previews
+  differently on purpose.
 - `widthDp`/`heightDp` are dp at that density rather than raw pixels, so a 200dp box on a 440dpi
   device is 550px wide on both runtimes.
 
-The dimensions the two runtimes produce agree exactly, including for devices whose size is declared
-in pixels: the density round trip that Robolectric performs is reproduced rather than approximated.
-What does not agree is text measurement - Android bends font scale non-linearly from API 34, and
+The surface size and the density the two runtimes use agree exactly, including for devices whose
+size is declared in pixels: the density round trip that Robolectric performs is reproduced rather
+than approximated. What does not agree is text measurement - Android bends font scale non-linearly from API 34, and
 glyph advances differ by a few pixels - so a preview whose size is driven by laid-out text can still
 come out a little wider or taller.
 

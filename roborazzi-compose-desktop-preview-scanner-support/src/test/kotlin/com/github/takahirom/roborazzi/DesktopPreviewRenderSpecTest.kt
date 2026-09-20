@@ -125,6 +125,59 @@ class DesktopPreviewRenderSpecTest {
   }
 
   @Test
+  fun `a fractional widthDp floors the way Android's window does`() {
+    // Measured: the Robolectric runtime renders @Preview(widthDp = 201) on the Pixel 4a as 552px
+    // wide, not the 553 that rounding 201 x 2.75 = 552.75 would give.
+    assertEquals(552, DesktopPreviewRenderSpec.flooredPx(201, 2.75f))
+    assertEquals(0, DesktopPreviewRenderSpec.flooredPx(-1, 2.75f))
+  }
+
+  @Test
+  fun `density is the product Android computes, not the quotient`() {
+    // 213 / 160f and 213 * (1f / 160f) differ by one ULP, and Android multiplies. This pins the
+    // exact float so a later refactor cannot quietly switch back to dividing.
+    val spec = resolve(
+      AndroidPreviewInfo(device = "spec:width=1080px,height=1920px,dpi=213"),
+    )
+
+    assertEquals(213 * (1f / 160f), spec.density, 0f)
+  }
+
+  @Test
+  fun `a device named the long way resolves the same as its id`() {
+    val byName = resolve(AndroidPreviewInfo(device = "name:Pixel 4a"))
+    val byId = resolve(AndroidPreviewInfo(device = "id:pixel_4a"))
+
+    assertEquals(byId, byName)
+  }
+
+  @Test
+  fun `a device declared width-first in landscape stays landscape`() {
+    // The spec's own dimension order contradicts the keyword here, and the keyword has to win:
+    // measured, both runtimes render this 1920 wide.
+    val keywordWins = resolve(
+      AndroidPreviewInfo(
+        device = "spec:width=800dp,height=1280dp,dpi=240,orientation=landscape",
+      ),
+    )
+    val orderAlone = resolve(
+      AndroidPreviewInfo(device = "spec:width=1280dp,height=800dp,dpi=240"),
+    )
+
+    assertEquals(1920, keywordWins.surfaceWidth)
+    assertEquals(1200, keywordWins.surfaceHeight)
+    assertEquals(keywordWins, orderAlone)
+  }
+
+  @Test
+  fun `fontScale does not move the surface`() {
+    val plain = resolve(AndroidPreviewInfo())
+    val scaled = resolve(AndroidPreviewInfo(fontScale = 2f))
+
+    assertEquals(plain, scaled)
+  }
+
+  @Test
   fun `an unparseable device is rejected instead of silently falling back`() {
     val failure = runCatching {
       resolve(AndroidPreviewInfo(device = "pixel_4a"))

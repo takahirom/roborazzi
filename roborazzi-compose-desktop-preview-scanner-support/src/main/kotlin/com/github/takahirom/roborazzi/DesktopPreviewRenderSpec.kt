@@ -48,7 +48,7 @@ data class DesktopPreviewRenderSpec(
         "Roborazzi: could not parse the preview device \"$deviceSpec\". It has to be written in " +
           "the same grammar as @Preview(device = ...): \"id:...\", \"name:...\" or \"spec:...\"."
       }
-      val density = device.densityDpi / DENSITY_DPI_PER_DENSITY
+      val density = device.densityDpi * DENSITY_DEFAULT_SCALE
       val (deviceWidthDp, deviceHeightDp) = device.screenSizeDp()
 
       return DesktopPreviewRenderSpec(
@@ -81,16 +81,27 @@ data class DesktopPreviewRenderSpec(
     }
 
     /**
-     * Converts dp to px by flooring.
+     * Converts dp to px the way Android's window sizing does, by flooring.
      *
      * `Dimensions.inPx(dpi)` from ComposablePreviewScanner is not used on purpose: it rounds with
      * `ceil`, which would make every capture a pixel wider and taller than the Robolectric one.
+     *
+     * An unset dp (-1) converts to 0, which every caller reads as "not specified".
      */
-    private fun toPx(dp: Int, density: Float): Int =
+    @ExperimentalRoborazziApi
+    fun flooredPx(dp: Int, density: Float): Int =
       if (dp > 0) floor(dp * density).toInt() else 0
 
-    // A dp is 1px at 160dpi, by definition.
-    private const val DENSITY_DPI_PER_DENSITY = 160f
+    private fun toPx(dp: Int, density: Float): Int = flooredPx(dp, density)
+
+    /**
+     * The same constant Android's `DisplayMetrics.DENSITY_DEFAULT_SCALE` holds: `1f / 160f`.
+     *
+     * Android multiplies by it rather than dividing by 160, and the two disagree by one ULP at
+     * 213dpi and 411dpi, so multiplying is what keeps the density bit-identical to the one the
+     * Robolectric runtime hands Compose.
+     */
+    private const val DENSITY_DEFAULT_SCALE = 1f / 160f
 
     /** `widthDp`/`heightDp` of -1 (unset) leave the surface alone. */
     private fun enlarge(surface: Int, requested: Int): Int =

@@ -212,6 +212,19 @@ fun FixedSizeText() {
   Labeled("200 x 120")
 }
 
+/**
+ * A `widthDp` whose pixel size is fractional: 201dp at the Pixel 4a's 2.75 density is 552.75px.
+ *
+ * Android's window is an integer number of pixels and `Modifier.size` is coerced into it, while
+ * Compose Desktop's `requiredSize` rounds the dp itself. This preview is here to measure which
+ * way each runtime goes rather than to assume.
+ */
+@Preview(widthDp = 201, heightDp = 120)
+@Composable
+fun OddFixedSizeText() {
+  Labeled("201 x 120")
+}
+
 @Preview(widthDp = 200, heightDp = 120)
 @Composable
 fun FixedSizeButton() {
