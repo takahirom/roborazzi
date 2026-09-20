@@ -285,6 +285,10 @@ The presets are:
 
 To vary a single axis, start from a preset and use `copy()`.
 
+`Desktop` is the default, so an existing project keeps the screenshots it already has. It ignores
+`@Preview(device = ...)`, and it says so once per test run when a preview asks for a device, so
+that a preview naming a Pixel and coming out 1024x768 does not look like a bug.
+
 Under `AndroidCompatible`:
 
 - `@Preview(device = ...)` is parsed - `id:`, `name:` and `spec:` all work, with the same parser
