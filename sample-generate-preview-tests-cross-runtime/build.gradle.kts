@@ -165,8 +165,18 @@ afterEvaluate {
  * two rasterizers believe a laid-out string is.
  *
  * - The two `fontScale = 2f` previews differ because Android applies non-linear font scaling from
- *   API 34 while Compose Desktop scales linearly. Adding that converter removes both entries.
- * - The three others are a few pixels of glyph advance in a wrapped `Button`/`Text`.
+ *   API 34 while Compose Desktop scales linearly, so a 14sp line is 26dp on one side and 28dp on
+ *   the other. Compose Multiplatform cannot be given that curve from the outside: a `Density` that
+ *   converts sp through Android's table does reach the composition, but text is measured through
+ *   the layout node, and `NodeCoordinator` carries only the `density` and `fontScale` numbers on to
+ *   it. These two entries stay until Compose Desktop scales text non-linearly itself.
+ * - The four others are the font family. Robolectric's NATIVE graphics draws with the Roboto that
+ *   `org.robolectric:nativeruntime-dist-compat` ships; Skiko draws with the host's default sans
+ *   font, whose glyph advances are a little wider. Rendering the desktop side with the same Roboto
+ *   closes each of them to within a pixel - 325 -> 320 against Robolectric's 319 for
+ *   `DefaultButton`, 184 -> 179 against 180 for `TabletSpecButton` - so what is left after that is
+ *   rounding, not a layout difference. Shipping a font with Roborazzi is a separate decision from
+ *   sizing, which is why these are still listed.
  *
  * [compareCrossRuntimeOutputs] fails both when a preview outside this list differs and when one
  * inside it stops differing, so the list cannot rot.
