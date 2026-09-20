@@ -482,7 +482,7 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 On Compose Desktop the `@Preview` annotation options are applied as follows:
 
 - `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box. Under the default `Desktop` profile density is `1`, so 1dp equals 1px; under `AndroidCompatible` they are dp at the device density. When neither is specified the preview still renders wrap-content.
-- `fontScale`: applied through `LocalDensity`, together with the density the render profile resolved, because `DeviceConfigurationOverride.FontScale` is unsupported on desktop.
+- `fontScale`: applied through `LocalDensity`, together with the density the render profile resolved, because `DeviceConfigurationOverride.FontScale` is unsupported on desktop. It is applied linearly, which is where the two runtimes part: from API 34 Android bends the curve so that small text grows more than large text, and a `fontScale = 2f` preview is therefore laid out differently on desktop. Compose Multiplatform has no equivalent, and it cannot be supplied from the outside - a `Density` given to `LocalDensity` reaches the composition, but text is measured through the layout node, which carries only the `density` and `fontScale` numbers and converts sp linearly.
 - `showBackground`/`backgroundColor`: draws a background behind the preview, defaulting to white when `showBackground = true` but no color is given.
 - `locale`: sets `java.util.Locale.getDefault()` for the capture and restores it afterwards. Accepts `"ja"`, `"ja-rJP"`, and `"ja-JP"` forms.
 - `uiMode`: only the night bit is honored (dark mode via `LocalSystemTheme`); other configuration bits are ignored.
