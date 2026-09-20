@@ -47,12 +47,54 @@ class DesktopPreviewRenderSpecTest {
 
   @Test
   fun `a preview with no device falls back to the profile's default device`() {
-    // id:pixel_4a is 1080x2340 px at 440dpi, which is 392x850 dp, which is 1078x2337 px.
+    // Measured: the Robolectric runtime renders a device-less preview at 1078x2337 under its
+    // default Pixel 4a qualifiers.
     val spec = resolve(AndroidPreviewInfo())
 
     assertEquals(1078, spec.surfaceWidth)
     assertEquals(2337, spec.surfaceHeight)
     assertEquals(2.75f, spec.density)
+  }
+
+  @Test
+  fun `the profile default goes through the qualifier round trip and a preview device does not`() {
+    // goals.md measured Robolectric at 1076 for the Pixel 6 qualifiers (w411dp at 420dpi): the
+    // base configuration's dp becomes pixels and is read back as dp before becoming the size,
+    // 411 -> 1078px -> 410dp -> 1076px. A preview that names the same device instead gets an
+    // additive qualifier built from the parsed device, which is a plain floor: 411 -> 1078.
+    val asProfileDefault = DesktopPreviewRenderSpec.resolve(
+      AndroidPreviewInfo(),
+      DesktopPreviewDeviceProfile.AndroidCompatible
+        .copy(defaultDevice = "spec:width=411dp,height=891dp,dpi=420"),
+    )
+    val asPreviewDevice = resolve(
+      AndroidPreviewInfo(device = "spec:width=411dp,height=891dp,dpi=420"),
+    )
+
+    assertEquals(1076, asProfileDefault.surfaceWidth)
+    assertEquals(1078, asPreviewDevice.surfaceWidth)
+  }
+
+  @Test
+  fun `a default device declared in pixels skips the round trip it has already made`() {
+    // The scanner's Pixel 4a is a pixel-table entry, so `inDp()` has already taken 2340px down to
+    // 850dp. Rounding a second time would reach 849dp and a 2334px surface, three pixels short of
+    // what the Robolectric runtime was measured to produce.
+    val viaPixelTable = DesktopPreviewRenderSpec.resolve(
+      AndroidPreviewInfo(),
+      DesktopPreviewDeviceProfile.AndroidCompatible.copy(defaultDevice = "id:pixel_4a"),
+    )
+
+    assertEquals(DesktopPreviewRenderSpec(1078, 2337, 2.75f), viaPixelTable)
+  }
+
+  @Test
+  fun `a blank default device is rejected because the parser would take it as a device`() {
+    val failure = runCatching {
+      DesktopPreviewDeviceProfile.AndroidCompatible.copy(defaultDevice = "")
+    }.exceptionOrNull()
+
+    assertEquals(IllegalArgumentException::class.java, failure?.javaClass)
   }
 
   @Test
