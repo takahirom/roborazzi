@@ -74,8 +74,9 @@ object RenderScaleVerification {
         "Carry the configured value through to the capture:\n" +
         "  - If you override options(), build it with super.options().copy(...) rather than " +
         "constructing a new ComposePreviewTester.Options, which resets renderScale to 1.0.\n" +
-        "  - If you override test(), pass options().renderScale to " +
-        "preview.toRoborazziComposeOptions(renderScale).\n" +
+        "  - If you override test(), pass preview.effectiveRenderScale(options().renderScale) " +
+        "to preview.toRoborazziComposeOptions(renderScale). options().renderScale alone ignores " +
+        "a per-preview @RoboComposePreviewOptions(renderScale = ...).\n" +
         "\n" +
         "Alternatively, remove renderScale from the Gradle configuration.\n" +
         "options().renderScale returned ${tester.options().renderScale}."

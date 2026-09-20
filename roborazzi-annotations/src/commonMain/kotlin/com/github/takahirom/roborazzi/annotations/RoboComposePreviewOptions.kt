@@ -13,6 +13,8 @@ annotation class RoboComposePreviewOptions(
   /**
    * Rendering scale for this preview only, overriding the Gradle-level `renderScale`.
    * Defaults to [INHERIT_RENDER_SCALE], which keeps the configured value.
+   *
+   * Android previews only: `renderScale` is not supported for Compose Desktop previews.
    */
   val renderScale: Double = INHERIT_RENDER_SCALE,
 ) {
