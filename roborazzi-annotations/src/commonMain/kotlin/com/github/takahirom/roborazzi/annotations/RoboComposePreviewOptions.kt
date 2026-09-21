@@ -15,8 +15,11 @@ annotation class RoboComposePreviewOptions(
    * Defaults to [INHERIT_RENDER_SCALE], which keeps the configured value.
    *
    * A value below 1.0 renders this preview at a lower density, which saves rendering time and
-   * file size at the cost of fidelity. See the `renderScale` property of the Gradle extension
-   * `generateComposePreviewRobolectricTests` for what the scale changes and what it does not.
+   * file size at the cost of fidelity. The saving is proportional to the area this preview
+   * renders, so scaling down a large preview is worth far more than scaling down a default-sized
+   * one, which is what makes this per-preview override useful. See the `renderScale` property of
+   * the Gradle extension `generateComposePreviewRobolectricTests` for what the scale changes and
+   * what it does not.
    *
    * Android previews only: `renderScale` is not supported for Compose Desktop previews.
    */
