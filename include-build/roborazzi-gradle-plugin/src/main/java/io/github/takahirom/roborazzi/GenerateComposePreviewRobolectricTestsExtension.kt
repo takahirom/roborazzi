@@ -49,8 +49,11 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * `renderScale` renders fewer pixels in the first place and so saves the rendering itself.
    *
    * Must be finite and positive. The resulting dpi is rounded to the nearest integer and
-   * clamped to a minimum of 1 dpi. Both scales change the recorded image dimensions at the same
-   * output paths, so existing golden images have to be recorded again after you set either.
+   * clamped to a minimum of 1 dpi.
+   *
+   * Generated tests using the default Android tester apply the scaled configuration before the
+   * Activity is launched. For previews without a device, setup and capture use the original
+   * Robolectric configuration as the scale baseline.
    *
    * A single preview can opt out of this value with
    * `@RoboComposePreviewOptions(renderScale = ...)`, which is the usual way to scale down only

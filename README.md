@@ -1221,7 +1221,7 @@ roborazzi {
     // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
     generatedTestClassCount = 4
 
-    // Experimental: scale render resolution while preserving logical dp size.
+    // Experimental: render at a lower density to make the tests faster and the images smaller.
     // renderScale = 1.0 / 3
 
     // Filter previews by annotation. See "Filtering previews by annotation" below.
@@ -1230,10 +1230,14 @@ roborazzi {
 }
 ```
 
-`renderScale` scales rendering density before capture while preserving logical dp dimensions.
-This may change density-qualified resource selection.
-Generated tests using the default Android tester apply the scaled configuration before Activity launch.
-For previews without a device, setup and capture use the original Robolectric configuration as the scale baseline.
+If the generated tests are slow or the recorded images are large, `renderScale` is the knob for it.
+A value below 1.0 renders every preview at a lower device density, so fewer pixels are rendered:
+the tests spend less time rendering and the images take less space. What you pay for it is
+fidelity, so it pays off on previews that stay readable at the smaller size.
+
+What the scale does and does not change — density-qualified resources, raw-pixel drawing, the dpi
+rounding, when it is applied — is documented on the `renderScale` property itself, which your IDE
+shows as you type it.
 
 `renderScale` is not the same as `resizeScale`:
 
@@ -1293,7 +1297,7 @@ If you need to customize more than the capture behavior, such as the scan option
 Two settings need extra care with a custom tester:
 
 - `includePrivatePreviews` and `annotationFilter` are consumed by `testParameters()`. Because a custom tester usually overrides it, the plugin rejects the combination unless you set `useScanOptionParametersInTester = true` and read `options().scanOptions` yourself.
-- `renderScale` is consumed at capture time, so the class-delegation pattern above keeps working. If you override `test()` yourself, resolve the scale with `preview.effectiveRenderScale(options().renderScale)` and pass the result to `preview.toRoborazziComposeOptions(renderScale)`. Passing `options().renderScale` directly ignores a per-preview `@RoboComposePreviewOptions(renderScale = ...)`. A tester that drops the configured scale fails the generated test with an explanation, so a silently unscaled screenshot is not possible.
+- `renderScale` is consumed at capture time, so the class-delegation pattern above keeps working. If you override `test()` yourself, see the `renderScale` property documentation for what to pass to `preview.toRoborazziComposeOptions(renderScale)`. A tester that drops the value fails the generated test with an explanation, so a silently unscaled screenshot is not possible.
 
 Then reference your custom tester in the Gradle configuration:
 
