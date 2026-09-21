@@ -154,6 +154,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     it.testerQualifiedClassName.set(testerQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)
     it.generatedTestClassCount.set(extension.generatedTestClassCount)
+    it.renderScale.set(extension.renderScale)
     it.annotationFilter.set(extension.annotationFilter.orElse(AnnotationFilter.Filter.RoboPreviewExclude))
   }
   // AGP 9.0: unitTest is now on HasUnitTest interface, not Variant

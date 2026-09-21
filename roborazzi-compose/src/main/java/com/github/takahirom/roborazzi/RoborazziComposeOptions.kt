@@ -131,13 +131,12 @@ class RoborazziComposeOptions private constructor(
   }
 
   @ExperimentalRoborazziApi
+  @OptIn(InternalRoborazziApi::class)
   fun configured(
     activityScenario: ActivityScenario<out Activity>,
     content: @Composable () -> Unit
   ): @Composable () -> Unit {
-    val configBuilder = RoborazziComposeSetupOption.ConfigBuilder()
-    setupOptions.forEach { it.configure(configBuilder) }
-    configBuilder.applyToRobolectric()
+    applySetup()
 
     activityScenarioOptions.forEach { it.configureWithActivityScenario(activityScenario) }
     var appliedContent = content
@@ -147,6 +146,14 @@ class RoborazziComposeOptions private constructor(
     return {
       appliedContent()
     }
+  }
+
+  /** Applies environment settings without requiring an ActivityScenario. */
+  @InternalRoborazziApi
+  fun applySetup() {
+    val configBuilder = RoborazziComposeSetupOption.ConfigBuilder()
+    setupOptions.forEach { it.configure(configBuilder) }
+    configBuilder.applyToRobolectric()
   }
 
   fun beforeCapture() {

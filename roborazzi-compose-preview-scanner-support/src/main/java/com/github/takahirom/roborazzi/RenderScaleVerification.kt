@@ -1,0 +1,95 @@
+package com.github.takahirom.roborazzi
+
+/**
+ * Detects a [ComposePreviewTester] that drops the `renderScale` configured in the Gradle
+ * extension before the preview is captured.
+ *
+ * The plugin can pass the configured value to the tester, but only the capture can apply it.
+ * A custom tester that replaces `options()` or `test()` can therefore record screenshots at the
+ * unscaled density without anything failing. [PreviewRenderScaleOption] records the scale it
+ * applied, and the generated test compares the records with the configured value once the
+ * capture has run.
+ */
+@InternalRoborazziApi
+object RenderScaleVerification {
+  private val appliedScales = mutableListOf<Double>()
+  private var expectedScale: Double? = null
+
+  /**
+   * Records the scale this preview declares for itself, or null when it inherits the scale
+   * configured in the Gradle extension.
+   *
+   * The configuration rule runs outside the test method, so this is set before [beforeTest] and
+   * must survive it. The rule drops it again with [clearExpectation] once the test has finished.
+   */
+  @InternalRoborazziApi
+  fun expect(scale: Double?) {
+    expectedScale = scale
+  }
+
+  /** Forgets the per-preview expectation so that it cannot leak into the next test. */
+  @InternalRoborazziApi
+  fun clearExpectation() {
+    expectedScale = null
+  }
+
+  internal fun markApplied(scale: Double) {
+    appliedScales += scale
+  }
+
+  /** Clears the recorded scales before a preview is captured. Called by the generated test. */
+  @InternalRoborazziApi
+  fun beforeTest() {
+    appliedScales.clear()
+  }
+
+  /**
+   * Fails when the configured scale did not reach every capture the test ran.
+   *
+   * A test may capture more than once, so each capture has to use the configured value: one
+   * correct capture must not hide another that used a different scale or none at all.
+   *
+   * Does nothing when neither the Gradle extension nor the preview asked for a scale, or when
+   * Roborazzi is not recording or verifying, because no capture runs in that case.
+   */
+  @OptIn(ExperimentalRoborazziApi::class)
+  @InternalRoborazziApi
+  fun afterTest(tester: ComposePreviewTester<*>) {
+    val previewOverride = expectedScale
+    val configuredScale =
+      previewOverride ?: ComposePreviewTester.defaultOptionsFromPlugin.renderScale
+    // The expectation belongs to the preview that has just been captured, so drop it here as
+    // well as in the rule: a tester that never runs the rule must not inherit it.
+    clearExpectation()
+    // Nobody asked for a scale, so a tester is free to scale the capture as it sees fit.
+    if (previewOverride == null && configuredScale == 1.0) return
+    val applied = appliedScales.toList()
+    // The unscaled density is what 1.0 renders at, so a preview that asks for it is satisfied by
+    // a capture that scales nothing. Capturing anything else still ignores the request.
+    if (applied.isEmpty() && configuredScale == 1.0) return
+    if (applied.isNotEmpty() && applied.all { it == configuredScale }) return
+    if (!provideRoborazziContext().options.taskType.isEnabled()) return
+    val appliedDescription = when {
+      applied.isEmpty() -> "did not apply it, so this screenshot was captured at the unscaled density"
+      else -> "applied ${applied.joinToString()} instead"
+    }
+    val source = when (previewOverride) {
+      null -> "is configured in generateComposePreviewRobolectricTests"
+      else -> "is declared by @RoboComposePreviewOptions on this preview"
+    }
+    throw IllegalStateException(
+      "renderScale = $configuredScale $source, " +
+        "but ${tester::class.java.name} $appliedDescription.\n" +
+        "\n" +
+        "Carry the configured value through to the capture:\n" +
+        "  - If you override options(), build it with super.options().copy(...) rather than " +
+        "constructing a new ComposePreviewTester.Options, which resets renderScale to 1.0.\n" +
+        "  - If you override test(), pass preview.effectiveRenderScale(options().renderScale) " +
+        "to preview.toRoborazziComposeOptions(renderScale). options().renderScale alone ignores " +
+        "a per-preview @RoboComposePreviewOptions(renderScale = ...).\n" +
+        "\n" +
+        "Alternatively, remove renderScale from the Gradle configuration.\n" +
+        "options().renderScale returned ${tester.options().renderScale}."
+    )
+  }
+}

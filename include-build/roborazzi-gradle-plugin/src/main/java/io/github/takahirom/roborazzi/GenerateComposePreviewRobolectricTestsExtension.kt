@@ -25,6 +25,52 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
     .convention(false)
 
   /**
+   * Experimental rendering scale for generated Compose Preview Robolectric tests.
+   *
+   * A value below 1.0 renders the preview at a lower device density, which is what makes it
+   * worth setting: fewer pixels are rendered, so the tests spend less time rendering and the
+   * recorded images take less space. What you pay for it is fidelity, so it pays off on the
+   * previews that are large enough for the smaller image to still be readable.
+   *
+   * The scale is applied to the device density before Compose content is rendered, so the
+   * preview's logical dp dimensions are preserved while the surface pixel dimensions scale
+   * accordingly. Density-qualified resources may resolve differently at the scaled density.
+   * Only values expressed in dp and sp follow the density: anything drawn in raw pixels, such as
+   * `drawLine(..., strokeWidth = 1f)` or a pixel offset, keeps its absolute pixel size and so
+   * appears relatively thicker and shifted in the smaller image.
+   *
+   * A value above 1.0 is allowed and renders at a higher density, which is genuine detail rather
+   * than an upscale, but it costs rendering time and file size in proportion. Prefer the
+   * preview's own `device = "spec:...,dpi=..."` unless you want every preview to change at once.
+   *
+   * This is independent of capture-time `resizeScale`, which downsamples the bitmap after the
+   * preview has been rendered at full resolution. `resizeScale` shrinks everything in the image
+   * uniformly, pixel-based drawing included, and saves file size but not rendering time;
+   * `renderScale` renders fewer pixels in the first place and so saves the rendering itself.
+   *
+   * Must be finite and positive. The resulting dpi is rounded to the nearest integer and
+   * clamped to a minimum of 1 dpi.
+   *
+   * Generated tests using the default Android tester apply the scaled configuration before the
+   * Activity is launched. For previews without a device, setup and capture use the original
+   * Robolectric configuration as the scale baseline.
+   *
+   * A single preview can opt out of this value with
+   * `@RoboComposePreviewOptions(renderScale = ...)`, which is the usual way to scale down only
+   * the few previews that are large enough to be worth it.
+   *
+   * Android previews only: this is not supported for Compose Desktop previews.
+   *
+   * A custom [com.github.takahirom.roborazzi.ComposePreviewTester] that overrides `test()` has to
+   * pass `preview.effectiveRenderScale(options().renderScale)` to
+   * `preview.toRoborazziComposeOptions(renderScale)`; `options().renderScale` on its own ignores a
+   * per-preview override. A tester that drops the value fails the generated test, so no opt-in
+   * flag is needed here.
+   */
+  @ExperimentalRoborazziApi
+  val renderScale: Property<Double> = objects.property(Double::class.java).convention(1.0)
+
+  /**
    * The package names to scan for the Composable Previews.
    */
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
@@ -56,8 +102,18 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
     .convention(DEFAULT_TESTER_CLASS)
 
   /**
-   * If true, the scan options (like includePrivatePreviews) will be passed to the custom tester via scanOptions.
-   * If false (default), these options cannot be set when using a custom tester, and you must configure them directly in your tester implementation.
+   * Acknowledges that a custom tester applies the scan options itself.
+   *
+   * The scan options are always passed to the tester as `options().scanOptions`, whatever this
+   * property is set to. What they cannot do is apply themselves: [includePrivatePreviews] and
+   * [annotationFilter] take effect inside `testParameters()`, which a custom tester usually
+   * overrides, so the scanner call that would honour them is your code, not the plugin's.
+   *
+   * To stop that from failing silently, the plugin rejects the combination of a custom tester
+   * and those options. Set this to true to state that you read `options().scanOptions` in your
+   * own `testParameters()`, and the build proceeds.
+   *
+   * This has no effect with the default tester.
    */
   val useScanOptionParametersInTester: Property<Boolean> = objects.property(Boolean::class.java)
     .convention(false)
@@ -102,6 +158,9 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   abstract val generatedTestClassCount: Property<Int>
 
   @get:Input
+  abstract val renderScale: Property<Double>
+
+  @get:Input
   @get:Optional
   @ExperimentalRoborazziApi
   abstract val annotationFilter: Property<AnnotationFilter>
@@ -109,6 +168,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   @TaskAction
   @OptIn(ExperimentalRoborazziApi::class)
   fun generateTests() {
+    val scale = validateRenderScale(renderScale.getOrElse(1.0))
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
@@ -149,6 +209,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
         annotationFilterExpr = annotationFilterExpr,
         robolectricConfigString = robolectricConfigString,
         testerQualifiedClassNameString = testerQualifiedClassNameString,
+        renderScale = scale,
         shardIndex = null,
         totalShards = 1
       )
@@ -163,6 +224,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
           annotationFilterExpr = annotationFilterExpr,
           robolectricConfigString = robolectricConfigString,
           testerQualifiedClassNameString = testerQualifiedClassNameString,
+          renderScale = scale,
           shardIndex = shardIndex,
           totalShards = testClassCount
         )
@@ -179,9 +241,12 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     annotationFilterExpr: String,
     robolectricConfigString: String,
     testerQualifiedClassNameString: String,
+    renderScale: Double,
     shardIndex: Int?,
     totalShards: Int
   ) {
+    val renderScaleArgument =
+      if (renderScale == 1.0) "" else "\n                            renderScale = $renderScale,"
     val valuesFunction = if (shardIndex == null) {
       "testParameters"
     } else {
@@ -220,18 +285,21 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 }
                 @Suppress("UNCHECKED_CAST")
                 @get:Rule
-                val rule = RuleChain.outerRule(
-                  testLifecycleOptions.testRuleFactory(composeTestRule)
-                )
+                val rule = junit4TestParameter.releaseComposeTestRuleAfter {
+                  RuleChain.outerRule(createRoborazziPreviewConfigurationRule(tester, testParameter))
+                    .around(testLifecycleOptions.testRuleFactory(composeTestRule))
+                }
                 
                 @Category(RoborazziComposePreviewTestCategory::class)
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)
                 $robolectricConfigString
                 @Test
                 fun test() {
+                  RenderScaleVerification.beforeTest()
                   tester.test(
                     testParameter = testParameter
                   )
+                  RenderScaleVerification.afterTest(tester)
                 }
                 
                 companion object {
@@ -251,7 +319,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                               packages = listOf($packagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
                               annotationFilter = $annotationFilterExpr,
-                            )
+                            ),$renderScaleArgument
                         )
                     }
                 }
@@ -259,4 +327,11 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
         """.trimIndent()
     )
   }
+}
+
+internal fun validateRenderScale(value: Double): Double {
+  require(value.isFinite() && value > 0.0) {
+    "renderScale must be finite and greater than 0, but was $value"
+  }
+  return value
 }

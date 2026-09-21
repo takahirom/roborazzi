@@ -28,6 +28,8 @@ dependencies {
   compileOnly libs.androidx.compose.ui.test.junit4
   compileOnly libs.kotlinx.coroutines.test
 
+  testImplementation libs.composable.preview.scanner
+  testImplementation libs.androidx.compose.foundation
   testImplementation libs.junit
   testImplementation libs.robolectric
   testImplementation libs.androidx.compose.ui.test.junit4

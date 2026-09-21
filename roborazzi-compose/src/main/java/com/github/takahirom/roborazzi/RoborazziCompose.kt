@@ -61,25 +61,31 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  launchRoborazziActivity(roborazziComposeOptions) { activityScenario ->
-    // Save current qualifiers before any modifications
-    val savedQualifiers = RuntimeEnvironment.getQualifiers()
-    
-    val configuredContent = roborazziComposeOptions
-      .configured(activityScenario) {
-        content()
+  var savedQualifiers: String? = null
+  var savedFontScale = 1f
+  try {
+    launchRoborazziActivity(roborazziComposeOptions) { activityScenario ->
+      savedQualifiers = RuntimeEnvironment.getQualifiers()
+      savedFontScale = RuntimeEnvironment.getFontScale()
+      val configuredContent = roborazziComposeOptions.configured(activityScenario) { content() }
+      try {
+        activityScenario.captureRoboImage(
+          file = file,
+          roborazziOptions = roborazziOptions,
+          doBeforeCapture = { roborazziComposeOptions.beforeCapture() },
+          content = { configuredContent() }
+        )
+      } finally {
+        roborazziComposeOptions.afterCapture()
       }
-    try {
-      activityScenario.captureRoboImage(
-        file = file,
-        roborazziOptions = roborazziOptions,
-        doBeforeCapture = { roborazziComposeOptions.beforeCapture() },
-        content = { configuredContent() }
-      )
-    } finally {
-      roborazziComposeOptions.afterCapture()
-      // Restore original qualifiers
-      RuntimeEnvironment.setQualifiers(savedQualifiers)
+    }
+  } finally {
+    // Restore only after the scenario has closed, so cleanup does not recreate its activity.
+    savedQualifiers?.let { originalQualifiers ->
+      RuntimeEnvironment.setQualifiers(originalQualifiers)
+      if (RuntimeEnvironment.getFontScale() != savedFontScale) {
+        RuntimeEnvironment.setFontScale(savedFontScale)
+      }
     }
   }
 }
