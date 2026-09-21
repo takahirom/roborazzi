@@ -1222,6 +1222,7 @@ roborazzi {
     generatedTestClassCount = 4
 
     // Experimental: render at a lower density to make the tests faster and the images smaller.
+    // See "Making the tests faster with renderScale" below.
     // renderScale = 1.0 / 3
 
     // Filter previews by annotation. See "Filtering previews by annotation" below.
@@ -1229,38 +1230,6 @@ roborazzi {
   }
 }
 ```
-
-If the generated tests are slow or the recorded images are large, `renderScale` is the knob for it.
-A value below 1.0 renders every preview at a lower device density, so fewer pixels are rendered:
-the tests spend less time rendering and the images take less space. What you pay for it is
-fidelity, so it pays off on previews that stay readable at the smaller size.
-
-What the scale does and does not change — density-qualified resources, raw-pixel drawing, the dpi
-rounding, when it is applied — is documented on the `renderScale` property itself, which your IDE
-shows as you type it.
-
-`renderScale` is not the same as `resizeScale`:
-
-| Property | When it applies | What it changes |
-| --- | --- | --- |
-| `renderScale` | Before Compose renders | Device density. Logical dp dimensions are preserved, so a smaller surface is rendered. Density-qualified resources (`drawable-hdpi` and so on) may resolve differently. |
-| `resizeScale` (`RoborazziOptions.RecordOptions`, `roborazzi.record.resizeScale`) | After the screenshot is captured | Downsamples the captured bitmap. Rendering cost is unchanged. |
-
-Both change the recorded image dimensions at the same output paths, so existing golden images have to be recorded again after you set either of them.
-
-In the Groovy DSL, write the value as a `double` literal: `renderScale = 0.5d`. A bare `0.5` is a `BigDecimal` and fails to convert.
-
-To scale a single preview differently, annotate it with `@RoboComposePreviewOptions(renderScale = ...)`. This is useful when only a few previews are large enough to be worth the loss of fidelity:
-
-```kotlin
-@RoboComposePreviewOptions(renderScale = 0.5)
-@Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
-@Composable
-fun TabletPreview() {
-}
-```
-
-Previews without the annotation keep the scale configured in the Gradle extension.
 
 #### Advanced: Custom ComposePreviewTester Implementation
 
@@ -1297,7 +1266,7 @@ If you need to customize more than the capture behavior, such as the scan option
 Two settings need extra care with a custom tester:
 
 - `includePrivatePreviews` and `annotationFilter` are consumed by `testParameters()`. Because a custom tester usually overrides it, the plugin rejects the combination unless you set `useScanOptionParametersInTester = true` and read `options().scanOptions` yourself.
-- `renderScale` is consumed at capture time, so the class-delegation pattern above keeps working. If you override `test()` yourself, see the `renderScale` property documentation for what to pass to `preview.toRoborazziComposeOptions(renderScale)`. A tester that drops the value fails the generated test with an explanation, so a silently unscaled screenshot is not possible.
+- `renderScale` (see [Making the tests faster with `renderScale`](#making-the-tests-faster-with-renderscale)) is consumed at capture time, so the class-delegation pattern above keeps working. If you override `test()` yourself, see the `renderScale` property documentation for what to pass to `preview.toRoborazziComposeOptions(renderScale)`. A tester that drops the value fails the generated test with an explanation, so a silently unscaled screenshot is not possible.
 
 Then reference your custom tester in the Gradle configuration:
 
@@ -1317,6 +1286,40 @@ roborazzi {
 > generateComposePreviewRobolectricTests.enable.set(true)
 > generateComposePreviewRobolectricTests.packages.set(["com.example"])
 > ```
+
+### Making the tests faster with `renderScale`
+
+If the generated tests are slow or the recorded images are large, `renderScale` is the knob for it.
+A value below 1.0 renders every preview at a lower device density, so fewer pixels are rendered:
+the tests spend less time rendering and the images take less space. What you pay for it is
+fidelity, so it pays off on previews that stay readable at the smaller size.
+
+What the scale does and does not change — density-qualified resources, raw-pixel drawing, the dpi
+rounding, when it is applied — is documented on the `renderScale` property itself, which your IDE
+shows as you type it.
+
+`renderScale` is not the same as `resizeScale`:
+
+| Property | When it applies | What it changes |
+| --- | --- | --- |
+| `renderScale` | Before Compose renders | Device density. Logical dp dimensions are preserved, so a smaller surface is rendered. Density-qualified resources (`drawable-hdpi` and so on) may resolve differently. |
+| `resizeScale` (`RoborazziOptions.RecordOptions`, `roborazzi.record.resizeScale`) | After the screenshot is captured | Downsamples the captured bitmap. Rendering cost is unchanged. |
+
+Both change the recorded image dimensions at the same output paths, so existing golden images have to be recorded again after you set either of them.
+
+In the Groovy DSL, write the value as a `double` literal: `renderScale = 0.5d`. A bare `0.5` is a `BigDecimal` and fails to convert.
+
+To scale a single preview differently, annotate it with `@RoboComposePreviewOptions(renderScale = ...)`. This is useful when only a few previews are large enough to be worth the loss of fidelity:
+
+```kotlin
+@RoboComposePreviewOptions(renderScale = 0.5)
+@Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
+@Composable
+fun TabletPreview() {
+}
+```
+
+Previews without the annotation keep the scale configured in the Gradle extension.
 
 ### Filtering previews by annotation
 
