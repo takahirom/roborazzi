@@ -16,13 +16,14 @@ object RenderScaleVerification {
   private var expectedScale: Double? = null
 
   /**
-   * Records the scale this preview should be captured at, including a per-preview override.
+   * Records the scale this preview declares for itself, or null when it inherits the scale
+   * configured in the Gradle extension.
    *
    * The configuration rule runs outside the test method, so this is set before [beforeTest] and
    * must survive it. The rule drops it again with [clearExpectation] once the test has finished.
    */
   @InternalRoborazziApi
-  fun expect(scale: Double) {
+  fun expect(scale: Double?) {
     expectedScale = scale
   }
 
@@ -48,27 +49,36 @@ object RenderScaleVerification {
    * A test may capture more than once, so each capture has to use the configured value: one
    * correct capture must not hide another that used a different scale or none at all.
    *
-   * Does nothing when no scale is configured or when Roborazzi is not recording or verifying,
-   * because no capture runs in that case.
+   * Does nothing when neither the Gradle extension nor the preview asked for a scale, or when
+   * Roborazzi is not recording or verifying, because no capture runs in that case.
    */
   @OptIn(ExperimentalRoborazziApi::class)
   @InternalRoborazziApi
   fun afterTest(tester: ComposePreviewTester<*>) {
+    val previewOverride = expectedScale
     val configuredScale =
-      expectedScale ?: ComposePreviewTester.defaultOptionsFromPlugin.renderScale
+      previewOverride ?: ComposePreviewTester.defaultOptionsFromPlugin.renderScale
     // The expectation belongs to the preview that has just been captured, so drop it here as
     // well as in the rule: a tester that never runs the rule must not inherit it.
     clearExpectation()
-    if (configuredScale == 1.0) return
+    // Nobody asked for a scale, so a tester is free to scale the capture as it sees fit.
+    if (previewOverride == null && configuredScale == 1.0) return
     val applied = appliedScales.toList()
+    // The unscaled density is what 1.0 renders at, so a preview that asks for it is satisfied by
+    // a capture that scales nothing. Capturing anything else still ignores the request.
+    if (applied.isEmpty() && configuredScale == 1.0) return
     if (applied.isNotEmpty() && applied.all { it == configuredScale }) return
     if (!provideRoborazziContext().options.taskType.isEnabled()) return
     val appliedDescription = when {
       applied.isEmpty() -> "did not apply it, so this screenshot was captured at the unscaled density"
       else -> "applied ${applied.joinToString()} instead"
     }
+    val source = when (previewOverride) {
+      null -> "is configured in generateComposePreviewRobolectricTests"
+      else -> "is declared by @RoboComposePreviewOptions on this preview"
+    }
     throw IllegalStateException(
-      "renderScale = $configuredScale is configured in generateComposePreviewRobolectricTests, " +
+      "renderScale = $configuredScale $source, " +
         "but ${tester::class.java.name} $appliedDescription.\n" +
         "\n" +
         "Carry the configured value through to the capture:\n" +

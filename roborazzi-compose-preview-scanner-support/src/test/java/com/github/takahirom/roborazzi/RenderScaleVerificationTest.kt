@@ -19,6 +19,7 @@ class RenderScaleVerificationTest {
   private val tester = DroppingTester()
 
   @After fun tearDown() {
+    RenderScaleVerification.clearExpectation()
     ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options()
     provideRoborazziContext().clearRuleOverrideRoborazziOptions()
   }
@@ -101,6 +102,39 @@ class RenderScaleVerificationTest {
     val message = assertFails()
     assertTrue(message, message.contains("renderScale = 0.25"))
     assertTrue(message, message.contains("applied 0.5 instead"))
+  }
+
+  @Test fun passesWhenAPreviewAsksForTheUnscaledDensity() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+
+    // Nothing is applied for 1.0, because the unscaled density is what the capture already uses.
+    RenderScaleVerification.expect(1.0)
+    RenderScaleVerification.beforeTest()
+
+    RenderScaleVerification.afterTest(tester)
+  }
+
+  @Test fun failsWhenACaptureScalesAPreviewThatAskedForTheUnscaledDensity() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+
+    RenderScaleVerification.expect(1.0)
+    RenderScaleVerification.beforeTest()
+    preview.toRoborazziComposeOptions(renderScale = 0.5).applySetup()
+
+    val message = assertFails()
+    assertTrue(message, message.contains("renderScale = 1.0"))
+    assertTrue(message, message.contains("applied 0.5 instead"))
+    assertTrue(message, message.contains("@RoboComposePreviewOptions"))
+  }
+
+  @Test fun passesWhenATesterScalesOnItsOwnWithoutAnyConfiguration() {
+    configurePlugin(renderScale = 1.0, taskType = RoborazziTaskType.Record)
+
+    // Nobody asked for a scale, so a tester is free to scale the capture as it sees fit.
+    RenderScaleVerification.beforeTest()
+    preview.toRoborazziComposeOptions(renderScale = 0.5).applySetup()
+
+    RenderScaleVerification.afterTest(tester)
   }
 
   @Test fun passesWhenRoborazziIsNotRecordingOrVerifying() {

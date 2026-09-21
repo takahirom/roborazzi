@@ -148,7 +148,7 @@ public final class com/github/takahirom/roborazzi/RenderScaleVerification {
 	public final fun afterTest (Lcom/github/takahirom/roborazzi/ComposePreviewTester;)V
 	public final fun beforeTest ()V
 	public final fun clearExpectation ()V
-	public final fun expect (D)V
+	public final fun expect (Ljava/lang/Double;)V
 }
 
 public final class com/github/takahirom/roborazzi/RoboComposePreviewOptionVariation {

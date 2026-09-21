@@ -42,19 +42,15 @@ fun createRoborazziPreviewConfigurationRule(
   if (testParameter !is AndroidPreviewJUnit4TestParameter) {
     return TestRule { base, _ -> base }
   }
-  // The expectation comes from the plugin rather than from tester.options(): a tester that drops
-  // the configured scale in options() is exactly what the verification has to catch. It is
-  // resolved when the test runs so that an invalid annotation fails the test that declares it.
-  val expectedScale = {
-    testParameter.preview.effectiveRenderScale(
-      ComposePreviewTester.defaultOptionsFromPlugin.renderScale
-    )
-  }
+  // Only the preview's own override is recorded: what the tester reports in options() is exactly
+  // what the verification has to catch, and without an override the plugin value already applies.
+  // It is read when the test runs so that an invalid annotation fails the test that declares it.
+  val declaredScale = { testParameter.preview.declaredRenderScaleOrNull() }
   if (tester !is AndroidComposePreviewTester) {
     return TestRule { base, _ ->
       object : org.junit.runners.model.Statement() {
         override fun evaluate() {
-          RenderScaleVerification.expect(expectedScale())
+          RenderScaleVerification.expect(declaredScale())
           try {
             base.evaluate()
           } finally {
@@ -75,7 +71,7 @@ fun createRoborazziPreviewConfigurationRule(
           testParameter.renderScaleBaseConfiguration = android.content.res.Configuration(
             android.content.res.Resources.getSystem().configuration
           )
-          RenderScaleVerification.expect(expectedScale())
+          RenderScaleVerification.expect(declaredScale())
           testParameter.preview.toRoborazziComposeOptions(
             testParameter.preview.effectiveRenderScale(tester.options().renderScale),
             testParameter.renderScaleBaseConfiguration
@@ -116,13 +112,17 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
  * `preview.toRoborazziComposeOptions(preview.effectiveRenderScale(options().renderScale))`.
  */
 @ExperimentalRoborazziApi
-fun ComposablePreview<*>.effectiveRenderScale(configuredScale: Double): Double {
+fun ComposablePreview<*>.effectiveRenderScale(configuredScale: Double): Double =
+  declaredRenderScaleOrNull() ?: configuredScale
+
+/** The [RoboComposePreviewOptions.renderScale] this preview declares, or null when it inherits. */
+internal fun ComposablePreview<*>.declaredRenderScaleOrNull(): Double? {
   // getAnnotation() on the preview throws, see testParameters() for the same workaround.
   val annotated = declaringMethodOrNull()
     ?.getAnnotation(RoboComposePreviewOptions::class.java)
     ?.renderScale
     ?: INHERIT_RENDER_SCALE
-  if (annotated == INHERIT_RENDER_SCALE) return configuredScale
+  if (annotated == INHERIT_RENDER_SCALE) return null
   require(annotated.isFinite() && annotated > 0.0) {
     "renderScale must be finite and greater than 0, but $declaringClass.$methodName declares $annotated"
   }
