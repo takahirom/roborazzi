@@ -27,6 +27,11 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
   /**
    * Experimental rendering scale for generated Compose Preview Robolectric tests.
    *
+   * A value below 1.0 renders the preview at a lower device density, which is what makes it
+   * worth setting: fewer pixels are rendered, so the tests spend less time rendering and the
+   * recorded images take less space. What you pay for it is fidelity, so it pays off on the
+   * previews that are large enough for the smaller image to still be readable.
+   *
    * The scale is applied to the device density before Compose content is rendered, so the
    * preview's logical dp dimensions are preserved while the surface pixel dimensions scale
    * accordingly. Density-qualified resources may resolve differently at the scaled density.
@@ -34,17 +39,30 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * `drawLine(..., strokeWidth = 1f)` or a pixel offset, keeps its absolute pixel size and so
    * appears relatively thicker and shifted in the smaller image.
    *
+   * A value above 1.0 is allowed and renders at a higher density, which is genuine detail rather
+   * than an upscale, but it costs rendering time and file size in proportion. Prefer the
+   * preview's own `device = "spec:...,dpi=..."` unless you want every preview to change at once.
+   *
    * This is independent of capture-time `resizeScale`, which downsamples the bitmap after the
    * preview has been rendered at full resolution. `resizeScale` shrinks everything in the image
    * uniformly, pixel-based drawing included, and saves file size but not rendering time;
    * `renderScale` renders fewer pixels in the first place and so saves the rendering itself.
    *
    * Must be finite and positive. The resulting dpi is rounded to the nearest integer and
-   * clamped to a minimum of 1 dpi.
+   * clamped to a minimum of 1 dpi. Both scales change the recorded image dimensions at the same
+   * output paths, so existing golden images have to be recorded again after you set either.
+   *
+   * A single preview can opt out of this value with
+   * `@RoboComposePreviewOptions(renderScale = ...)`, which is the usual way to scale down only
+   * the few previews that are large enough to be worth it.
+   *
+   * Android previews only: this is not supported for Compose Desktop previews.
    *
    * A custom [com.github.takahirom.roborazzi.ComposePreviewTester] that overrides `test()` has to
-   * pass `options().renderScale` to `preview.toRoborazziComposeOptions(renderScale)`. A tester that
-   * drops the value fails the generated test, so no opt-in flag is needed here.
+   * pass `preview.effectiveRenderScale(options().renderScale)` to
+   * `preview.toRoborazziComposeOptions(renderScale)`; `options().renderScale` on its own ignores a
+   * per-preview override. A tester that drops the value fails the generated test, so no opt-in
+   * flag is needed here.
    */
   @ExperimentalRoborazziApi
   val renderScale: Property<Double> = objects.property(Double::class.java).convention(1.0)
