@@ -30,9 +30,10 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * A value below 1.0 renders the preview at a lower device density, which is what makes it
    * worth setting: fewer pixels are rendered, so the tests spend less time rendering and the
    * recorded images take less space. What you pay for it is fidelity, so it pays off on the
-   * previews that are large enough for the smaller image to still be readable. The saving is
-   * proportional to the area each preview renders, so a suite of large previews benefits a lot
-   * and a suite of default-sized previews barely at all.
+   * previews that are large enough for the smaller image to still be readable. Only the
+   * rendering shrinks: launching the Activity, composing and writing the file cost the same at
+   * any scale. A preview that renders a lot of pixels can nearly halve its time, while a small
+   * component is mostly setup and barely moves.
    *
    * The scale is applied to the device density before Compose content is rendered, so the
    * preview's logical dp dimensions are preserved while the surface pixel dimensions scale
