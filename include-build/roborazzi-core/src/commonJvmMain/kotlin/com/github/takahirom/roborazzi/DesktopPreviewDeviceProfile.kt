@@ -44,6 +44,12 @@ class DesktopPreviewDeviceProfile private constructor(
     require(defaultDevice == null || defaultDevice.isNotBlank()) {
       "Roborazzi: defaultDevice must be null or a device spec, not blank."
     }
+    // The encoded profile travels on a forked JVM's command line, where a NUL or a newline is not
+    // an argument the JVM can be handed. No device grammar contains one, so this only ever rejects
+    // a string that was going to fail later and less clearly.
+    require(defaultDevice == null || defaultDevice.none { it.isISOControl() }) {
+      "Roborazzi: defaultDevice must not contain control characters, but was '$defaultDevice'."
+    }
   }
 
   fun copy(

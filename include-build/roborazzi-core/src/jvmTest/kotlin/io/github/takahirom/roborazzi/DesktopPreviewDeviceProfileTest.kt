@@ -53,6 +53,19 @@ class DesktopPreviewDeviceProfileTest {
   }
 
   @Test
+  fun aDeviceWithAControlCharacterIsRejected() {
+    // The encoding is what the plugin hands a forked JVM, so a device carrying a NUL would break
+    // the fork rather than the profile. Rejecting it where it is written says so.
+    for (device in listOf("id:pixel_4a\u0000", "id:pixel_4a\n")) {
+      val failure = runCatching {
+        DesktopPreviewDeviceProfile.Desktop.copy(defaultDevice = device)
+      }.exceptionOrNull()
+
+      assertEquals(IllegalArgumentException::class.java, failure?.javaClass)
+    }
+  }
+
+  @Test
   fun nullDeviceIsNotConfusedWithTheStringNull() {
     assertNull(DesktopPreviewDeviceProfile.Desktop.defaultDevice)
     val literal = DesktopPreviewDeviceProfile.Desktop.copy(defaultDevice = "null")
