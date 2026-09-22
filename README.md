@@ -1612,8 +1612,8 @@ roborazzi {
 The preview keeps its logical dp size and the density under it shrinks, so half the scale
 is a quarter of the pixels to rasterize. The scaled dpi is rounded to the nearest integer
 and clamped to at least 1, which is what a device's `dpi=` carries; the `Desktop`
-profile names no device, so its pinned density is scaled as 160dpi, the dpi at which 1dp
-is 1px. Anything drawn in raw pixels keeps its absolute size and so looks relatively
+profile names no device, so its pinned density starts at 160dpi, the dpi at which 1dp
+is 1px, and is then scaled by `renderScale`. Anything drawn in raw pixels keeps its absolute size and so looks relatively
 thicker in the smaller image, and existing goldens have to be recorded again.
 
 A custom tester that sizes its own surface has to pass the value on:
