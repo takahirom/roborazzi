@@ -421,8 +421,15 @@ class DefaultDesktopComposePreviewTester(
         width = first.renderSpec.surfaceWidth,
         height = first.renderSpec.surfaceHeight,
       ) {
-        var index by mutableStateOf(0)
-        setContent { key(index) { group[index].second.captureParameter.content() } }
+        // Nothing is composed until a preview is selected, so that every preview - the first one
+        // included - is composed inside its own `aroundCapture`, the way a scene per preview
+        // composes it inside the test the listener wraps.
+        var index by mutableStateOf(NOTHING_SELECTED)
+        setContent {
+          key(index) {
+            if (index != NOTHING_SELECTED) group[index].second.captureParameter.content()
+          }
+        }
         group.forEachIndexed { position, (testParameter, prepared) ->
           // Comparison failures are reported per preview and do not end the group: in verify mode
           // `captureRoboImage` throws on a mismatch, and letting the first mismatch out of here
@@ -664,6 +671,9 @@ private val warnedAboutIgnoredDevice = AtomicBoolean(false)
 private val warnedAboutCustomCapturer = AtomicBoolean(false)
 
 private val localeCaptureLock = Any()
+
+/** The index a shared scene holds before any preview of the group has been selected. */
+private const val NOTHING_SELECTED = -1
 
 // Default raster surface size of runDesktopComposeUiTest(width = 1024, height = 768).
 
