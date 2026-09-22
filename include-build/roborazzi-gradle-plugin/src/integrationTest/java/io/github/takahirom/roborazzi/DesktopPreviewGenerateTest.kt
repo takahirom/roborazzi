@@ -430,6 +430,19 @@ class DesktopPreviewDeviceProfileTest {
   }
 
   @Test
+  fun whenATestRunDoesNotRunTheTestCompilationItNeedsNoProfile() {
+    // The generated preview tests live in the target's `test` compilation. A run pointed at
+    // another compilation cannot run them, so demanding a profile for it would fail a build that
+    // has nothing to render.
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.extraTestRunsOnMainCompilation = listOf("bench")
+
+      record(additionalParameters = NO_BUILD_CACHE)
+      checkHasImages()
+    }
+  }
+
+  @Test
   fun whenDeviceProfileByTestRunNamesAnUnknownTestRunItFails() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.separateOutputDirs = true
@@ -469,6 +482,14 @@ class DesktopPreviewModule(
 
     /** Extra Kotlin test runs to create on the desktop target, e.g. "androidCompat". */
     var extraTestRuns: List<String> = emptyList()
+
+    /**
+     * Extra test runs whose execution source is the target's `main` compilation instead of `test`.
+     *
+     * A run can be pointed at any compilation, and one that does not run the `test` compilation
+     * never runs a generated preview test.
+     */
+    var extraTestRunsOnMainCompilation: List<String> = emptyList()
 
     /**
      * Kotlin expression for the profile of the target's default test run, or null to leave it out.
@@ -537,9 +558,12 @@ class DesktopPreviewModule(
       } else {
         ""
       }
-      val extraTestRunsExpr = extraTestRuns.joinToString("\n                ") {
-        """testRuns.create("$it")"""
-      }
+      val extraTestRunsExpr = (
+        extraTestRuns.map { """testRuns.create("$it")""" } +
+          extraTestRunsOnMainCompilation.map {
+            """testRuns.create("$it") { setExecutionSourceFrom(compilations.getByName("main")) }"""
+          }
+        ).joinToString("\n                ")
       val desktopTargetAttribute = if (hasSecondJvmTarget) {
         """
                 attributes.attribute(Attribute.of("com.github.takahirom.roborazzi.sample.target", String::class.java), "desktop")

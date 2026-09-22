@@ -14,7 +14,10 @@ import org.gradle.process.CommandLineArgumentProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.plugin.CompilationExecutionSource
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTestRun
 import java.net.URLEncoder
 import java.util.Locale
 
@@ -70,6 +73,7 @@ internal fun generateComposePreviewDesktopTestsForKmpIfNeeded(
       project = project,
       roborazziExtension = roborazziExtension,
       target = target,
+      testCompilation = testCompilation,
     )
   }
 }
@@ -86,6 +90,7 @@ private fun setupDeviceProfiles(
   project: Project,
   roborazziExtension: RoborazziExtension,
   target: KotlinJvmTarget,
+  testCompilation: KotlinJvmCompilation,
 ) {
   val extension = roborazziExtension.generateComposePreviewDesktopTests
   val profileByTestRun = extension.deviceProfileByTestRun.getOrElse(emptyMap())
@@ -110,6 +115,11 @@ private fun setupDeviceProfiles(
     } else {
       profileByTestRun[testRun.name]
     }
+    // A run pointed somewhere else never executes a generated preview test, so it has nothing to
+    // render and no reason to be asked for a profile.
+    if (profile == null && !testRun.runs(testCompilation)) {
+      return@all
+    }
     // No default. The profile decides the size and density of every golden the run records, and no
     // value is right for every project, so an unconfigured run is a question for the build rather
     // than something to guess at.
@@ -118,6 +128,21 @@ private fun setupDeviceProfiles(
       applyDeviceProfile(test, profile)
     }
   }
+}
+
+/**
+ * Whether this test run executes [compilation], which is where the generated preview tests live.
+ *
+ * A project can point a test run at another compilation with `setExecutionSourceFrom`, and the
+ * generated tests are then not part of that run at all. Anything this cannot read as a single
+ * compilation counts as running it - an execution source is set lazily and may not be there yet,
+ * and a run can be given several compilations - so the runs the missing-profile check exists for
+ * keep failing the build as before.
+ */
+private fun KotlinJvmTestRun.runs(compilation: KotlinJvmCompilation): Boolean {
+  val source = runCatching { executionSource }.getOrNull() ?: return true
+  if (source !is CompilationExecutionSource<*>) return true
+  return source.compilation == compilation
 }
 
 /**
