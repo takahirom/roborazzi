@@ -9,8 +9,16 @@ import java.io.Serializable
  * previews under several profiles by giving each its own Kotlin test run, which the Roborazzi
  * plugin turns into its own set of tasks and its own output directory.
  *
- * The presets are [Desktop] and [AndroidCompatible]. To vary a single axis, start from a preset
- * and use [copy].
+ * The presets are [Desktop] and [Pixel4a]. To vary a single axis, start from a preset and use
+ * [copy]. There is deliberately no default: the profile decides the size and density of every
+ * golden the module records, and no value is right for every project, so the build asks rather
+ * than guessing.
+ *
+ * A profile fixes the device configuration - the surface size and the density - not the pixels.
+ * Desktop measures text with the host OS font rather than the one Android ships, so a profile that
+ * names an Android device still does not render text the way that device does, and the output is
+ * expected to move as that fidelity improves. Such an improvement needs the goldens re-recorded,
+ * the same way a Compose version bump already does.
  *
  * This type lives in `roborazzi-core` because the Gradle plugin and the desktop runtime both need
  * it, and the plugin must not depend on the Compose desktop scanner support module.
@@ -90,30 +98,54 @@ class DesktopPreviewDeviceProfile private constructor(
     /**
      * The historical desktop behaviour: fast, but sized in raw pixels at density 1 and blind to
      * `@Preview(device = ...)`.
+     *
+     * This is what the desktop runtime rendered before device profiles existed, so it is the
+     * profile that leaves a project's existing goldens unchanged.
      */
     val Desktop: DesktopPreviewDeviceProfile = DesktopPreviewDeviceProfile(defaultDevice = null)
 
     /**
-     * Sizes previews the way the Robolectric runtime does, so the two runtimes can be compared
-     * preview by preview. Previews that name no device are sized as a Pixel 4a, which is also
-     * Robolectric's default.
+     * Sizes previews as a Pixel 4a, the device Roborazzi's Robolectric runtime defaults to, so the
+     * same preview can be compared between the two runtimes.
      *
-     * Written out as a spec rather than as `"id:pixel_4a"` because `defaultDevice` stands in for
-     * the Robolectric base configuration, and these are the dp that `RobolectricDeviceQualifiers`
-     * puts in that configuration. The scanner's own Pixel 4a is a pixel-table entry (1080x2340 at
-     * 440dpi) whose dp work out one lower, 392 rather than 393; both produce a 1078x2337 surface,
-     * but only the dp the qualifier actually carries survive a `renderScale` other than 1.
+     * This is Roborazzi's own default device, not Android Studio's. Studio, and Google's Compose
+     * Preview Screenshot Testing, preview a device they call Medium Phone: 1080x2400px at 420dpi,
+     * against this profile's 1080x2340px at 440dpi. The density differs, so a preview captured
+     * here is not comparable to a Studio preview.
+     *
+     * Written out as a spec rather than as `"id:pixel_4a"` because these are the dp that
+     * `RobolectricDeviceQualifiers.Pixel4a` puts in the Robolectric configuration, and keeping
+     * the two spelled the same way is what makes it obvious they have to change together. Both
+     * spellings render the same 1080x2340 surface here.
+     *
+     * The Robolectric runtime captures two pixels narrower, 1078x2337. That is a Robolectric
+     * inconsistency rather than a rule to reproduce: at these qualifiers its `Resources` and
+     * `Configuration` report 1080x2340 while its `Display` reports a round-tripped 1078x2334, and
+     * the activity window is laid out from the `Display`.
+     *
+     * What matches the Robolectric runtime here is the device configuration, not the text: see the
+     * class documentation.
      */
-    val AndroidCompatible: DesktopPreviewDeviceProfile =
+    val Pixel4a: DesktopPreviewDeviceProfile =
       DesktopPreviewDeviceProfile(defaultDevice = "spec:width=393dp,height=851dp,dpi=440")
 
     /**
-     * Used when no profile is configured.
+     * Spelled out for the message a build sees when it has configured no profile at all.
      *
-     * Deliberately an alias rather than a stored value: which preset it points at is a release
-     * decision, and keeping it in one place means changing it does not touch any other code.
+     * Kept next to the presets so that adding one and forgetting to offer it here is a change to
+     * this file rather than to a string somewhere in the Gradle plugin.
      */
-    val Default: DesktopPreviewDeviceProfile get() = Desktop
+    @InternalRoborazziApi
+    val PRESET_CHOICES: String = """
+      |  DesktopPreviewDeviceProfile.Desktop
+      |      Density 1, so 1dp is 1px, on a surface of at least 1024x768, and
+      |      @Preview(device = ...) is ignored. This is what the desktop runtime rendered
+      |      before device profiles existed, so it leaves existing goldens unchanged.
+      |
+      |  DesktopPreviewDeviceProfile.Pixel4a
+      |      393dp x 851dp at 440dpi, the device the Robolectric runtime defaults to, so the
+      |      same preview can be compared between the two runtimes.
+    """.trimMargin()
 
     fun decode(value: String): DesktopPreviewDeviceProfile {
       val parts = splitUnescaped(value).filter { it.isNotEmpty() }

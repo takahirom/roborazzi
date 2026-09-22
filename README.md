@@ -1443,12 +1443,17 @@ A device profile decides how the desktop runtime sizes and scales previews. It i
 property of a *test run*, not of a preview, so one module can capture the same previews
 more than once under different profiles.
 
+`deviceProfile` is required and has no default. It decides the surface size and the
+density, which is to say what every golden the module records looks like, and no value is
+right for every project, so leaving it unset fails configuration with a message listing
+the presets.
+
 ```kotlin
 roborazzi {
   generateComposePreviewDesktopTests {
     enable = true
     packages = listOf("com.example.previews")
-    deviceProfile = DesktopPreviewDeviceProfile.AndroidCompatible
+    deviceProfile = DesktopPreviewDeviceProfile.Pixel4a
   }
 }
 ```
@@ -1458,15 +1463,27 @@ The presets are:
 | Profile | What it does |
 |---|---|
 | `DesktopPreviewDeviceProfile.Desktop` | The historical desktop behaviour: density 1, a canvas of at least 1024x768, and only `widthDp`/`heightDp` affect the size. |
-| `DesktopPreviewDeviceProfile.AndroidCompatible` | Sizes previews the way the Robolectric runtime does, so the same preview can be compared between the two runtimes. |
+| `DesktopPreviewDeviceProfile.Pixel4a` | Sizes previews as a Pixel 4a, the device the Robolectric runtime defaults to, so the same preview can be compared between the two runtimes. |
 
 To vary a single axis, start from a preset and use `copy()`.
 
-`Desktop` is the default, so an existing project keeps the screenshots it already has. It ignores
+`Pixel4a` is Roborazzi's own default device, not Android Studio's. Studio previews a device
+it calls Medium Phone - 411dp x 914dp at 420dpi - so previews captured under `Pixel4a` are
+about 4.8% larger in dp and rendered at a different density than what Studio, or Google's
+Compose Preview Screenshot Testing, shows.
+
+A profile fixes the device configuration - the surface size and the density - not the
+pixels. Desktop measures text with the host OS font rather than the one Android ships, so a
+profile that names an Android device still does not render text the way that device does,
+and the output is expected to move as that fidelity improves. Such an improvement needs the
+goldens re-recorded, the same way a Compose version bump already does.
+
+`Desktop` is the pre-profile behaviour, so it is the profile that leaves an existing project's
+screenshots unchanged. It ignores
 `@Preview(device = ...)`, and it says so once per test run when a preview asks for a device, so
 that a preview naming a Pixel and coming out 1024x768 does not look like a bug.
 
-Under `AndroidCompatible`:
+Under `Pixel4a`:
 
 - `@Preview(device = ...)` is parsed - `id:`, `name:` and `spec:` all work, with the same parser
   the Robolectric runtime uses - and it decides both the raster surface and the density.
@@ -1474,16 +1491,19 @@ Under `AndroidCompatible`:
   Robolectric base configuration, so write your `qualifiers` in `@Preview` grammar: the default is
   `spec:width=393dp,height=851dp,dpi=440`, which is `RobolectricDeviceQualifiers.Pixel4a`. Change
   both together, or the two runtimes size device-less previews differently on purpose.
-- A `defaultDevice` given in dp makes the same dp -> px -> dp round trip the base configuration
-  makes, which is not a no-op: `width=411dp` at 420dpi is 1078px, reads back as 410dp, and renders
-  at 1076px. A device id such as `id:pixel_7` names a pixel-size entry instead and is converted
-  once. Prefer a `spec:` in dp for `defaultDevice`, since that is the form a qualifier takes.
+- A device given in dp is converted once, `floor(dp * density)`, which is the number the
+  Robolectric runtime's configuration reports: `width=411dp` at 420dpi is 1078px. A device id such
+  as `id:pixel_7` names a pixel-size entry and is rendered at exactly those pixels. Prefer a
+  `spec:` in dp for `defaultDevice`, since that is the form a qualifier takes.
 - `widthDp`/`heightDp` are dp at that density rather than raw pixels, so a 200dp box on a 440dpi
   device is 550px wide on both runtimes.
 
-The surface size and the density the two runtimes use agree exactly, including for devices whose
-size is declared in pixels: the density round trip that Robolectric performs is reproduced rather
-than approximated. What does not agree is text measurement - Android bends font scale non-linearly from API 34, and
+The density the two runtimes use agrees exactly, and so does the surface size for most devices.
+A device-less preview can come out one or two pixels wider here, because the Robolectric runtime
+lays its window out from a `Display` whose size has been round-tripped through dp while its
+`Resources` and `Configuration` keep the original: a Pixel 4a is 1080x2340 by every Android API
+that reports it, and 1078x2337 in the captured image. The desktop runtime sizes from the numbers
+Android reports. What also does not agree is text measurement - Android bends font scale non-linearly from API 34, and
 glyph advances differ by a few pixels - so a preview whose size is driven by laid-out text can still
 come out a little wider or taller.
 
@@ -1508,7 +1528,7 @@ roborazzi {
     packages = listOf("com.example.previews")
     deviceProfileByTestRun.put(
       "androidCompat",
-      DesktopPreviewDeviceProfile.AndroidCompatible,
+      DesktopPreviewDeviceProfile.Pixel4a,
     )
   }
 }
@@ -1582,17 +1602,17 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 | Custom JUnit `TestRule` around generated tests (`testRuleFactory`) | ✅ | ✅ |
 | Compose rule factory (`composeRuleFactory`) | ✅ | Not applicable (function-scoped harness) |
 | `@Preview` annotation options (`widthDp`/`heightDp`, `fontScale`, `showBackground`/`backgroundColor`, `locale`, `uiMode` dark bit) | ✅ (see below) | ✅ |
-| `@Preview(device = ...)` | ✅ | ✅ with `deviceProfile = AndroidCompatible`; ignored under the default `Desktop` profile |
+| `@Preview(device = ...)` | ✅ | ✅ with `deviceProfile = Pixel4a`; ignored under the `Desktop` profile |
 | `robolectricConfig` (device qualifiers, SDK) | ✅ | Not applicable - the equivalent is the device profile's `defaultDevice` |
 
 On Compose Desktop the `@Preview` annotation options are applied as follows:
 
-- `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box. Under the default `Desktop` profile density is `1`, so 1dp equals 1px; under `AndroidCompatible` they are dp at the device density. When neither is specified the preview still renders wrap-content.
+- `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box. Under the `Desktop` profile density is `1`, so 1dp equals 1px; under `Pixel4a` they are dp at the device density. When neither is specified the preview still renders wrap-content.
 - `fontScale`: applied through `LocalDensity`, together with the density the device profile resolved, because `DeviceConfigurationOverride.FontScale` is unsupported on desktop.
 - `showBackground`/`backgroundColor`: draws a background behind the preview, defaulting to white when `showBackground = true` but no color is given.
 - `locale`: sets `java.util.Locale.getDefault()` for the capture and restores it afterwards. Accepts `"ja"`, `"ja-rJP"`, and `"ja-JP"` forms.
 - `uiMode`: only the night bit is honored (dark mode via `LocalSystemTheme`); other configuration bits are ignored.
-- `device`: honored under the `AndroidCompatible` device profile, which turns it into the surface size and the density. The default `Desktop` profile ignores it. A spec the parser cannot read fails the test rather than being skipped, which is stricter than the Robolectric runtime - it ignores an unreadable spec and renders at the default size.
+- `device`: honored under the `Pixel4a` device profile, which turns it into the surface size and the density. The `Desktop` profile ignores it. A spec the parser cannot read fails the test rather than being skipped, which is stricter than the Robolectric runtime - it ignores an unreadable spec and renders at the default size.
 
 ## Annotation-based Capture Control
 

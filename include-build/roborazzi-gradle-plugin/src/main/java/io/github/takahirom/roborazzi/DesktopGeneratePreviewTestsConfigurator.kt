@@ -3,6 +3,7 @@ package io.github.takahirom.roborazzi
 import com.github.takahirom.roborazzi.AnnotationFilter
 import com.github.takahirom.roborazzi.DesktopPreviewDeviceProfile
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.ROBORAZZI_DESKTOP_DEVICE_PROFILE_PROPERTY
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ProjectDependency
@@ -109,11 +110,51 @@ private fun setupDeviceProfiles(
     } else {
       profileByTestRun[testRun.name]
     }
+    // No default. The profile decides the size and density of every golden the run records, and no
+    // value is right for every project, so an unconfigured run is a question for the build rather
+    // than something to guess at.
+    checkNotNull(profile) { missingDeviceProfileMessage(target.name, testRun.name) }
     testRun.executionTask.configure { test ->
       applyDeviceProfile(test, profile)
     }
   }
 }
+
+/**
+ * Tells a build that configured desktop preview tests but no profile how to pick one.
+ *
+ * The presets it offers come from [DesktopPreviewDeviceProfile.PRESET_CHOICES] so that adding a
+ * preset and forgetting to mention it here is not possible.
+ */
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
+private fun missingDeviceProfileMessage(targetName: String, testRunName: String?): String {
+  val setter = if (testRunName == null || testRunName == DEFAULT_TEST_RUN_NAME) {
+    "deviceProfile = <preset>"
+  } else {
+    "deviceProfileByTestRun.put(\"$testRunName\", <preset>)"
+  }
+  val where =
+    if (testRunName == null) "this project"
+    else "the JVM target '$targetName' test run '$testRunName'"
+  return """
+    |Roborazzi: generateComposePreviewDesktopTests has no device profile for $where.
+    |
+    |The profile decides the surface size and the density, which is to say what every golden this
+    |module records looks like. There is no default, because no value is right for every project.
+    |Pick one:
+    |
+    |${DesktopPreviewDeviceProfile.PRESET_CHOICES}
+    |
+    |and set it with:
+    |
+    |  roborazzi {
+    |    generateComposePreviewDesktopTests {
+    |      $setter
+    |    }
+    |  }
+  """.trimMargin()
+}
+
 
 @OptIn(ExperimentalRoborazziApi::class)
 private fun applyDeviceProfile(test: Test, profile: DesktopPreviewDeviceProfile?) {
@@ -169,8 +210,10 @@ internal fun generateComposePreviewDesktopTestsForJvmIfNeeded(
         "project applies the Kotlin JVM plugin and has a single 'test' task, so use " +
         "generateComposePreviewDesktopTests.deviceProfile instead."
     }
+    val profile = extension.deviceProfile.orNull
+    checkNotNull(profile) { missingDeviceProfileMessage(targetName = "jvm", testRunName = null) }
     project.tasks.named("test", Test::class.java).configure { test ->
-      applyDeviceProfile(test, extension.deviceProfile.orNull)
+      applyDeviceProfile(test, profile)
     }
   }
 }

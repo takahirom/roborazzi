@@ -15,18 +15,18 @@ class DesktopPreviewRenderSpecTest {
 
   private fun resolve(
     previewInfo: AndroidPreviewInfo,
-    profile: DesktopPreviewDeviceProfile = DesktopPreviewDeviceProfile.AndroidCompatible,
+    profile: DesktopPreviewDeviceProfile = DesktopPreviewDeviceProfile.Pixel4a,
   ) = DesktopPreviewRenderSpec.resolve(previewInfo, profile)
 
   @Test
-  fun `the default profile keeps the historical 1024x768 surface at density 1`() {
+  fun `the Desktop profile keeps the historical 1024x768 surface at density 1`() {
     val spec = resolve(AndroidPreviewInfo(), DesktopPreviewDeviceProfile.Desktop)
 
     assertEquals(DesktopPreviewRenderSpec(1024, 768, 1f), spec)
   }
 
   @Test
-  fun `the default profile ignores the device even when the preview declares one`() {
+  fun `the Desktop profile ignores the device even when the preview declares one`() {
     val spec = resolve(
       AndroidPreviewInfo(device = "spec:width=411dp,height=891dp,dpi=420"),
       DesktopPreviewDeviceProfile.Desktop,
@@ -36,7 +36,7 @@ class DesktopPreviewRenderSpecTest {
   }
 
   @Test
-  fun `the default profile sizes in raw pixels because a dp is a pixel there`() {
+  fun `the Desktop profile sizes in raw pixels because a dp is a pixel there`() {
     val spec = resolve(
       AndroidPreviewInfo(widthDp = 2000, heightDp = 120),
       DesktopPreviewDeviceProfile.Desktop,
@@ -47,61 +47,59 @@ class DesktopPreviewRenderSpecTest {
 
   @Test
   fun `a preview with no device falls back to the profile's default device`() {
-    // Measured: the Robolectric runtime renders a device-less preview at 1078x2337 under its
-    // default Pixel 4a qualifiers.
+    // `w393dp` at 440dpi is `floor(393 * 2.75) = 1080`, which is what the Robolectric runtime's
+    // Configuration reports for the same qualifiers. Its capture is 1078x2337, two pixels short,
+    // because its `Display` is round-tripped while its `Resources` are not; see `screenSizePx`.
     val spec = resolve(AndroidPreviewInfo())
 
-    assertEquals(1078, spec.surfaceWidth)
-    assertEquals(2337, spec.surfaceHeight)
+    assertEquals(1080, spec.surfaceWidth)
+    assertEquals(2340, spec.surfaceHeight)
     assertEquals(2.75f, spec.density)
   }
 
   @Test
-  fun `the profile default goes through the qualifier round trip and a preview device does not`() {
-    // goals.md measured Robolectric at 1076 for the Pixel 6 qualifiers (w411dp at 420dpi): the
-    // base configuration's dp becomes pixels and is read back as dp before becoming the size,
-    // 411 -> 1078px -> 410dp -> 1076px. A preview that names the same device instead gets an
-    // additive qualifier built from the parsed device, which is a plain floor: 411 -> 1078.
+  fun `the same device sizes the same whether it is the default or the preview's own`() {
+    // The profile's default is not a special rounding case. Both spellings floor once, so
+    // `w411dp` at 420dpi is 1078px either way.
     val asProfileDefault = DesktopPreviewRenderSpec.resolve(
       AndroidPreviewInfo(),
-      DesktopPreviewDeviceProfile.AndroidCompatible
+      DesktopPreviewDeviceProfile.Pixel4a
         .copy(defaultDevice = "spec:width=411dp,height=891dp,dpi=420"),
     )
     val asPreviewDevice = resolve(
       AndroidPreviewInfo(device = "spec:width=411dp,height=891dp,dpi=420"),
     )
 
-    assertEquals(1076, asProfileDefault.surfaceWidth)
-    assertEquals(1078, asPreviewDevice.surfaceWidth)
+    assertEquals(1078, asProfileDefault.surfaceWidth)
+    assertEquals(asProfileDefault, asPreviewDevice)
   }
 
   @Test
-  fun `a default device declared in pixels skips the round trip it has already made`() {
-    // The scanner's Pixel 4a is a pixel-table entry, so `inDp()` has already taken 2340px down to
-    // 850dp. Rounding a second time would reach 849dp and a 2334px surface, three pixels short of
-    // what the Robolectric runtime was measured to produce.
+  fun `a device declared in pixels is sized at exactly those pixels`() {
+    // The scanner's Pixel 4a is a pixel-table entry, 1080x2340 at 440dpi, and those are the
+    // pixels rendered rather than the 392x850dp they truncate to. The dp spelling of the same
+    // device, `w393dp-h851dp` at 440dpi, lands on the same 1080x2340.
     val viaPixelTable = DesktopPreviewRenderSpec.resolve(
       AndroidPreviewInfo(),
-      DesktopPreviewDeviceProfile.AndroidCompatible.copy(defaultDevice = "id:pixel_4a"),
+      DesktopPreviewDeviceProfile.Pixel4a.copy(defaultDevice = "id:pixel_4a"),
     )
 
-    assertEquals(DesktopPreviewRenderSpec(1078, 2337, 2.75f), viaPixelTable)
+    assertEquals(DesktopPreviewRenderSpec(1080, 2340, 2.75f), viaPixelTable)
+    assertEquals(viaPixelTable, resolve(AndroidPreviewInfo()))
   }
 
   @Test
   fun `a blank default device is rejected because the parser would take it as a device`() {
     val failure = runCatching {
-      DesktopPreviewDeviceProfile.AndroidCompatible.copy(defaultDevice = "")
+      DesktopPreviewDeviceProfile.Pixel4a.copy(defaultDevice = "")
     }.exceptionOrNull()
 
     assertEquals(IllegalArgumentException::class.java, failure?.javaClass)
   }
 
   @Test
-  fun `a device declared in pixels loses the fraction the Robolectric qualifier loses`() {
-    // Rounding the raw 1080px instead of going through dp would give 1080, and every device-less
-    // preview would then be 2px wider on desktop than on Robolectric.
-    assertEquals(1078, resolve(AndroidPreviewInfo(device = "id:pixel_4a")).surfaceWidth)
+  fun `a preview naming a pixel device keeps its pixels`() {
+    assertEquals(1080, resolve(AndroidPreviewInfo(device = "id:pixel_4a")).surfaceWidth)
   }
 
   @Test
@@ -150,11 +148,10 @@ class DesktopPreviewRenderSpecTest {
   @Test
   fun `only the axis the preview sets is replaced`() {
     // Measured: @Preview(heightDp = 500) renders in a 1080x1375 window on the Robolectric runtime,
-    // so the unset axis keeps the device's size. The width differs by the dp round trip the
-    // device-less path makes on both runtimes, which is what 1078 is.
+    // so the unset axis keeps the device's size.
     val spec = resolve(AndroidPreviewInfo(heightDp = 500))
 
-    assertEquals(1078, spec.surfaceWidth)
+    assertEquals(1080, spec.surfaceWidth)
     assertEquals(1375, spec.surfaceHeight)
   }
 

@@ -267,13 +267,35 @@ class DesktopPreviewDeviceProfileTest {
   val testProjectDir = TemporaryFolder()
 
   @Test
-  fun whenNoDeviceProfileIsConfiguredTheDefaultIsUsed() {
+  fun whenNoDeviceProfileIsConfiguredTheBuildFails() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.useCustomTester = true
+      buildGradle.deviceProfile = null
+
+      record(BuildType.BuildAndFail, additionalParameters = NO_BUILD_CACHE) {
+        assert(output.contains("has no device profile for")) {
+          "Expected configuration to fail when no profile is set, but got:\n$output"
+        }
+        // The message has to be enough to fix the build without opening the documentation.
+        assert(output.contains("DesktopPreviewDeviceProfile.Desktop")) {
+          "Expected the failure to offer the Desktop preset, but got:\n$output"
+        }
+        assert(output.contains("DesktopPreviewDeviceProfile.Pixel4a")) {
+          "Expected the failure to offer the Pixel4a preset, but got:\n$output"
+        }
+      }
+    }
+  }
+
+  @Test
+  fun whenTheDesktopProfileIsConfiguredItReachesTheTestJvm() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.useCustomTester = true
+      buildGradle.deviceProfile = "$PROFILE.Desktop"
 
       record(additionalParameters = NO_BUILD_CACHE) {
         assert(output.contains("deviceProfile defaultDevice=[null]")) {
-          "Expected the default profile to reach the test JVM"
+          "Expected the Desktop profile to reach the test JVM"
         }
       }
     }
@@ -283,7 +305,7 @@ class DesktopPreviewDeviceProfileTest {
   fun whenDeviceProfileIsConfiguredItReachesTheTestJvm() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.useCustomTester = true
-      buildGradle.deviceProfile = "$PROFILE.AndroidCompatible"
+      buildGradle.deviceProfile = "$PROFILE.Pixel4a"
 
       record(additionalParameters = NO_BUILD_CACHE) {
         assert(output.contains("deviceProfile defaultDevice=[spec:width=393dp,height=851dp,dpi=440]")) {
@@ -315,7 +337,7 @@ class DesktopPreviewDeviceProfileTest {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.separateOutputDirs = true
       buildGradle.extraTestRuns = listOf("androidCompat")
-      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.AndroidCompatible")
+      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.Pixel4a")
 
       record(additionalParameters = NO_BUILD_CACHE)
       recordVariant("DesktopAndroidCompat", additionalParameters = NO_BUILD_CACHE)
@@ -334,7 +356,7 @@ class DesktopPreviewDeviceProfileTest {
       }
       // Both directories holding images is not evidence that the extra run used its own profile -
       // it would hold them either way. The default run has no profile and so renders at the pinned
-      // density where 1dp is 1px, while AndroidCompatible renders on a 440dpi screen, so every
+      // density where 1dp is 1px, while Pixel4a renders on a 440dpi screen, so every
       // preview has to come out 2.75x larger there. Comparing at ">= 2x" leaves room for the
       // rounding of a text's measured size without leaving room for the profile being ignored.
       val defaultSizes = recordedImageSizes("desktop")
@@ -383,7 +405,7 @@ class DesktopPreviewDeviceProfileTest {
         }
       }
 
-      buildGradle.deviceProfile = "$PROFILE.AndroidCompatible"
+      buildGradle.deviceProfile = "$PROFILE.Pixel4a"
 
       record(additionalParameters = NO_BUILD_CACHE) {
         assert(task(":${DesktopPreviewModule.moduleName}:desktopTest")?.outcome == TaskOutcome.SUCCESS) {
@@ -398,7 +420,7 @@ class DesktopPreviewDeviceProfileTest {
   fun whenDeviceProfileByTestRunIsUsedWithoutSeparateOutputDirsItFails() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.extraTestRuns = listOf("androidCompat")
-      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.AndroidCompatible")
+      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.Pixel4a")
 
       record(BuildType.BuildAndFail) {
         assert(output.contains("deviceProfileByTestRun needs"))
@@ -411,7 +433,7 @@ class DesktopPreviewDeviceProfileTest {
   fun whenDeviceProfileByTestRunNamesAnUnknownTestRunItFails() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.separateOutputDirs = true
-      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.AndroidCompatible")
+      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.Pixel4a")
 
       record(BuildType.BuildAndFail) {
         assert(output.contains("deviceProfileByTestRun names the test run(s) [androidCompat]"))
@@ -448,8 +470,14 @@ class DesktopPreviewModule(
     /** Extra Kotlin test runs to create on the desktop target, e.g. "androidCompat". */
     var extraTestRuns: List<String> = emptyList()
 
-    /** Kotlin expression for the profile of the target's default test run, or null to leave it unset. */
-    var deviceProfile: String? = null
+    /**
+     * Kotlin expression for the profile of the target's default test run, or null to leave it out.
+     *
+     * Defaults to the pre-profile behaviour rather than to null: the plugin requires a profile, so
+     * leaving it out is a configuration failure, which is its own test rather than the backdrop to
+     * every other one.
+     */
+    var deviceProfile: String? = "$PROFILE.Desktop"
 
     /** Kotlin expressions for the profiles of extra test runs, keyed by test run name. */
     var deviceProfileByTestRun: Map<String, String> = emptyMap()

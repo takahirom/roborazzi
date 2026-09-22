@@ -44,62 +44,43 @@ data class DesktopPreviewRenderSpec(
           density = 1f,
         )
 
-      // A blank `device` is what the scanner reports for a preview that declares none, and it is
-      // the one case where the profile's default applies. Which of the two it is decides the
-      // rounding below, so it has to be remembered rather than recomputed.
-      val fromProfileDefault = previewInfo.device.isBlank()
-      val deviceSpec = if (fromProfileDefault) defaultDevice else previewInfo.device
+      val deviceSpec = previewInfo.device.ifBlank { defaultDevice }
       val device = requireNotNull(DevicePreviewInfoParser.parse(deviceSpec)) {
         "Roborazzi: could not parse the preview device \"$deviceSpec\". It has to be written in " +
           "the same grammar as @Preview(device = ...): \"id:...\", \"name:...\" or \"spec:...\"."
       }
       val density = device.densityDpi * DENSITY_DEFAULT_SCALE
-      val (rawWidthDp, rawHeightDp) = device.screenSizeDp()
-      // A default written in dp is a base configuration and makes the dp -> px -> dp round trip; a
-      // default written in pixels has already lost that fraction in `inDp()`, and rounding it a
-      // second time would take it one dp too low (the Pixel 4a's 850dp would become 849).
-      val roundTrip = fromProfileDefault && device.dimensions.unit == DeviceUnit.DP
-      val deviceWidthDp = if (roundTrip) viaQualifier(rawWidthDp, density) else rawWidthDp
-      val deviceHeightDp = if (roundTrip) viaQualifier(rawHeightDp, density) else rawHeightDp
+      val (deviceWidthPx, deviceHeightPx) = device.screenSizePx(density)
 
       return DesktopPreviewRenderSpec(
-        surfaceWidth = override(toPx(deviceWidthDp, density), toPx(previewInfo.widthDp, density)),
-        surfaceHeight = override(toPx(deviceHeightDp, density), toPx(previewInfo.heightDp, density)),
+        surfaceWidth = override(deviceWidthPx, toPx(previewInfo.widthDp, density)),
+        surfaceHeight = override(deviceHeightPx, toPx(previewInfo.heightDp, density)),
         density = density,
       )
     }
 
     /**
-     * Rounds a dp the way Robolectric's `@Config(qualifiers = ...)` path does, for the one device
-     * that arrives through it.
+     * The device's screen in the pixels it is rendered at.
      *
-     * The two runtimes reach a device-less preview differently. A preview that names a device gets
-     * an additive `w<n>dp` qualifier built from the parsed device, and the pixel size is a plain
-     * `floor(dp * density)`. A preview that names none is sized by the base configuration instead,
-     * and that configuration was itself written in dp, turned into pixels, and read back as dp -
-     * so the dp makes a full round trip before becoming the pixel size. The profile's
-     * `defaultDevice` stands in for exactly that base configuration.
+     * A device written in dp is floored once, `floor(dp * density)`, which is what the Robolectric
+     * runtime's configuration produces: it keeps `Configuration.screenWidthDp` exactly as the
+     * qualifier gave it, so `w393dp` at 440dpi is 1080px and `w411dp` at 420dpi is 1078px. A
+     * device written in pixels - which is what an `"id:..."` usually resolves to - is rendered at
+     * exactly those pixels rather than at the dp they happen to truncate to.
      *
-     * The round trip is not a no-op: `w411dp` at 420dpi is 1078px, which reads back as 410dp,
-     * which is 1076px - the number goals.md measured from Robolectric for the Pixel 6 qualifiers.
-     * For `w393dp` at 440dpi it is 1080 -> 392 -> 1078, the Pixel 4a number.
+     * The Robolectric runtime captures two pixels narrower than this for a Pixel 4a, 1078 rather
+     * than 1080. That is a Robolectric inconsistency and not a rule to copy: measured at these
+     * qualifiers, its `Resources` and `Configuration` report 1080x2340 while `Display` reports a
+     * round-tripped 1078x2334, and the activity window is laid out from the `Display`. Sizing the
+     * desktop surface from the same numbers Android itself reports is what keeps this arithmetic
+     * explainable; the remaining pixel or two between the runtimes belongs to that bug.
      */
-    private fun viaQualifier(dp: Int, density: Float): Int =
-      floor(floor(dp * density) / density).toInt()
-
-    /**
-     * The device's screen in dp, the way the Robolectric runtime sees it.
-     *
-     * This deliberately goes through [Device.inDp] and truncates, because that is what
-     * `RobolectricDeviceQualifierBuilder` does before handing the size to Robolectric as a
-     * `w<n>dp-h<n>dp` qualifier. For a device declared in pixels the round trip loses a fraction,
-     * and reproducing that loss is what makes the two runtimes agree: `id:pixel_4a` is 1080x2340 px
-     * at 440dpi, which is 392dp wide, which is 1078px - not the 1080px it started from.
-     */
-    private fun Device.screenSizeDp(): Pair<Int, Int> {
-      val inDp = inDp().dimensions
-      val width = inDp.width.toInt()
-      val height = inDp.height.toInt()
+    private fun Device.screenSizePx(density: Float): Pair<Int, Int> {
+      val (width, height) = when (dimensions.unit) {
+        DeviceUnit.PX -> dimensions.width.toInt() to dimensions.height.toInt()
+        DeviceUnit.DP -> flooredPx(dimensions.width.toInt(), density) to
+          flooredPx(dimensions.height.toInt(), density)
+      }
       // A landscape device is described by its natural portrait dimensions, and the `land`
       // qualifier is what turns it around, so mirror that here rather than trusting the order.
       return if (orientation == Orientation.LANDSCAPE) {

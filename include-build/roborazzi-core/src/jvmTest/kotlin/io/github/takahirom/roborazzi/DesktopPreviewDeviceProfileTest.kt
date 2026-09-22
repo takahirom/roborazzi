@@ -14,7 +14,7 @@ class DesktopPreviewDeviceProfileTest {
   fun presetsSurviveEncoding() {
     for (profile in listOf(
       DesktopPreviewDeviceProfile.Desktop,
-      DesktopPreviewDeviceProfile.AndroidCompatible,
+      DesktopPreviewDeviceProfile.Pixel4a,
     )) {
       assertEquals(profile, DesktopPreviewDeviceProfile.decode(profile.encode()))
     }
@@ -41,7 +41,7 @@ class DesktopPreviewDeviceProfileTest {
     // would be silently truncated away rather than rejected.
     for (profile in listOf(
       DesktopPreviewDeviceProfile.Desktop,
-      DesktopPreviewDeviceProfile.AndroidCompatible,
+      DesktopPreviewDeviceProfile.Pixel4a,
     )) {
       val encoded = profile.encode()
       assertTrue("'$encoded' must not be empty", encoded.isNotEmpty())
@@ -64,13 +64,13 @@ class DesktopPreviewDeviceProfileTest {
   fun encodingDistinguishesProfilesSoItCanBeATaskInput() {
     assertNotEquals(
       DesktopPreviewDeviceProfile.Desktop.encode(),
-      DesktopPreviewDeviceProfile.AndroidCompatible.encode(),
+      DesktopPreviewDeviceProfile.Pixel4a.encode(),
     )
   }
 
   @Test
   fun equalProfilesHaveEqualHashCodes() {
-    val profile = DesktopPreviewDeviceProfile.AndroidCompatible
+    val profile = DesktopPreviewDeviceProfile.Pixel4a
     val same = DesktopPreviewDeviceProfile.Desktop.copy(defaultDevice = profile.defaultDevice)
     assertEquals(profile, same)
     assertEquals(profile.hashCode(), same.hashCode())

@@ -45,7 +45,7 @@ roborazzi {
     // The whole point of this module is comparing the two runtimes, so the desktop side has to
     // interpret `device` and render at the device density. The default device matches the
     // Pixel 4a qualifier the Robolectric side is configured with above.
-    deviceProfile = DesktopPreviewDeviceProfile.AndroidCompatible
+    deviceProfile = DesktopPreviewDeviceProfile.Pixel4a
   }
 }
 

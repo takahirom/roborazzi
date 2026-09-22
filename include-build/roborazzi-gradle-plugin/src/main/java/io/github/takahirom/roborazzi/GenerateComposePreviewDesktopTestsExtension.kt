@@ -93,7 +93,9 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
   /**
    * How previews are sized and scaled by the test task of the target's default test run.
    *
-   * Unset means [DesktopPreviewDeviceProfile.Default].
+   * Required: there is no default, because the profile decides the size and density of every
+   * golden this module records and no value is right for every project. Leaving it unset fails
+   * configuration with a message listing the presets.
    *
    * A custom tester reads it as `options().deviceProfile`, so build its options from
    * `DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(...)`: options constructed from
@@ -101,7 +103,7 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
    *
    * ```kotlin
    * roborazzi.generateComposePreviewDesktopTests {
-   *   deviceProfile = DesktopPreviewDeviceProfile.AndroidCompatible
+   *   deviceProfile = DesktopPreviewDeviceProfile.Pixel4a
    * }
    * ```
    */
@@ -129,7 +131,7 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
    *   generateComposePreviewDesktopTests {
    *     deviceProfileByTestRun.put(
    *       "androidCompat",
-   *       DesktopPreviewDeviceProfile.AndroidCompatible,
+   *       DesktopPreviewDeviceProfile.Pixel4a,
    *     )
    *   }
    * }
@@ -311,8 +313,12 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
 
                     fun setupDefaultOptions() {
                         DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(
-                            deviceProfile = roborazziSystemPropertyDesktopDeviceProfile()
-                              ?: DesktopPreviewDeviceProfile.Default,
+                            deviceProfile = requireNotNull(roborazziSystemPropertyDesktopDeviceProfile()) {
+                              "Roborazzi: no desktop device profile reached the test JVM. The " +
+                                "Gradle plugin sets it from " +
+                                "generateComposePreviewDesktopTests.deviceProfile, so this means " +
+                                "the test task was not configured by the Roborazzi plugin."
+                            },
                             scanOptions = DesktopComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
