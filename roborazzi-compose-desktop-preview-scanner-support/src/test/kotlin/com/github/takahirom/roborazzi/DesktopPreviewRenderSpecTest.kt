@@ -90,6 +90,58 @@ class DesktopPreviewRenderSpecTest {
   }
 
   @Test
+  fun `the MediumPhone profile renders the pixels Android Studio previews`() {
+    // Studio, and Google's Compose Preview Screenshot Testing, preview Medium Phone at exactly
+    // 1080x2400 at 420dpi. Reading those pixels back as 411dp would give 1078x2399.
+    val spec = resolve(AndroidPreviewInfo(), DesktopPreviewDeviceProfile.MediumPhone)
+
+    assertEquals(DesktopPreviewRenderSpec(1080, 2400, 2.625f), spec)
+  }
+
+  @Test
+  fun `a scaled MediumPhone moves its pixels by the same ratio as its dpi`() {
+    // 420dpi halves to 210dpi, and the pixels halve with it. Going through the device's 411x914
+    // dp would give 539x1199 instead, reintroducing the rounding the pixel path exists to avoid.
+    val spec = resolve(
+      AndroidPreviewInfo(),
+      DesktopPreviewDeviceProfile.MediumPhone,
+      renderScale = 0.5,
+    )
+
+    assertEquals(DesktopPreviewRenderSpec(540, 1200, 1.3125f), spec)
+  }
+
+  @Test
+  fun `a third of MediumPhone rounds the dpi first, and the pixels follow that dpi`() {
+    // 420 / 3 is 140 exactly, so the dpi rounding is a no-op here and the pixels are a clean
+    // third: the ratio the pixels are scaled by is the one the density actually ended up at.
+    val spec = resolve(
+      AndroidPreviewInfo(),
+      DesktopPreviewDeviceProfile.MediumPhone,
+      renderScale = 1.0 / 3.0,
+    )
+
+    assertEquals(DesktopPreviewRenderSpec(360, 800, 0.875f), spec)
+  }
+
+  @Test
+  fun `a preview naming Medium Phone is sized at the pixels the device declares`() {
+    // Both spellings give the device's real 1080x2400 here, whether it arrives as the profile's
+    // default or as the preview's own `device`.
+    //
+    // The Robolectric runtime is 1078x2399 for this one, and the gap is not ours to close:
+    // ComposablePreviewScanner turns 1080px into a `w411dp` qualifier, and no integer dp maps
+    // back to 1080 at 420dpi (411 -> 1078, 412 -> 1081). Pixel 4a has no such gap because its
+    // 1080px is exactly `w393dp` at 440dpi.
+    val spec = resolve(
+      AndroidPreviewInfo(device = "id:medium_phone"),
+      DesktopPreviewDeviceProfile.MediumPhone,
+    )
+
+    assertEquals(DesktopPreviewRenderSpec(1080, 2400, 2.625f), spec)
+  }
+
+  @Test
   fun `a blank default device is rejected because the parser would take it as a device`() {
     val failure = runCatching {
       DesktopPreviewDeviceProfile.Pixel4a.copy(defaultDevice = "")

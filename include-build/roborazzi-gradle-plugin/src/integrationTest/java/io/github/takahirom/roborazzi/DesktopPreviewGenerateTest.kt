@@ -320,6 +320,9 @@ class DesktopPreviewDeviceProfileTest {
         assert(output.contains("DesktopPreviewDeviceProfile.Pixel4a")) {
           "Expected the failure to offer the Pixel4a preset, but got:\n$output"
         }
+        assert(output.contains("DesktopPreviewDeviceProfile.MediumPhone")) {
+          "Expected the failure to offer the MediumPhone preset, but got:\n$output"
+        }
       }
     }
   }

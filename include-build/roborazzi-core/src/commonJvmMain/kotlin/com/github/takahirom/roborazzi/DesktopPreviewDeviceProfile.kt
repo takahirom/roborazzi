@@ -9,10 +9,10 @@ import java.io.Serializable
  * previews under several profiles by giving each its own Kotlin test run, which the Roborazzi
  * plugin turns into its own set of tasks and its own output directory.
  *
- * The presets are [Desktop] and [Pixel4a]. To vary a single axis, start from a preset and use
- * [copy]. There is deliberately no default: the profile decides the size and density of every
- * golden the module records, and no value is right for every project, so the build asks rather
- * than guessing.
+ * The presets are [Desktop], [Pixel4a] and [MediumPhone]. To vary a single axis, start from a
+ * preset and use [copy]. There is deliberately no default: the profile decides the size and
+ * density of every golden the module records, and no value is right for every project, so the
+ * build asks rather than guessing.
  *
  * A profile fixes the device configuration - the surface size and the density - not the pixels.
  * Desktop measures text with the host OS font rather than the one Android ships, so a profile that
@@ -30,6 +30,14 @@ class DesktopPreviewDeviceProfile private constructor(
    * `@Preview(device = ...)` - `id:`, `name:` or `spec:`. It is parsed by ComposablePreviewScanner's
    * `DevicePreviewInfoParser`, so for example `"id:pixel_4a"` and
    * `"spec:width=411dp,height=891dp,dpi=420"` are both valid.
+   *
+   * The unit decides the rounding. A spec in dp stands in for a Robolectric base configuration,
+   * whose dp become pixels and are read back as dp before they size the surface, so
+   * `"spec:width=411dp,height=914dp,dpi=420"` renders narrower than 411dp at 420dpi would
+   * suggest. A device in pixels - which is what `"id:..."` usually resolves to - has no such
+   * configuration behind it and is rendered at exactly its own pixels. A preview that names a
+   * device itself is never affected by this: it always takes the Robolectric qualifier
+   * arithmetic.
    *
    * `null` keeps the historical desktop behaviour: density is pinned at 1, the canvas is at least
    * 1024x768, `device` is ignored and only `widthDp`/`heightDp` affect the size.
@@ -117,7 +125,7 @@ class DesktopPreviewDeviceProfile private constructor(
      * This is Roborazzi's own default device, not Android Studio's. Studio, and Google's Compose
      * Preview Screenshot Testing, preview a device they call Medium Phone: 1080x2400px at 420dpi,
      * against this profile's 1080x2340px at 440dpi. The density differs, so a preview captured
-     * here is not comparable to a Studio preview.
+     * here is not comparable to a Studio preview; [MediumPhone] is the profile for that.
      *
      * Written out as a spec rather than as `"id:pixel_4a"` because these are the dp that
      * `RobolectricDeviceQualifiers.Pixel4a` puts in the Robolectric configuration, and keeping
@@ -136,6 +144,25 @@ class DesktopPreviewDeviceProfile private constructor(
       DesktopPreviewDeviceProfile(defaultDevice = "spec:width=393dp,height=851dp,dpi=440")
 
     /**
+     * Sizes previews as the Medium Phone that Android Studio previews by default, so a preview can
+     * be compared with what Studio, or Google's Compose Preview Screenshot Testing, shows.
+     *
+     * Written out as a spec rather than as `"id:medium_phone"` so the preset does not depend on
+     * ComposablePreviewScanner's device table keeping that entry; these are the pixels and dpi the
+     * scanner resolves `id:medium_phone` to, and they are the pixels rendered.
+     *
+     * Robolectric has the same device as `RobolectricDeviceQualifiers.MediumPhone`, but it carries
+     * the configuration in dp, and at density 2.625 no whole dp reaches 1080 or 2400: 411dp is
+     * 1078px and 412dp is 1081px. A Robolectric run of this device is therefore a pixel or two off
+     * Studio however it is spelled, while this profile renders exactly what Studio does.
+     *
+     * What matches Studio here is the device configuration, not the text: see the class
+     * documentation.
+     */
+    val MediumPhone: DesktopPreviewDeviceProfile =
+      DesktopPreviewDeviceProfile(defaultDevice = "spec:width=1080px,height=2400px,dpi=420")
+
+    /**
      * Spelled out for the message a build sees when it has configured no profile at all.
      *
      * Kept next to the presets so that adding one and forgetting to offer it here is a change to
@@ -151,6 +178,11 @@ class DesktopPreviewDeviceProfile private constructor(
       |  DesktopPreviewDeviceProfile.Pixel4a
       |      393dp x 851dp at 440dpi, the device the Robolectric runtime defaults to, so the
       |      same preview can be compared between the two runtimes.
+      |
+      |  DesktopPreviewDeviceProfile.MediumPhone
+      |      1080x2400px at 420dpi, the device Android Studio previews by default, so the
+      |      same preview can be compared with Studio and with Google's Compose Preview
+      |      Screenshot Testing.
     """.trimMargin()
 
     fun decode(value: String): DesktopPreviewDeviceProfile {

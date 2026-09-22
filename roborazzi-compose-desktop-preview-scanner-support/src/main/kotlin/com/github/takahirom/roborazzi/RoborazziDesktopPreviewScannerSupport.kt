@@ -528,11 +528,12 @@ class DefaultDesktopComposePreviewTester(
   /**
    * Says once that the configured profile is dropping a `device` the preview asked for.
    *
-   * The default profile has always ignored `device`, and keeping it that way is what lets an
+   * The `Desktop` profile has always ignored `device`, and keeping it that way is what lets an
    * existing project upgrade without re-recording. Ignoring it silently is the part worth fixing:
    * a preview that names a Pixel and comes out 1024x768 looks like a bug until you know about
    * device profiles.
    */
+  @OptIn(InternalRoborazziApi::class)
   private fun warnOnceIfTheDeviceIsIgnored(
     previewInfo: AndroidPreviewInfo,
     profile: DesktopPreviewDeviceProfile,
@@ -543,9 +544,9 @@ class DefaultDesktopComposePreviewTester(
     roborazziErrorLog(
       "@Preview(device = \"${previewInfo.device}\") is ignored because the desktop " +
         "device profile has no default device. Set " +
-        "generateComposePreviewDesktopTests { deviceProfile = " +
-        "DesktopPreviewDeviceProfile.Pixel4a } to size previews the way the Robolectric " +
-        "runtime does. Note that this changes the size of every screenshot this module records."
+        "generateComposePreviewDesktopTests { deviceProfile = ... } to a profile that has " +
+        "one. Note that this changes the size of every screenshot this module records.\n" +
+        DesktopPreviewDeviceProfile.PRESET_CHOICES
     )
   }
 

@@ -10,12 +10,15 @@ import org.junit.Test
 
 @OptIn(ExperimentalRoborazziApi::class)
 class DesktopPreviewDeviceProfileTest {
+  private val presets = listOf(
+    DesktopPreviewDeviceProfile.Desktop,
+    DesktopPreviewDeviceProfile.Pixel4a,
+    DesktopPreviewDeviceProfile.MediumPhone,
+  )
+
   @Test
   fun presetsSurviveEncoding() {
-    for (profile in listOf(
-      DesktopPreviewDeviceProfile.Desktop,
-      DesktopPreviewDeviceProfile.Pixel4a,
-    )) {
+    for (profile in presets) {
       assertEquals(profile, DesktopPreviewDeviceProfile.decode(profile.encode()))
     }
   }
@@ -39,10 +42,7 @@ class DesktopPreviewDeviceProfileTest {
   fun encodingIsCommandLineSafe() {
     // The plugin puts the encoding on a forked test JVM's command line, where a control character
     // would be silently truncated away rather than rejected.
-    for (profile in listOf(
-      DesktopPreviewDeviceProfile.Desktop,
-      DesktopPreviewDeviceProfile.Pixel4a,
-    )) {
+    for (profile in presets) {
       val encoded = profile.encode()
       assertTrue("'$encoded' must not be empty", encoded.isNotEmpty())
       assertTrue(
@@ -75,10 +75,7 @@ class DesktopPreviewDeviceProfileTest {
 
   @Test
   fun encodingDistinguishesProfilesSoItCanBeATaskInput() {
-    assertNotEquals(
-      DesktopPreviewDeviceProfile.Desktop.encode(),
-      DesktopPreviewDeviceProfile.Pixel4a.encode(),
-    )
+    assertEquals(presets.size, presets.map { it.encode() }.toSet().size)
   }
 
   @Test

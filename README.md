@@ -1466,13 +1466,15 @@ The presets are:
 |---|---|
 | `DesktopPreviewDeviceProfile.Desktop` | The historical desktop behaviour: density 1, a canvas of at least 1024x768, and only `widthDp`/`heightDp` affect the size. |
 | `DesktopPreviewDeviceProfile.Pixel4a` | Sizes previews as a Pixel 4a, the device the Robolectric runtime defaults to, so the same preview can be compared between the two runtimes. |
+| `DesktopPreviewDeviceProfile.MediumPhone` | Sizes previews as the Medium Phone that Android Studio previews by default - 1080x2400px at 420dpi - so the same preview can be compared with Studio and with Google's Compose Preview Screenshot Testing. The Robolectric runtime cannot reach these pixels: it carries the device in dp, and at density 2.625 no whole dp reaches 1080 or 2400 (411dp is 1078px, 412dp is 1081px). |
 
 To vary a single axis, start from a preset and use `copy()`.
 
-`Pixel4a` is Roborazzi's own default device, not Android Studio's. Studio previews a device
-it calls Medium Phone - 411dp x 914dp at 420dpi - so previews captured under `Pixel4a` are
-about 4.8% larger in dp and rendered at a different density than what Studio, or Google's
-Compose Preview Screenshot Testing, shows.
+`Pixel4a` is Roborazzi's own default device, not Android Studio's. Studio, and Google's
+Compose Preview Screenshot Testing, preview a device they call Medium Phone: 1080x2400px at
+420dpi, against `Pixel4a`'s 1080x2340px at 440dpi. Neither the surface nor the density
+matches, so pick by what you want to compare against - `Pixel4a` for Roborazzi's Robolectric
+runtime, `MediumPhone` for Studio.
 
 A profile fixes the device configuration - the surface size and the density - not the
 pixels. Desktop measures text with the host OS font rather than the one Android ships, so a
@@ -1495,8 +1497,9 @@ Under `Pixel4a`:
   both together, or the two runtimes size device-less previews differently on purpose.
 - A device given in dp is converted once, `floor(dp * density)`, which is the number the
   Robolectric runtime's configuration reports: `width=411dp` at 420dpi is 1078px. A device id such
-  as `id:pixel_7` names a pixel-size entry and is rendered at exactly those pixels. Prefer a
-  `spec:` in dp for `defaultDevice`, since that is the form a qualifier takes.
+  as `id:pixel_7` names a pixel-size entry and is rendered at exactly those pixels. For a device
+  whose pixels are a whole number of dp both forms give the same surface, so write `defaultDevice`
+  the way the device is defined - `Pixel4a` is in dp, `MediumPhone` in pixels.
 - `widthDp`/`heightDp` are dp at that density rather than raw pixels, so a 200dp box on a 440dpi
   device is 550px wide on both runtimes.
 
