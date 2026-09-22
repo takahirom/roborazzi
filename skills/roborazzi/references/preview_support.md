@@ -350,6 +350,8 @@ roborazzi {
   generateComposePreviewDesktopTests {
     enable = true
     packages = listOf("com.example.previews")
+    // The default test run needs one too; deviceProfileByTestRun only covers the runs it names.
+    deviceProfile = DesktopPreviewDeviceProfile.Desktop
     deviceProfileByTestRun.put(
       "androidCompat",
       DesktopPreviewDeviceProfile.Pixel4a,
