@@ -1617,9 +1617,11 @@ is 1px, and is then scaled by `renderScale`. Anything drawn in raw pixels keeps 
 thicker in the smaller image, and existing goldens have to be recorded again.
 
 A custom tester that sizes its own surface has to pass the value on:
-`DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile, options().renderScale)`. A
-tester that drops the configured scale fails the generated test with an explanation, so a
-silently unscaled screenshot is not possible.
+`DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile, options().renderScale)`. What
+the check watches is that resolve: a test that never asks for a spec, or asks for one at a
+different scale, fails with an explanation rather than recording an unscaled image. It does
+not measure the surface the tester then draws on, so a tester that resolves the right spec
+and ignores it is still on its own.
 
 ### Customizing the desktop tester
 
