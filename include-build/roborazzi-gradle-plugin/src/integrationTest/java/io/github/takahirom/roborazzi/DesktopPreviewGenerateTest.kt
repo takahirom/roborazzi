@@ -2,6 +2,8 @@ package io.github.takahirom.roborazzi
 
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
+import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.Element
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
@@ -462,6 +464,9 @@ class DesktopPreviewModule(
 ) {
   companion object {
     val moduleName = "sample-generate-preview-desktop-tests"
+
+    /** The children JUnit writes under a `<testcase>` that did not pass. */
+    private val FAILED_TAGS = setOf("failure", "error")
   }
 
   val buildGradle = BuildGradle(testProjectDir)
@@ -923,15 +928,25 @@ class DesktopPreviewModule(
         .toSet()
     }
 
-  /** The subset of [reportedTestCaseNames] that JUnit reported as failed. */
+  /**
+   * The subset of [reportedTestCaseNames] that JUnit reported as failed.
+   *
+   * Parsed rather than matched: a `<testcase>` can be written with children for reasons other
+   * than a failure - `<system-out>`, a `<skipped>` marker - so what makes it a failure is the
+   * child element, not the shape of the opening tag.
+   */
   fun failedTestCaseNames(testTaskName: String = "desktopTest"): Set<String> =
     junitXmlFiles(testTaskName)
       .flatMap { file ->
-        // A passing testcase is written self-closing; a failed one opens a tag with a
-        // <failure> child, so the last character before '>' tells them apart.
-        Regex("<testcase name=\"([^\"]+)\"[^>]*[^/]>")
-          .findAll(file.readText())
-          .map { it.groupValues[1] }
+        val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
+        val testCases = document.getElementsByTagName("testcase")
+        (0 until testCases.length)
+          .map { testCases.item(it) as Element }
+          .filter { testCase ->
+            val children = testCase.childNodes
+            (0 until children.length).any { children.item(it).nodeName in FAILED_TAGS }
+          }
+          .map { it.getAttribute("name") }
       }
       .toSet()
 
