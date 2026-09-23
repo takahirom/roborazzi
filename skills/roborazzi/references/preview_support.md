@@ -385,6 +385,7 @@ roborazzi {
   generateComposePreviewDesktopTests {
     enable = true
     packages = listOf("com.example.previews")
+    deviceProfile = DesktopPreviewDeviceProfile.Pixel4a
     sceneReuse = true
   }
 }
