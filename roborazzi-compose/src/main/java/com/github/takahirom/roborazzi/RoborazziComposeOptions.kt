@@ -137,7 +137,14 @@ class RoborazziComposeOptions private constructor(
     content: @Composable () -> Unit
   ): @Composable () -> Unit {
     applySetup()
+    return configuredAfterSetup(activityScenario, content)
+  }
 
+  /** Applies the Activity and Composable options, assuming [applySetup] already ran. */
+  internal fun configuredAfterSetup(
+    activityScenario: ActivityScenario<out Activity>,
+    content: @Composable () -> Unit
+  ): @Composable () -> Unit {
     activityScenarioOptions.forEach { it.configureWithActivityScenario(activityScenario) }
     var appliedContent = content
     composableOptions.forEach { config ->

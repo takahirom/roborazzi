@@ -54,6 +54,7 @@ fun captureRoboImage(
 }
 
 @ExperimentalRoborazziApi
+@OptIn(InternalRoborazziApi::class)
 fun captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
@@ -61,13 +62,14 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  var savedQualifiers: String? = null
-  var savedFontScale = 1f
+  val savedQualifiers = RuntimeEnvironment.getQualifiers()
+  val savedFontScale = RuntimeEnvironment.getFontScale()
   try {
+    // Apply the environment before launch; changing it afterwards recreates the Activity.
+    roborazziComposeOptions.applySetup()
     launchRoborazziActivity(roborazziComposeOptions) { activityScenario ->
-      savedQualifiers = RuntimeEnvironment.getQualifiers()
-      savedFontScale = RuntimeEnvironment.getFontScale()
-      val configuredContent = roborazziComposeOptions.configured(activityScenario) { content() }
+      val configuredContent =
+        roborazziComposeOptions.configuredAfterSetup(activityScenario) { content() }
       try {
         activityScenario.captureRoboImage(
           file = file,
@@ -81,11 +83,9 @@ fun captureRoboImage(
     }
   } finally {
     // Restore only after the scenario has closed, so cleanup does not recreate its activity.
-    savedQualifiers?.let { originalQualifiers ->
-      RuntimeEnvironment.setQualifiers(originalQualifiers)
-      if (RuntimeEnvironment.getFontScale() != savedFontScale) {
-        RuntimeEnvironment.setFontScale(savedFontScale)
-      }
+    RuntimeEnvironment.setQualifiers(savedQualifiers)
+    if (RuntimeEnvironment.getFontScale() != savedFontScale) {
+      RuntimeEnvironment.setFontScale(savedFontScale)
     }
   }
 }
