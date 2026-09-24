@@ -31,13 +31,11 @@ class DesktopPreviewDeviceProfile private constructor(
    * `DevicePreviewInfoParser`, so for example `"id:pixel_4a"` and
    * `"spec:width=411dp,height=891dp,dpi=420"` are both valid.
    *
-   * The unit decides the rounding. A spec in dp stands in for a Robolectric base configuration,
-   * whose dp become pixels and are read back as dp before they size the surface, so
-   * `"spec:width=411dp,height=914dp,dpi=420"` renders narrower than 411dp at 420dpi would
-   * suggest. A device in pixels - which is what `"id:..."` usually resolves to - has no such
-   * configuration behind it and is rendered at exactly its own pixels. A preview that names a
-   * device itself is never affected by this: it always takes the Robolectric qualifier
-   * arithmetic.
+   * The unit decides the rounding, the same way for this default and for a preview that names
+   * its own device. A device in dp is converted once with `floor(dp * density)`, as Robolectric
+   * does, so `"spec:width=411dp,height=914dp,dpi=420"` is 1078x2399px. A device in pixels - which
+   * is what `"id:..."` usually resolves to - is rendered at exactly its own pixels, so
+   * `"id:medium_phone"` is 1080x2400px.
    *
    * `null` keeps the historical desktop behaviour: density is pinned at 1, the canvas is at least
    * 1024x768, `device` is ignored and only `widthDp`/`heightDp` affect the size.
