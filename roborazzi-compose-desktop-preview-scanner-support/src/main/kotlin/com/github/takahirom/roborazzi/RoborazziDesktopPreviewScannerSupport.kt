@@ -420,6 +420,12 @@ class DefaultDesktopComposePreviewTester(
     // after the per-preview rule has run, as it is when every preview gets its own scene.
     val firstPreviewInfo = group.first().preview.previewInfo
     val sceneSpec = DesktopPreviewRenderSpec.resolve(firstPreviewInfo, options().deviceProfile)
+    // How many previews the shared scene got through. A preview that throws is reported as its own
+    // failure, but the scene it threw in is not trusted afterwards: an exception out of
+    // composition, for one, leaves the surface unable to produce an image, and every later
+    // capture in it would fail too. So the scene stops there and the rest of the group is captured
+    // the way it would be without scene reuse.
+    var attempted = 0
     withLocale(firstPreviewInfo.locale) {
       runDesktopComposeUiTest(
         width = sceneSpec.surfaceWidth,
@@ -433,25 +439,33 @@ class DefaultDesktopComposePreviewTester(
         setContent {
           key(index) { content?.invoke() }
         }
-        group.forEachIndexed { position, testParameter ->
-          // Comparison failures are reported per preview and do not end the group: in verify mode
-          // `captureRoboImage` throws on a mismatch, and letting the first mismatch out of here
-          // would leave every later preview in this scene uncaptured and unreported.
+        for ((position, testParameter) in group.withIndex()) {
+          var threw = false
+          attempted = position + 1
           listener.aroundCapture(testParameter) {
-            val prepared = prepare(testParameter)
-            content = prepared.captureParameter.content
-            index = position
-            waitForIdle()
-            // A no-op here - a preview with manualClockOptions never joins a shared scene - but
-            // kept so this path stays a step-for-step match of DefaultCapturer.capture().
-            advanceMainClockFor(prepared.captureParameter)
-            onRoot().captureRoboImage(
-              filePath = prepared.captureParameter.filePath,
-              roborazziOptions = prepared.captureParameter.roborazziOptions,
-            )
+            try {
+              val prepared = prepare(testParameter)
+              content = prepared.captureParameter.content
+              index = position
+              waitForIdle()
+              // A no-op here - a preview with manualClockOptions never joins a shared scene - but
+              // kept so this path stays a step-for-step match of DefaultCapturer.capture().
+              advanceMainClockFor(prepared.captureParameter)
+              onRoot().captureRoboImage(
+                filePath = prepared.captureParameter.filePath,
+                roborazziOptions = prepared.captureParameter.roborazziOptions,
+              )
+            } catch (throwable: Throwable) {
+              threw = true
+              throw throwable
+            }
           }
+          if (threw) break
         }
       }
+    }
+    group.drop(attempted).forEach { testParameter ->
+      listener.aroundCapture(testParameter) { test(testParameter) }
     }
   }
 

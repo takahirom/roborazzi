@@ -230,6 +230,55 @@ class DesktopPreviewSceneReuseGenerateTest {
   }
 
   @Test
+  fun whenOnePreviewInASharedSceneThrowsWhileComposingTheOthersStillRenderTheirOwnContent() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      testProjectDir.root
+        .resolve(
+          "${DesktopPreviewModule.moduleName}/src/commonMain/kotlin/" +
+            "com/github/takahirom/preview/tests/AThrowingPreview.kt"
+        )
+        .writeText(
+          """
+            package com.github.takahirom.preview.tests
+
+            import androidx.compose.runtime.Composable
+            import androidx.compose.ui.tooling.preview.Preview
+
+            @Preview
+            @Composable
+            fun PreviewThrowsWhileComposing() {
+              error("thrown while composing")
+            }
+          """.trimIndent()
+        )
+      record(buildType = BuildType.BuildAndFail, additionalParameters = NO_BUILD_CACHE)
+      val perScene = recordedImageBytes()
+
+      // The file name puts the throwing preview first in the scanner's order, so it is composed
+      // before the other previews that share its scene rather than after them. Its exception
+      // escapes from the composition the scene keeps using, so what matters is that every later
+      // preview of the scene is still reported and still renders what it renders on its own.
+      buildGradle.sceneReuse = true
+      clearRecordedImages()
+      record(buildType = BuildType.BuildAndFail, additionalParameters = NO_BUILD_CACHE)
+      val reused = recordedImageBytes()
+
+      val failed = failedTestCaseNames()
+      assert(failed.size == 1 && failed.single().contains("PreviewThrowsWhileComposing")) {
+        "Expected only the throwing preview to fail, but these did: $failed"
+      }
+      assert(reused.keys == perScene.keys) {
+        "The throwing preview changed which previews of its scene were captured. Only per-scene: " +
+          "${perScene.keys - reused.keys}; only reusing: ${reused.keys - perScene.keys}"
+      }
+      val different = perScene.keys.filter { !perScene.getValue(it).contentEquals(reused.getValue(it)) }
+      assert(different.isEmpty()) {
+        "After the throwing preview, these previews rendered something else: $different"
+      }
+    }
+  }
+
+  @Test
   fun whenOnePreviewHasAnUnparsableDeviceTheOthersStillRun() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.sceneReuse = true
