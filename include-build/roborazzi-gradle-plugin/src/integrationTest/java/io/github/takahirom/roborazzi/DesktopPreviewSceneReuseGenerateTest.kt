@@ -158,6 +158,78 @@ class DesktopPreviewSceneReuseGenerateTest {
   }
 
   @Test
+  fun whenSceneReuseIsOnAPerPreviewRuleStillReachesEveryCapture() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.useCustomTester = true
+      // A rule that overrides the options for its own test, the way RoborazziRule does. Anything
+      // the capture reads from the Roborazzi context has to be read inside that test, including
+      // for the previews that share a scene with others.
+      testProjectDir.root
+        .resolve(
+          "${DesktopPreviewModule.moduleName}/src/desktopTest/kotlin/" +
+            "com/github/takahirom/sample/CustomDesktopPreviewTester.kt"
+        )
+        .writeText(
+          """
+            package com.github.takahirom.sample
+
+            import com.github.takahirom.roborazzi.DefaultDesktopComposePreviewTester
+            import com.github.takahirom.roborazzi.DesktopComposePreviewTester
+            import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+            import com.github.takahirom.roborazzi.InternalRoborazziApi
+            import com.github.takahirom.roborazzi.RoborazziOptions
+            import com.github.takahirom.roborazzi.provideRoborazziContext
+            import org.junit.rules.TestRule
+            import org.junit.runner.Description
+            import org.junit.runners.model.Statement
+
+            @OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
+            class CustomDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester() {
+              override fun options(): DesktopComposePreviewTester.Options =
+                DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(
+                  testLifecycleOptions = DesktopComposePreviewTester.Options.JUnit4TestLifecycleOptions(
+                    testRuleFactory = {
+                      TestRule { base: Statement, _: Description ->
+                        object : Statement() {
+                          override fun evaluate() {
+                            provideRoborazziContext().setRuleOverrideRoborazziOptions(
+                              RoborazziOptions(
+                                recordOptions = RoborazziOptions.RecordOptions(resizeScale = 0.5),
+                              )
+                            )
+                            try {
+                              base.evaluate()
+                            } finally {
+                              provideRoborazziContext().clearRuleOverrideRoborazziOptions()
+                            }
+                          }
+                        }
+                      }
+                    }
+                  )
+                )
+            }
+          """.trimIndent()
+        )
+
+      record(additionalParameters = NO_BUILD_CACHE)
+      val perScene = recordedImageSizes()
+      assert(perScene.isNotEmpty()) { "The per-scene run recorded nothing to compare against" }
+
+      buildGradle.sceneReuse = true
+      clearRecordedImages()
+      record(additionalParameters = NO_BUILD_CACHE)
+      val reused = recordedImageSizes()
+
+      val different = perScene.keys.filter { perScene[it] != reused[it] }
+      assert(different.isEmpty()) {
+        "Under scene reuse these previews were captured without the rule's options: " +
+          different.associateWith { "${perScene[it]} per scene, ${reused[it]} reused" }
+      }
+    }
+  }
+
+  @Test
   fun whenOnePreviewHasAnUnparsableDeviceTheOthersStillRun() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.sceneReuse = true

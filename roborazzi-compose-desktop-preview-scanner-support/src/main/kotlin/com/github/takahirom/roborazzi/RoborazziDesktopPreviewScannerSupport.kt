@@ -312,7 +312,7 @@ class DefaultDesktopComposePreviewTester(
     }
     groupDesktopPreviewsByScene(testParameters, options().deviceProfile).forEach { group ->
       if (group.size > 1 && capturerCanShareAScene()) {
-        captureInOneScene(group.map { it to prepare(it) }, listener)
+        captureInOneScene(group, listener)
       } else {
         // Resolved inside the callback, so a preview whose device cannot be parsed fails as its own
         // test rather than before any preview of the shard has been reported.
@@ -323,7 +323,7 @@ class DefaultDesktopComposePreviewTester(
     }
   }
 
-  /** A preview resolved down to everything the capture needs, so a group resolves before it runs. */
+  /** A preview resolved down to everything its capture needs. */
   private class Prepared(
     val renderSpec: DesktopPreviewRenderSpec,
     val locale: String,
@@ -412,29 +412,34 @@ class DefaultDesktopComposePreviewTester(
    */
   @OptIn(ExperimentalTestApi::class)
   private fun captureInOneScene(
-    group: List<Pair<DesktopPreviewTestParameter, Prepared>>,
+    group: List<DesktopPreviewTestParameter>,
     listener: DesktopPreviewCaptureListener,
   ) {
-    val first = group.first().second
-    withLocale(first.locale) {
+    // The group shares one surface and one locale, so the first preview's are the scene's. Only
+    // those are read up front: everything else is prepared inside each preview's `aroundCapture`,
+    // after the per-preview rule has run, as it is when every preview gets its own scene.
+    val firstPreviewInfo = group.first().preview.previewInfo
+    val sceneSpec = DesktopPreviewRenderSpec.resolve(firstPreviewInfo, options().deviceProfile)
+    withLocale(firstPreviewInfo.locale) {
       runDesktopComposeUiTest(
-        width = first.renderSpec.surfaceWidth,
-        height = first.renderSpec.surfaceHeight,
+        width = sceneSpec.surfaceWidth,
+        height = sceneSpec.surfaceHeight,
       ) {
         // Nothing is composed until a preview is selected, so that every preview - the first one
         // included - is composed inside its own `aroundCapture`, the way a scene per preview
         // composes it inside the test the listener wraps.
         var index by mutableStateOf(NOTHING_SELECTED)
+        var content by mutableStateOf<(@Composable () -> Unit)?>(null)
         setContent {
-          key(index) {
-            if (index != NOTHING_SELECTED) group[index].second.captureParameter.content()
-          }
+          key(index) { content?.invoke() }
         }
-        group.forEachIndexed { position, (testParameter, prepared) ->
+        group.forEachIndexed { position, testParameter ->
           // Comparison failures are reported per preview and do not end the group: in verify mode
           // `captureRoboImage` throws on a mismatch, and letting the first mismatch out of here
           // would leave every later preview in this scene uncaptured and unreported.
           listener.aroundCapture(testParameter) {
+            val prepared = prepare(testParameter)
+            content = prepared.captureParameter.content
             index = position
             waitForIdle()
             // A no-op here - a preview with manualClockOptions never joins a shared scene - but
