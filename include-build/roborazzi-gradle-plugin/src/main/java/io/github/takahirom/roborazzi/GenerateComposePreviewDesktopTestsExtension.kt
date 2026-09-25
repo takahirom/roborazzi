@@ -1,11 +1,13 @@
 package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.AnnotationFilter
+import com.github.takahirom.roborazzi.DesktopPreviewDeviceProfile
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -87,6 +89,60 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
    */
   @ExperimentalRoborazziApi
   val annotationFilter: Property<AnnotationFilter> = objects.property(AnnotationFilter::class.java)
+
+  /**
+   * How previews are sized and scaled by the test task of the target's default test run.
+   *
+   * Required: there is no default, because the profile decides the size and density of every
+   * golden this module records and no value is right for every project. Leaving it unset fails
+   * configuration with a message listing the presets.
+   *
+   * A custom tester reads it as `options().deviceProfile`, so build its options from
+   * `DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(...)`: options constructed from
+   * scratch drop everything the plugin configured, this profile included.
+   *
+   * ```kotlin
+   * roborazzi.generateComposePreviewDesktopTests {
+   *   deviceProfile = DesktopPreviewDeviceProfile.MediumPhone
+   * }
+   * ```
+   */
+  @ExperimentalRoborazziApi
+  val deviceProfile: Property<DesktopPreviewDeviceProfile> =
+    objects.property(DesktopPreviewDeviceProfile::class.java)
+
+  /**
+   * Profiles for additional Kotlin test runs of the same target, keyed by test run name.
+   *
+   * A test run is how one module captures the same previews more than once: the Roborazzi plugin
+   * gives every test run of the target its own set of tasks and its own output directory, so the
+   * outputs never overwrite each other.
+   *
+   * ```kotlin
+   * kotlin {
+   *   jvm("desktop") {
+   *     testRuns.create("androidCompat")
+   *   }
+   * }
+   *
+   * roborazzi {
+   *   // required as soon as there is more than one run
+   *   separateOutputDirs = true
+   *   generateComposePreviewDesktopTests {
+   *     deviceProfileByTestRun.put(
+   *       "androidCompat",
+   *       DesktopPreviewDeviceProfile.MediumPhone,
+   *     )
+   *   }
+   * }
+   * ```
+   *
+   * Recording the run above writes to `build/outputs/roborazzi/desktopAndroidCompat/`, while the
+   * default run keeps writing to `build/outputs/roborazzi/desktop/`.
+   */
+  @ExperimentalRoborazziApi
+  val deviceProfileByTestRun: MapProperty<String, DesktopPreviewDeviceProfile> =
+    objects.mapProperty(String::class.java, DesktopPreviewDeviceProfile::class.java)
 }
 
 @CacheableTask
@@ -257,6 +313,12 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
 
                     fun setupDefaultOptions() {
                         DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(
+                            deviceProfile = requireNotNull(roborazziSystemPropertyDesktopDeviceProfile()) {
+                              "Roborazzi: no desktop device profile reached the test JVM. The " +
+                                "Gradle plugin sets it from " +
+                                "generateComposePreviewDesktopTests.deviceProfile, so this means " +
+                                "the test task was not configured by the Roborazzi plugin."
+                            },
                             scanOptions = DesktopComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
