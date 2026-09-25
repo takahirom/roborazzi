@@ -302,6 +302,51 @@ class DesktopPreviewDeviceProfileTest {
   }
 
   @Test
+  fun whenTheDesktopProfileIsConfiguredAPreviewsOwnDeviceIsStillHonored() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.deviceProfile = "$PROFILE.Desktop"
+      testProjectDir.root
+        .resolve(
+          "${DesktopPreviewModule.moduleName}/src/commonMain/kotlin/" +
+            "com/github/takahirom/preview/tests/DeclaredDevicePreview.kt"
+        )
+        .writeText(
+          """
+            package com.github.takahirom.preview.tests
+
+            import androidx.compose.foundation.background
+            import androidx.compose.foundation.layout.Box
+            import androidx.compose.foundation.layout.fillMaxSize
+            import androidx.compose.runtime.Composable
+            import androidx.compose.ui.Modifier
+            import androidx.compose.ui.graphics.Color
+            import androidx.compose.ui.tooling.preview.Preview
+
+            @Preview(device = "spec:width=200dp,height=100dp,dpi=320")
+            @Composable
+            fun PreviewDeclaredDevice() {
+              Box(Modifier.fillMaxSize().background(Color.Blue))
+            }
+          """.trimIndent()
+        )
+
+      record(additionalParameters = NO_BUILD_CACHE)
+
+      // The profile only decides previews that declare no device: this one is laid out on its own
+      // 200x100dp screen at 320dpi, so filling it is 400x200px rather than the 1024x768 canvas.
+      val declared = imageContaining("PreviewDeclaredDevice")
+      assert(declared.width == 400 && declared.height == 200) {
+        "Expected PreviewDeclaredDevice to be 400x200 px, but was ${declared.width}x${declared.height}"
+      }
+      // A preview without a device keeps the historical density of 1 in the same run.
+      val fixedSize = imageContaining("PreviewFixedSize")
+      assert(fixedSize.width == 300 && fixedSize.height == 150) {
+        "Expected PreviewFixedSize to be 300x150 px, but was ${fixedSize.width}x${fixedSize.height}"
+      }
+    }
+  }
+
+  @Test
   fun whenDeviceProfileIsConfiguredItReachesTheTestJvm() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.useCustomTester = true

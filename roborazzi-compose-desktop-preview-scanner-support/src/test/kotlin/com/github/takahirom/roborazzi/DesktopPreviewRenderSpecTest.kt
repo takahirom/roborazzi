@@ -26,13 +26,25 @@ class DesktopPreviewRenderSpecTest {
   }
 
   @Test
-  fun `the Desktop profile ignores the device even when the preview declares one`() {
+  fun `the Desktop profile honors a device the preview declares, dpi included`() {
+    // `floor(411 * 2.625) = 1078` and `floor(891 * 2.625) = 2338`, the same as under any profile
+    // with a default device: the profile only decides previews that declare none.
     val spec = resolve(
       AndroidPreviewInfo(device = "spec:width=411dp,height=891dp,dpi=420"),
       DesktopPreviewDeviceProfile.Desktop,
     )
 
-    assertEquals(DesktopPreviewRenderSpec(1024, 768, 1f), spec)
+    assertEquals(DesktopPreviewRenderSpec(1078, 2338, 2.625f), spec)
+  }
+
+  @Test
+  fun `the Desktop profile resizes a declared device with the preview's own size`() {
+    val spec = resolve(
+      AndroidPreviewInfo(device = "spec:width=411dp,height=891dp,dpi=420", widthDp = 200),
+      DesktopPreviewDeviceProfile.Desktop,
+    )
+
+    assertEquals(DesktopPreviewRenderSpec(525, 2338, 2.625f), spec)
   }
 
   @Test

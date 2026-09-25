@@ -34,17 +34,16 @@ data class DesktopPreviewRenderSpec(
       previewInfo: AndroidPreviewInfo,
       profile: DesktopPreviewDeviceProfile,
     ): DesktopPreviewRenderSpec {
-      val defaultDevice = profile.defaultDevice
-        // No default device means the historical behaviour: density is pinned at 1 so 1dp == 1px,
-        // and `device` is ignored entirely - including when the preview declares one, so that a
-        // profile-less build renders exactly what it rendered before device profiles existed.
+      // A device the preview declares always wins; the profile only supplies one for previews that
+      // declare none. With no device from either, the historical behaviour applies: density is
+      // pinned at 1 so 1dp == 1px, on a surface of at least 1024x768.
+      val deviceSpec = previewInfo.device.ifBlank { profile.defaultDevice }
         ?: return DesktopPreviewRenderSpec(
           surfaceWidth = enlarge(DEFAULT_SURFACE_WIDTH, previewInfo.widthDp),
           surfaceHeight = enlarge(DEFAULT_SURFACE_HEIGHT, previewInfo.heightDp),
           density = 1f,
         )
 
-      val deviceSpec = previewInfo.device.ifBlank { defaultDevice }
       val device = requireNotNull(DevicePreviewInfoParser.parse(deviceSpec)) {
         "Roborazzi: could not parse the preview device \"$deviceSpec\". It has to be written in " +
           "the same grammar as @Preview(device = ...): \"id:...\", \"name:...\" or \"spec:...\"."

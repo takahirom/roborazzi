@@ -24,7 +24,6 @@ import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import io.github.takahirom.roborazzi.captureRoboImage
 import java.io.File
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicBoolean
 import org.junit.rules.TestRule
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
@@ -303,7 +302,6 @@ class DefaultDesktopComposePreviewTester(
     // How large the raster surface is and what a dp is worth on it both follow from the render
     // profile, so they are resolved together before the preview is decorated.
     val deviceProfile = options().deviceProfile
-    warnOnceIfTheDeviceIsIgnored(previewInfo, deviceProfile)
     val renderSpec = DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile)
 
     val parameter = CaptureParameter(
@@ -342,36 +340,11 @@ class DefaultDesktopComposePreviewTester(
   }
 
   /**
-   * Says once that the configured profile is dropping a `device` the preview asked for.
-   *
-   * The `Desktop` profile has always ignored `device`, and keeping it that way is what lets an
-   * existing project upgrade without re-recording. Ignoring it silently is the part worth fixing:
-   * a preview that names a Pixel and comes out 1024x768 looks like a bug until you know about
-   * device profiles.
-   */
-  @OptIn(InternalRoborazziApi::class)
-  private fun warnOnceIfTheDeviceIsIgnored(
-    previewInfo: AndroidPreviewInfo,
-    profile: DesktopPreviewDeviceProfile,
-  ) {
-    if (profile.defaultDevice != null) return
-    if (previewInfo.device.isBlank()) return
-    if (!warnedAboutIgnoredDevice.compareAndSet(false, true)) return
-    roborazziErrorLog(
-      "@Preview(device = \"${previewInfo.device}\") is ignored because the desktop " +
-        "device profile has no default device. Set " +
-        "generateComposePreviewDesktopTests { deviceProfile = ... } to a profile that has " +
-        "one. Note that this changes the size of every screenshot this module records.\n" +
-        DesktopPreviewDeviceProfile.PRESET_CHOICES
-    )
-  }
-
-  /**
    * Wraps the raw preview with its `@Preview` annotation options.
    *
    * The `device` option is applied by the caller rather than here: it decides the raster surface as
-   * well as the density, and [density] is the density it resolved. Under the `Desktop` profile that
-   * density is 1, which is why a build on the pre-profile behaviour is unaffected by any of this.
+   * well as the density, and [density] is the density it resolved. A preview with no device under the
+   * `Desktop` profile gets density 1, which is what it rendered before device profiles existed.
    */
   @OptIn(InternalComposeUiApi::class)
   private fun decoratedPreviewContent(
@@ -512,9 +485,6 @@ fun ComposeUiTest.advanceMainClockFor(parameter: DefaultDesktopComposePreviewTes
 }
 
 // The JVM default locale is process-global; see the locale handling in test().
-/** One warning per test JVM is enough; every preview in the module would hit the same case. */
-private val warnedAboutIgnoredDevice = AtomicBoolean(false)
-
 private val localeCaptureLock = Any()
 
 // Default raster surface size of runDesktopComposeUiTest(width = 1024, height = 768).

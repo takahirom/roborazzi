@@ -39,8 +39,10 @@ class DesktopPreviewDeviceProfile private constructor(
    * is what `"id:..."` usually resolves to - is rendered at exactly its own pixels, so
    * `"id:medium_phone"` is 1080x2400px.
    *
-   * `null` keeps the historical desktop behaviour: density is pinned at 1, the canvas is at least
-   * 1024x768, `device` is ignored and only `widthDp`/`heightDp` affect the size.
+   * A preview that declares its own `device` is always sized by it, whatever this is set to.
+   *
+   * `null` keeps the historical desktop behaviour for previews without a `device`: density is
+   * pinned at 1, the canvas is at least 1024x768, and only `widthDp`/`heightDp` affect the size.
    */
   val defaultDevice: String?,
 ) : Serializable {
@@ -110,11 +112,12 @@ class DesktopPreviewDeviceProfile private constructor(
     private const val VERSION = "v1"
 
     /**
-     * The historical desktop behaviour: fast, but sized in raw pixels at density 1 and blind to
-     * `@Preview(device = ...)`.
+     * The historical desktop behaviour for previews without a `device`: sized in raw pixels at
+     * density 1, on a canvas of at least 1024x768.
      *
-     * This is what the desktop runtime rendered before device profiles existed, so it is the
-     * profile that leaves a project's existing goldens unchanged.
+     * This is what the desktop runtime rendered for such previews before device profiles existed,
+     * so it leaves their goldens unchanged. A preview that declares `@Preview(device = ...)` is
+     * sized and scaled by that device, as under every other profile.
      */
     val Desktop: DesktopPreviewDeviceProfile = DesktopPreviewDeviceProfile(defaultDevice = null)
 
@@ -146,9 +149,9 @@ class DesktopPreviewDeviceProfile private constructor(
     @InternalRoborazziApi
     val PRESET_CHOICES: String = """
       |  DesktopPreviewDeviceProfile.Desktop
-      |      Density 1, so 1dp is 1px, on a surface of at least 1024x768, and
-      |      @Preview(device = ...) is ignored. This is what the desktop runtime rendered
-      |      before device profiles existed, so it leaves existing goldens unchanged.
+      |      Density 1, so 1dp is 1px, on a surface of at least 1024x768, for previews
+      |      without @Preview(device = ...). This is what the desktop runtime rendered for
+      |      them before device profiles existed, so it leaves their goldens unchanged.
       |
       |  DesktopPreviewDeviceProfile.MediumPhone
       |      1080x2400px at 420dpi, the device Android Studio previews by default, so the
