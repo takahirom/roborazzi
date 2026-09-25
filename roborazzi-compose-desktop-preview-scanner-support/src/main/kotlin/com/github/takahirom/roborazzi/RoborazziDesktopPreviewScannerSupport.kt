@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.LocalSystemTheme
 import androidx.compose.ui.Modifier
@@ -24,6 +28,7 @@ import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import io.github.takahirom.roborazzi.captureRoboImage
 import java.io.File
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 import org.junit.rules.TestRule
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
@@ -60,6 +65,17 @@ interface DesktopComposePreviewTester {
      * options reads the configured one from `roborazziSystemPropertyDesktopDeviceProfile()`.
      */
     val deviceProfile: DesktopPreviewDeviceProfile,
+    /**
+     * Whether previews that need the same scene are captured in one scene instead of one each.
+     *
+     * Opening a Compose scene is most of what capturing a small preview costs, so reusing it
+     * across a configuration group is the single largest speed-up available on this runtime. Off
+     * by default: it changes how previews are handed to the tester, and a project should be able
+     * to turn it on, compare the images, and turn it back off.
+     *
+     * Previews whose clock is driven by hand are never grouped; see [DesktopPreviewSceneKey].
+     */
+    val sceneReuse: Boolean = false,
   ) {
     interface TestLifecycleOptions
 
@@ -105,6 +121,23 @@ interface DesktopComposePreviewTester {
    * Note: This method will not be called on the same instance as [testParameters].
    */
   fun test(testParameter: DesktopPreviewTestParameter)
+
+  /**
+   * Performs the tests for a whole shard, which is what lets an implementation capture several
+   * previews in one Compose scene.
+   *
+   * Every capture has to be wrapped in [listener] so that the test runner can report it as its own
+   * test even when several of them happened inside one scene. The default runs them one at a time,
+   * so an existing tester that only overrides [test] keeps working unchanged.
+   */
+  fun test(
+    testParameters: List<DesktopPreviewTestParameter>,
+    listener: DesktopPreviewCaptureListener,
+  ) {
+    testParameters.forEach { testParameter ->
+      listener.aroundCapture(testParameter) { test(testParameter) }
+    }
+  }
 
   companion object {
     private var pluginOptions: Options? = null
@@ -263,8 +296,60 @@ class DefaultDesktopComposePreviewTester(
     }
   }
 
-  @OptIn(ExperimentalTestApi::class)
   override fun test(testParameter: DesktopPreviewTestParameter) {
+    captureInItsOwnScene(prepare(testParameter))
+  }
+
+  override fun test(
+    testParameters: List<DesktopPreviewTestParameter>,
+    listener: DesktopPreviewCaptureListener,
+  ) {
+    if (!options().sceneReuse) {
+      testParameters.forEach { testParameter ->
+        listener.aroundCapture(testParameter) { test(testParameter) }
+      }
+      return
+    }
+    groupDesktopPreviewsByScene(testParameters, options().deviceProfile).forEach { group ->
+      if (group.size > 1 && capturerCanShareAScene()) {
+        captureInOneScene(group, listener)
+      } else {
+        // Resolved inside the callback, so a preview whose device cannot be parsed fails as its own
+        // test rather than before any preview of the shard has been reported.
+        group.forEach { testParameter ->
+          listener.aroundCapture(testParameter) { test(testParameter) }
+        }
+      }
+    }
+  }
+
+  /** A preview resolved down to everything its capture needs. */
+  private class Prepared(
+    val renderSpec: DesktopPreviewRenderSpec,
+    val locale: String,
+    val captureParameter: CaptureParameter,
+  )
+
+  private fun prepare(testParameter: DesktopPreviewTestParameter): Prepared {
+    val preview = testParameter.preview
+    val previewInfo = preview.previewInfo
+    // How large the raster surface is and what a dp is worth on it both follow from the render
+    // profile, so they are resolved together before the preview is decorated.
+    val deviceProfile = options().deviceProfile
+    val renderSpec = DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile)
+    return Prepared(
+      renderSpec = renderSpec,
+      locale = previewInfo.locale,
+      captureParameter = CaptureParameter(
+        preview = preview,
+        filePath = outputFilePathFor(testParameter),
+        manualClockOptions = testParameter.manualClockOptions,
+        content = decoratedPreviewContent(preview, renderSpec.density),
+      ),
+    )
+  }
+
+  private fun outputFilePathFor(testParameter: DesktopPreviewTestParameter): String {
     val preview = testParameter.preview
     val manualClockOptions = testParameter.manualClockOptions
     val pathPrefix =
@@ -297,40 +382,129 @@ class DefaultDesktopComposePreviewTester(
         "  imageExtension: ${provideRoborazziContext().imageExtension}\n" +
         "  filePath: $filePath"
     }
+    return filePath
+  }
 
-    val previewInfo = preview.previewInfo
-    // How large the raster surface is and what a dp is worth on it both follow from the render
-    // profile, so they are resolved together before the preview is decorated.
-    val deviceProfile = options().deviceProfile
-    val renderSpec = DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile)
+  @OptIn(ExperimentalTestApi::class)
+  private fun captureInItsOwnScene(prepared: Prepared) {
+    withLocale(prepared.locale) {
+      runDesktopComposeUiTest(
+        width = prepared.renderSpec.surfaceWidth,
+        height = prepared.renderSpec.surfaceHeight,
+      ) {
+        if (prepared.captureParameter.manualClockOptions != null) {
+          mainClock.autoAdvance = false
+        }
+        with(capturer) { capture(prepared.captureParameter) }
+      }
+    }
+  }
 
-    val parameter = CaptureParameter(
-      preview = preview,
-      filePath = filePath,
-      manualClockOptions = manualClockOptions,
-      content = decoratedPreviewContent(preview, renderSpec.density),
-    )
+  /**
+   * Captures a whole group in one scene, swapping the content instead of reopening the scene.
+   *
+   * [key] rebuilds the subtree on every swap, so the previous preview's remembered values are
+   * discarded and the coroutines its `LaunchedEffect`s started are cancelled rather than handed to
+   * the next preview. What it cannot undo is state a preview keeps outside the composition - a
+   * top-level `object`, a singleton, a static counter. That state already drifts between two
+   * plain runs in the same JVM, on this runtime and under Robolectric alike, so reuse does not
+   * make it worse; it is simply not something Roborazzi can reset.
+   */
+  @OptIn(ExperimentalTestApi::class)
+  private fun captureInOneScene(
+    group: List<DesktopPreviewTestParameter>,
+    listener: DesktopPreviewCaptureListener,
+  ) {
+    // The group shares one surface and one locale, so the first preview's are the scene's. Only
+    // those are read up front: everything else is prepared inside each preview's `aroundCapture`,
+    // after the per-preview rule has run, as it is when every preview gets its own scene.
+    val firstPreviewInfo = group.first().preview.previewInfo
+    val sceneSpec = DesktopPreviewRenderSpec.resolve(firstPreviewInfo, options().deviceProfile)
+    // How many previews the shared scene got through. A preview that throws is reported as its own
+    // failure, but the scene it threw in is not trusted afterwards: an exception out of
+    // composition, for one, leaves the surface unable to produce an image, and every later
+    // capture in it would fail too. So the scene stops there and the rest of the group is captured
+    // the way it would be without scene reuse.
+    var attempted = 0
+    withLocale(firstPreviewInfo.locale) {
+      runDesktopComposeUiTest(
+        width = sceneSpec.surfaceWidth,
+        height = sceneSpec.surfaceHeight,
+      ) {
+        // Nothing is composed until a preview is selected, so that every preview - the first one
+        // included - is composed inside its own `aroundCapture`, the way a scene per preview
+        // composes it inside the test the listener wraps.
+        var index by mutableStateOf(NOTHING_SELECTED)
+        var content by mutableStateOf<(@Composable () -> Unit)?>(null)
+        setContent {
+          key(index) { content?.invoke() }
+        }
+        for ((position, testParameter) in group.withIndex()) {
+          var threw = false
+          attempted = position + 1
+          listener.aroundCapture(testParameter) {
+            try {
+              val prepared = prepare(testParameter)
+              content = prepared.captureParameter.content
+              index = position
+              waitForIdle()
+              // A no-op here - a preview with manualClockOptions never joins a shared scene - but
+              // kept so this path stays a step-for-step match of DefaultCapturer.capture().
+              advanceMainClockFor(prepared.captureParameter)
+              onRoot().captureRoboImage(
+                filePath = prepared.captureParameter.filePath,
+                roborazziOptions = prepared.captureParameter.roborazziOptions,
+              )
+            } catch (throwable: Throwable) {
+              threw = true
+              throw throwable
+            }
+          }
+          if (threw) break
+        }
+      }
+    }
+    group.drop(attempted).forEach { testParameter ->
+      listener.aroundCapture(testParameter) { test(testParameter) }
+    }
+  }
 
-    val surfaceWidth = renderSpec.surfaceWidth
-    val surfaceHeight = renderSpec.surfaceHeight
+  /**
+   * Whether the configured [Capturer] can be driven by the shared-scene path.
+   *
+   * [Capturer.capture] owns `setContent`, which a shared scene calls once for the whole group, so
+   * there is no correct way to route a custom capturer through it. Rather than silently ignore
+   * what the project asked for, the group falls back to a scene per preview.
+   */
+  private fun capturerCanShareAScene(): Boolean {
+    if (capturer is DefaultCapturer) return true
+    if (warnedAboutCustomCapturer.compareAndSet(false, true)) {
+      roborazziErrorLog(
+        "sceneReuse is on, but a custom Capturer (${capturer::class.java.name}) owns setContent, " +
+          "so previews are captured one scene each as before. Remove the custom Capturer to get " +
+          "the speed-up, or leave sceneReuse off to silence this."
+      )
+    }
+    return false
+  }
 
-    // Locale on desktop is read from java.util.Locale.getDefault() (there is no
-    // LocalLocale), so set it before composing and restore it afterwards. The JVM
-    // default locale is process-global, so captures are serialized under a lock to
-    // stay correct if tests ever run concurrently in one JVM.
+  /**
+   * Runs [block] with the JVM default locale the preview asked for.
+   *
+   * Locale on desktop is read from `java.util.Locale.getDefault()` (there is no LocalLocale), so
+   * it has to be set before composing and restored afterwards. The JVM default locale is
+   * process-global, so captures are serialized under a lock to stay correct if tests ever run
+   * concurrently in one JVM.
+   */
+  private fun <R> withLocale(locale: String, block: () -> R): R {
     synchronized(localeCaptureLock) {
-      val localeToApply = parseAndroidLocale(previewInfo.locale)
+      val localeToApply = parseAndroidLocale(locale)
       val previousLocale = Locale.getDefault()
       if (localeToApply != null) {
         Locale.setDefault(localeToApply)
       }
       try {
-        runDesktopComposeUiTest(width = surfaceWidth, height = surfaceHeight) {
-          if (manualClockOptions != null) {
-            mainClock.autoAdvance = false
-          }
-          with(capturer) { capture(parameter) }
-        }
+        return block()
       } finally {
         if (localeToApply != null) {
           Locale.setDefault(previousLocale)
@@ -484,8 +658,17 @@ fun ComposeUiTest.advanceMainClockFor(parameter: DefaultDesktopComposePreviewTes
   }
 }
 
-// The JVM default locale is process-global; see the locale handling in test().
+/**
+ * One warning per test JVM is enough for the custom-capturer fallback in the shared-scene path;
+ * every group in the module would hit the same case.
+ */
+private val warnedAboutCustomCapturer = AtomicBoolean(false)
+
+// The JVM default locale is process-global; see withLocale().
 private val localeCaptureLock = Any()
+
+/** The index a shared scene holds before any preview of the group has been selected. */
+private const val NOTHING_SELECTED = -1
 
 // Default raster surface size of runDesktopComposeUiTest(width = 1024, height = 768).
 
