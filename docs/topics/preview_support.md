@@ -201,6 +201,8 @@ roborazzi {
   generateComposePreviewDesktopTests {
     enable = true
     packages = listOf("com.example")
+    // Required. Desktop keeps the desktop runtime's historical sizing; see Device profiles below.
+    deviceProfile = DesktopPreviewDeviceProfile.Desktop
     // Required only when the project has multiple Kotlin JVM targets:
     // targetName = "desktop"
   }
