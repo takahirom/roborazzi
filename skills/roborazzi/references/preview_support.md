@@ -284,7 +284,7 @@ roborazzi {
 
 | Profile | Screen | Use it to |
 |---|---|---|
-| `DesktopPreviewDeviceProfile.Desktop` | 1dp = 1px, at least 1024x768px. `@Preview(device = ...)` is ignored. | Keep existing desktop screenshots unchanged. |
+| `DesktopPreviewDeviceProfile.Desktop` | 1dp = 1px, at least 1024x768dp. `@Preview(device = ...)` is ignored. `renderScale` shrinks the density from there. | Keep existing desktop screenshots unchanged. |
 | `DesktopPreviewDeviceProfile.MediumPhone` | Medium Phone: 411x914dp, 1dp = 2.625px | Compare with Android Studio and Compose Preview Screenshot Testing. |
 
 Under any profile other than `Desktop`, `@Preview(device = ...)` is honored with the same parser
@@ -417,7 +417,7 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 
 On Compose Desktop the `@Preview` annotation options are applied as follows:
 
-- `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box. Under the `Desktop` profile density is `1`, so 1dp equals 1px; under a device profile such as `MediumPhone` they are dp at the device density. When neither is specified the preview still renders wrap-content.
+- `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box. Under the `Desktop` profile density is `1` (times `renderScale`), so 1dp equals 1px at scale 1; under a device profile such as `MediumPhone` they are dp at the device density. When neither is specified the preview still renders wrap-content.
 - `fontScale`: applied through `LocalDensity`, together with the density the device profile resolved, because `DeviceConfigurationOverride.FontScale` is unsupported on desktop. It is applied linearly, which is where the two runtimes part: from API 34 Android bends the curve so that small text grows more than large text, and a `fontScale = 2f` preview is therefore laid out differently on desktop. Compose Multiplatform has no equivalent, and it cannot be supplied from the outside - a `Density` given to `LocalDensity` reaches the composition, but text is measured through the layout node, which carries only the `density` and `fontScale` numbers and converts sp linearly.
 - `showBackground`/`backgroundColor`: draws a background behind the preview, defaulting to white when `showBackground = true` but no color is given.
 - `locale`: sets `java.util.Locale.getDefault()` for the capture and restores it afterwards. Accepts `"ja"`, `"ja-rJP"`, and `"ja-JP"` forms.
