@@ -487,7 +487,6 @@ public final class com/github/takahirom/roborazzi/DesktopPreviewDeviceProfile$Co
 	public final fun getDesktop ()Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;
 	public final fun getMediumPhone ()Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;
 	public final fun getPRESET_CHOICES ()Ljava/lang/String;
-	public final fun getPixel4a ()Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;
 }
 
 public final class com/github/takahirom/roborazzi/DesktopPreviewDeviceProfileKt {

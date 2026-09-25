@@ -12,7 +12,6 @@ import org.junit.Test
 class DesktopPreviewDeviceProfileTest {
   private val presets = listOf(
     DesktopPreviewDeviceProfile.Desktop,
-    DesktopPreviewDeviceProfile.Pixel4a,
     DesktopPreviewDeviceProfile.MediumPhone,
   )
 
@@ -80,7 +79,7 @@ class DesktopPreviewDeviceProfileTest {
 
   @Test
   fun equalProfilesHaveEqualHashCodes() {
-    val profile = DesktopPreviewDeviceProfile.Pixel4a
+    val profile = DesktopPreviewDeviceProfile.MediumPhone
     val same = DesktopPreviewDeviceProfile.Desktop.copy(defaultDevice = profile.defaultDevice)
     assertEquals(profile, same)
     assertEquals(profile.hashCode(), same.hashCode())

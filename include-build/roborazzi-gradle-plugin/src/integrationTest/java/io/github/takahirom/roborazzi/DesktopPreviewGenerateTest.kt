@@ -317,9 +317,6 @@ class DesktopPreviewDeviceProfileTest {
         assert(output.contains("DesktopPreviewDeviceProfile.Desktop")) {
           "Expected the failure to offer the Desktop preset, but got:\n$output"
         }
-        assert(output.contains("DesktopPreviewDeviceProfile.Pixel4a")) {
-          "Expected the failure to offer the Pixel4a preset, but got:\n$output"
-        }
         assert(output.contains("DesktopPreviewDeviceProfile.MediumPhone")) {
           "Expected the failure to offer the MediumPhone preset, but got:\n$output"
         }
@@ -345,10 +342,10 @@ class DesktopPreviewDeviceProfileTest {
   fun whenDeviceProfileIsConfiguredItReachesTheTestJvm() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.useCustomTester = true
-      buildGradle.deviceProfile = "$PROFILE.Pixel4a"
+      buildGradle.deviceProfile = "$PROFILE.MediumPhone"
 
       record(additionalParameters = NO_BUILD_CACHE) {
-        assert(output.contains("deviceProfile defaultDevice=[spec:width=393dp,height=851dp,dpi=440]")) {
+        assert(output.contains("deviceProfile defaultDevice=[spec:width=1080px,height=2400px,dpi=420]")) {
           "Expected the configured profile to reach the test JVM"
         }
       }
@@ -377,7 +374,7 @@ class DesktopPreviewDeviceProfileTest {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.separateOutputDirs = true
       buildGradle.extraTestRuns = listOf("androidCompat")
-      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.Pixel4a")
+      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.MediumPhone")
 
       record(additionalParameters = NO_BUILD_CACHE)
       recordVariant("DesktopAndroidCompat", additionalParameters = NO_BUILD_CACHE)
@@ -396,8 +393,8 @@ class DesktopPreviewDeviceProfileTest {
       }
       // Both directories holding images is not evidence that the extra run used its own profile -
       // it would hold them either way. The default run has no profile and so renders at the pinned
-      // density where 1dp is 1px, while Pixel4a renders on a 440dpi screen, so every
-      // preview has to come out 2.75x larger there. Comparing at ">= 2x" leaves room for the
+      // density where 1dp is 1px, while MediumPhone renders on a 420dpi screen, so every
+      // preview has to come out 2.625x larger there. Comparing at ">= 2x" leaves room for the
       // rounding of a text's measured size without leaving room for the profile being ignored.
       val defaultSizes = recordedImageSizes("desktop")
       val extraSizes = recordedImageSizes("desktopAndroidCompat")
@@ -445,7 +442,7 @@ class DesktopPreviewDeviceProfileTest {
         }
       }
 
-      buildGradle.deviceProfile = "$PROFILE.Pixel4a"
+      buildGradle.deviceProfile = "$PROFILE.MediumPhone"
 
       record(additionalParameters = NO_BUILD_CACHE) {
         assert(task(":${DesktopPreviewModule.moduleName}:desktopTest")?.outcome == TaskOutcome.SUCCESS) {
@@ -460,7 +457,7 @@ class DesktopPreviewDeviceProfileTest {
   fun whenDeviceProfileByTestRunIsUsedWithoutSeparateOutputDirsItFails() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.extraTestRuns = listOf("androidCompat")
-      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.Pixel4a")
+      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.MediumPhone")
 
       record(BuildType.BuildAndFail) {
         assert(output.contains("deviceProfileByTestRun needs"))
@@ -486,7 +483,7 @@ class DesktopPreviewDeviceProfileTest {
   fun whenDeviceProfileByTestRunNamesAnUnknownTestRunItFails() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.separateOutputDirs = true
-      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.Pixel4a")
+      buildGradle.deviceProfileByTestRun = mapOf("androidCompat" to "$PROFILE.MediumPhone")
 
       record(BuildType.BuildAndFail) {
         assert(output.contains("deviceProfileByTestRun names the test run(s) [androidCompat]"))

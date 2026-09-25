@@ -39,7 +39,7 @@ class DesktopPreviewSceneGroupingTest {
 
   private fun group(
     parameters: List<DesktopPreviewTestParameter>,
-    profile: DesktopPreviewDeviceProfile = DesktopPreviewDeviceProfile.Pixel4a,
+    profile: DesktopPreviewDeviceProfile = Pixel4aDeviceProfile,
   ): List<List<String>> =
     groupDesktopPreviewsByScene(parameters, profile)
       .map { group -> group.map { it.preview.methodName } }
@@ -151,7 +151,7 @@ class DesktopPreviewSceneGroupingTest {
 
   @Test
   fun `the Desktop profile puts everything on one surface`() {
-    // The Desktop profile ignores the device, so previews that the Pixel4a profile would
+    // The Desktop profile ignores the device, so previews that a phone profile would
     // separate all land on the same 1024x768 scene.
     val groups = group(
       listOf(

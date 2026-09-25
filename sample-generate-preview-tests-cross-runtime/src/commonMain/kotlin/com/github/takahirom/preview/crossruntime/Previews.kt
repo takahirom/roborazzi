@@ -213,7 +213,7 @@ fun FixedSizeText() {
 }
 
 /**
- * A `widthDp` whose pixel size is fractional: 201dp at the Pixel 4a's 2.75 density is 552.75px.
+ * A `widthDp` whose pixel size is fractional: 201dp at the Medium Phone's 2.625 density is 527.625px.
  *
  * Android's window is an integer number of pixels and `Modifier.size` is coerced into it, while
  * Compose Desktop's `requiredSize` rounds the dp itself. This preview is here to measure which

@@ -15,7 +15,7 @@ class DesktopPreviewRenderSpecTest {
 
   private fun resolve(
     previewInfo: AndroidPreviewInfo,
-    profile: DesktopPreviewDeviceProfile = DesktopPreviewDeviceProfile.Pixel4a,
+    profile: DesktopPreviewDeviceProfile = Pixel4aDeviceProfile,
     renderScale: Double = 1.0,
   ) = DesktopPreviewRenderSpec.resolve(previewInfo, profile, renderScale)
 
@@ -64,7 +64,7 @@ class DesktopPreviewRenderSpecTest {
     // `w411dp` at 420dpi is 1078px either way.
     val asProfileDefault = DesktopPreviewRenderSpec.resolve(
       AndroidPreviewInfo(),
-      DesktopPreviewDeviceProfile.Pixel4a
+      Pixel4aDeviceProfile
         .copy(defaultDevice = "spec:width=411dp,height=891dp,dpi=420"),
     )
     val asPreviewDevice = resolve(
@@ -82,7 +82,7 @@ class DesktopPreviewRenderSpecTest {
     // device, `w393dp-h851dp` at 440dpi, lands on the same 1080x2340.
     val viaPixelTable = DesktopPreviewRenderSpec.resolve(
       AndroidPreviewInfo(),
-      DesktopPreviewDeviceProfile.Pixel4a.copy(defaultDevice = "id:pixel_4a"),
+      Pixel4aDeviceProfile.copy(defaultDevice = "id:pixel_4a"),
     )
 
     assertEquals(DesktopPreviewRenderSpec(1080, 2340, 2.75f), viaPixelTable)
@@ -144,7 +144,7 @@ class DesktopPreviewRenderSpecTest {
   @Test
   fun `a blank default device is rejected because the parser would take it as a device`() {
     val failure = runCatching {
-      DesktopPreviewDeviceProfile.Pixel4a.copy(defaultDevice = "")
+      Pixel4aDeviceProfile.copy(defaultDevice = "")
     }.exceptionOrNull()
 
     assertEquals(IllegalArgumentException::class.java, failure?.javaClass)

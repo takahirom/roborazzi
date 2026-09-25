@@ -42,7 +42,7 @@ class ShardOfDesktopPreviewsTest {
     parameters: List<DesktopPreviewTestParameter>,
     shardIndex: Int?,
     totalShards: Int,
-    profile: DesktopPreviewDeviceProfile = DesktopPreviewDeviceProfile.Pixel4a,
+    profile: DesktopPreviewDeviceProfile = Pixel4aDeviceProfile,
     renderScale: Double = 1.0,
   ): List<String> =
     shardOfDesktopPreviews(

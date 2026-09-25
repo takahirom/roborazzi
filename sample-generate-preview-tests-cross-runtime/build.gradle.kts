@@ -30,7 +30,7 @@ roborazzi {
     // would scale linearly and hide the very difference the fontScale previews are here to show.
     robolectricConfig = mapOf(
       "sdk" to "[35]",
-      "qualifiers" to "RobolectricDeviceQualifiers.Pixel4a",
+      "qualifiers" to "RobolectricDeviceQualifiers.MediumPhone",
     )
     // One class per runtime. Sharding splits the previews by a sort of their string form, which
     // cuts through the configuration groups scene reuse depends on.
@@ -46,9 +46,9 @@ roborazzi {
     targetName = "desktop"
     generatedTestClassCount = 1
     // The whole point of this module is comparing the two runtimes, so the desktop side has to
-    // interpret `device` and render at the device density. The default device matches the
-    // Pixel 4a qualifier the Robolectric side is configured with above.
-    deviceProfile = DesktopPreviewDeviceProfile.Pixel4a
+    // interpret `device` and render at the device density. The default device is the Medium Phone
+    // the Robolectric side is configured with above.
+    deviceProfile = DesktopPreviewDeviceProfile.MediumPhone
     // Off by default, so this sample records what a project gets out of the box. Pass
     // -Proborazzi.sceneReuse=true to capture the same previews with the scenes shared, which is
     // how the two outputs are compared and how the speed-up is measured.
@@ -160,10 +160,15 @@ afterEvaluate {
 /**
  * The previews whose dimensions the two runtimes are not expected to agree on yet.
  *
- * Every one of them is a text measurement difference, not a sizing one: the desktop runtime now
- * resolves the same surface and density as Robolectric, so what is left is how wide and tall the
- * two rasterizers believe a laid-out string is.
+ * Apart from the previews that name no device, every one of them is a text measurement
+ * difference, not a sizing one: the desktop runtime resolves the same density as Robolectric, so
+ * what is left is how wide and tall the two rasterizers believe a laid-out string is.
  *
+ * - The previews that name no device and fill the width are 1080px wide on desktop, the Medium
+ *   Phone Android Studio renders, and 1076px on Robolectric. Robolectric carries the device in dp,
+ *   and 411dp at 2.625 is 1078px, and it then lays the window out from a `Display` whose size has
+ *   been round-tripped through dp once more, which costs another two pixels. A preview that names
+ *   its device in dp, such as `PhoneSpecCard`, gets the same floor on both runtimes and agrees.
  * - The two `fontScale = 2f` previews differ because Android applies non-linear font scaling from
  *   API 34 while Compose Desktop scales linearly, so a 14sp line is 26dp on one side and 28dp on
  *   the other. Compose Multiplatform cannot be given that curve from the outside: a `Density` that
@@ -173,8 +178,8 @@ afterEvaluate {
  * - The four others are the font family. Robolectric's NATIVE graphics draws with the Roboto that
  *   `org.robolectric:nativeruntime-dist-compat` ships; Skiko draws with the host's default sans
  *   font, whose glyph advances are a little wider. Rendering the desktop side with the same Roboto
- *   closes each of them to within a pixel - 325 -> 320 against Robolectric's 319 for
- *   `DefaultButton`, 184 -> 179 against 180 for `TabletSpecButton` - so what is left after that is
+ *   closes each of them to within a pixel - measured on a Pixel 4a, 325 -> 320 against
+ *   Robolectric's 319 for `DefaultButton`, 184 -> 179 against 180 for `TabletSpecButton` - so what is left after that is
  *   rounding, not a layout difference. Shipping a font with Roborazzi is a separate decision from
  *   sizing, which is why these are still listed.
  *
@@ -182,6 +187,15 @@ afterEvaluate {
  * inside it stops differing, so the list cannot rot.
  */
 val crossRuntimeKnownDifferences = setOf(
+  "DefaultCard",
+  "DefaultText",
+  "EndlessAnimation_TIME_0ms",
+  "EndlessAnimation_TIME_500ms",
+  "NeverCompletingEffect",
+  "NightCard.NIGHT",
+  "NightText.NIGHT",
+  "RememberedCounter",
+  "ScenePosition",
   "DefaultButton",
   "LargeFontParagraph.FONT_2_0f",
   "LargeFontSizes.FONT_2_0f",

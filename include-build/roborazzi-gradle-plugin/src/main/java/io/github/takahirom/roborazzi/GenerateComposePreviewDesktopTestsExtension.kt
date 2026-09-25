@@ -103,7 +103,7 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
    *
    * ```kotlin
    * roborazzi.generateComposePreviewDesktopTests {
-   *   deviceProfile = DesktopPreviewDeviceProfile.Pixel4a
+   *   deviceProfile = DesktopPreviewDeviceProfile.MediumPhone
    * }
    * ```
    */
@@ -131,7 +131,7 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
    *   generateComposePreviewDesktopTests {
    *     deviceProfileByTestRun.put(
    *       "androidCompat",
-   *       DesktopPreviewDeviceProfile.Pixel4a,
+   *       DesktopPreviewDeviceProfile.MediumPhone,
    *     )
    *   }
    * }
