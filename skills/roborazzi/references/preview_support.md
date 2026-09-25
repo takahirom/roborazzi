@@ -265,14 +265,12 @@ is enabled, which gives each task its own subdirectory.
 
 ### Device profiles (experimental)
 
-A device profile decides how the desktop runtime sizes and scales previews. It is a
-property of a *test run*, not of a preview, so one module can capture the same previews
-more than once under different profiles.
-
-`deviceProfile` is required and has no default. It decides the surface size and the
-density, which is to say what every golden the module records looks like, and no value is
-right for every project, so leaving it unset fails configuration with a message listing
-the presets.
+A device profile decides which screen a preview is laid out on when its `@Preview` names no
+device. The image is still cropped to the composable, so a button stays button-sized; the screen
+only sets the density and how far `fillMaxWidth()` and similar reach. Content larger than the
+screen is shrunk to it, or cut off if it uses `requiredSize`; set `widthDp`/`heightDp` on the
+`@Preview` to capture it whole. A device profile is required: leaving it unset fails the build
+with a message listing the presets.
 
 ```kotlin
 roborazzi {
@@ -284,63 +282,25 @@ roborazzi {
 }
 ```
 
-The presets are:
+| Profile | Screen | Use it to |
+|---|---|---|
+| `DesktopPreviewDeviceProfile.Desktop` | 1dp = 1px, at least 1024x768px. `@Preview(device = ...)` is ignored. | Keep existing desktop screenshots unchanged. |
+| `DesktopPreviewDeviceProfile.Pixel4a` | Pixel 4a: 393x851dp, 1dp = 2.75px | Compare with Roborazzi's Robolectric runtime. |
+| `DesktopPreviewDeviceProfile.MediumPhone` | Medium Phone: 411x914dp, 1dp = 2.625px | Compare with Android Studio and Compose Preview Screenshot Testing. |
 
-| Profile | What it does |
-|---|---|
-| `DesktopPreviewDeviceProfile.Desktop` | The historical desktop behaviour: density 1, a canvas of at least 1024x768, and only `widthDp`/`heightDp` affect the size. |
-| `DesktopPreviewDeviceProfile.Pixel4a` | Sizes previews as a Pixel 4a, the device the Robolectric runtime defaults to, so the same preview can be compared between the two runtimes. |
-| `DesktopPreviewDeviceProfile.MediumPhone` | Sizes previews as the Medium Phone that Android Studio previews by default - 1080x2400px at 420dpi - so the same preview can be compared with Studio and with Google's Compose Preview Screenshot Testing. The Robolectric runtime cannot reach these pixels: it carries the device in dp, and at density 2.625 no whole dp reaches 1080 or 2400 (411dp is 1078px, 412dp is 1081px). |
+Under `Pixel4a` and `MediumPhone`, `@Preview(device = ...)` is honored with the same parser the
+Robolectric runtime uses, and a preview that names no device uses the profile's `defaultDevice`.
+Use `copy(defaultDevice = ...)` to change it.
 
-To vary a single axis, start from a preset and use `copy()`.
+A profile fixes the size and the density, not the pixels: desktop measures text with the host
+font, so text-driven layouts can still differ slightly from Android.
 
-`Pixel4a` is Roborazzi's own default device, not Android Studio's. Studio, and Google's
-Compose Preview Screenshot Testing, preview a device they call Medium Phone: 1080x2400px at
-420dpi, against `Pixel4a`'s 1080x2340px at 440dpi. Neither the surface nor the density
-matches, so pick by what you want to compare against - `Pixel4a` for Roborazzi's Robolectric
-runtime, `MediumPhone` for Studio.
-
-A profile fixes the device configuration - the surface size and the density - not the
-pixels. Desktop measures text with the host OS font rather than the one Android ships, so a
-profile that names an Android device still does not render text the way that device does,
-and the output is expected to move as that fidelity improves. Such an improvement needs the
-goldens re-recorded, the same way a Compose version bump already does.
-
-`Desktop` is the pre-profile behaviour, so it is the profile that leaves an existing project's
-screenshots unchanged. It ignores
-`@Preview(device = ...)`, and it says so once per test run when a preview asks for a device, so
-that a preview naming a Pixel and coming out 1024x768 does not look like a bug.
-
-Under `Pixel4a`:
-
-- `@Preview(device = ...)` is parsed - `id:`, `name:` and `spec:` all work, with the same parser
-  the Robolectric runtime uses - and it decides both the raster surface and the density.
-- A preview that names no device is sized as the profile's `defaultDevice`. This stands in for the
-  Robolectric base configuration, so write your `qualifiers` in `@Preview` grammar: the default is
-  `spec:width=393dp,height=851dp,dpi=440`, which is `RobolectricDeviceQualifiers.Pixel4a`. Change
-  both together, or the two runtimes size device-less previews differently on purpose.
-- A device given in dp is converted once, `floor(dp * density)`, which is the number the
-  Robolectric runtime's configuration reports: `width=411dp` at 420dpi is 1078px. A device id such
-  as `id:pixel_7` names a pixel-size entry and is rendered at exactly those pixels. For a device
-  whose pixels are a whole number of dp both forms give the same surface, so write `defaultDevice`
-  the way the device is defined - `Pixel4a` is in dp, `MediumPhone` in pixels.
-- `widthDp`/`heightDp` are dp at that density rather than raw pixels, so a 200dp box on a 440dpi
-  device is 550px wide on both runtimes.
-
-The density the two runtimes use agrees exactly, and so does the surface size for most devices.
-A device-less preview can come out one or two pixels wider here, because the Robolectric runtime
-lays its window out from a `Display` whose size has been round-tripped through dp while its
-`Resources` and `Configuration` keep the original: a Pixel 4a is 1080x2340 by every Android API
-that reports it, and 1078x2337 in the captured image. The desktop runtime sizes from the numbers
-Android reports. What also does not agree is text measurement - Android bends font scale non-linearly from API 34, and
-glyph advances differ by a few pixels - so a preview whose size is driven by laid-out text can still
-come out a little wider or taller.
+A custom tester reads the profile from `options().deviceProfile`. Build options from
+`DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(...)`, or the profile is dropped.
 
 #### Capturing the same previews under several profiles
 
-Give each profile its own Kotlin test run. Roborazzi already gives every test run of a
-JVM target its own set of tasks and, with `separateOutputDirs`, its own output directory,
-so the two sets of screenshots never overwrite each other:
+Give each profile its own Kotlin test run (Kotlin Multiplatform only):
 
 ```kotlin
 kotlin {
@@ -350,38 +310,31 @@ kotlin {
 }
 
 roborazzi {
-  // required as soon as a target has more than one test run recording previews
   separateOutputDirs = true
   generateComposePreviewDesktopTests {
     enable = true
     packages = listOf("com.example.previews")
-    // The default test run needs one too; deviceProfileByTestRun only covers the runs it names.
     deviceProfile = DesktopPreviewDeviceProfile.Desktop
-    deviceProfileByTestRun.put(
-      "androidCompat",
-      DesktopPreviewDeviceProfile.Pixel4a,
-    )
+    deviceProfileByTestRun.put("androidCompat", DesktopPreviewDeviceProfile.Pixel4a)
   }
 }
 ```
 
-```bash
-./gradlew recordRoborazziDesktop              # build/outputs/roborazzi/desktop/
-./gradlew recordRoborazziDesktopAndroidCompat # build/outputs/roborazzi/desktopAndroidCompat/
-```
-
-`deviceProfileByTestRun` is Kotlin Multiplatform only, because a Kotlin JVM project has a
-single `test` task and therefore no run to key a profile by. Use `deviceProfile` there.
-
-A custom tester sees the profile as `options().deviceProfile`. Build your options from
-`DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(...)`, as the examples below
-do: options constructed from scratch drop whatever the plugin configured, the profile
-included.
+`recordRoborazziDesktop` then writes to `build/outputs/roborazzi/desktop/`, and
+`recordRoborazziDesktopAndroidCompat` to `build/outputs/roborazzi/desktopAndroidCompat/`.
 
 #### Sharing a scene between previews
 
-Opening a Compose scene is a large part of what capturing one preview costs. `sceneReuse`
-captures the previews that need the same scene without closing it in between:
+`sceneReuse = true` captures previews that need the same scene without closing it in between.
+It only makes the run faster; the images do not change. Each preview is still reported as its own
+test.
+
+A custom `Capturer` cannot share a scene, so it keeps one scene per preview. A custom tester has
+to override `test(testParameters, listener)` to reuse scenes.
+
+#### Rendering at a smaller density
+
+`renderScale` works as on the Robolectric generator, and both runtimes round it the same way:
 
 ```kotlin
 roborazzi {
@@ -389,66 +342,14 @@ roborazzi {
     enable = true
     packages = listOf("com.example.previews")
     deviceProfile = DesktopPreviewDeviceProfile.Pixel4a
-    sceneReuse = true
-  }
-}
-```
-
-The images do not change - the option is only about how long the run takes. Previews are
-grouped by what the scene itself carries, which is its surface size and the JVM locale;
-everything else a `@Preview` sets (font scale, night mode, the background) is given to the
-composition, so it never splits a group. `widthDp`/`heightDp` do resize the surface, the
-way the `w<n>dp`/`h<n>dp` qualifiers do on Robolectric, so a preview that sets either one
-is grouped by the size it asked for rather than the device's. A preview with
-`manualClockOptions` always gets a scene of its own: an infinite animation takes its phase
-from the scene's clock, and a test clock can be advanced but not rewound.
-
-Each preview is still reported as its own test, under the same name, so `--tests` filters
-and report diffs are unaffected. A preview that fails its comparison fails alone; the rest
-of its scene still runs. A `testRule` still wraps each preview separately, but it wraps the
-capture only: the scene around it is opened before the first preview's rule starts and
-closed after the last one's has finished, so a rule cannot set up or assert on anything
-that lives in the composition's creation or disposal.
-
-Two kinds of customization opt out of it. A custom `Capturer` owns `setContent`, so it
-cannot share a scene - Roborazzi logs this once and captures a scene per preview as
-before. A custom tester that overrides only `test(testParameter)` keeps the per-preview
-default; override `test(testParameters, listener)` to reuse scenes yourself. Overriding it
-means implementing it: with scene reuse on, the generated test calls that overload and
-nothing else, so a tester written as
-`class MyTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester(...)`
-hands the batch call straight to the delegate, and whatever the wrapper does around
-`test(testParameter)` is skipped.
-
-#### Rendering at a smaller density
-
-`renderScale` is the same option as on the Robolectric generator above, and the two
-runtimes round it the same way, so a module that captures the same previews on both can
-scale both and keep comparing them:
-
-```kotlin
-roborazzi {
-  generateComposePreviewDesktopTests {
-    enable = true
-    packages = listOf("com.example.previews")
     renderScale = 0.5
   }
 }
 ```
 
-The preview keeps its logical dp size and the density under it shrinks, so half the scale
-is a quarter of the pixels to rasterize. The scaled dpi is rounded to the nearest integer
-and clamped to at least 1, which is what a device's `dpi=` carries; the `Desktop`
-profile names no device, so its pinned density starts at 160dpi, the dpi at which 1dp
-is 1px, and is then scaled by `renderScale`. Anything drawn in raw pixels keeps its absolute size and so looks relatively
-thicker in the smaller image, and existing goldens have to be recorded again.
-
-A custom tester that sizes its own surface has to pass the value on:
-`DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile, options().renderScale)`. What
-the check watches is that resolve: a test that never asks for a spec, or asks for one at a
-different scale, fails with an explanation rather than recording an unscaled image. It does
-not measure the surface the tester then draws on, so a tester that resolves the right spec
-and ignores it is still on its own.
+Previews keep their dp size while the density shrinks, so `0.5` rasterizes a quarter of the pixels.
+Existing screenshots have to be recorded again. A custom tester that sizes its own surface passes
+the value on: `DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile, options().renderScale)`.
 
 ### Customizing the desktop tester
 
