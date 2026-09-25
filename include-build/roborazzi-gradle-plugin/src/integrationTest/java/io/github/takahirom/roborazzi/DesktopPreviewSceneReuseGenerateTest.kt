@@ -156,4 +156,48 @@ class DesktopPreviewSceneReuseGenerateTest {
       }
     }
   }
+
+  @Test
+  fun whenOnePreviewHasAnUnparsableDeviceTheOthersStillRun() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.sceneReuse = true
+      // The Desktop profile ignores `device`, so it takes a device-aware profile to parse it at all.
+      buildGradle.deviceProfile =
+        "com.github.takahirom.roborazzi.DesktopPreviewDeviceProfile.MediumPhone"
+      testProjectDir.root
+        .resolve(
+          "${DesktopPreviewModule.moduleName}/src/commonMain/kotlin/" +
+            "com/github/takahirom/preview/tests/UnparsableDevicePreview.kt"
+        )
+        .writeText(
+          """
+            package com.github.takahirom.preview.tests
+
+            import androidx.compose.material3.Text
+            import androidx.compose.runtime.Composable
+            import androidx.compose.ui.tooling.preview.Preview
+
+            @Preview(device = "not-a-device-spec")
+            @Composable
+            fun PreviewUnparsableDevice() {
+              Text("unparsable device")
+            }
+          """.trimIndent()
+        )
+
+      // The device is resolved when the preview is captured. Resolving it before the shard's
+      // captures are handed to JUnit would throw once for the whole shard, and none of the other
+      // previews would be reported.
+      record(buildType = BuildType.BuildAndFail, additionalParameters = NO_BUILD_CACHE)
+
+      val failed = failedTestCaseNames()
+      assert(failed.size == 1 && failed.single().contains("PreviewUnparsableDevice")) {
+        "Expected only the preview with the unparsable device to fail, but these did: $failed"
+      }
+      assert((reportedTestCaseNames() - failed).isNotEmpty()) {
+        "The other previews of the shard should still be reported, but only $failed was"
+      }
+      checkHasImageContaining("PreviewNormal")
+    }
+  }
 }

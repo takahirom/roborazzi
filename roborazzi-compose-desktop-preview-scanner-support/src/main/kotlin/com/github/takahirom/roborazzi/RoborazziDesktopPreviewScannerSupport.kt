@@ -311,12 +311,13 @@ class DefaultDesktopComposePreviewTester(
       return
     }
     groupDesktopPreviewsByScene(testParameters, options().deviceProfile).forEach { group ->
-      val prepared = group.map { it to prepare(it) }
-      if (prepared.size > 1 && capturerCanShareAScene()) {
-        captureInOneScene(prepared, listener)
+      if (group.size > 1 && capturerCanShareAScene()) {
+        captureInOneScene(group.map { it to prepare(it) }, listener)
       } else {
-        prepared.forEach { (testParameter, single) ->
-          listener.aroundCapture(testParameter) { captureInItsOwnScene(single) }
+        // Resolved inside the callback, so a preview whose device cannot be parsed fails as its own
+        // test rather than before any preview of the shard has been reported.
+        group.forEach { testParameter ->
+          listener.aroundCapture(testParameter) { test(testParameter) }
         }
       }
     }
