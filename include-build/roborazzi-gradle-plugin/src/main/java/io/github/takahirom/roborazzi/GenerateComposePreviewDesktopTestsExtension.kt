@@ -179,9 +179,9 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
    * same way, so a module that captures the same previews on both runtimes can scale both and go
    * on comparing them.
    *
-   * With [deviceProfile] left at a profile that has no default device, the desktop runtime has no
-   * device density to scale; the pinned `1dp == 1px` density is read as 160dpi and scaled through
-   * the same integer dpi, so a scale of 0.5 gives `1dp == 0.5px`.
+   * A preview that declares no `device`, under a profile that has no default device, has no device
+   * density to scale; the pinned `1dp == 1px` density is read as 160dpi and scaled through the same
+   * integer dpi, so a scale of 0.5 gives `1dp == 0.5px`.
    *
    * Must be finite and positive. The resulting dpi is rounded to the nearest integer and clamped
    * to a minimum of 1 dpi.
