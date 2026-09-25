@@ -349,6 +349,18 @@ class DesktopPreviewRenderSpecTest {
   }
 
   @Test
+  fun `a tiny scale still leaves a dp device at least one pixel on each side`() {
+    // 100dp at the 1dpi floor above is 0.625px, which floors to no surface at all.
+    val spec = resolve(
+      AndroidPreviewInfo(device = "spec:width=100dp,height=100dp,dpi=160"),
+      renderScale = 0.001,
+    )
+
+    assertEquals(1, spec.surfaceWidth)
+    assertEquals(1, spec.surfaceHeight)
+  }
+
+  @Test
   fun `the profile without a default device scales its pinned density as 160dpi`() {
     val spec = resolve(
       AndroidPreviewInfo(widthDp = 2000, heightDp = 120),

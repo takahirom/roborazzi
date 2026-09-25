@@ -152,8 +152,10 @@ data class DesktopPreviewRenderSpec(
 
         DeviceUnit.DP -> {
           val density = scaledDensity(densityDpi, renderScale)
-          flooredPx(dimensions.width.toInt(), density) to
-            flooredPx(dimensions.height.toInt(), density)
+          // A tiny scale can floor a whole side to 0, which is no surface at all; the pixel branch
+          // clamps the same way.
+          flooredPx(dimensions.width.toInt(), density).coerceAtLeast(1) to
+            flooredPx(dimensions.height.toInt(), density).coerceAtLeast(1)
         }
       }
       // A landscape device is described by its natural portrait dimensions, and the `land`
