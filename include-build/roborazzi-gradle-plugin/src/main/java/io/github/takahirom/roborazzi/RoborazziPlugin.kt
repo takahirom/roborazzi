@@ -218,6 +218,21 @@ abstract class RoborazziPlugin : Plugin<Project> {
       return roborazziProperties["roborazzi.test.record"] == "true" || roborazziProperties["roborazzi.test.verify"] == "true" || roborazziProperties["roborazzi.test.compare"] == "true"
     }
 
+    // Every Test task Roborazzi wires up, collected so the configuration-phase JUnit Platform
+    // reporting diagnostics inspect exactly the same tasks the execution-phase ones do. Appended
+    // to from configureRoborazziTasks (which runs from variant/target callbacks) and read at
+    // projectsEvaluated, by which point every entry is in place. Only Test tasks are recorded:
+    // the diagnostics are about JUnit Platform options, which KotlinNativeTest does not have, and
+    // realizing native test tasks for nothing would be wasteful.
+    val junitPlatformReportingTestTasks = mutableListOf<TaskCollection<out AbstractTestTask>>()
+    // Set to true at projectsEvaluated when the configuration-phase diagnostics detected the
+    // reporting module from the declared dependencies and therefore already reported any problem.
+    // Read from the execution-phase doFirst through the Provider, so its value is resolved after
+    // configuration has finished — and it is a plain Boolean, keeping the action Configuration
+    // Cache safe.
+    val junitPlatformReportingDetectedAtConfigurationTime =
+      project.objects.property(Boolean::class.java).convention(false)
+
     fun <T : AbstractTestTask> findTestTaskProvider(
       testTaskClass: KClass<T>,
       testTaskName: String
@@ -354,6 +369,9 @@ abstract class RoborazziPlugin : Plugin<Project> {
       }
 
       val testTaskProvider = findTestTaskProvider(testTaskClass, testTaskName)
+      if (testTaskClass == Test::class) {
+        junitPlatformReportingTestTasks.add(testTaskProvider)
+      }
       val roborazziProperties: Map<String, Any?> =
         project.providers.gradlePropertiesPrefixedBy("roborazzi").get()
 
@@ -657,6 +675,34 @@ abstract class RoborazziPlugin : Plugin<Project> {
               // Do nothing
             }
           })
+          // Diagnose roborazzi-junit-platform-reporting setup mistakes. This is the backstop
+          // layer, for a reporting module that reaches the classpath only transitively and so is
+          // invisible to the declared-dependency scan the configuration-phase layer does. Runs in
+          // a doFirst so that inspecting the test runtime classpath and the resolved test
+          // framework options never forces configuration resolution at configuration
+          // time; the task parameter is used (not the captured `test`) so no Task
+          // reference is captured, keeping the action Configuration Cache safe.
+          if (test is Test) {
+            // The set of diagnostic ids to suppress, read from the roborazzi.suppress
+            // Gradle property at configuration time (a Gradle property is a Configuration
+            // Cache input) and captured as a plain Set<String> so the doFirst action holds
+            // no Project reference. Every JUnit Platform reporting diagnostic is a build
+            // error; listing its id here downgrades that error to a warning rather than
+            // silencing it, so the message still surfaces.
+            val suppressedDiagnostics =
+              RoborazziDiagnosticSuppression.parse(roborazziProperties)
+            // Captured as a Provider, not a value: configuration is still in progress here, and
+            // the configuration-phase layer only decides at projectsEvaluated.
+            val detectedAtConfigurationTime: Provider<Boolean> =
+              junitPlatformReportingDetectedAtConfigurationTime
+            test.doFirst("Roborazzi JUnit Platform reporting diagnostics") { task ->
+              diagnoseJUnitPlatformReporting(
+                test = task as Test,
+                suppressedDiagnostics = suppressedDiagnostics,
+                detectedFromDeclaredDependency = detectedAtConfigurationTime.get(),
+              )
+            }
+          }
           test.finalizedBy(finalizeTestRoborazziTask)
         }
 
@@ -665,6 +711,24 @@ abstract class RoborazziPlugin : Plugin<Project> {
       verifyTaskProvider.configure { it.dependsOn(testTaskProvider) }
       verifyAndRecordTaskProvider.configure { it.dependsOn(testTaskProvider) }
     }
+
+    // The set of diagnostic ids to suppress, read from the roborazzi.suppress Gradle property
+    // at configuration time (a Gradle property is a Configuration Cache input) and captured as
+    // a plain Set<String> via RoborazziDiagnosticSuppression.
+    val suppressedDiagnostics =
+      RoborazziDiagnosticSuppression.parse(
+        project.providers.gradlePropertiesPrefixedBy("roborazzi").get()
+      )
+
+    // Layer 1 of the JUnit Platform reporting diagnostics: report setup mistakes during
+    // configuration so they surface before any task runs. The execution-time doFirst added in
+    // configureRoborazziTasks stays as the backstop for a transitively-supplied reporting module.
+    registerJUnitPlatformReportingConfigurationDiagnostics(
+      project = project,
+      testTaskCollections = junitPlatformReportingTestTasks,
+      suppressedDiagnostics = suppressedDiagnostics,
+      detectedFromDeclaredDependency = junitPlatformReportingDetectedAtConfigurationTime,
+    )
 
     project.pluginManager.withPlugin("com.android.application") {
       AndroidRoborazziConfigurator.configureAndroidApplication(
