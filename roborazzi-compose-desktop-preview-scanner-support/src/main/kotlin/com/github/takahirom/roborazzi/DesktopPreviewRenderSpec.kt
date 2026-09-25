@@ -152,10 +152,8 @@ data class DesktopPreviewRenderSpec(
 
         DeviceUnit.DP -> {
           val density = scaledDensity(densityDpi, renderScale)
-          // A tiny scale can floor a whole side to 0, which is no surface at all; the pixel branch
-          // clamps the same way.
-          flooredPx(dimensions.width.toInt(), density).coerceAtLeast(1) to
-            flooredPx(dimensions.height.toInt(), density).coerceAtLeast(1)
+          flooredPx(dimensions.width.toInt(), density) to
+            flooredPx(dimensions.height.toInt(), density)
         }
       }
       // A landscape device is described by its natural portrait dimensions, and the `land`
@@ -173,11 +171,13 @@ data class DesktopPreviewRenderSpec(
      * `Dimensions.inPx(dpi)` from ComposablePreviewScanner is not used on purpose: it rounds with
      * `ceil`, which would make every capture a pixel wider and taller than the Robolectric one.
      *
-     * An unset dp (-1) converts to 0, which every caller reads as "not specified".
+     * An unset dp (-1) converts to 0, which every caller reads as "not specified". A set dp is at
+     * least 1px, even when a tiny `renderScale` makes it a fraction of one: flooring it to 0 would
+     * turn a size the preview asked for into "not specified", or into no surface at all.
      */
     @ExperimentalRoborazziApi
     fun flooredPx(dp: Int, density: Float): Int =
-      if (dp > 0) floor(dp * density).toInt() else 0
+      if (dp > 0) floor(dp * density).toInt().coerceAtLeast(1) else 0
 
     private fun toPx(dp: Int, density: Float): Int = flooredPx(dp, density)
 

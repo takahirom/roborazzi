@@ -361,6 +361,25 @@ class DesktopPreviewRenderSpecTest {
   }
 
   @Test
+  fun `a tiny scale still leaves a preview's own size at least one pixel`() {
+    // widthDp = 100 at the 1dpi floor is 0.625px. Flooring it to 0 would read as "not specified"
+    // here and as a 0dp requiredSize when the preview is decorated.
+    val spec = resolve(
+      AndroidPreviewInfo(
+        device = "spec:width=400dp,height=400dp,dpi=160",
+        widthDp = 100,
+        heightDp = 100,
+      ),
+      renderScale = 0.001,
+    )
+
+    assertEquals(1, spec.surfaceWidth)
+    assertEquals(1, spec.surfaceHeight)
+    assertEquals(1, DesktopPreviewRenderSpec.flooredPx(100, spec.density))
+    assertEquals(0, DesktopPreviewRenderSpec.flooredPx(-1, spec.density))
+  }
+
+  @Test
   fun `the profile without a default device scales its pinned density as 160dpi`() {
     val spec = resolve(
       AndroidPreviewInfo(widthDp = 2000, heightDp = 120),
