@@ -22,6 +22,17 @@ class DesktopPreviewGenerateTest {
   }
 
   @Test
+  fun whenExplicitApiStrictInTestsAndRecordRunImagesShouldBeRecorded() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.explicitApiStrictInTests = true
+
+      record()
+
+      checkHasImages()
+    }
+  }
+
+  @Test
   fun whenDisablePreviewAndRecordRunImagesShouldNotBeRecorded() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.enable = false
@@ -270,6 +281,18 @@ class DesktopPreviewModule(
     var separateOutputDirs = false
     var annotationFilterExcludeBinaryName: String? = null
     var useAndroidOnlyProject = false
+    var explicitApiStrictInTests = false
+
+    // kotlin { explicitApi() } is skipped for test compilations by KGP, but the
+    // -Xexplicit-api compiler flag reaches them and so the generated tests.
+    // Scoped to test compilations so the fixture's main sources stay as they are.
+    private fun explicitApiStrictInTestsScript() = if (explicitApiStrictInTests) """
+      tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+        if (name.contains("Test")) {
+          compilerOptions.freeCompilerArgs.add("-Xexplicit-api=strict")
+        }
+      }
+    """.trimIndent() else ""
 
     fun write() {
       val file = projectFolder.root.resolve(PATH)
@@ -402,7 +425,7 @@ class DesktopPreviewModule(
         }
       """.trimIndent()
 
-      file.writeText(buildGradleText)
+      file.writeText(buildGradleText + "\n" + explicitApiStrictInTestsScript())
     }
 
     private fun createRoborazziExtension(): String {

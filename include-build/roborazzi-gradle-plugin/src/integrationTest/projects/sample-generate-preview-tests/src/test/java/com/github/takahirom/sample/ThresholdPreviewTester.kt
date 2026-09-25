@@ -9,7 +9,7 @@ import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4T
  * example in docs/topics/preview_support.md. Keep this in sync with the docs.
  */
 @OptIn(ExperimentalRoborazziApi::class)
-class ThresholdPreviewTester :
+public class ThresholdPreviewTester :
   ComposePreviewTester<AndroidPreviewJUnit4TestParameter> by AndroidComposePreviewTester(
     capturer = { parameter ->
       val customOptions = parameter.roborazziOptions.copy(

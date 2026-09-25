@@ -184,6 +184,17 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenExplicitApiStrictInTestsAndRecordRunImagesShouldBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.explicitApiStrictInTests = true
+
+      record()
+
+      checkHasImages()
+    }
+  }
+
+  @Test
   fun whenGeneratedTestClassCountIs1ShouldGenerateSingleTestClass() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.generatedTestClassCount = 1
@@ -245,6 +256,18 @@ class PreviewModule(
     var useKsp = false
     var generatedTestClassCount: Int? = null
     var maxParallelForks: Int? = null
+    var explicitApiStrictInTests = false
+
+    // kotlin { explicitApi() } is skipped for test compilations by KGP, but the
+    // -Xexplicit-api compiler flag reaches them and so the generated tests.
+    // Scoped to test compilations so the fixture's main sources stay as they are.
+    private fun explicitApiStrictInTestsScript() = if (explicitApiStrictInTests) """
+      tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+        if (name.contains("Test")) {
+          compilerOptions.freeCompilerArgs.add("-Xexplicit-api=strict")
+        }
+      }
+    """.trimIndent() else ""
     
     private fun kspDependencies() = if (useKsp) """
                           ksp("com.google.dagger:hilt-android-compiler:2.57.1")
@@ -450,7 +473,7 @@ class PreviewModule(
 """
       }
       file.writeText(
-        buildGradleText.trimIndent()
+        buildGradleText.trimIndent() + "\n" + explicitApiStrictInTestsScript()
       )
     }
 
