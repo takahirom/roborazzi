@@ -161,9 +161,6 @@ class DesktopPreviewSceneReuseGenerateTest {
   fun whenOnePreviewHasAnUnparsableDeviceTheOthersStillRun() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.sceneReuse = true
-      // The Desktop profile ignores `device`, so it takes a device-aware profile to parse it at all.
-      buildGradle.deviceProfile =
-        "com.github.takahirom.roborazzi.DesktopPreviewDeviceProfile.MediumPhone"
       testProjectDir.root
         .resolve(
           "${DesktopPreviewModule.moduleName}/src/commonMain/kotlin/" +

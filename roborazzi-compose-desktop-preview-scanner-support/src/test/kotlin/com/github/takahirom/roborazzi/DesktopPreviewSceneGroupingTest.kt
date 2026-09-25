@@ -150,18 +150,19 @@ class DesktopPreviewSceneGroupingTest {
   }
 
   @Test
-  fun `the Desktop profile puts everything on one surface`() {
-    // The Desktop profile ignores the device, so previews that a phone profile would
-    // separate all land on the same 1024x768 scene.
+  fun `the Desktop profile shares one surface only among previews that declare no device`() {
+    // A declared device sizes the preview under every profile, so it cannot join the 1024x768
+    // scene that the device-less previews share.
     val groups = group(
       listOf(
+        parameter("first"),
         parameter("phone", AndroidPreviewInfo(device = "spec:width=411dp,height=891dp,dpi=420")),
-        parameter("tablet", AndroidPreviewInfo(device = "spec:width=800dp,height=1280dp,dpi=240")),
+        parameter("second"),
       ),
       profile = DesktopPreviewDeviceProfile.Desktop,
     )
 
-    assertEquals(listOf(listOf("phone", "tablet")), groups)
+    assertEquals(listOf(listOf("first", "second"), listOf("phone")), groups)
   }
 
   @Test
