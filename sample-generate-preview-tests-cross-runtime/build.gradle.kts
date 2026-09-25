@@ -236,7 +236,9 @@ tasks.register("compareCrossRuntimeOutputs") {
   // The list above was measured at the default density. A `-Proborazzi.renderScale` run re-measures
   // every text at a different density, and a glyph that fitted in one line of 72px can need 73, so
   // which previews differ is not the same set. Widths are geometry rather than text measurement
-  // and have to agree at any scale, so that is what a scaled run asserts.
+  // and have to agree at any scale, so that is what a scaled run asserts - for the previews not
+  // already listed. The list stays exempt at every scale because some of its entries differ in width
+  // by design, such as a device-less preview that the Robolectric side sizes in whole dp.
   val widthsOnly = (providers.gradleProperty("roborazzi.renderScale").orNull?.toDouble() ?: 1.0) != 1.0
 
   // The recording tasks and their finalizers rewrite these directories while the build runs, so
