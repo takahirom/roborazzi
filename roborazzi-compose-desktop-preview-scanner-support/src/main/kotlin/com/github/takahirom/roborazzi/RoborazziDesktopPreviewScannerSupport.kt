@@ -76,7 +76,32 @@ interface DesktopComposePreviewTester {
      * Previews whose clock is driven by hand are never grouped; see [DesktopPreviewSceneKey].
      */
     val sceneReuse: Boolean = false,
+    /**
+     * Renders every preview at this fraction of its device density.
+     *
+     * The preview keeps its logical dp size and the raster surface shrinks with the density, so
+     * half the scale is a quarter of the pixels to rasterize. Anything drawn in raw pixels keeps
+     * its absolute size and so looks relatively thicker in the smaller image.
+     *
+     * The same option exists on the Robolectric generator, and the two runtimes round the same
+     * way, so a module that captures the same previews on both can scale both and keep comparing
+     * them.
+     *
+     * Must be finite and positive. The resulting dpi is rounded to the nearest integer and clamped
+     * to a minimum of 1 dpi.
+     *
+     * A custom [DesktopComposePreviewTester] that sizes its own surface has to pass this value to
+     * [DesktopPreviewRenderSpec.resolve]. A tester that drops it fails the generated test, so no
+     * opt-in flag is needed here.
+     */
+    val renderScale: Double = 1.0,
   ) {
+    init {
+      require(renderScale.isFinite() && renderScale > 0.0) {
+        "renderScale must be finite and greater than 0, but was $renderScale"
+      }
+    }
+
     interface TestLifecycleOptions
 
     data class JUnit4TestLifecycleOptions(
@@ -310,7 +335,11 @@ class DefaultDesktopComposePreviewTester(
       }
       return
     }
-    groupDesktopPreviewsByScene(testParameters, options().deviceProfile).forEach { group ->
+    groupDesktopPreviewsByScene(
+      testParameters,
+      options().deviceProfile,
+      options().renderScale,
+    ).forEach { group ->
       if (group.size > 1 && capturerCanShareAScene()) {
         captureInOneScene(group, listener)
       } else {
@@ -336,7 +365,9 @@ class DefaultDesktopComposePreviewTester(
     // How large the raster surface is and what a dp is worth on it both follow from the render
     // profile, so they are resolved together before the preview is decorated.
     val deviceProfile = options().deviceProfile
-    val renderSpec = DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile)
+    val renderScale = options().renderScale
+    // resolve() records the scale it was given, which is what DesktopRenderScaleVerification reads.
+    val renderSpec = DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile, renderScale)
     return Prepared(
       renderSpec = renderSpec,
       locale = previewInfo.locale,
@@ -417,9 +448,14 @@ class DefaultDesktopComposePreviewTester(
   ) {
     // The group shares one surface and one locale, so the first preview's are the scene's. Only
     // those are read up front: everything else is prepared inside each preview's `aroundCapture`,
-    // after the per-preview rule has run, as it is when every preview gets its own scene.
+    // after the per-preview rule has run, as it is when every preview gets its own scene. Sizing
+    // the scene does not count as reaching a capture; each preview's own prepare() records that.
     val firstPreviewInfo = group.first().preview.previewInfo
-    val sceneSpec = DesktopPreviewRenderSpec.resolve(firstPreviewInfo, options().deviceProfile)
+    val sceneSpec = DesktopPreviewRenderSpec.resolveWithoutRecording(
+      firstPreviewInfo,
+      options().deviceProfile,
+      options().renderScale,
+    )
     // How many previews the shared scene got through. A preview that throws is reported as its own
     // failure, but the scene it threw in is not trusted afterwards: an exception out of
     // composition, for one, leaves the surface unable to produce an image, and every later
