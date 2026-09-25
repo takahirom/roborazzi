@@ -43,8 +43,15 @@ class ShardOfDesktopPreviewsTest {
     shardIndex: Int?,
     totalShards: Int,
     profile: DesktopPreviewDeviceProfile = Pixel4aDeviceProfile,
+    renderScale: Double = 1.0,
   ): List<String> =
-    shardOfDesktopPreviews(parameters, profile, shardIndex, totalShards)
+    shardOfDesktopPreviews(
+      testParameters = parameters,
+      profile = profile,
+      renderScale = renderScale,
+      shardIndex = shardIndex,
+      totalShards = totalShards,
+    )
       .map { it.preview.methodName }
 
   @Test

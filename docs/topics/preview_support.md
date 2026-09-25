@@ -283,7 +283,7 @@ roborazzi {
 
 | Profile | Screen | Use it to |
 |---|---|---|
-| `DesktopPreviewDeviceProfile.Desktop` | 1dp = 1px, at least 1024x768dp | Keep existing desktop screenshots of previews without a `device` unchanged. |
+| `DesktopPreviewDeviceProfile.Desktop` | 1dp = 1px, at least 1024x768dp. `renderScale` shrinks the density from there. | Keep existing desktop screenshots of previews without a `device` unchanged. |
 | `DesktopPreviewDeviceProfile.MediumPhone` | Medium Phone: 411x914dp, 1dp = 2.625px | Compare with Android Studio and Compose Preview Screenshot Testing. |
 
 Under every profile, including `Desktop`, `@Preview(device = ...)` is honored with the same parser
@@ -335,6 +335,25 @@ test.
 
 A custom `Capturer` cannot share a scene, so it keeps one scene per preview. A custom tester has
 to override `test(testParameters, listener)` to reuse scenes.
+
+#### Rendering at a smaller density
+
+`renderScale` works as on the Robolectric generator, and both runtimes round it the same way:
+
+```kotlin
+roborazzi {
+  generateComposePreviewDesktopTests {
+    enable = true
+    packages = listOf("com.example.previews")
+    deviceProfile = DesktopPreviewDeviceProfile.MediumPhone
+    renderScale = 0.5
+  }
+}
+```
+
+Previews keep their dp size while the density shrinks, so `0.5` rasterizes a quarter of the pixels.
+Existing screenshots have to be recorded again. A custom tester that sizes its own surface passes
+the value on: `DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile, options().renderScale)`.
 
 ### Customizing the desktop tester
 
@@ -392,11 +411,12 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 | Compose rule factory (`composeRuleFactory`) | ✅ | Not applicable (function-scoped harness) |
 | `@Preview` annotation options (`widthDp`/`heightDp`, `fontScale`, `showBackground`/`backgroundColor`, `locale`, `uiMode` dark bit) | ✅ (see below) | ✅ |
 | `@Preview(device = ...)` | ✅ | ✅ under every device profile, including `Desktop` |
+| `renderScale` | ✅ | ✅ |
 | `robolectricConfig` (device qualifiers, SDK) | ✅ | Not applicable - the equivalent is the device profile's `defaultDevice` |
 
 On Compose Desktop the `@Preview` annotation options are applied as follows:
 
-- `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box. For a preview without a `device` under the `Desktop` profile density is `1`, so 1dp equals 1px; otherwise they are dp at the device density. When neither is specified the preview still renders wrap-content.
+- `widthDp`/`heightDp`: the preview is wrapped in a fixed-size box. For a preview without a `device` under the `Desktop` profile density is `1` (times `renderScale`), so 1dp equals 1px at scale 1; otherwise they are dp at the device density. When neither is specified the preview still renders wrap-content.
 - `fontScale`: applied through `LocalDensity`, together with the density the device profile resolved, because `DeviceConfigurationOverride.FontScale` is unsupported on desktop. It is applied linearly, which is where the two runtimes part: from API 34 Android bends the curve so that small text grows more than large text, and a `fontScale = 2f` preview is therefore laid out differently on desktop. Compose Multiplatform has no equivalent, and it cannot be supplied from the outside - a `Density` given to `LocalDensity` reaches the composition, but text is measured through the layout node, which carries only the `density` and `fontScale` numbers and converts sp linearly.
 - `showBackground`/`backgroundColor`: draws a background behind the preview, defaulting to white when `showBackground = true` but no color is given.
 - `locale`: sets `java.util.Locale.getDefault()` for the capture and restores it afterwards. Accepts `"ja"`, `"ja-rJP"`, and `"ja-JP"` forms.

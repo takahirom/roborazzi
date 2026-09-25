@@ -35,6 +35,9 @@ roborazzi {
     // One class per runtime. Sharding splits the previews by a sort of their string form, which
     // cuts through the configuration groups scene reuse depends on.
     generatedTestClassCount = 1
+    // Pass -Proborazzi.renderScale=0.5 to record the same previews at a smaller density. Both
+    // generators read the same property, so the two runtimes stay comparable at any scale.
+    renderScale = providers.gradleProperty("roborazzi.renderScale").orNull?.toDouble() ?: 1.0
   }
 
   generateComposePreviewDesktopTests {
@@ -50,6 +53,9 @@ roborazzi {
     // -Proborazzi.sceneReuse=true to capture the same previews with the scenes shared, which is
     // how the two outputs are compared and how the speed-up is measured.
     sceneReuse = providers.gradleProperty("roborazzi.sceneReuse").orNull.toBoolean()
+    // The same lever as the Robolectric generator above: both runtimes have to scale together for
+    // the comparison to mean anything.
+    renderScale = providers.gradleProperty("roborazzi.renderScale").orNull?.toDouble() ?: 1.0
   }
 }
 
@@ -227,6 +233,11 @@ tasks.register("compareCrossRuntimeOutputs") {
   val desktopDir = layout.buildDirectory.dir("outputs/roborazzi/desktop")
   val reportFile = layout.buildDirectory.file("reports/cross-runtime/dimensions.md")
   val knownDifferences = crossRuntimeKnownDifferences
+  // The list above was measured at the default density. A `-Proborazzi.renderScale` run re-measures
+  // every text at a different density, and a glyph that fitted in one line of 72px can need 73, so
+  // which previews differ is not the same set. Widths are geometry rather than text measurement
+  // and have to agree at any scale, so that is what a scaled run asserts.
+  val widthsOnly = (providers.gradleProperty("roborazzi.renderScale").orNull?.toDouble() ?: 1.0) != 1.0
 
   // The recording tasks and their finalizers rewrite these directories while the build runs, so
   // snapshotting them as inputs races with the rewrite (the failure mode behind issue #830). This
@@ -265,9 +276,12 @@ tasks.register("compareCrossRuntimeOutputs") {
     }
     val missing = rows.filter { it.second == "missing" || it.third == "missing" }
     val mismatched = rows.filter { it !in missing && it.second != it.third }
-    val unexpectedlyDifferent =
-      mismatched.filterNot { shortNameOf(it.first) in knownDifferences }
-    val unexpectedlyEqual = knownDifferences -
+    fun widthOf(size: String): String = size.substringBefore('x')
+
+    val unexpectedlyDifferent = mismatched
+      .filterNot { shortNameOf(it.first) in knownDifferences }
+      .filterNot { widthsOnly && widthOf(it.second) == widthOf(it.third) }
+    val unexpectedlyEqual = if (widthsOnly) emptySet() else knownDifferences -
       mismatched.map { shortNameOf(it.first) }.toSet()
 
     val report = buildString {
