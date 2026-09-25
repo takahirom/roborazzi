@@ -129,13 +129,13 @@ data class CaptureResults(
   ): String {
     if (images.isEmpty()) return ""
     return buildString {
-      append("<h3>$title (${images.size})</h3>")
+      append("<h3 id=\"${anchor}\">$title (${images.size})</h3>")
       val fileNameClass = "flow-text col s4"
       val fileNameStyle = "word-wrap: break-word; word-break: break-all;"
       val imgClass = "col s6"
       val imgAttributes =
         "style=\"max-width: 100%; height: 100%; object-fit: cover;\" class=\"modal-trigger\""
-      append("<table class=\"highlight\" id=\"$anchor\">")
+      append("<table class=\"highlight\">")
       append("<thead>")
       append("<tr class=\"row\">")
       append("<th class=\"$fileNameClass\" style=\"$fileNameStyle\">File Name</th>")
