@@ -84,4 +84,16 @@ class DesktopPreviewDeviceProfileTest {
     assertEquals(profile, same)
     assertEquals(profile.hashCode(), same.hashCode())
   }
+
+  @Test
+  fun toStringNamesTheDefaultDevice() {
+    assertEquals(
+      "DesktopPreviewDeviceProfile(defaultDevice=spec:width=1080px,height=2400px,dpi=420)",
+      DesktopPreviewDeviceProfile.MediumPhone.toString(),
+    )
+    assertEquals(
+      "DesktopPreviewDeviceProfile(defaultDevice=null)",
+      DesktopPreviewDeviceProfile.Desktop.toString(),
+    )
+  }
 }
