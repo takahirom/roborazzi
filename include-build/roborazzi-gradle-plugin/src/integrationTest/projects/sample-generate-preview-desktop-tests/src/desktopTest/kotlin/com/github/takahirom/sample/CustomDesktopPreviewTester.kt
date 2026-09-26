@@ -9,7 +9,7 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 
 @OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
-class CustomDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester() {
+public class CustomDesktopPreviewTester : DesktopComposePreviewTester by DefaultDesktopComposePreviewTester() {
   override fun options(): DesktopComposePreviewTester.Options =
     DesktopComposePreviewTester.defaultOptionsFromPlugin.copy(
       testLifecycleOptions = DesktopComposePreviewTester.Options.JUnit4TestLifecycleOptions(
