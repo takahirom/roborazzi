@@ -26,6 +26,7 @@ import java.io.Serializable
  * it, and the plugin must not depend on the Compose desktop scanner support module.
  */
 @ExperimentalRoborazziApi
+@Poko
 class DesktopPreviewDeviceProfile private constructor(
   /**
    * Device used to size previews that declare no `device`, written in the same grammar as
@@ -86,16 +87,6 @@ class DesktopPreviewDeviceProfile private constructor(
       append(encodeValue(defaultDevice))
     }
   }
-
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (other !is DesktopPreviewDeviceProfile) return false
-    return defaultDevice == other.defaultDevice
-  }
-
-  override fun hashCode(): Int = defaultDevice?.hashCode() ?: 0
-
-  override fun toString(): String = "DesktopPreviewDeviceProfile(defaultDevice=$defaultDevice)"
 
   companion object {
     private const val serialVersionUID: Long = 1L

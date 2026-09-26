@@ -5,5 +5,12 @@
   ],
   "ignoreDeps": [
     "io.github.takahirom.roborazzi"
+  ],
+  "packageRules": [
+    {
+      "description": "Poko is a compiler plugin that supports only a narrow Kotlin range, so update it together with Kotlin.",
+      "matchPackageNames": ["dev.drewhamilton.poko:*"],
+      "groupName": "kotlin monorepo"
+    }
   ]
 }
