@@ -527,6 +527,9 @@ public final class com/github/takahirom/roborazzi/KotlinxIoKt {
 	public static final fun relativeTo (Lkotlinx/io/files/Path;Lkotlinx/io/files/Path;)Lkotlinx/io/files/Path;
 }
 
+public abstract interface annotation class com/github/takahirom/roborazzi/Poko : java/lang/annotation/Annotation {
+}
+
 public final class com/github/takahirom/roborazzi/ProcessOutputImageAndReportKt {
 	public static final fun processOutputImageAndReport (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/EmptyCanvasFactory;Lcom/github/takahirom/roborazzi/CanvasFactoryFromFile;Lcom/github/takahirom/roborazzi/ComparisonCanvasFactory;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun processOutputImageAndReport$default (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/EmptyCanvasFactory;Lcom/github/takahirom/roborazzi/CanvasFactoryFromFile;Lcom/github/takahirom/roborazzi/ComparisonCanvasFactory;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
