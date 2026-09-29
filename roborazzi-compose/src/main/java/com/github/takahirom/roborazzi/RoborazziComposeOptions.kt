@@ -67,6 +67,8 @@ interface RoborazziComposeCaptureOption : RoborazziComposeOption {
 
 @ExperimentalRoborazziApi
 class RoborazziComposeOptions private constructor(
+  // Every option exactly once, in the order passed to addOption(), so builder() can replay them.
+  private val options: List<RoborazziComposeOption>,
   private val activityScenarioCreatorOptions: List<RoborazziComposeActivityScenarioCreatorOption>,
   private val activityScenarioOptions: List<RoborazziComposeActivityScenarioOption>,
   private val composableOptions: List<RoborazziComposeComposableOption>,
@@ -74,6 +76,7 @@ class RoborazziComposeOptions private constructor(
   private val captureOptions: List<RoborazziComposeCaptureOption>,
 ) {
   class Builder {
+    private val options = mutableListOf<RoborazziComposeOption>()
     private val activityScenarioOptions =
       mutableListOf<RoborazziComposeActivityScenarioOption>()
     private val activityScenarioCreatorOptions =
@@ -83,6 +86,7 @@ class RoborazziComposeOptions private constructor(
     private val captureOptions = mutableListOf<RoborazziComposeCaptureOption>()
 
     fun addOption(option: RoborazziComposeOption): Builder {
+      options.add(option)
       if (option is RoborazziComposeActivityScenarioCreatorOption) {
         activityScenarioCreatorOptions.add(option)
       }
@@ -103,6 +107,7 @@ class RoborazziComposeOptions private constructor(
 
     fun build(): RoborazziComposeOptions {
       return RoborazziComposeOptions(
+        options = options,
         activityScenarioCreatorOptions = activityScenarioCreatorOptions,
         activityScenarioOptions = activityScenarioOptions,
         composableOptions = composableOptions,
@@ -115,11 +120,9 @@ class RoborazziComposeOptions private constructor(
   fun builder(): Builder {
     return Builder()
       .apply {
-        activityScenarioCreatorOptions.forEach { addOption(it) }
-        activityScenarioOptions.forEach { addOption(it) }
-        composableOptions.forEach { addOption(it) }
-        setupOptions.forEach { addOption(it) }
-        captureOptions.forEach { addOption(it) }
+        // Replay the original options instead of the per-type lists: an option implementing
+        // several option interfaces is in several lists and would otherwise be added repeatedly.
+        options.forEach { addOption(it) }
       }
   }
 
