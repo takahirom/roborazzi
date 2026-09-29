@@ -67,61 +67,34 @@ interface RoborazziComposeCaptureOption : RoborazziComposeOption {
 
 @ExperimentalRoborazziApi
 class RoborazziComposeOptions private constructor(
-  // Every option exactly once, in the order passed to addOption(), so builder() can replay them.
+  // Every option exactly once, in the order passed to addOption(). The per-type lists below are
+  // derived from it so that an option implementing several option interfaces is never duplicated.
   private val options: List<RoborazziComposeOption>,
-  private val activityScenarioCreatorOptions: List<RoborazziComposeActivityScenarioCreatorOption>,
-  private val activityScenarioOptions: List<RoborazziComposeActivityScenarioOption>,
-  private val composableOptions: List<RoborazziComposeComposableOption>,
-  private val setupOptions: List<RoborazziComposeSetupOption>,
-  private val captureOptions: List<RoborazziComposeCaptureOption>,
 ) {
+  private val activityScenarioCreatorOptions =
+    options.filterIsInstance<RoborazziComposeActivityScenarioCreatorOption>()
+  private val activityScenarioOptions =
+    options.filterIsInstance<RoborazziComposeActivityScenarioOption>()
+  private val composableOptions = options.filterIsInstance<RoborazziComposeComposableOption>()
+  private val setupOptions = options.filterIsInstance<RoborazziComposeSetupOption>()
+  private val captureOptions = options.filterIsInstance<RoborazziComposeCaptureOption>()
+
   class Builder {
     private val options = mutableListOf<RoborazziComposeOption>()
-    private val activityScenarioOptions =
-      mutableListOf<RoborazziComposeActivityScenarioOption>()
-    private val activityScenarioCreatorOptions =
-      mutableListOf<RoborazziComposeActivityScenarioCreatorOption>()
-    private val composableOptions = mutableListOf<RoborazziComposeComposableOption>()
-    private val setupOptions = mutableListOf<RoborazziComposeSetupOption>()
-    private val captureOptions = mutableListOf<RoborazziComposeCaptureOption>()
 
     fun addOption(option: RoborazziComposeOption): Builder {
       options.add(option)
-      if (option is RoborazziComposeActivityScenarioCreatorOption) {
-        activityScenarioCreatorOptions.add(option)
-      }
-      if (option is RoborazziComposeActivityScenarioOption) {
-        activityScenarioOptions.add(option)
-      }
-      if (option is RoborazziComposeComposableOption) {
-        composableOptions.add(option)
-      }
-      if (option is RoborazziComposeSetupOption) {
-        setupOptions.add(option)
-      }
-      if (option is RoborazziComposeCaptureOption) {
-        captureOptions.add(option)
-      }
       return this
     }
 
     fun build(): RoborazziComposeOptions {
-      return RoborazziComposeOptions(
-        options = options,
-        activityScenarioCreatorOptions = activityScenarioCreatorOptions,
-        activityScenarioOptions = activityScenarioOptions,
-        composableOptions = composableOptions,
-        setupOptions = setupOptions,
-        captureOptions = captureOptions
-      )
+      return RoborazziComposeOptions(options = options.toList())
     }
   }
 
   fun builder(): Builder {
     return Builder()
       .apply {
-        // Replay the original options instead of the per-type lists: an option implementing
-        // several option interfaces is in several lists and would otherwise be added repeatedly.
         options.forEach { addOption(it) }
       }
   }
