@@ -60,18 +60,25 @@ class UiTreeDumpTest {
     ),
   )
 
-  private val captureInfo = UiTreeCaptureInfo(imageWidth = 220, imageHeight = 100, scale = 1.0)
+  private val captureInfo = UiTreeCaptureInfo(imageWidth = 220, imageHeight = 100, scale = 1.0, density = 1f)
 
   @Test
   fun exactStringMatchesSpec() {
     val expected = """
-{ "schemaVersion": 1, "capture": { "imageWidth": 220, "imageHeight": 100, "scale": 1.0 }, "root":
+{ "schemaVersion": 1, "capture": { "imageWidth": 220, "imageHeight": 100, "scale": 1.0, "density": 1.0 }, "root":
  { "type": "view", "className": "androidx.compose.ui.platform.ComposeView", "bounds": [0, 0, 220, 100], "children": [
   { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 24, 204, 72], "properties": { "Role": "Button", "Text": "Login" }, "actions": ["OnClick"], "flags": ["MergeDescendants"] },
   { "n": 2, "type": "compose", "bounds": [16, 80, 204, 96], "properties": { "Text": "Forgot password?" } } ] }
 }
 """.trim()
     assertEquals(expected, sampleTree().toUiTreeJson(captureInfo))
+  }
+
+  @Test
+  fun densityIsSerializedAsItsShortestDecimal() {
+    // tvdpi is 213 / 160. A Float widened to Double would print 1.3312499523162842.
+    val json = sampleTree().toUiTreeJson(captureInfo.copy(density = 1.33125f))
+    assertTrue(json, json.lines().first().contains("\"density\": 1.33125 }"))
   }
 
   @Test

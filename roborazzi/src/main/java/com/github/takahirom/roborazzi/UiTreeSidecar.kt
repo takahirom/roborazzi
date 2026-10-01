@@ -36,8 +36,11 @@ class UiTreeDumpWriteResult internal constructor(
  * annotated Set-of-Mark image (drawn later via
  * [UiTreeDumpWriteResult.writeAnnotatedImage]).
  *
- * The [serializationTree] lambda is only invoked when the feature is enabled, so
- * there is no traversal cost when it is off. The tree it returns should be built
+ * [density] returns the px-per-dp of the captured UI, recorded as `capture.density`.
+ *
+ * The [serializationTree] and [density] lambdas are only invoked when the
+ * feature is enabled, so there is no traversal cost when it is off. The tree
+ * [serializationTree] returns should be built
  * with [UiTreeTraversalCaptureType] so the whole hierarchy is traversed without
  * fetching per-node bitmaps.
  *
@@ -51,6 +54,7 @@ class UiTreeDumpWriteResult internal constructor(
 @InternalRoborazziApi
 fun writeUiTreeDumpIfEnabled(
   serializationTree: () -> RoboComponentTree,
+  density: () -> Float,
   goldenFile: File,
   roborazziOptions: RoborazziOptions,
 ): UiTreeDumpWriteResult {
@@ -63,6 +67,7 @@ fun writeUiTreeDumpIfEnabled(
       imageWidth = (tree.width * scale).toInt(),
       imageHeight = (tree.height * scale).toInt(),
       scale = scale,
+      density = density(),
     )
     // Compute the numbering once so the JSON sidecar and annotated image agree.
     val numbers = assignUiTreeNumbers(tree, dumpOptions.isAnnotatable)
