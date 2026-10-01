@@ -38,8 +38,10 @@ class UiTreeDumpDesktopTest {
       taskType = RoborazziTaskType.Record,
       uiTreeDumpOptions = UiTreeDumpOptions(),
     )
+    var density = 0f
     runDesktopComposeUiTest {
       setContent { App() }
+      density = onRoot().fetchSemanticsNode().layoutInfo.density.density
       onRoot().captureRoboImage(file = golden, roborazziOptions = options)
     }
 
@@ -49,6 +51,10 @@ class UiTreeDumpDesktopTest {
     assertTrue(sidecar.exists(), "sidecar should be written at ${sidecar.absolutePath}")
     val json = sidecar.readText()
     assertTrue(json.contains("\"schemaVersion\": 1"), "sidecar should be valid UI tree JSON")
+    assertTrue(
+      json.lines().first().contains("\"density\": $density }"),
+      "capture should record the node density $density",
+    )
     assertTrue(json.contains("\"type\": \"compose\""), "sidecar should contain compose nodes")
     // The button node's testTag and bounds live on one grep-able line.
     val taggedLine = json.lines().firstOrNull {

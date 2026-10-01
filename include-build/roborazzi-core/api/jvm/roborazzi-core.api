@@ -971,13 +971,15 @@ public final class com/github/takahirom/roborazzi/UiTreeAnnotation {
 }
 
 public final class com/github/takahirom/roborazzi/UiTreeCaptureInfo {
-	public fun <init> (IID)V
+	public fun <init> (IIDF)V
 	public final fun component1 ()I
 	public final fun component2 ()I
 	public final fun component3 ()D
-	public final fun copy (IID)Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;
-	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;IIDILjava/lang/Object;)Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;
+	public final fun component4 ()F
+	public final fun copy (IIDF)Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;IIDFILjava/lang/Object;)Lcom/github/takahirom/roborazzi/UiTreeCaptureInfo;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDensity ()F
 	public final fun getImageHeight ()I
 	public final fun getImageWidth ()I
 	public final fun getScale ()D
