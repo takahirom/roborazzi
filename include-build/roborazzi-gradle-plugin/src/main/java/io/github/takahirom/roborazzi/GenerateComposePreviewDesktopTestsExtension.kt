@@ -30,6 +30,11 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
 
   /**
+   * The package names to exclude from the Composable Previews scan.
+   */
+  val excludePackages: ListProperty<String> = objects.listProperty(String::class.java)
+
+  /**
    * The name of the Kotlin Multiplatform JVM target to generate the tests for
    * (e.g. "desktop" for `jvm("desktop")`).
    *
@@ -98,6 +103,9 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
   abstract val scanPackageTrees: ListProperty<String>
 
   @get:Input
+  abstract val excludePackageTrees: ListProperty<String>
+
+  @get:Input
   abstract val includePrivatePreviews: Property<Boolean>
 
   @get:Input
@@ -119,6 +127,8 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
 
     val packagesExpr =
       scanPackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
+    val excludePackagesExpr =
+      excludePackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
     val includePrivatePreviewsExpr = includePrivatePreviews.get()
     val annotationFilterExpr = when (val filter = annotationFilter.orNull) {
       is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
@@ -152,6 +162,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
         packageName = packageName,
         className = baseClassName,
         packagesExpr = packagesExpr,
+        excludePackagesExpr = excludePackagesExpr,
         includePrivatePreviewsExpr = includePrivatePreviewsExpr,
         annotationFilterExpr = annotationFilterExpr,
         testerQualifiedClassNameString = testerQualifiedClassNameString,
@@ -165,6 +176,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
           packageName = packageName,
           className = "$baseClassName$shardIndex",
           packagesExpr = packagesExpr,
+          excludePackagesExpr = excludePackagesExpr,
           includePrivatePreviewsExpr = includePrivatePreviewsExpr,
           annotationFilterExpr = annotationFilterExpr,
           testerQualifiedClassNameString = testerQualifiedClassNameString,
@@ -200,6 +212,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     packageName: String,
     className: String,
     packagesExpr: String,
+    excludePackagesExpr: String,
     includePrivatePreviewsExpr: Boolean,
     annotationFilterExpr: String,
     testerQualifiedClassNameString: String,
@@ -259,6 +272,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
                         DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(
                             scanOptions = DesktopComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),
+                              excludePackages = listOf($excludePackagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
                               annotationFilter = $annotationFilterExpr,
                             )

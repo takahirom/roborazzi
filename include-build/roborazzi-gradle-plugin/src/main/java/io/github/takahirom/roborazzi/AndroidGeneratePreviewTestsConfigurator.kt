@@ -150,6 +150,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     // The generated tests will be located in build/JAVA/generate[VariantName]ComposePreviewRobolectricTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot/${variant.name}"))
     it.scanPackageTrees.set(extension.packages)
+    it.excludePackageTrees.set(extension.excludePackages)
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(testerQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)

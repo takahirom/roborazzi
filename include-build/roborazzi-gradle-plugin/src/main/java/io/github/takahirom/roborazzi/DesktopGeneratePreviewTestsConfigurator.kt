@@ -120,6 +120,7 @@ private fun setupGenerateComposePreviewDesktopTestsTask(
   ) {
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot/$variantName"))
     it.scanPackageTrees.set(extension.packages)
+    it.excludePackageTrees.set(extension.excludePackages)
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(extension.testerQualifiedClassName)
     it.generatedTestClassCount.set(generatedTestClassCountProvider)

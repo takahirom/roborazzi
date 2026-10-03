@@ -68,6 +68,10 @@ interface DesktopComposePreviewTester {
        */
       val packages: List<String>,
       /**
+       * The packages to exclude from the scan.
+       */
+      val excludePackages: List<String> = emptyList(),
+      /**
        * Whether to include private previews in the scan.
        */
       val includePrivatePreviews: Boolean = false,
@@ -75,7 +79,22 @@ interface DesktopComposePreviewTester {
        * Filter for composable previews by annotation.
        */
       val annotationFilter: AnnotationFilter? = null,
-    )
+    ) {
+      @Deprecated(
+        message = "Kept for binary compatibility.",
+        level = DeprecationLevel.HIDDEN
+      )
+      constructor(
+        packages: List<String>,
+        includePrivatePreviews: Boolean = false,
+        annotationFilter: AnnotationFilter? = null,
+      ) : this(
+        packages = packages,
+        excludePackages = emptyList(),
+        includePrivatePreviews = includePrivatePreviews,
+        annotationFilter = annotationFilter,
+      )
+    }
   }
 
   /**
@@ -200,7 +219,16 @@ class DefaultDesktopComposePreviewTester(
   override fun testParameters(): List<DesktopPreviewTestParameter> {
     val scanOptions = options().scanOptions
     val scanner = AndroidComposablePreviewScanner()
-      .scanPackageTrees(*scanOptions.packages.toTypedArray())
+      .let {
+        if (scanOptions.excludePackages.isNotEmpty()) {
+          it.scanPackageTrees(
+            include = scanOptions.packages,
+            exclude = scanOptions.excludePackages,
+          )
+        } else {
+          it.scanPackageTrees(*scanOptions.packages.toTypedArray())
+        }
+      }
       .let {
         if (scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
