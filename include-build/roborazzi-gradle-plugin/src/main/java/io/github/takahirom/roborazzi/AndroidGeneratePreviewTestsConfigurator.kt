@@ -76,17 +76,18 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
   val isUsingCustomTester = testerQualifiedClassName.get() != GenerateComposePreviewRobolectricTestsExtension.DEFAULT_TESTER_CLASS
   val useScanOptions = extension.useScanOptionParametersInTester.get()
   val includePrivatePreviews = extension.includePrivatePreviews.get()
+  val hasExcludedPackages = extension.excludePackages.getOrElse(emptyList()).isNotEmpty()
 
-  if (!useScanOptions && isUsingCustomTester && (includePrivatePreviews || extension.annotationFilter.isPresent)) {
+  if (!useScanOptions && isUsingCustomTester && (includePrivatePreviews || extension.annotationFilter.isPresent || hasExcludedPackages)) {
     throw IllegalArgumentException(
       """
-      includePrivatePreviews / annotationFilter cannot be set automatically when using a custom tester.
+      includePrivatePreviews / annotationFilter / excludePackages cannot be set automatically when using a custom tester.
 
       When using a custom tester, if you override testParameters(), you must manually handle
-      the includePrivatePreviews option in your scanner configuration.
+      the includePrivatePreviews / annotationFilter / excludePackages options in your scanner configuration.
 
       You have two options:
-      1. Remove 'includePrivatePreviews = true' / annotationFilter option from generateComposePreviewRobolectricTests configuration
+      1. Remove 'includePrivatePreviews = true' / annotationFilter / excludePackages option from generateComposePreviewRobolectricTests configuration
          and call '.includePrivatePreviews()' / '.excludeIfAnnotatedWithAnyOf()' / '.includeIfAnnotatedWithAnyOf()' directly in your custom tester's testParameters() method.
 
       2. Set 'useScanOptionParametersInTester = true' in generateComposePreviewRobolectricTests configuration
@@ -150,6 +151,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
     // The generated tests will be located in build/JAVA/generate[VariantName]ComposePreviewRobolectricTests.
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot/${variant.name}"))
     it.scanPackageTrees.set(extension.packages)
+    it.excludePackageTrees.set(extension.excludePackages)
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(testerQualifiedClassName)
     it.robolectricConfig.set(robolectricConfig)

@@ -30,6 +30,11 @@ open class GenerateComposePreviewDesktopTestsExtension @Inject constructor(objec
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
 
   /**
+   * The package names to exclude from the Composable Previews scan.
+   */
+  val excludePackages: ListProperty<String> = objects.listProperty(String::class.java)
+
+  /**
    * The name of the Kotlin Multiplatform JVM target to generate the tests for
    * (e.g. "desktop" for `jvm("desktop")`).
    *
@@ -98,6 +103,9 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
   abstract val scanPackageTrees: ListProperty<String>
 
   @get:Input
+  abstract val excludePackageTrees: ListProperty<String>
+
+  @get:Input
   abstract val includePrivatePreviews: Property<Boolean>
 
   @get:Input
@@ -119,6 +127,8 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
 
     val packagesExpr =
       scanPackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
+    val excludePackagesExpr =
+      excludePackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
     val includePrivatePreviewsExpr = includePrivatePreviews.get()
     val annotationFilterExpr = when (val filter = annotationFilter.orNull) {
       is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
@@ -152,6 +162,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
         packageName = packageName,
         className = baseClassName,
         packagesExpr = packagesExpr,
+        excludePackagesExpr = excludePackagesExpr,
         includePrivatePreviewsExpr = includePrivatePreviewsExpr,
         annotationFilterExpr = annotationFilterExpr,
         testerQualifiedClassNameString = testerQualifiedClassNameString,
@@ -165,6 +176,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
           packageName = packageName,
           className = "$baseClassName$shardIndex",
           packagesExpr = packagesExpr,
+          excludePackagesExpr = excludePackagesExpr,
           includePrivatePreviewsExpr = includePrivatePreviewsExpr,
           annotationFilterExpr = annotationFilterExpr,
           testerQualifiedClassNameString = testerQualifiedClassNameString,
@@ -175,31 +187,13 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     }
   }
 
-  /**
-   * Escapes a configured string for embedding in a generated Kotlin string literal.
-   * Without this, values like the documented nested annotation name
-   * `com.example.Outer$Inner` would be interpreted as string templates and break
-   * the generated test's compilation.
-   */
-  private fun String.escapeForKotlinStringLiteral(): String = buildString {
-    for (c in this@escapeForKotlinStringLiteral) {
-      when (c) {
-        '\\' -> append("\\\\")
-        '"' -> append("\\\"")
-        '$' -> append("\\$")
-        '\n' -> append("\\n")
-        '\r' -> append("\\r")
-        '\t' -> append("\\t")
-        else -> append(c)
-      }
-    }
-  }
 
   private fun generateTestClass(
     directory: File,
     packageName: String,
     className: String,
     packagesExpr: String,
+    excludePackagesExpr: String,
     includePrivatePreviewsExpr: Boolean,
     annotationFilterExpr: String,
     testerQualifiedClassNameString: String,
@@ -261,6 +255,7 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
                               packages = listOf($packagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
                               annotationFilter = $annotationFilterExpr,
+                              excludePackages = listOf($excludePackagesExpr),
                             )
                         )
                     }
@@ -268,5 +263,25 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
             }
         """.trimIndent()
     )
+  }
+}
+
+/**
+ * Escapes a configured string for embedding in a generated Kotlin string literal.
+ * Without this, values like the documented nested annotation name
+ * `com.example.Outer$Inner` would be interpreted as string templates and break
+ * the generated test's compilation.
+ */
+internal fun String.escapeForKotlinStringLiteral(): String = buildString {
+  for (c in this@escapeForKotlinStringLiteral) {
+    when (c) {
+      '\\' -> append("\\\\")
+      '"' -> append("\\\"")
+      '$' -> append("\\$")
+      '\n' -> append("\\n")
+      '\r' -> append("\\r")
+      '\t' -> append("\\t")
+      else -> append(c)
+    }
   }
 }

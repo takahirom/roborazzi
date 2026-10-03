@@ -560,7 +560,41 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
        * Filter for composable previews by annotation.
        */
       val annotationFilter: AnnotationFilter? = null,
-    )
+      /**
+       * The packages to exclude from the scan.
+       */
+      val excludePackages: List<String> = emptyList(),
+    ) {
+      @Deprecated(
+        message = "Kept for binary compatibility.",
+        level = DeprecationLevel.HIDDEN
+      )
+      constructor(
+        packages: List<String>,
+        includePrivatePreviews: Boolean = false,
+        annotationFilter: AnnotationFilter? = null,
+      ) : this(
+        packages = packages,
+        includePrivatePreviews = includePrivatePreviews,
+        annotationFilter = annotationFilter,
+        excludePackages = emptyList(),
+      )
+
+      @Deprecated(
+        message = "Kept for binary compatibility.",
+        level = DeprecationLevel.HIDDEN
+      )
+      fun copy(
+        packages: List<String> = this.packages,
+        includePrivatePreviews: Boolean = this.includePrivatePreviews,
+        annotationFilter: AnnotationFilter? = this.annotationFilter,
+      ): ScanOptions = copy(
+        packages = packages,
+        includePrivatePreviews = includePrivatePreviews,
+        annotationFilter = annotationFilter,
+        excludePackages = this.excludePackages,
+      )
+    }
   }
 
   /**
@@ -697,7 +731,16 @@ class AndroidComposePreviewTester(
       options.testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions
 
     val scanner = AndroidComposablePreviewScanner()
-      .scanPackageTrees(*options.scanOptions.packages.toTypedArray())
+      .let {
+        if (options.scanOptions.excludePackages.isNotEmpty()) {
+          it.scanPackageTrees(
+            include = options.scanOptions.packages,
+            exclude = options.scanOptions.excludePackages,
+          )
+        } else {
+          it.scanPackageTrees(*options.scanOptions.packages.toTypedArray())
+        }
+      }
       .includeAnnotationInfoForAllOf(RoboComposePreviewOptions::class.java)
       .let {
         if (options.scanOptions.includePrivatePreviews) {

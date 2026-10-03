@@ -235,6 +235,16 @@ class GeneratePreviewTestTest {
     }
   }
 
+  @Test
+  fun whenExcludePackagesIsConfiguredImagesShouldNotBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.excludePackages = listOf("com.github.takahirom.preview.tests")
+
+      record()
+
+      checkNoImages()
+    }
+  }
 
 }
 
@@ -482,6 +492,7 @@ class PreviewModule(
     var useCustomTester = false
     var useScanOptionParametersInTester = false
     var renderScale: Double? = null
+    var excludePackages: List<String>? = null
 
     private fun createRoborazziExtension(): String {
       val includePrivatePreviewsExpr = if (isIncludePrivatePreviews) {
@@ -509,11 +520,17 @@ class PreviewModule(
       } else {
         ""
       }
+      val excludePackagesExpr = if (excludePackages != null) {
+        """excludePackages = listOf(${excludePackages!!.joinToString(", ") { "\"$it\"" }})"""
+      } else {
+        ""
+      }
       val roborazziExtension = """
               roborazzi {
                 generateComposePreviewRobolectricTests {
                   enable = $enable
                   packages = listOf("com.github.takahirom.preview.tests")
+                  $excludePackagesExpr
                   $includePrivatePreviewsExpr
                   $customTesterExpr
                   $useScanOptionParametersInTesterExpr
