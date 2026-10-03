@@ -62,6 +62,34 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
+  runWithRoborazziComposeActivity(roborazziComposeOptions, content) { activityScenario, configuredContent ->
+    activityScenario.captureRoboImage(
+      file = file,
+      roborazziOptions = roborazziOptions,
+      doBeforeCapture = { roborazziComposeOptions.beforeCapture() },
+      content = { configuredContent() }
+    )
+  }
+}
+
+/**
+ * Launches the Roborazzi activity for [roborazziComposeOptions], applies the options to
+ * [content] and runs [block] with the scenario and the configured content. The caller decides
+ * what to do with them (capture one image, record a video, ...).
+ *
+ * Environment changes (qualifiers, font scale) made by the options are restored and the
+ * scenario is closed after [block] returns or throws, and `afterCapture()` of the options runs
+ * even when [block] fails.
+ */
+@InternalRoborazziApi
+fun runWithRoborazziComposeActivity(
+  roborazziComposeOptions: RoborazziComposeOptions,
+  content: @Composable () -> Unit,
+  block: (
+    activityScenario: ActivityScenario<out ComponentActivity>,
+    configuredContent: @Composable () -> Unit,
+  ) -> Unit,
+) {
   val savedQualifiers = RuntimeEnvironment.getQualifiers()
   val savedFontScale = RuntimeEnvironment.getFontScale()
   try {
@@ -71,12 +99,7 @@ fun captureRoboImage(
       val configuredContent =
         roborazziComposeOptions.configuredAfterSetup(activityScenario) { content() }
       try {
-        activityScenario.captureRoboImage(
-          file = file,
-          roborazziOptions = roborazziOptions,
-          doBeforeCapture = { roborazziComposeOptions.beforeCapture() },
-          content = { configuredContent() }
-        )
+        block(activityScenario, configuredContent)
       } finally {
         roborazziComposeOptions.afterCapture()
       }
@@ -88,6 +111,15 @@ fun captureRoboImage(
       RuntimeEnvironment.setFontScale(savedFontScale)
     }
   }
+}
+
+/**
+ * Sets [content] as the content of the activity of this scenario. Used by callers of
+ * [runWithRoborazziComposeActivity] that drive the UI themselves instead of capturing once.
+ */
+@InternalRoborazziApi
+fun ActivityScenario<out ComponentActivity>.setRoborazziContent(content: @Composable () -> Unit) {
+  onActivity { activity -> activity.setContent(content = { content() }) }
 }
 
 private fun launchRoborazziActivity(
