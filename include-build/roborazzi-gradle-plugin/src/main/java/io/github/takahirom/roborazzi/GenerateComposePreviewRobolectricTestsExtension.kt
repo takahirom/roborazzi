@@ -180,12 +180,12 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
-    val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
-    val excludePackagesExpr = excludePackageTrees.get().joinToString(", ") { "\"$it\"" }
+    val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
+    val excludePackagesExpr = excludePackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
     val includePrivatePreviewsExpr = includePrivatePreviews.get()
     val annotationFilterExpr = when (val filter = annotationFilter.orNull) {
-      is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
-      is AnnotationFilter.Include -> "AnnotationFilter.Include(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
+      is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
+      is AnnotationFilter.Include -> "AnnotationFilter.Include(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
       null -> "null"
     }
     val testClassCount = generatedTestClassCount.get()
@@ -206,7 +206,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
       "@Config(" + robolectricConfig.get().entries.joinToString(", ") { (key, value) ->
         "$key = $value"
       } + ")"
-    val testerQualifiedClassNameString = testerQualifiedClassName.get()
+    val testerQualifiedClassNameString = testerQualifiedClassName.get().escapeForKotlinStringLiteral()
 
     if (testClassCount == 1) {
       generateTestClass(
@@ -330,9 +330,9 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                         ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options(
                             scanOptions = ComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),
-                              excludePackages = listOf($excludePackagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
                               annotationFilter = $annotationFilterExpr,
+                              excludePackages = listOf($excludePackagesExpr),
                             ),$renderScaleArgument
                         )
                     }

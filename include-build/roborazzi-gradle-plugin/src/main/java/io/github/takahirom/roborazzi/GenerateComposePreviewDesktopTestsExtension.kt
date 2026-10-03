@@ -187,25 +187,6 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
     }
   }
 
-  /**
-   * Escapes a configured string for embedding in a generated Kotlin string literal.
-   * Without this, values like the documented nested annotation name
-   * `com.example.Outer$Inner` would be interpreted as string templates and break
-   * the generated test's compilation.
-   */
-  private fun String.escapeForKotlinStringLiteral(): String = buildString {
-    for (c in this@escapeForKotlinStringLiteral) {
-      when (c) {
-        '\\' -> append("\\\\")
-        '"' -> append("\\\"")
-        '$' -> append("\\$")
-        '\n' -> append("\\n")
-        '\r' -> append("\\r")
-        '\t' -> append("\\t")
-        else -> append(c)
-      }
-    }
-  }
 
   private fun generateTestClass(
     directory: File,
@@ -272,9 +253,9 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
                         DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(
                             scanOptions = DesktopComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),
-                              excludePackages = listOf($excludePackagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
                               annotationFilter = $annotationFilterExpr,
+                              excludePackages = listOf($excludePackagesExpr),
                             )
                         )
                     }
@@ -282,5 +263,25 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
             }
         """.trimIndent()
     )
+  }
+}
+
+/**
+ * Escapes a configured string for embedding in a generated Kotlin string literal.
+ * Without this, values like the documented nested annotation name
+ * `com.example.Outer$Inner` would be interpreted as string templates and break
+ * the generated test's compilation.
+ */
+internal fun String.escapeForKotlinStringLiteral(): String = buildString {
+  for (c in this@escapeForKotlinStringLiteral) {
+    when (c) {
+      '\\' -> append("\\\\")
+      '"' -> append("\\\"")
+      '$' -> append("\\$")
+      '\n' -> append("\\n")
+      '\r' -> append("\\r")
+      '\t' -> append("\\t")
+      else -> append(c)
+    }
   }
 }

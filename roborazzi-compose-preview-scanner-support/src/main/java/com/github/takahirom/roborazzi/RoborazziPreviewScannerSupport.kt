@@ -553,10 +553,6 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
        */
       val packages: List<String>,
       /**
-       * The packages to exclude from the scan.
-       */
-      val excludePackages: List<String> = emptyList(),
-      /**
        * Whether to include private previews in the scan.
        */
       val includePrivatePreviews: Boolean = false,
@@ -564,6 +560,10 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
        * Filter for composable previews by annotation.
        */
       val annotationFilter: AnnotationFilter? = null,
+      /**
+       * The packages to exclude from the scan.
+       */
+      val excludePackages: List<String> = emptyList(),
     ) {
       @Deprecated(
         message = "Kept for binary compatibility.",
@@ -575,9 +575,24 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
         annotationFilter: AnnotationFilter? = null,
       ) : this(
         packages = packages,
-        excludePackages = emptyList(),
         includePrivatePreviews = includePrivatePreviews,
         annotationFilter = annotationFilter,
+        excludePackages = emptyList(),
+      )
+
+      @Deprecated(
+        message = "Kept for binary compatibility.",
+        level = DeprecationLevel.HIDDEN
+      )
+      fun copy(
+        packages: List<String> = this.packages,
+        includePrivatePreviews: Boolean = this.includePrivatePreviews,
+        annotationFilter: AnnotationFilter? = this.annotationFilter,
+      ): ScanOptions = copy(
+        packages = packages,
+        includePrivatePreviews = includePrivatePreviews,
+        annotationFilter = annotationFilter,
+        excludePackages = this.excludePackages,
       )
     }
   }
