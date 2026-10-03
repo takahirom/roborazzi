@@ -76,14 +76,19 @@ Some Roborazzi messages report something that is probably a mistake but may be i
 This option sets the severity of each problem by ID. The levels are `error`, `warning`, and `disabled`.
 
 ```properties
-roborazzi.problemSeverity=junitPlatformReporting.oldGradle:warning,previewTests.renderScaleNotVerified:disabled
+roborazzi.problemSeverity=composePreview.renderScaleMismatch:warning
 ```
 
 - You can raise a problem to `error` or lower it to `warning` or `disabled`.
+- Separate several problems with commas, for example `<id>:warning,<id>:disabled`.
 - `disabled` only stops the report. It does not change how settings are applied or how screenshots are compared.
 - An unknown ID or level, or the same ID listed twice, fails the build, so typos are not silently ignored.
 - Invalid settings, such as a negative render scale, and screenshot comparison failures are not problems and cannot be changed by this option.
 - When you run tests directly from the IDE without Gradle, pass the same value as a system property: `-Droborazzi.problemSeverity=...`.
+
+| Problem ID | Default | Reported when |
+|---|---|---|
+| `composePreview.renderScaleMismatch` | `error` | A custom `ComposePreviewTester` does not apply the `renderScale` configured for the generated preview tests. |
 
 ## Robolectric Options
 
