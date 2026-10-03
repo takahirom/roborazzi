@@ -68,6 +68,22 @@ never participates in image diffing and never fails verification.
 roborazzi.dumpUiTree=true
 ```
 
+## roborazzi.problemSeverity
+
+Some Roborazzi messages report something that is probably a mistake but may be intentional. For example, a setting passed from Gradle may not be applied by a custom preview tester. Each of these problems has an ID, and each message shows its ID and how to change its severity.
+
+This option sets the severity of each problem by ID. The levels are `error`, `warning`, and `disabled`.
+
+```properties
+roborazzi.problemSeverity=junitPlatformReporting.oldGradle:warning,previewTests.renderScaleNotVerified:disabled
+```
+
+- You can raise a problem to `error` or lower it to `warning` or `disabled`.
+- `disabled` only stops the report. It does not change how settings are applied or how screenshots are compared.
+- An unknown ID or level, or the same ID listed twice, fails the build, so typos are not silently ignored.
+- Invalid settings, such as a negative render scale, and screenshot comparison failures are not problems and cannot be changed by this option.
+- When you run tests directly from the IDE without Gradle, pass the same value as a system property: `-Droborazzi.problemSeverity=...`.
+
 ## Robolectric Options
 
 ### robolectric.pixelCopyRenderMode
