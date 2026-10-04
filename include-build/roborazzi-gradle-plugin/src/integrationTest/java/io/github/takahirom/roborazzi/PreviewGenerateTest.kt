@@ -19,6 +19,16 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenVideoOptionsShouldRecordVideoAndKeepStill() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      record()
+
+      checkHasImageContaining("PreviewWithVideo.png")
+      checkHasImageContaining("PreviewWithVideo_VIDEO")
+    }
+  }
+
+  @Test
   fun whenKmpModuleAndRecordRunImagesShouldBeRecorded() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.isKmp = true
@@ -357,6 +367,7 @@ class PreviewModule(
                         implementation(compose.ui)
                         implementation(compose.uiTooling)
                         implementation(compose.runtime)
+                        implementation("io.github.takahirom.roborazzi:roborazzi-annotations:0.1.0")
                       }
                   }
                   
@@ -459,6 +470,7 @@ class PreviewModule(
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.compose.runtime)
+    implementation("io.github.takahirom.roborazzi:roborazzi-annotations:0.1.0")
 
     // replaced by dependency substitution
     $previewScannerSupportDependency
@@ -558,6 +570,15 @@ class PreviewModule(
   fun checkHasImages() {
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
     assert(images?.isNotEmpty() == true)
+  }
+
+  fun checkHasImageContaining(nameFragment: String) {
+    val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+      .orEmpty()
+      .filter { it.name.contains(nameFragment) }
+    assert(images.isNotEmpty()) {
+      "Expected outputs containing '$nameFragment', but found none"
+    }
   }
 
   fun checkNoImages() {
