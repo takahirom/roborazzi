@@ -180,6 +180,32 @@ fun recordScreenRoboVideo(
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
   block: RoboVideoRecorderScope.() -> Unit
 ) {
+  recordScreenRoboVideoAfterSetup(
+    composeRule = composeRule,
+    file = file,
+    videoOptions = videoOptions,
+    roborazziOptions = roborazziOptions,
+    setup = {},
+    block = block,
+  )
+}
+
+/**
+ * [recordScreenRoboVideo] with a [setup] that runs with the Compose clock already paused and
+ * before the first frame is captured. Use it to install the content to record so it is visible in
+ * frame 0. It has its own name (and no default for [setup]) so the shipped
+ * [recordScreenRoboVideo] signatures stay untouched.
+ */
+@InternalRoborazziApi
+@OptIn(ExperimentalRoborazziApi::class)
+fun recordScreenRoboVideoAfterSetup(
+  composeRule: ComposeTestRule,
+  file: File,
+  videoOptions: RoboVideoOptions,
+  roborazziOptions: RoborazziOptions,
+  setup: () -> Unit,
+  block: RoboVideoRecorderScope.() -> Unit,
+) {
   // currently, video compare is not supported
   if (!roborazziOptions.taskType.isRecording()) return
   recordVideo(
@@ -187,6 +213,7 @@ fun recordScreenRoboVideo(
     file = file,
     videoOptions = videoOptions,
     roborazziOptions = roborazziOptions,
+    setup = setup,
     block = block,
   ) {
     // Idle the main Looper so windows added mid-recording (e.g. dialogs, or a gesture overlay
@@ -241,6 +268,7 @@ private fun recordVideo(
   file: File,
   videoOptions: RoboVideoOptions,
   roborazziOptions: RoborazziOptions,
+  setup: () -> Unit = {},
   block: RoboVideoRecorderScope.() -> Unit,
   rootComponentForFrame: () -> RoboComponent,
 ) {
@@ -249,6 +277,7 @@ private fun recordVideo(
     videoOptions = videoOptions,
     roborazziOptions = roborazziOptions,
     clock = ComposeRuleRoboVideoClock(composeRule),
+    setup = setup,
     captureFrame = { onCanvas ->
       capture(
         rootComponent = rootComponentForFrame(),

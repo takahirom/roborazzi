@@ -1,9 +1,11 @@
 package com.github.takahirom.roborazzi
 
 import android.content.res.Configuration
+import android.graphics.BitmapFactory
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
@@ -18,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -35,7 +38,11 @@ private fun FadingBox() {
   var target by remember { mutableStateOf(0f) }
   LaunchedEffect(Unit) { target = 1f }
   val alpha by animateFloatAsState(target)
-  Box(Modifier.fillMaxWidth().height(100.dp).alpha(alpha).background(Color.Red))
+  Column {
+    // Static, so the very first frame already has something that is not the background.
+    Box(Modifier.fillMaxWidth().height(50.dp).background(Color.Blue))
+    Box(Modifier.fillMaxWidth().height(100.dp).alpha(alpha).background(Color.Red))
+  }
 }
 
 @OptIn(ExperimentalRoborazziApi::class)
@@ -84,5 +91,26 @@ class PreviewRecordVideoTest {
     }
     assertTrue("expected an animation, got $frames frame(s)", frames > 1)
     assertEquals(before, RuntimeEnvironment.getQualifiers())
+  }
+
+  @Test
+  fun firstFrameContainsThePreview() {
+    val file = File(tmp.root, "first.gif")
+    preview.recordRoboVideo(
+      filePath = file.path,
+      videoOptions = RoboVideoOptions(settleTimeoutMillis = 0),
+      roborazziOptions = provideRoborazziContext().options.copy(
+        taskType = RoborazziTaskType.Record
+      ),
+      roborazziComposeOptions = RoborazziComposeOptions(),
+      composeRule = composeTestRule,
+    )
+    // BitmapFactory decodes the first frame of a GIF.
+    val first = BitmapFactory.decodeFile(file.path)
+    assertNotEquals(
+      "first frame should already show the preview, not the empty background",
+      RoboVideoOptions().backgroundColor,
+      first.getPixel(5, 5),
+    )
   }
 }

@@ -153,6 +153,7 @@ public abstract interface class com/github/takahirom/roborazzi/RoboVideoClock {
 }
 
 public final class com/github/takahirom/roborazzi/RoboVideoRecorderKt {
-	public static final fun recordRoboVideoToFile (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoboVideoOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoboVideoClock;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public static final fun recordRoboVideoToFile (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoboVideoOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoboVideoClock;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun recordRoboVideoToFile$default (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoboVideoOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoboVideoClock;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 }
 

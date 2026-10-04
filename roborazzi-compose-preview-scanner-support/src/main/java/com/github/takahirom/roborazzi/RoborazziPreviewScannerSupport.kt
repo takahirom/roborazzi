@@ -143,17 +143,19 @@ fun ComposablePreview<AndroidPreviewInfo>.recordRoboVideo(
     roborazziComposeOptions = roborazziComposeOptions,
     content = { composablePreview() },
   ) { scenario, configuredContent ->
-    recordScreenRoboVideo(
+    recordScreenRoboVideoAfterSetup(
       composeRule = rule,
-      filePath = filePath,
+      file = fileWithRecordFilePathStrategy(filePath),
       videoOptions = videoOptions,
       roborazziOptions = roborazziOptions,
-    ) {
-      // Set the content while the clock is paused, otherwise its entrance animations would
-      // already have finished before the first frame is recorded.
-      scenario.setRoborazziContent(configuredContent)
-      block()
-    }
+      // Installed while the clock is paused and before frame 0, so the first frame shows the
+      // preview and its entrance animations are recorded.
+      setup = {
+        scenario.setRoborazziContent(configuredContent)
+        rule.waitForIdle()
+      },
+      block = block,
+    )
   }
 }
 
