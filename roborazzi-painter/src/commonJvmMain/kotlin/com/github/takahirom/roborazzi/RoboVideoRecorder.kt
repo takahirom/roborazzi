@@ -35,12 +35,16 @@ fun recordRoboVideoToFile(
   roborazziOptions: RoborazziOptions,
   clock: RoboVideoClock,
   captureFrame: (onCanvas: (AwtRoboCanvas) -> Unit) -> Unit,
+  setup: () -> Unit = {},
   block: RoboVideoRecorderScope.() -> Unit,
 ) {
   val canvases = mutableListOf<AwtRoboCanvas>()
   val captureFrameIntoList = { captureFrame { canvas -> canvases.add(canvas) } }
   val result = runCatching {
     clock.withManualClock {
+      // Runs with the clock paused and before the first frame, so what it installs (e.g. the
+      // content under test) is already visible in frame 0 and its entrance animations are recorded.
+      setup()
       captureFrameIntoList()
       val scope = RoboVideoRecorderScope(
         frameStepMillis = videoOptions.frameStepMillis,

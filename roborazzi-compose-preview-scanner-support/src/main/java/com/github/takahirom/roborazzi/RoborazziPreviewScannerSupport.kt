@@ -104,6 +104,62 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
 }
 
 /**
+ * The [ComposeTestRule] registered through [RoborazziComposeOptions.Builder.composeTestRule], or
+ * null when these options carry none.
+ */
+@ExperimentalRoborazziApi
+fun RoborazziComposeOptions.composeTestRuleOrNull(): ComposeTestRule? =
+  allOptions().filterIsInstance<RoborazziComposeTestRuleOption>().lastOrNull()?.rule
+
+/**
+ * Records this preview as a video (an animated image), the video counterpart of [captureRoboImage].
+ * The whole screen is recorded, see [recordScreenRoboVideo].
+ *
+ * The preview is rendered with [roborazziComposeOptions] and driven by [composeRule], which must be
+ * the rule that owns the activity the options launch. By default it is the rule registered in
+ * [roborazziComposeOptions]. [block] runs with the Compose clock paused; call `delay()` in it to
+ * advance virtual time. The preview is composed inside the recording, so its entrance animations
+ * are captured. Recording continues after [block] until the UI settles.
+ *
+ * Like [recordScreenRoboVideo], this is a no-op unless the Roborazzi task is recording.
+ */
+@ExperimentalRoborazziApi
+fun ComposablePreview<AndroidPreviewInfo>.recordRoboVideo(
+  filePath: String,
+  videoOptions: RoboVideoOptions = RoboVideoOptions(),
+  roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
+  roborazziComposeOptions: RoborazziComposeOptions = this.toRoborazziComposeOptions(),
+  composeRule: ComposeTestRule? = roborazziComposeOptions.composeTestRuleOrNull(),
+  block: RoboVideoRecorderScope.() -> Unit = {},
+) {
+  if (!roborazziOptions.taskType.isRecording()) return
+  val rule = requireNotNull(composeRule) {
+    "recordRoboVideo needs a ComposeTestRule. Pass composeRule or add one to " +
+      "roborazziComposeOptions with composeTestRule(...)."
+  }
+  val composablePreview = this
+  @OptIn(InternalRoborazziApi::class)
+  runWithRoborazziComposeActivity(
+    roborazziComposeOptions = roborazziComposeOptions,
+    content = { composablePreview() },
+  ) { scenario, configuredContent ->
+    recordScreenRoboVideoAfterSetup(
+      composeRule = rule,
+      file = fileWithRecordFilePathStrategy(filePath),
+      videoOptions = videoOptions,
+      roborazziOptions = roborazziOptions,
+      // Installed while the clock is paused and before frame 0, so the first frame shows the
+      // preview and its entrance animations are recorded.
+      setup = {
+        scenario.setRoborazziContent(configuredContent)
+        rule.waitForIdle()
+      },
+      block = block,
+    )
+  }
+}
+
+/**
  * The scale this preview is rendered at: its own [RoboComposePreviewOptions.renderScale] when it
  * declares one, otherwise [configuredScale] from the Gradle extension.
  *
@@ -327,6 +383,8 @@ data class RoborazziComposeTestRuleOption(
 ) :
   RoborazziComposeActivityScenarioCreatorOption,
   RoborazziComposeCaptureOption {
+  internal val rule: ComposeTestRule get() = composeTestRule
+
   /**
    * Kept for binary compatibility with the previous
    * `AndroidComposeTestRule<ActivityScenarioRule<out ComponentActivity>, *>` signature.

@@ -92,6 +92,10 @@ class RoborazziComposeOptions private constructor(
     }
   }
 
+  /** Every option exactly once, in the order they were added. */
+  @ExperimentalRoborazziApi
+  fun allOptions(): List<RoborazziComposeOption> = options
+
   fun builder(): Builder {
     return Builder()
       .apply {
