@@ -85,10 +85,6 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
   @OptIn(InternalRoborazziApi::class)
   override fun run(notifier: RunNotifier) {
     if (parameters.isEmpty()) return
-    // Once per class rather than per preview: with scene reuse on a whole group is resolved
-    // before its first capture runs, so clearing between captures would discard the records of
-    // the previews behind it.
-    DesktopRenderScaleVerification.beforeTest()
     val verificationTester = configuration.createTester()
     // DesktopPreviewTestParameter has no equals, so this is identity based, which is what is
     // wanted: two variations of one preview are two entries.
@@ -99,13 +95,13 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
       reported.add(testParameter)
       notifier.fireTestStarted(description)
       try {
+        DesktopRenderScaleVerification.verify(verificationTester)
         val statement = object : Statement() {
           override fun evaluate() = capture()
         }
         // A fresh rule per preview, so a TestWatcher or a retry rule sees one test per preview
         // rather than one per scene.
         (configuration.createTestRule()?.apply(statement, description) ?: statement).evaluate()
-        DesktopRenderScaleVerification.afterTest(verificationTester)
       } catch (assumptionViolated: AssumptionViolatedException) {
         // A preview that decides it does not apply - Assume.assumeTrue in a rule, or a tester that
         // skips a configuration - is a skip on every other runner, so it has to be one here too

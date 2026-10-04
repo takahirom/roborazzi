@@ -78,6 +78,7 @@ class DesktopPreviewRenderSpecTest {
       AndroidPreviewInfo(),
       Pixel4aDeviceProfile
         .copy(defaultDevice = "spec:width=411dp,height=891dp,dpi=420"),
+      renderScale = 1.0,
     )
     val asPreviewDevice = resolve(
       AndroidPreviewInfo(device = "spec:width=411dp,height=891dp,dpi=420"),
@@ -95,6 +96,7 @@ class DesktopPreviewRenderSpecTest {
     val viaPixelTable = DesktopPreviewRenderSpec.resolve(
       AndroidPreviewInfo(),
       Pixel4aDeviceProfile.copy(defaultDevice = "id:pixel_4a"),
+      renderScale = 1.0,
     )
 
     assertEquals(DesktopPreviewRenderSpec(1080, 2340, 2.75f), viaPixelTable)

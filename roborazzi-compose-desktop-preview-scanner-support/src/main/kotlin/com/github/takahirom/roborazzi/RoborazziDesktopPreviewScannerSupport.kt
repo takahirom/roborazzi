@@ -366,7 +366,6 @@ class DefaultDesktopComposePreviewTester(
     // profile, so they are resolved together before the preview is decorated.
     val deviceProfile = options().deviceProfile
     val renderScale = options().renderScale
-    // resolve() records the scale it was given, which is what DesktopRenderScaleVerification reads.
     val renderSpec = DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile, renderScale)
     return Prepared(
       renderSpec = renderSpec,
@@ -448,10 +447,9 @@ class DefaultDesktopComposePreviewTester(
   ) {
     // The group shares one surface and one locale, so the first preview's are the scene's. Only
     // those are read up front: everything else is prepared inside each preview's `aroundCapture`,
-    // after the per-preview rule has run, as it is when every preview gets its own scene. Sizing
-    // the scene does not count as reaching a capture; each preview's own prepare() records that.
+    // after the per-preview rule has run, as it is when every preview gets its own scene.
     val firstPreviewInfo = group.first().preview.previewInfo
-    val sceneSpec = DesktopPreviewRenderSpec.resolveWithoutRecording(
+    val sceneSpec = DesktopPreviewRenderSpec.resolve(
       firstPreviewInfo,
       options().deviceProfile,
       options().renderScale,

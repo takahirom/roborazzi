@@ -142,7 +142,6 @@ public final class com/github/takahirom/roborazzi/DesktopPreviewRenderSpec {
 public final class com/github/takahirom/roborazzi/DesktopPreviewRenderSpec$Companion {
 	public final fun flooredPx (IF)I
 	public final fun resolve (Lsergio/sastre/composable/preview/scanner/android/AndroidPreviewInfo;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;D)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec;
-	public static synthetic fun resolve$default (Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec$Companion;Lsergio/sastre/composable/preview/scanner/android/AndroidPreviewInfo;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;DILjava/lang/Object;)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec;
 }
 
 public final class com/github/takahirom/roborazzi/DesktopPreviewSceneReuseRunner : org/junit/runner/Runner, org/junit/runner/manipulation/Filterable {
@@ -172,8 +171,7 @@ public final class com/github/takahirom/roborazzi/DesktopPreviewTestParameter {
 public final class com/github/takahirom/roborazzi/DesktopRenderScaleVerification {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/github/takahirom/roborazzi/DesktopRenderScaleVerification;
-	public final fun afterTest (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester;)V
-	public final fun beforeTest ()V
+	public final fun verify (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester;)V
 }
 
 public final class com/github/takahirom/roborazzi/RoborazziDesktopPreviewScannerSupportKt {

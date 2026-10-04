@@ -4,13 +4,9 @@ import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
-import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 
 @OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 class DesktopRenderScaleVerificationTest {
-  private val tester = RenderScaleDroppingTester()
-  private val previewInfo = AndroidPreviewInfo()
-
   @After
   fun tearDown() {
     // The options have no default profile to fall back on, so the reset names one explicitly.
@@ -20,59 +16,39 @@ class DesktopRenderScaleVerificationTest {
   }
 
   @Test
-  fun `a tester that sizes its own surface through resolve passes`() {
-    // The message the check prints tells a custom tester to call
-    // DesktopPreviewRenderSpec.resolve(previewInfo, deviceProfile, renderScale). A tester that
-    // follows it has applied the scale, so it must not be failed for it.
+  fun `a tester that keeps the plugin options passes`() {
     configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
 
-    DesktopRenderScaleVerification.beforeTest()
-    DesktopPreviewRenderSpec.resolve(previewInfo, DesktopPreviewDeviceProfile.Desktop, 0.5)
-
-    DesktopRenderScaleVerification.afterTest(tester)
+    DesktopRenderScaleVerification.verify(OptionsFromPluginTester())
   }
 
   @Test
-  fun `a tester that never resolves the spec is reported`() {
+  fun `a tester that builds its options from scratch is reported`() {
     configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
 
-    DesktopRenderScaleVerification.beforeTest()
-
-    val message = assertFails()
+    val message = assertFails(RenderScaleDroppingTester())
     assertTrue(message, message.contains("renderScale = 0.5"))
     assertTrue(message, message.contains(RenderScaleDroppingTester::class.java.name))
+    assertTrue(message, message.contains("options().renderScale returned 1.0"))
   }
 
   @Test
-  fun `a tester that resolves a different scale is reported`() {
-    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+  fun `a tester may pick its own scale when none is configured`() {
+    configurePlugin(renderScale = 1.0, taskType = RoborazziTaskType.Record)
 
-    DesktopRenderScaleVerification.beforeTest()
-    DesktopPreviewRenderSpec.resolve(previewInfo, DesktopPreviewDeviceProfile.Desktop, 0.75)
-
-    val message = assertFails()
-    assertTrue(message, message.contains("applied 0.75 instead"))
+    DesktopRenderScaleVerification.verify(OwnScaleTester())
   }
 
   @Test
-  fun `grouping previews into scenes does not count as applying the scale`() {
-    // Scene grouping resolves every preview before any capture runs. If that counted, scene reuse
-    // would silently switch the check off for the testers it exists to catch.
-    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+  fun `nothing is reported when Roborazzi does not capture`() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.None)
 
-    DesktopRenderScaleVerification.beforeTest()
-    groupDesktopPreviewsByScene(
-      parameters = listOf(fakeParameter("a"), fakeParameter("b")),
-      profile = DesktopPreviewDeviceProfile.Desktop,
-      renderScale = 0.5,
-    )
-
-    assertTrue(assertFails().contains("renderScale = 0.5"))
+    DesktopRenderScaleVerification.verify(RenderScaleDroppingTester())
   }
 
-  private fun assertFails(): String {
+  private fun assertFails(tester: DesktopComposePreviewTester): String {
     try {
-      DesktopRenderScaleVerification.afterTest(tester)
+      DesktopRenderScaleVerification.verify(tester)
     } catch (e: IllegalStateException) {
       return requireNotNull(e.message)
     }
@@ -89,8 +65,24 @@ class DesktopRenderScaleVerificationTest {
     provideRoborazziContext().setRuleOverrideRoborazziOptions(RoborazziOptions(taskType = taskType))
   }
 
+  private class OptionsFromPluginTester : DesktopComposePreviewTester {
+    override fun testParameters(): List<DesktopPreviewTestParameter> = emptyList()
+    override fun test(testParameter: DesktopPreviewTestParameter) = Unit
+  }
+
   /** Stands in for a custom tester that never carries the configured scale into its capture. */
   private class RenderScaleDroppingTester : DesktopComposePreviewTester {
+    override fun options() =
+      DesktopComposePreviewTester.Options(deviceProfile = DesktopPreviewDeviceProfile.Desktop)
+    override fun testParameters(): List<DesktopPreviewTestParameter> = emptyList()
+    override fun test(testParameter: DesktopPreviewTestParameter) = Unit
+  }
+
+  private class OwnScaleTester : DesktopComposePreviewTester {
+    override fun options() = DesktopComposePreviewTester.Options(
+      deviceProfile = DesktopPreviewDeviceProfile.Desktop,
+      renderScale = 0.5,
+    )
     override fun testParameters(): List<DesktopPreviewTestParameter> = emptyList()
     override fun test(testParameter: DesktopPreviewTestParameter) = Unit
   }

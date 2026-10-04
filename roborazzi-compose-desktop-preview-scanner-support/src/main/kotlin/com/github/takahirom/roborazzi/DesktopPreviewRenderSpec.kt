@@ -31,34 +31,16 @@ data class DesktopPreviewRenderSpec(
     internal const val DEFAULT_SURFACE_HEIGHT = 768
 
     /**
-     * The spec a capture should use, recorded as the scale that reached it.
+     * The spec a capture should use.
      *
-     * The recording is what [DesktopRenderScaleVerification] reads, so a custom tester that sizes
-     * its own surface through this function passes the check without knowing it exists - which is
-     * the path the failure message tells it to take.
+     * [renderScale] has no default so a custom tester that sizes its own surface has to decide
+     * what to pass; it should be `options().renderScale`.
      */
-    @OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
+    @OptIn(ExperimentalRoborazziApi::class)
     fun resolve(
       previewInfo: AndroidPreviewInfo,
       profile: DesktopPreviewDeviceProfile,
-      renderScale: Double = 1.0,
-    ): DesktopPreviewRenderSpec {
-      DesktopRenderScaleVerification.markApplied(renderScale)
-      return resolveWithoutRecording(previewInfo, profile, renderScale)
-    }
-
-    /**
-     * The same sizing, for the callers that are not about to capture anything.
-     *
-     * Scene grouping resolves every preview up front to decide which ones share a surface. Letting
-     * that count as "the scale reached the capture" would leave the check passing for a tester that
-     * then captured at a different density, which is the one thing it is there to catch.
-     */
-    @OptIn(ExperimentalRoborazziApi::class)
-    internal fun resolveWithoutRecording(
-      previewInfo: AndroidPreviewInfo,
-      profile: DesktopPreviewDeviceProfile,
-      renderScale: Double = 1.0,
+      renderScale: Double,
     ): DesktopPreviewRenderSpec {
       require(renderScale.isFinite() && renderScale > 0.0) {
         "renderScale must be finite and greater than 0, but was $renderScale"

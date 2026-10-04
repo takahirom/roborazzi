@@ -51,7 +51,7 @@ internal fun desktopPreviewSceneKey(
   renderScale: Double = 1.0,
 ): DesktopPreviewSceneKey {
   val renderSpec = try {
-    DesktopPreviewRenderSpec.resolveWithoutRecording(
+    DesktopPreviewRenderSpec.resolve(
       parameter.preview.previewInfo, profile, renderScale,
     )
   } catch (unparsableDevice: IllegalArgumentException) {

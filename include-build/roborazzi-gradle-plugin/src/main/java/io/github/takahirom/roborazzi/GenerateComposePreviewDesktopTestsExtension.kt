@@ -446,9 +446,8 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
 
                 @Test
                 public fun test() {
-                  DesktopRenderScaleVerification.beforeTest()
+                  DesktopRenderScaleVerification.verify(tester)
                   tester.test(testParameter)
-                  DesktopRenderScaleVerification.afterTest(tester)
                 }
 
                 public companion object {
