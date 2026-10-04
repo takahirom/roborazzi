@@ -1,5 +1,6 @@
 import com.github.takahirom.roborazzi.DefaultDesktopComposePreviewTester
 import com.github.takahirom.roborazzi.DesktopComposePreviewTester
+import com.github.takahirom.roborazzi.DesktopPreviewDeviceProfile
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -13,6 +14,8 @@ class DesktopPreviewScanTest {
         scanOptions = DesktopComposePreviewTester.Options.ScanOptions(
           packages = listOf("com.github.takahirom.sample.previews"),
         ),
+        // The desktop surface, which is what this sample recorded before profiles existed.
+        deviceProfile = DesktopPreviewDeviceProfile.Desktop,
       ),
     )
     val testParameters = tester.testParameters()
