@@ -22,7 +22,7 @@ private val droppedOptions: DesktopComposePreviewTester.Options
   )
 
 @OptIn(ExperimentalRoborazziApi::class)
-class RenderScaleDroppingDesktopPreviewTester :
+public class RenderScaleDroppingDesktopPreviewTester :
   DesktopComposePreviewTester by DefaultDesktopComposePreviewTester(options = droppedOptions) {
   override fun options(): DesktopComposePreviewTester.Options = droppedOptions
 }
