@@ -245,7 +245,7 @@ tasks.register("generateReadme") {
                     .replaceAll(newTopicContent)
         }
         def topicNames = topics.collect { it.name }
-        def markerNames = (readmeContent =~ /<!-- topic_([A-Za-z0-9_-]+) -->/).collect { it[1] }.unique()
+        def markerNames = (readmeContent =~ /<!-- topic_(\S+) -->/).collect { it[1] }.unique()
         markerNames.each { name ->
             if (!topicNames.contains(name)) {
                 throw new GradleException("README.template.md has <!-- topic_$name --> but $topicsPath/${name}.md does not exist.")
