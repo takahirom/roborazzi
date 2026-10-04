@@ -1,6 +1,7 @@
 package com.github.takahirom.roborazzi
 
 import android.annotation.SuppressLint
+import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -120,6 +121,23 @@ fun runWithRoborazziComposeActivity(
 @InternalRoborazziApi
 fun ActivityScenario<out ComponentActivity>.setRoborazziContent(content: @Composable () -> Unit) {
   onActivity { activity -> activity.setContent(content = { content() }) }
+}
+
+/**
+ * The view [captureRoboImage] captures for the content set with [setRoborazziContent]: the Compose
+ * view of the preview itself, not the whole screen.
+ */
+@InternalRoborazziApi
+@SuppressLint("VisibleForTests")
+fun ActivityScenario<out ComponentActivity>.roborazziContentView(): View {
+  var view: View? = null
+  onActivity { activity ->
+    val composeView = activity.window.decorView
+      .findViewById<ViewGroup>(android.R.id.content)
+      .getChildAt(0) as ComposeView
+    view = (composeView.getChildAt(0) as ViewRootForTest).view
+  }
+  return requireNotNull(view) { "The Roborazzi content view is not available" }
 }
 
 private fun launchRoborazziActivity(

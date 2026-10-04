@@ -107,6 +107,11 @@ class PreviewRecordVideoTest {
     )
     // BitmapFactory decodes the first frame of a GIF.
     val first = BitmapFactory.decodeFile(file.path)
+    // Only the preview is recorded, not the whole screen.
+    assertTrue(
+      "expected the preview view, got ${first.width}x${first.height}",
+      first.height < RuntimeEnvironment.getApplication().resources.displayMetrics.heightPixels
+    )
     assertNotEquals(
       "first frame should already show the preview, not the empty background",
       RoboVideoOptions().backgroundColor,
