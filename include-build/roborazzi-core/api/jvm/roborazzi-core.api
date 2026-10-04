@@ -540,6 +540,10 @@ public final class com/github/takahirom/roborazzi/ProcessOutputImageAndReport_co
 	public static synthetic fun processOutputImageAndReport$default (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/lang/String;Ljava/util/Map;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/EmptyCanvasFactory;Lcom/github/takahirom/roborazzi/CanvasFactoryFromPath;Lcom/github/takahirom/roborazzi/ComparisonCanvasFactory;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 }
 
+public final class com/github/takahirom/roborazzi/RecordedVideoReportKt {
+	public static final fun reportRecordedVideo (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;)V
+}
+
 public final class com/github/takahirom/roborazzi/ReportLogKt {
 	public static final fun roborazziReportLog (Ljava/lang/String;)V
 }
