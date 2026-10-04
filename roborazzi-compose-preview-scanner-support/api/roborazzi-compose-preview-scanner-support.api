@@ -153,11 +153,18 @@ public final class com/github/takahirom/roborazzi/RenderScaleVerification {
 
 public final class com/github/takahirom/roborazzi/RoboComposePreviewOptionVariation {
 	public static final field $stable I
+	public static final field Companion Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation$Companion;
 	public fun <init> ()V
 	public fun <init> (Lcom/github/takahirom/roborazzi/annotations/ManualClockOptions;)V
 	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/annotations/ManualClockOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getManualClockOptions ()Lcom/github/takahirom/roborazzi/annotations/ManualClockOptions;
+	public final fun getVideoOptions ()Lcom/github/takahirom/roborazzi/annotations/PreviewVideoOptions;
 	public final fun nameWithPrefix ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoboComposePreviewOptionVariation$Companion {
+	public final fun video (Lcom/github/takahirom/roborazzi/annotations/PreviewVideoOptions;II)Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation;
+	public static synthetic fun video$default (Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation$Companion;Lcom/github/takahirom/roborazzi/annotations/PreviewVideoOptions;IIILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoboComposePreviewOptionVariation;
 }
 
 public final class com/github/takahirom/roborazzi/RoborazziComposeManualAdvancePreviewOption : com/github/takahirom/roborazzi/RoborazziComposeCaptureOption, com/github/takahirom/roborazzi/RoborazziComposeSetupOption {

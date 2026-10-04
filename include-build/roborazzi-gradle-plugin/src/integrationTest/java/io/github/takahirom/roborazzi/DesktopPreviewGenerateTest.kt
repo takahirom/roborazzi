@@ -160,6 +160,17 @@ class DesktopPreviewGenerateTest {
   }
 
   @Test
+  fun whenVideoOptionsShouldRecordVideoAndKeepStill() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      // Cleanup removes managed images that no capture result reported; videos must survive it.
+      recordWithCleanupOldScreenshots()
+
+      checkHasImageContaining("PreviewWithVideo.png")
+      checkHasImageContaining("PreviewWithVideo_VIDEO")
+    }
+  }
+
+  @Test
   fun whenPreviewAnnotatedWithRoboPreviewExcludeShouldBeSkipped() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       record()
@@ -492,6 +503,13 @@ class DesktopPreviewModule(
   fun record(buildType: BuildType = BuildType.Build, checks: BuildResult.() -> Unit = {}) {
     val result = runTask("recordRoborazziDesktop", buildType)
     result.checks()
+  }
+
+  fun recordWithCleanupOldScreenshots() {
+    runTask(
+      "recordRoborazziDesktop",
+      additionalParameters = arrayOf("-Proborazzi.cleanupOldScreenshots=true")
+    )
   }
 
   private fun runTask(

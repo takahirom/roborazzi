@@ -880,6 +880,10 @@ class AndroidComposePreviewTester(
       ) {
         delay(videoOptions.durationMillis)
       }
+      reportRecordedVideo(
+        fileWithRecordFilePathStrategy(filePath).absolutePath,
+        provideRoborazziContext().options
+      )
       return
     }
 
