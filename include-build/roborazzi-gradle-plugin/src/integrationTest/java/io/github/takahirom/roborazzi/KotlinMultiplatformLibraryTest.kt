@@ -27,8 +27,18 @@ class KotlinMultiplatformLibraryTest {
     }
   }
 
+  /**
+   * Regression test for the preview diagnostics being gated on the feature being enabled.
+   *
+   * sample-kmp-library never configures generateComposePreviewRobolectricTests (it stays
+   * disabled), so it is an ordinary KMP consumer that did not opt in. Even with
+   * isIncludeAndroidResources absent, the preview isIncludeAndroidResources advisory must NOT
+   * fire: emitting it here would advise (and, once it becomes a build error, break) users who
+   * never asked for preview generation. This mirrors the Android path, where every preview
+   * diagnostic is gated behind extension.enable.
+   */
   @Test
-  fun verifyIsIncludeAndroidResourcesCheckForKmpLibrary() {
+  fun doesNotWarnAboutIncludeAndroidResourcesWhenPreviewGenerationDisabled() {
     val rootProject = RoborazziGradleRootProject(testProjectDir)
     rootProject.kmpLibraryModule.apply {
       // Note: testProjectDir is a fresh temporary folder created per test via @Rule,
@@ -49,8 +59,11 @@ class KotlinMultiplatformLibraryTest {
       assert(result.output.contains("BUILD SUCCESSFUL")) {
         "Build should succeed"
       }
-      assert(result.output.contains("Please set 'isIncludeAndroidResources = true'")) {
-        "Should warn about missing isIncludeAndroidResources. Output:\n${result.output}"
+      assert(!result.output.contains("Diagnostic id: preview.includeAndroidResources")) {
+        "Preview diagnostics must stay silent when preview generation is disabled. Output:\n${result.output}"
+      }
+      assert(!result.output.contains("Please set 'isIncludeAndroidResources = true'")) {
+        "Preview isIncludeAndroidResources advisory must not fire when preview generation is disabled. Output:\n${result.output}"
       }
     }
   }

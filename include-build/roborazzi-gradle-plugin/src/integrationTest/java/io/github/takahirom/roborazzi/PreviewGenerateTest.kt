@@ -282,6 +282,16 @@ class PreviewModule(
     var useKsp = false
     var generatedTestClassCount: Int? = null
     var maxParallelForks: Int? = null
+
+    // Preview diagnostics knobs. Defaults keep a correctly-configured project (no warnings),
+    // so existing tests are unaffected; PreviewDiagnosticsIntegrationTest flips them to
+    // reproduce the misconfigurations the plugin warns about.
+    // When false, omit `isIncludeAndroidResources = true` -> trips preview.includeAndroidResources.
+    var isIncludeAndroidResources = true
+    // When false, omit the `robolectric.pixelCopyRenderMode = hardware` system property ->
+    // trips preview.pixelCopyRenderMode.
+    var setPixelCopyRenderModeHardware = true
+
     var explicitApiStrictInTests = false
 
     // kotlin { explicitApi() } is skipped for test compilations by KGP, but the
@@ -337,9 +347,9 @@ class PreviewModule(
             }
             testOptions {
               unitTests {
-                isIncludeAndroidResources = true
+                ${if (isIncludeAndroidResources) "isIncludeAndroidResources = true" else ""}
                 all {
-                  it.systemProperties["robolectric.pixelCopyRenderMode"] = "hardware"
+                  ${if (setPixelCopyRenderModeHardware) "it.systemProperties[\"robolectric.pixelCopyRenderMode\"] = \"hardware\"" else ""}
                   ${if (maxParallelForks != null) "it.maxParallelForks = $maxParallelForks" else ""}
                 }
               }
@@ -566,6 +576,18 @@ class PreviewModule(
     val result = runTask("recordRoborazziDebug", buildType)
     result.checks()
   }
+
+  /**
+   * Configures the project and realizes the recordRoborazziDebug task graph with `--dry-run`,
+   * so the preview diagnostics (emitted from afterEvaluate and from the test task's
+   * configureEach) fire, but no tests actually run. This keeps the diagnostic assertions fast
+   * and independent of whether a (deliberately) misconfigured project could execute its tests.
+   */
+  fun configureAndReportDiagnostics(vararg additionalParameters: String): BuildResult =
+    runTask(
+      "recordRoborazziDebug",
+      additionalParameters = arrayOf("--dry-run", *additionalParameters)
+    )
 
   fun BuildResult.itShouldHaveJUnitRuleLog() {
     assert(output.contains("JUnit4TestLifecycleOptions starting"))
