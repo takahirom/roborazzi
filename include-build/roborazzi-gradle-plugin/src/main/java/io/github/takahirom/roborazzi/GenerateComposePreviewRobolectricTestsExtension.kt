@@ -260,6 +260,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
             import org.junit.Rule
             import org.junit.Test
             import org.junit.runner.RunWith
+            import org.junit.rules.TestRule
             import org.junit.rules.TestWatcher
             import org.junit.rules.RuleChain
             import org.robolectric.ParameterizedRobolectricTestRunner
@@ -273,19 +274,19 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
             @RunWith(ParameterizedRobolectricTestRunner::class)
             @OptIn(InternalRoborazziApi::class, ExperimentalRoborazziApi::class)
             @GraphicsMode(GraphicsMode.Mode.NATIVE)
-            class $className(
+            public class $className(
                 private val testParameter: ComposePreviewTester.TestParameter<Any>,
             ) {
                 @Suppress("UNCHECKED_CAST")
-                val junit4TestParameter: ComposePreviewTester.TestParameter.JUnit4TestParameter<Any> = testParameter as ComposePreviewTester.TestParameter.JUnit4TestParameter<Any>
+                public val junit4TestParameter: ComposePreviewTester.TestParameter.JUnit4TestParameter<Any> = testParameter as ComposePreviewTester.TestParameter.JUnit4TestParameter<Any>
                 private val tester = getComposePreviewTester("$testerQualifiedClassNameString")
                 private val testLifecycleOptions = tester.options().testLifecycleOptions as ComposePreviewTester.Options.JUnit4TestLifecycleOptions
-                val composeTestRule: ComposeContentTestRule by lazy {
+                public val composeTestRule: ComposeContentTestRule by lazy {
                   junit4TestParameter.composeTestRule
                 }
                 @Suppress("UNCHECKED_CAST")
                 @get:Rule
-                val rule = junit4TestParameter.releaseComposeTestRuleAfter {
+                public val rule: TestRule = junit4TestParameter.releaseComposeTestRuleAfter {
                   RuleChain.outerRule(createRoborazziPreviewConfigurationRule(tester, testParameter))
                     .around(testLifecycleOptions.testRuleFactory(composeTestRule))
                 }
@@ -294,7 +295,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 @GraphicsMode(GraphicsMode.Mode.NATIVE)
                 $robolectricConfigString
                 @Test
-                fun test() {
+                public fun test() {
                   RenderScaleVerification.beforeTest()
                   tester.test(
                     testParameter = testParameter
@@ -302,18 +303,18 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                   RenderScaleVerification.afterTest(tester)
                 }
                 
-                companion object {
+                public companion object {
                     // lazy for performance
-                    val testParameters: List<ComposePreviewTester.TestParameter<*>> by lazy {
+                    public val testParameters: List<ComposePreviewTester.TestParameter<*>> by lazy {
                         setupDefaultOptions()
                         val tester = getComposePreviewTester("$testerQualifiedClassNameString")
                         tester.testParameters()
                     }
                     @JvmStatic
                     @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-                    fun values(): List<ComposePreviewTester.TestParameter<*>> = $valuesFunction
+                    public fun values(): List<ComposePreviewTester.TestParameter<*>> = $valuesFunction
 
-                    fun setupDefaultOptions() {
+                    public fun setupDefaultOptions() {
                         ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options(
                             scanOptions = ComposePreviewTester.Options.ScanOptions(
                               packages = listOf($packagesExpr),

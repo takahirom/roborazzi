@@ -28,15 +28,20 @@ include ':roborazzi-compose-preview-scanner-support'
 
 include ':roborazzi-idea-plugin'
 
-include ':sample-android'
-include ':sample-android-multiplatform'
-include ':sample-android-without-compose'
-include ':sample-compose-desktop-multiplatform'
-include ':sample-compose-desktop-jvm'
-include ':sample-compose-v2'
-include ':sample-generate-preview-tests'
-include ':sample-generate-preview-tests-multiplatform'
-include ':sample-generate-preview-tests-cross-runtime'
+// The Gradle plugin integration tests include this build only to substitute the library modules.
+// Configuring the samples in every nested TestKit build adds memory pressure that got the test
+// executor OOM-killed (exit 137) on CI, so leave them out there.
+if (System.getenv("INTEGRATION_TEST") != "true") {
+  include ':sample-android'
+  include ':sample-android-multiplatform'
+  include ':sample-android-without-compose'
+  include ':sample-compose-desktop-multiplatform'
+  include ':sample-compose-desktop-jvm'
+  include ':sample-compose-v2'
+  include ':sample-generate-preview-tests'
+  include ':sample-generate-preview-tests-multiplatform'
+  include ':sample-generate-preview-tests-cross-runtime'
+}
 
 includeBuild("include-build") {
   dependencySubstitution {

@@ -2,6 +2,12 @@ plugins {
   id "org.jetbrains.kotlin.multiplatform"
   id "com.android.kotlin.multiplatform.library"
   id("org.jetbrains.kotlin.plugin.serialization") version libs.versions.kotlin
+  id "dev.drewhamilton.poko"
+}
+
+poko {
+  // Our own marker keeps poko-annotations out of the published dependencies.
+  pokoAnnotation.set("com/github/takahirom/roborazzi/Poko")
 }
 if (System.getenv("INTEGRATION_TEST") != "true") {
   pluginManager.apply("com.vanniktech.maven.publish")

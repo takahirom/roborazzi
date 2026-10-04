@@ -9,6 +9,13 @@ if (System.getenv("INTEGRATION_TEST") != "true") {
 apply plugin: 'java-gradle-plugin'
 
 def integrationTestDep = sourceSets.create('integrationTestDep')
+// These jars only run inside the TestKit daemon, which needs Java 17 anyway, and some of them
+// (the Poko Gradle plugin) are published for Java 17 only.
+[integrationTestDep.compileClasspathConfigurationName, integrationTestDep.runtimeClasspathConfigurationName].each {
+  configurations.named(it) {
+    attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, libs.versions.javaToolchain.get().toInteger())
+  }
+}
 
 dependencies {
   compileOnly gradleApi()
@@ -26,6 +33,7 @@ dependencies {
   integrationTestDepImplementation libs.kotlin.gradle.plugin
   integrationTestDepImplementation libs.compose.gradle.plugin
   integrationTestDepImplementation libs.kotlin.compose.compiler.gradle.plugin
+  integrationTestDepImplementation libs.poko.gradle.plugin
   testImplementation libs.kotlin.test
   testImplementation libs.kotlin.test.junit
   testImplementation libs.junit

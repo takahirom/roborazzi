@@ -6,6 +6,7 @@ plugins {
   id 'com.android.kotlin.multiplatform.library' version libs.versions.agp apply false
   id "com.vanniktech.maven.publish" version libs.versions.mavenPublish apply false
   id "org.jetbrains.kotlinx.binary-compatibility-validator" version libs.versions.binaryCompatibilityValidator apply false
+  id "dev.drewhamilton.poko" version libs.versions.poko apply false
 }
 
 // Applying BCV inside the integration-test composite build splits the Kotlin
