@@ -231,6 +231,37 @@ fun recordScreenRoboVideoAfterSetup(
   }
 }
 
+/**
+ * Like [recordScreenRoboVideoAfterSetup], but records only the view returned by [viewProvider]
+ * (resolved again for every frame), so the video shows the same bounds as a still captured of that
+ * view.
+ */
+@InternalRoborazziApi
+@OptIn(ExperimentalRoborazziApi::class)
+fun recordViewRoboVideoAfterSetup(
+  composeRule: ComposeTestRule,
+  file: File,
+  videoOptions: RoboVideoOptions,
+  roborazziOptions: RoborazziOptions,
+  setup: () -> Unit,
+  viewProvider: () -> android.view.View,
+  block: RoboVideoRecorderScope.() -> Unit,
+) {
+  // currently, video compare is not supported
+  if (!roborazziOptions.taskType.isRecording()) return
+  recordVideo(
+    composeRule = composeRule,
+    file = file,
+    videoOptions = videoOptions,
+    roborazziOptions = roborazziOptions,
+    setup = setup,
+    block = block,
+  ) {
+    idleMainLooperFor(0)
+    RoboComponent.View(view = viewProvider(), roborazziOptions = roborazziOptions)
+  }
+}
+
 
 /**
  * Adapts a JUnit4 [ComposeTestRule] running under Robolectric to the shared recording loop.

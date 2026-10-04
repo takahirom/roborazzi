@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
+import com.github.takahirom.roborazzi.annotations.PreviewVideoOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import com.github.takahirom.roborazzi.annotations.RoboPreviewExclude
 import kotlinx.coroutines.delay
@@ -200,5 +201,21 @@ class Filters {
 fun PreviewExcludedByCustomAnnotation() {
   MaterialTheme {
     Text(text = "This preview should be excluded by the custom annotation")
+  }
+}
+
+@RoboComposePreviewOptions(
+  videoOptions = [PreviewVideoOptions(durationMillis = 1000L, fps = 10)]
+)
+@Preview
+@Composable
+fun PreviewWithVideo() {
+  var visible by remember { mutableStateOf(false) }
+  LaunchedEffect(Unit) {
+    delay(300)
+    visible = true
+  }
+  MaterialTheme {
+    Text(text = if (visible) "Video content" else "Video waiting...")
   }
 }

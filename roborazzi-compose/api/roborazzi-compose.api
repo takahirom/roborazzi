@@ -72,6 +72,7 @@ public final class com/github/takahirom/roborazzi/RoborazziComposeKt {
 	public static synthetic fun captureRoboImage$default (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
 	public static synthetic fun captureRoboImage$default (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
 	public static synthetic fun captureRoboImage$default (Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+	public static final fun roborazziContentView (Landroidx/test/core/app/ActivityScenario;)Landroid/view/View;
 	public static final fun runWithRoborazziComposeActivity (Lcom/github/takahirom/roborazzi/RoborazziComposeOptions;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)V
 	public static final fun setRoborazziContent (Landroidx/test/core/app/ActivityScenario;Lkotlin/jvm/functions/Function2;)V
 }

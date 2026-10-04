@@ -2,9 +2,25 @@ public abstract interface annotation class com/github/takahirom/roborazzi/annota
 	public abstract fun advanceTimeMillis ()J
 }
 
+public final class com/github/takahirom/roborazzi/annotations/PreviewVideoFormat : java/lang/Enum {
+	public static final field APNG Lcom/github/takahirom/roborazzi/annotations/PreviewVideoFormat;
+	public static final field GIF Lcom/github/takahirom/roborazzi/annotations/PreviewVideoFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getExtension ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/annotations/PreviewVideoFormat;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/annotations/PreviewVideoFormat;
+}
+
+public abstract interface annotation class com/github/takahirom/roborazzi/annotations/PreviewVideoOptions : java/lang/annotation/Annotation {
+	public abstract fun durationMillis ()J
+	public abstract fun format ()Lcom/github/takahirom/roborazzi/annotations/PreviewVideoFormat;
+	public abstract fun fps ()I
+}
+
 public abstract interface annotation class com/github/takahirom/roborazzi/annotations/RoboComposePreviewOptions : java/lang/annotation/Annotation {
 	public abstract fun manualClockOptions ()[Lcom/github/takahirom/roborazzi/annotations/ManualClockOptions;
 	public abstract fun renderScale ()D
+	public abstract fun videoOptions ()[Lcom/github/takahirom/roborazzi/annotations/PreviewVideoOptions;
 }
 
 public final class com/github/takahirom/roborazzi/annotations/RoboComposePreviewOptionsKt {

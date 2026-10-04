@@ -10,6 +10,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
+import com.github.takahirom.roborazzi.annotations.PreviewVideoOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import com.github.takahirom.roborazzi.annotations.INHERIT_RENDER_SCALE
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -113,7 +114,8 @@ fun RoborazziComposeOptions.composeTestRuleOrNull(): ComposeTestRule? =
 
 /**
  * Records this preview as a video (an animated image), the video counterpart of [captureRoboImage].
- * The whole screen is recorded, see [recordScreenRoboVideo].
+ * Only the preview itself is recorded (the same view [captureRoboImage] captures), so the video
+ * has the framing of the still screenshot.
  *
  * The preview is rendered with [roborazziComposeOptions] and driven by [composeRule], which must be
  * the rule that owns the activity the options launch. By default it is the rule registered in
@@ -143,7 +145,7 @@ fun ComposablePreview<AndroidPreviewInfo>.recordRoboVideo(
     roborazziComposeOptions = roborazziComposeOptions,
     content = { composablePreview() },
   ) { scenario, configuredContent ->
-    recordScreenRoboVideoAfterSetup(
+    recordViewRoboVideoAfterSetup(
       composeRule = rule,
       file = fileWithRecordFilePathStrategy(filePath),
       videoOptions = videoOptions,
@@ -154,6 +156,7 @@ fun ComposablePreview<AndroidPreviewInfo>.recordRoboVideo(
         scenario.setRoborazziContent(configuredContent)
         rule.waitForIdle()
       },
+      viewProvider = { scenario.roborazziContentView() },
       block = block,
     )
   }
@@ -788,7 +791,7 @@ class AndroidComposePreviewTester(
           .firstOrNull { it.name == preview.methodName }
           ?.getAnnotation(RoboComposePreviewOptions::class.java)
           ?: RoboComposePreviewOptions()
-        annotationOptions.variations()
+        annotationOptions.variations("${preview.declaringClass}.${preview.methodName}")
           .map { optionVariation ->
             AndroidPreviewJUnit4TestParameter(
               composeTestRuleFactory = { junit4TestLifecycleOptions.composeRuleFactory() },
@@ -818,8 +821,10 @@ class AndroidComposePreviewTester(
 
     val optionVariation: RoboComposePreviewOptionVariation =
       testParameter.composeRoboComposePreviewOptionVariation
+    val videoOptions = optionVariation.videoOptions
     val filePath =
-      "$pathPrefix$name${optionVariation.nameWithPrefix()}.${provideRoborazziContext().imageExtension}"
+      "$pathPrefix$name${optionVariation.nameWithPrefix()}." +
+        (videoOptions?.format?.extension ?: provideRoborazziContext().imageExtension)
 
     roborazziDebugLog {
       "AndroidComposePreviewTester.test():\n" +
@@ -859,6 +864,29 @@ class AndroidComposePreviewTester(
         }
         .build()
 
+    if (videoOptions != null) {
+      // A video is its own test parameter (so it gets a fresh rule and activity) and is recorded
+      // directly: a custom Capturer only knows how to capture stills.
+      @Suppress("USELESS_CAST")
+      (preview as ComposablePreview<AndroidPreviewInfo>).recordRoboVideo(
+        filePath = filePath,
+        videoOptions = RoboVideoOptions(
+          fps = videoOptions.fps,
+          // The clip is exactly durationMillis long; do not keep recording until the UI settles.
+          settleTimeoutMillis = 0,
+        ),
+        roborazziComposeOptions = roborazziComposeOptions,
+        composeRule = junit4TestParameter.composeTestRule,
+      ) {
+        delay(videoOptions.durationMillis)
+      }
+      reportRecordedVideo(
+        fileWithRecordFilePathStrategy(filePath).absolutePath,
+        provideRoborazziContext().options
+      )
+      return
+    }
+
     @Suppress("USELESS_CAST")
     val parameter = CaptureParameter(
       preview = preview as ComposablePreview<AndroidPreviewInfo>,
@@ -892,19 +920,53 @@ class AndroidComposePreviewTester(
 class RoboComposePreviewOptionVariation(
   val manualClockOptions: ManualClockOptions? = null
 ) {
+  /** Set when this variation records a video instead of capturing a still. */
+  var videoOptions: PreviewVideoOptions? = null
+    private set
+  private var videoNameSuffix: String = ""
+
   fun nameWithPrefix(): String {
     return buildString {
       if (manualClockOptions != null) {
         append("_TIME_${manualClockOptions.advanceTimeMillis}ms")
       }
+      append(videoNameSuffix)
     }
+  }
+
+  companion object {
+    /** [index] of [count] videos declared on the same preview. */
+    fun video(
+      videoOptions: PreviewVideoOptions,
+      index: Int = 0,
+      count: Int = 1
+    ): RoboComposePreviewOptionVariation =
+      RoboComposePreviewOptionVariation().apply {
+        this.videoOptions = videoOptions
+        videoNameSuffix = if (count > 1) "_VIDEO_${index + 1}" else "_VIDEO"
+      }
   }
 }
 
 
-internal fun RoboComposePreviewOptions.variations(): List<RoboComposePreviewOptionVariation> {
-  return manualClockOptions.map { RoboComposePreviewOptionVariation(it) }
+internal fun RoboComposePreviewOptions.variations(
+  previewName: String = "preview"
+): List<RoboComposePreviewOptionVariation> {
+  require(videoOptions.isEmpty() || manualClockOptions.isEmpty()) {
+    "$previewName: videoOptions cannot be combined with manualClockOptions yet, " +
+      "because the video drives the Compose clock itself."
+  }
+  videoOptions.forEach {
+    require(it.durationMillis > 0 && it.fps > 0) {
+      "$previewName: PreviewVideoOptions needs durationMillis > 0 and fps > 0 " +
+        "(durationMillis=${it.durationMillis}, fps=${it.fps})."
+    }
+  }
+  val stills = manualClockOptions.map { RoboComposePreviewOptionVariation(it) }
     .ifEmpty { listOf(RoboComposePreviewOptionVariation()) }
+  return stills + videoOptions.mapIndexed { index, video ->
+    RoboComposePreviewOptionVariation.video(video, index, videoOptions.size)
+  }
 }
 
 @InternalRoborazziApi

@@ -20,8 +20,10 @@ import androidx.compose.ui.test.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
+import com.github.takahirom.roborazzi.annotations.PreviewVideoOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import io.github.takahirom.roborazzi.captureRoboImage
+import io.github.takahirom.roborazzi.recordRoboVideo
 import java.io.File
 import java.util.Locale
 import org.junit.rules.TestRule
@@ -118,15 +120,42 @@ class DesktopPreviewTestParameter(
   val manualClockOptions: ManualClockOptions? = null,
 ) {
   /**
+   * Set when this test records the preview's `@RoboComposePreviewOptions.videoOptions` video
+   * instead of capturing a still.
+   */
+  var videoOptions: PreviewVideoOptions? = null
+    private set
+  private var videoNameSuffix: String = ""
+
+  /** The suffix this test adds to the preview's file name, before the extension. */
+  internal fun variationSuffix(): String = buildString {
+    if (manualClockOptions != null) {
+      append("_TIME_${manualClockOptions.advanceTimeMillis}ms")
+    }
+    append(videoNameSuffix)
+  }
+
+  companion object {
+    /** [index] of [count] videos declared on the same preview. */
+    fun video(
+      preview: ComposablePreview<AndroidPreviewInfo>,
+      videoOptions: PreviewVideoOptions,
+      index: Int = 0,
+      count: Int = 1,
+    ): DesktopPreviewTestParameter = DesktopPreviewTestParameter(preview).apply {
+      this.videoOptions = videoOptions
+      videoNameSuffix = if (count > 1) "_VIDEO_${index + 1}" else "_VIDEO"
+    }
+  }
+
+  /**
    * Used as the JUnit Parameterized test name, so each manual clock variation
    * appears as its own test.
    */
   override fun toString(): String {
     return buildString {
       append(preview)
-      if (manualClockOptions != null) {
-        append("_TIME_${manualClockOptions.advanceTimeMillis}ms")
-      }
+      append(variationSuffix())
     }
   }
 }
@@ -224,13 +253,27 @@ class DefaultDesktopComposePreviewTester(
     // each variation runs (and is reported) as its own test, matching the
     // Robolectric preview tests.
     return previews.flatMap { preview ->
+      val annotationOptions = annotationOptionsFor(preview)
+      val videos = annotationOptions.videoOptions
+      require(videos.isEmpty() || annotationOptions.manualClockOptions.isEmpty()) {
+        "${preview.declaringClass}.${preview.methodName}: videoOptions cannot be combined with " +
+          "manualClockOptions yet, because the video drives the Compose clock itself."
+      }
+      videos.forEach {
+        require(it.durationMillis > 0 && it.fps > 0) {
+          "${preview.declaringClass}.${preview.methodName}: PreviewVideoOptions needs " +
+            "durationMillis > 0 and fps > 0 (durationMillis=${it.durationMillis}, fps=${it.fps})."
+        }
+      }
       val manualClockVariations: List<ManualClockOptions?> =
-        annotationOptionsFor(preview).manualClockOptions.toList().ifEmpty { listOf(null) }
+        annotationOptions.manualClockOptions.toList().ifEmpty { listOf(null) }
       manualClockVariations.map { manualClockOptions ->
         DesktopPreviewTestParameter(
           preview = preview,
           manualClockOptions = manualClockOptions,
         )
+      } + videos.mapIndexed { index, video ->
+        DesktopPreviewTestParameter.video(preview, video, index, videos.size)
       }
     }
   }
@@ -252,12 +295,9 @@ class DefaultDesktopComposePreviewTester(
       preview.declaringClass,
       createScreenshotIdFor(preview)
     )
-    val suffix = if (manualClockOptions != null) {
-      "_TIME_${manualClockOptions.advanceTimeMillis}ms"
-    } else {
-      ""
-    }
-    val filePath = "$pathPrefix$name$suffix.${provideRoborazziContext().imageExtension}"
+    val videoOptions = testParameter.videoOptions
+    val filePath = "$pathPrefix$name${testParameter.variationSuffix()}." +
+      (videoOptions?.format?.extension ?: provideRoborazziContext().imageExtension)
 
     roborazziDebugLog {
       "DefaultDesktopComposePreviewTester.test():\n" +
@@ -296,6 +336,22 @@ class DefaultDesktopComposePreviewTester(
       }
       try {
         runDesktopComposeUiTest(width = surfaceWidth, height = surfaceHeight) {
+          if (videoOptions != null) {
+            // Recorded directly (a custom Capturer only knows how to capture stills). The
+            // clip is exactly durationMillis long; do not keep recording until the UI settles.
+            recordRoboVideo(
+              filePath = filePath,
+              videoOptions = RoboVideoOptions(fps = videoOptions.fps, settleTimeoutMillis = 0),
+              setup = { setContent(parameter.content) },
+            ) {
+              delay(videoOptions.durationMillis)
+            }
+            reportRecordedVideo(
+              fileWithRecordFilePathStrategy(filePath).absolutePath,
+              provideRoborazziContext().options
+            )
+            return@runDesktopComposeUiTest
+          }
           if (manualClockOptions != null) {
             mainClock.autoAdvance = false
           }
