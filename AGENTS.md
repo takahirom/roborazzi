@@ -22,4 +22,4 @@ When one part of Roborazzi needs to tell another about the current test, pass it
 
 ## Docs
 
-User-facing docs live in `docs/topics/*.md`. `README.md` and `skills/` are generated from them. After editing docs, run `./gradlew generateReadme generateSkill` and commit the generated files too; CI checks that they are up to date.
+User-facing docs live in `docs/topics/*.md`. `README.md` and `skills/roborazzi/references/*.md` are generated from them; `skills/roborazzi/SKILL.md` is a hand-maintained index. After editing docs, run `./gradlew generateReadme generateSkill` and commit the generated files too; CI checks that they are up to date. When you add a new topic, also add it to the index in `SKILL.md`, or `generateSkill` fails.
