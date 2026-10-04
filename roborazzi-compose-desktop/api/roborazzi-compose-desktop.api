@@ -9,3 +9,10 @@ public final class io/github/takahirom/roborazzi/RoborazziDesktopKt {
 	public static final fun processOutputImageAndReportWithDefaults (Lcom/github/takahirom/roborazzi/RoboCanvas;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoborazziOptions;Landroidx/compose/ui/unit/Density;Lkotlin/jvm/functions/Function1;)V
 }
 
+public final class io/github/takahirom/roborazzi/RoborazziDesktopVideoKt {
+	public static final fun recordRoboVideo (Landroidx/compose/ui/test/ComposeUiTest;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoboVideoOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public static final fun recordRoboVideo (Landroidx/compose/ui/test/ComposeUiTest;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoboVideoOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun recordRoboVideo$default (Landroidx/compose/ui/test/ComposeUiTest;Ljava/io/File;Lcom/github/takahirom/roborazzi/RoboVideoOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun recordRoboVideo$default (Landroidx/compose/ui/test/ComposeUiTest;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoboVideoOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
