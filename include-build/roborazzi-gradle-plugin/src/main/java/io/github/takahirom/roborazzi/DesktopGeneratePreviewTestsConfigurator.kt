@@ -157,7 +157,7 @@ private fun validateCustomTesterConfiguration(extension: GenerateComposePreviewD
 
       You have two options:
       1. Remove 'includePrivatePreviews = true' / annotationFilter / excludePackages option from generateComposePreviewDesktopTests configuration
-         and call '.includePrivatePreviews()' / '.excludeIfAnnotatedWithAnyOf()' / '.includeIfAnnotatedWithAnyOf()' directly in your custom tester's previews() method.
+         and call '.includePrivatePreviews()' / '.excludeIfAnnotatedWithAnyOf()' / '.includeIfAnnotatedWithAnyOf()' / 'scanPackageTrees(include = ..., exclude = ...)' directly in your custom tester's previews() method.
 
       2. Set 'useScanOptionParametersInTester = true' in generateComposePreviewDesktopTests configuration
          and check 'options().scanOptions.includePrivatePreviews' / 'options().scanOptions.annotationFilter' in your previews() implementation.

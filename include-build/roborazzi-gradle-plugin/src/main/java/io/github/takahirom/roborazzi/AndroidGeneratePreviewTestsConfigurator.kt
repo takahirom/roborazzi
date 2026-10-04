@@ -88,7 +88,7 @@ private fun setupGenerateComposePreviewRobolectricTestsTask(
 
       You have two options:
       1. Remove 'includePrivatePreviews = true' / annotationFilter / excludePackages option from generateComposePreviewRobolectricTests configuration
-         and call '.includePrivatePreviews()' / '.excludeIfAnnotatedWithAnyOf()' / '.includeIfAnnotatedWithAnyOf()' directly in your custom tester's testParameters() method.
+         and call '.includePrivatePreviews()' / '.excludeIfAnnotatedWithAnyOf()' / '.includeIfAnnotatedWithAnyOf()' / 'scanPackageTrees(include = ..., exclude = ...)' directly in your custom tester's testParameters() method.
 
       2. Set 'useScanOptionParametersInTester = true' in generateComposePreviewRobolectricTests configuration
          and check 'options.scanOptions.includePrivatePreviews' / 'opts.scanOptions.annotationFilter' in your testParameters() implementation.

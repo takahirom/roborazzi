@@ -164,7 +164,7 @@ class GeneratePreviewTestTest {
       buildGradle.useScanOptionParametersInTester = false
 
       record(BuildType.BuildAndFail) {
-        assert(output.contains("includePrivatePreviews / annotationFilter cannot be set automatically when using a custom tester"))
+        assert(output.contains("cannot be set automatically when using a custom tester"))
         assert(output.contains("You have two options:"))
       }
     }
@@ -243,6 +243,32 @@ class GeneratePreviewTestTest {
       record()
 
       checkNoImages()
+    }
+  }
+
+  @Test
+  fun whenExcludeSubpackageIsConfiguredOtherImagesShouldBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.excludePackages = listOf("com.github.takahirom.preview.tests.subpackage")
+
+      record()
+
+      checkHasImages()
+      checkNoSubpackageImages()
+    }
+  }
+
+  @Test
+  fun whenCustomTesterAndExcludePackagesWithoutUseScanOptionsShouldFail() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.useCustomTester = true
+      buildGradle.excludePackages = listOf("com.github.takahirom.preview.tests.subpackage")
+      buildGradle.useScanOptionParametersInTester = false
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("includePrivatePreviews / annotationFilter / excludePackages cannot be set automatically when using a custom tester"))
+        assert(output.contains("scanPackageTrees(include = ..., exclude = ...)"))
+      }
     }
   }
 
@@ -606,6 +632,16 @@ class PreviewModule(
         .orEmpty()
         .filter { it.name.contains("PreviewWithPrivate") }
     assert(privateImages.isNotEmpty() == true)
+  }
+
+  fun checkNoSubpackageImages() {
+    val subpackageImages =
+      testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+        .orEmpty()
+        .filter { it.name.contains("Subpackage") }
+    assert(subpackageImages.isEmpty()) {
+      "Expected no subpackage screenshots, but found: ${subpackageImages.map { it.name }}"
+    }
   }
 
   fun checkGeneratedTestClassCount(expectedCount: Int) {
