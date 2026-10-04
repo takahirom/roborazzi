@@ -216,3 +216,7 @@ recordScreenRoboVideo(
   delay(1000)
 }
 ```
+
+### Record a video from a Compose Preview
+
+To record a video of a `@Preview` without writing a test, use `videoOptions` in `@RoboComposePreviewOptions`. See the "Record a video of a preview" section of the Compose Preview support page.

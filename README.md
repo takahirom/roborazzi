@@ -1171,6 +1171,10 @@ recordScreenRoboVideo(
 }
 ```
 
+### Record a video from a Compose Preview
+
+To record a video of a `@Preview` without writing a test, use `videoOptions` in `@RoboComposePreviewOptions`. See the "Record a video of a preview" section of the Compose Preview support page.
+
 <!-- end -->
 <!-- topic_preview_support -->
 
@@ -1489,6 +1493,7 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 | `annotationFilter` (`@RoboPreviewInclude` / `@RoboPreviewExclude`) | ✅ | ✅ |
 | `@PreviewParameter` (`PreviewParameterProvider`, one capture per value) | ✅ | ✅ |
 | `@RoboComposePreviewOptions` (`manualClockOptions`, one test per variation) | ✅ | ✅ |
+| `@RoboComposePreviewOptions` (`videoOptions`, one animated image per entry) | ✅ | ✅ |
 | Custom JUnit `TestRule` around generated tests (`testRuleFactory`) | ✅ | ✅ |
 | Compose rule factory (`composeRuleFactory`) | ✅ | Not applicable (function-scoped harness) |
 | `@Preview` annotation options (`widthDp`/`heightDp`, `fontScale`, `showBackground`/`backgroundColor`, `locale`, `uiMode` dark bit) | ✅ (see below) | ✅ |
@@ -1533,6 +1538,26 @@ fun DelayedPreview() {
 ```
 
 This annotation enables capturing screenshots at specific time intervals, particularly useful for testing animated components or delayed state changes.
+
+### Record a video of a preview (experimental)
+
+Add `videoOptions` to `@RoboComposePreviewOptions` to also record an animated image of a preview. This works for both the Android (Robolectric) and the Compose Desktop preview tests:
+
+```kotlin
+@RoboComposePreviewOptions(
+  videoOptions = [PreviewVideoOptions(durationMillis = 1000L, fps = 10)]
+)
+@Preview
+@Composable
+fun DelayedPreview() { /* ... */ }
+```
+
+- The regular screenshot is still captured; the video is an additional output named `<name>_VIDEO.gif` (`_VIDEO_1`, `_VIDEO_2`, ... when there are several entries). Use `format = PreviewVideoFormat.APNG` for a lossless `.png` animation.
+- `durationMillis` is the exact length of the clip in virtual time, and `fps` is the frame rate. The clock is paused and driven frame by frame, so the recording does not depend on wall-clock timing.
+- The video shows the preview itself, framed the same way as the screenshot.
+- Videos are written only while recording (`recordRoborazzi*`). `verifyRoborazzi*` and `compareRoborazzi*` check the screenshot only, and a video is not compared.
+- Combining `videoOptions` with `manualClockOptions` on the same preview is not supported yet and fails with an error. `durationMillis` and `fps` must be positive.
+- Recorded videos are kept by `roborazzi.cleanupOldScreenshots`.
 
 ## PreviewWrapper support
 
