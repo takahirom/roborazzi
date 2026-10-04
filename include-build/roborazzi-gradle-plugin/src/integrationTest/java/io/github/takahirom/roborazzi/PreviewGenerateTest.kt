@@ -52,6 +52,17 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenNestedNamingStrategyAndRecordRunImagesShouldBeInNestedSubdirectory() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      addNamingStrategyGradleProperty("testNestedPackageDirAndClassAndMethod")
+
+      record()
+
+      checkHasNestedPackageDirImages()
+    }
+  }
+
+  @Test
   fun whenIncludePrivatePreviewsAndRecordRunImagesShouldBeRecorded() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.isIncludePrivatePreviews = true
@@ -121,6 +132,57 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenRenderScaleIsSetImagesShouldBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.renderScale = 0.5
+
+      record()
+
+      checkHasImages()
+    }
+  }
+
+  @Test
+  fun whenACustomTesterDropsRenderScaleTheTestShouldFail() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.useCustomTester = true
+      buildGradle.renderScale = 0.5
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("renderScale = 0.5 is configured in generateComposePreviewRobolectricTests"))
+        assert(output.contains("com.github.takahirom.sample.CustomPreviewTester"))
+        assert(output.contains("toRoborazziComposeOptions(renderScale)"))
+        assert(output.contains("roborazzi.problemSeverity=composePreview.renderScaleMismatch:warning"))
+      }
+    }
+  }
+
+  @Test
+  fun whenACustomTesterDropsRenderScaleAndTheProblemIsAWarningImagesShouldBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.useCustomTester = true
+      buildGradle.renderScale = 0.5
+      addGradleProperty("roborazzi.problemSeverity", "composePreview.renderScaleMismatch:warning")
+
+      record {
+        assert(output.contains("Roborazzi: Warning: renderScale = 0.5 is configured in generateComposePreviewRobolectricTests"))
+      }
+      checkHasImages()
+    }
+  }
+
+  @Test
+  fun whenProblemSeverityHasAnUnknownIdTheBuildShouldFail() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      addGradleProperty("roborazzi.problemSeverity", "composePreview.renderScaleMisMatch:warning")
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("Unknown problem id 'composePreview.renderScaleMisMatch'"))
+      }
+    }
+  }
+
+  @Test
   fun whenCustomTesterAndIncludePrivatePreviewsWithoutUseScanOptionsShouldFail() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.useCustomTester = true
@@ -140,6 +202,17 @@ class GeneratePreviewTestTest {
       buildGradle.useCustomTester = true
       buildGradle.isIncludePrivatePreviews = true
       buildGradle.useScanOptionParametersInTester = true
+
+      record()
+
+      checkHasImages()
+    }
+  }
+
+  @Test
+  fun whenExplicitApiStrictInTestsAndRecordRunImagesShouldBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.explicitApiStrictInTests = true
 
       record()
 
@@ -218,6 +291,19 @@ class PreviewModule(
     // When false, omit the `robolectric.pixelCopyRenderMode = hardware` system property ->
     // trips preview.pixelCopyRenderMode.
     var setPixelCopyRenderModeHardware = true
+
+    var explicitApiStrictInTests = false
+
+    // kotlin { explicitApi() } is skipped for test compilations by KGP, but the
+    // -Xexplicit-api compiler flag reaches them and so the generated tests.
+    // Scoped to test compilations so the fixture's main sources stay as they are.
+    private fun explicitApiStrictInTestsScript() = if (explicitApiStrictInTests) """
+      tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+        if (name.contains("Test")) {
+          compilerOptions.freeCompilerArgs.add("-Xexplicit-api=strict")
+        }
+      }
+    """.trimIndent() else ""
     
     private fun kspDependencies() = if (useKsp) """
                           ksp("com.google.dagger:hilt-android-compiler:2.57.1")
@@ -423,7 +509,7 @@ class PreviewModule(
 """
       }
       file.writeText(
-        buildGradleText.trimIndent()
+        buildGradleText.trimIndent() + "\n" + explicitApiStrictInTestsScript()
       )
     }
 
@@ -431,6 +517,7 @@ class PreviewModule(
     var isIncludePrivatePreviews = false
     var useCustomTester = false
     var useScanOptionParametersInTester = false
+    var renderScale: Double? = null
 
     private fun createRoborazziExtension(): String {
       val includePrivatePreviewsExpr = if (isIncludePrivatePreviews) {
@@ -448,6 +535,11 @@ class PreviewModule(
       } else {
         ""
       }
+      val renderScaleExpr = if (renderScale != null) {
+        """renderScale = $renderScale"""
+      } else {
+        ""
+      }
       val generatedTestClassCountExpr = if (generatedTestClassCount != null) {
         """generatedTestClassCount = $generatedTestClassCount"""
       } else {
@@ -461,12 +553,23 @@ class PreviewModule(
                   $includePrivatePreviewsExpr
                   $customTesterExpr
                   $useScanOptionParametersInTesterExpr
+                  $renderScaleExpr
                   $generatedTestClassCountExpr
                 }
               }
           """.trimIndent()
       return roborazziExtension
     }
+  }
+
+  fun addGradleProperty(key: String, value: String) {
+    val file = testProjectDir.root.resolve("gradle.properties")
+    file.appendText("\n$key=$value")
+  }
+
+  fun addNamingStrategyGradleProperty(namingStrategy: String) {
+    val file = testProjectDir.root.resolve("gradle.properties")
+    file.appendText("\nroborazzi.record.namingStrategy=$namingStrategy")
   }
 
   fun record(buildType: BuildType = BuildType.Build, checks: BuildResult.() -> Unit = {}) {
@@ -518,6 +621,19 @@ class PreviewModule(
     )
 
     assert(images?.isEmpty() == true)
+  }
+
+  fun checkHasNestedPackageDirImages() {
+    // With testNestedPackageDirAndClassAndMethod, the preview's package becomes a
+    // nested directory tree under the output dir, so goldens land in
+    // build/outputs/roborazzi/com/github/takahirom/preview/tests/.
+    val nestedDir = testProjectDir.root.resolve(
+      "$moduleName/build/outputs/roborazzi/com/github/takahirom/preview/tests"
+    )
+    val images = nestedDir.listFiles().orEmpty().filter { it.name.endsWith(".png") }
+    assert(images.isNotEmpty()) {
+      "Expected preview images in nested dir ${nestedDir.absolutePath}, but found none"
+    }
   }
 
   fun checkHasPrivatePreviewImages() {

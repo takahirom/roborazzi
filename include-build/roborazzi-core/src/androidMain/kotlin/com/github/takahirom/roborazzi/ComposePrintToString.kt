@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.AccessibilityAction
 import androidx.compose.ui.semantics.CollectionInfo
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.SemanticsConfiguration
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -172,13 +173,36 @@ private fun semanticsValueToString(value: Any?): String = buildString {
             // Save space if we there is text only in the object
             append(value)
         }
+    } else if (value is CustomAccessibilityAction) {
+        // Label only: the action lambda's toString carries JVM runtime identity
+        // (JIT address / identityHashCode), which changes on every run and would
+        // break the deterministic-output contract of the UI tree dump.
+        append("CustomAccessibilityAction(label=${value.label})")
     } else if (value is Iterable<*>) {
-        append(value.sortedBy { it.toString() })
+        append(value.map { semanticsValueToString(it) }.sorted())
     } else if (value is CollectionInfo) {
         append("(rowCount=${value.rowCount}, columnCount=${value.columnCount})")
     } else {
-        append(value)
+        append(value.toStableString())
     }
+}
+
+/**
+ * Renders [this] the way [semanticsValueToString]'s fallback branch does, dropping the JVM's
+ * default `Object#toString()` identity-hash suffix when it's actually in play. That default
+ * rendering, `<FullyQualifiedClassName>@<hex identity hash>` (e.g.
+ * `androidx.compose.foundation.VerticalScrollableClipShape@5fb48f31`), is what any semantics
+ * value type falls back to when it doesn't override `toString()`, and the hash half changes on
+ * every run regardless of whether the UI changed -- the same trap #911 fixed for
+ * [CustomAccessibilityAction], just via a different type. Checked by asking reflection which
+ * class actually declares [this]'s `toString()` method, rather than by matching the rendered
+ * text (shape or exact value), so a custom `toString()` override can never be mistaken for the
+ * unstable default and mangled -- no matter how closely its output happens to resemble it.
+ */
+private fun Any?.toStableString(): String {
+    if (this == null) return "null"
+    val usesJvmDefaultToString = javaClass.getMethod("toString").declaringClass == Any::class.java
+    return if (usesJvmDefaultToString) javaClass.name else toString()
 }
 
 /**

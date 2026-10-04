@@ -9,7 +9,9 @@ object DefaultFileNameGenerator {
   enum class DefaultNamingStrategy(val optionName: String) {
     TestPackageAndClassAndMethod("testPackageAndClassAndMethod"),
     EscapedTestPackageAndClassAndMethod("escapedTestPackageAndClassAndMethod"),
-    TestClassAndMethod("testClassAndMethod");
+    TestClassAndMethod("testClassAndMethod"),
+    TestPackageDirAndClassAndMethod("testPackageDirAndClassAndMethod"),
+    TestNestedPackageDirAndClassAndMethod("testNestedPackageDirAndClassAndMethod");
 
     @ExperimentalRoborazziApi
     fun generateOutputName(className: String, methodName: String?): String {
@@ -21,6 +23,21 @@ object DefaultFileNameGenerator {
         ) + "." + methodName
 
         TestClassAndMethod -> className.substringAfterLast(".") + "." + methodName
+
+        // Goldens are shared across OSes, so the path separator is always a
+        // literal '/' rather than File.separator (Windows JVM handles '/' fine).
+        TestPackageDirAndClassAndMethod -> {
+          val packageName = className.substringBeforeLast(".", "")
+          val simpleName = className.substringAfterLast(".")
+          if (packageName.isEmpty()) {
+            "$simpleName.$methodName"
+          } else {
+            "$packageName/$simpleName.$methodName"
+          }
+        }
+
+        TestNestedPackageDirAndClassAndMethod ->
+          className.replace(".", "/") + "." + methodName
       }
     }
 
