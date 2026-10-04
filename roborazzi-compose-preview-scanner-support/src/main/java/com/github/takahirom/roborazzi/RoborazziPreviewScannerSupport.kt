@@ -11,10 +11,12 @@ import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
 import com.github.takahirom.roborazzi.annotations.ManualClockOptions
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
+import com.github.takahirom.roborazzi.annotations.INHERIT_RENDER_SCALE
 import kotlinx.coroutines.test.StandardTestDispatcher
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.rules.TestWatcher
+import org.robolectric.RuntimeEnvironment
 import sergio.sastre.composable.preview.scanner.android.AndroidComposablePreviewScanner
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
@@ -23,6 +25,70 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 
 // For Generated junit4 tests
 interface RoborazziComposePreviewTestCategory
+
+/**
+ * Applies the standard Android preview configuration before the generated test's rule chain
+ * launches its activity, and records the scale the capture is expected to run at.
+ *
+ * Custom tester implementations retain their own configuration lifecycle, so only the expectation
+ * is recorded for them: they resolve and apply the scale themselves.
+ */
+@InternalRoborazziApi
+@OptIn(ExperimentalRoborazziApi::class)
+fun createRoborazziPreviewConfigurationRule(
+  tester: ComposePreviewTester<*>,
+  testParameter: TestParameter<*>,
+): TestRule {
+  if (testParameter !is AndroidPreviewJUnit4TestParameter) {
+    return TestRule { base, _ -> base }
+  }
+  // Only the preview's own override is recorded: what the tester reports in options() is exactly
+  // what the verification has to catch, and without an override the plugin value already applies.
+  // It is read when the test runs so that an invalid annotation fails the test that declares it.
+  val declaredScale = { testParameter.preview.declaredRenderScaleOrNull() }
+  if (tester !is AndroidComposePreviewTester) {
+    return TestRule { base, _ ->
+      object : org.junit.runners.model.Statement() {
+        override fun evaluate() {
+          RenderScaleVerification.expect(declaredScale())
+          try {
+            base.evaluate()
+          } finally {
+            RenderScaleVerification.clearExpectation()
+          }
+        }
+      }
+    }
+  }
+  return TestRule { base, _ ->
+    object : org.junit.runners.model.Statement() {
+      override fun evaluate() {
+        val qualifiers = RuntimeEnvironment.getQualifiers()
+        val fontScale = RuntimeEnvironment.getFontScale()
+        try {
+          // A blank device is relative to the original @Config, not a density already scaled
+          // by this rule. Reuse this baseline when capture reapplies the preview settings.
+          testParameter.renderScaleBaseConfiguration = android.content.res.Configuration(
+            android.content.res.Resources.getSystem().configuration
+          )
+          RenderScaleVerification.expect(declaredScale())
+          testParameter.preview.toRoborazziComposeOptions(
+            testParameter.preview.effectiveRenderScale(tester.options().renderScale),
+            testParameter.renderScaleBaseConfiguration
+          ).applySetup()
+          base.evaluate()
+        } finally {
+          testParameter.renderScaleBaseConfiguration = null
+          RenderScaleVerification.clearExpectation()
+          RuntimeEnvironment.setQualifiers(qualifiers)
+          if (RuntimeEnvironment.getFontScale() != fontScale) {
+            RuntimeEnvironment.setFontScale(fontScale)
+          }
+        }
+      }
+    }
+  }
+}
 
 @ExperimentalRoborazziApi
 fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
@@ -37,10 +103,113 @@ fun ComposablePreview<AndroidPreviewInfo>.captureRoboImage(
   }
 }
 
+/**
+ * The scale this preview is rendered at: its own [RoboComposePreviewOptions.renderScale] when it
+ * declares one, otherwise [configuredScale] from the Gradle extension.
+ *
+ * A custom [ComposePreviewTester] that captures the preview itself has to resolve the scale with
+ * this function, otherwise a per-preview override is silently ignored:
+ * `preview.toRoborazziComposeOptions(preview.effectiveRenderScale(options().renderScale))`.
+ */
 @ExperimentalRoborazziApi
-fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): RoborazziComposeOptions {
+fun ComposablePreview<*>.effectiveRenderScale(configuredScale: Double): Double =
+  declaredRenderScaleOrNull() ?: configuredScale
+
+/** The [RoboComposePreviewOptions.renderScale] this preview declares, or null when it inherits. */
+internal fun ComposablePreview<*>.declaredRenderScaleOrNull(): Double? {
+  // getAnnotation() on the preview throws, see testParameters() for the same workaround.
+  val annotated = declaringMethodOrNull()
+    ?.getAnnotation(RoboComposePreviewOptions::class.java)
+    ?.renderScale
+    ?: INHERIT_RENDER_SCALE
+  if (annotated == INHERIT_RENDER_SCALE) return null
+  require(annotated.isFinite() && annotated > 0.0) {
+    "renderScale must be finite and greater than 0, but $declaringClass.$methodName declares $annotated"
+  }
+  return annotated
+}
+
+/**
+ * The method this preview was declared by, or null when it cannot be resolved.
+ *
+ * The scanner reports a canonical-style class name (`com.example.Outer.Inner`), while
+ * `Class.forName` needs the binary name (`com.example.Outer$Inner`), so nested classes are
+ * retried with `$` separators. Overloaded previews share a method name, so the candidate whose
+ * source parameter types encode to the scanner's `methodParametersType` is the declaring one.
+ */
+private fun ComposablePreview<*>.declaringMethodOrNull(): java.lang.reflect.Method? {
+  val declaring = loadDeclaringClass(declaringClass) ?: return null
+  val candidates = declaring.declaredMethods.filter { it.name == methodName }
+  if (candidates.size <= 1) return candidates.firstOrNull()
+  // Overloads differ in their parameters only, so an exact signature match is the only safe
+  // choice: a near match would read another overload's annotation.
+  return candidates.firstOrNull { it.sourceParameterTypesAsString() == methodParametersType }
+}
+
+/**
+ * The parameter types this method declares in the source, encoded the way the scanner encodes
+ * [ComposablePreview.methodParametersType].
+ */
+private fun java.lang.reflect.Method.sourceParameterTypesAsString(): String {
+  val types = genericParameterTypes.toMutableList()
+  // The compiler appends a Composer and one or more int bitmasks (`$changed`, `$default`) to
+  // every @Composable function, none of which the scanner reports.
+  while (types.isNotEmpty() && types.last() == Integer.TYPE) {
+    types.removeAt(types.lastIndex)
+  }
+  if (types.isNotEmpty() && (types.last() as? Class<*>)?.name == COMPOSER_CLASS_NAME) {
+    types.removeAt(types.lastIndex)
+  }
+  return types.joinToString("_") { type ->
+    type.typeName.replace(PACKAGE_PREFIX, "").replace(WHITESPACE, "_")
+  }
+}
+
+private const val COMPOSER_CLASS_NAME = "androidx.compose.runtime.Composer"
+private val PACKAGE_PREFIX = Regex("""\b[a-zA-Z_][a-zA-Z0-9_]*\.""")
+private val WHITESPACE = Regex("""\s+""")
+
+private fun loadDeclaringClass(className: String): Class<*>? {
+  var candidate = className
+  while (true) {
+    try {
+      return Class.forName(candidate)
+    } catch (e: ClassNotFoundException) {
+      val lastDot = candidate.lastIndexOf('.')
+      if (lastDot < 0) return null
+      candidate = candidate.substring(0, lastDot) + '$' + candidate.substring(lastDot + 1)
+    }
+  }
+}
+
+@ExperimentalRoborazziApi
+fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(): RoborazziComposeOptions =
+  toRoborazziComposeOptions(renderScale = 1.0)
+
+/**
+ * Converts the preview's own `@Preview` settings into [RoborazziComposeOptions], scaling the
+ * rendering density by [renderScale].
+ *
+ * The default [AndroidComposePreviewTester.test] already applies the scale configured in the
+ * Gradle extension. Call this overload only when you implement `test()` yourself, passing
+ * `options().renderScale` so that the configured scale is not lost.
+ */
+@ExperimentalRoborazziApi
+fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(
+  renderScale: Double,
+): RoborazziComposeOptions = toRoborazziComposeOptions(renderScale, baseConfiguration = null)
+
+@OptIn(ExperimentalRoborazziApi::class)
+private fun ComposablePreview<AndroidPreviewInfo>.toRoborazziComposeOptions(
+  renderScale: Double,
+  baseConfiguration: android.content.res.Configuration? = null,
+): RoborazziComposeOptions {
   return RoborazziComposeOptions {
-    previewDevice(previewInfo.device)
+    if (renderScale == 1.0) {
+      previewDevice(previewInfo.device)
+    } else {
+      addOption(PreviewRenderScaleOption(renderScale, previewInfo.device, baseConfiguration))
+    }
     size(
       widthDp = previewInfo.widthDp, heightDp = previewInfo.heightDp
     )
@@ -290,7 +459,19 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
   data class Options(
     val testLifecycleOptions: TestLifecycleOptions = JUnit4TestLifecycleOptions(),
     val scanOptions: ScanOptions = ScanOptions(emptyList()),
+    /**
+     * Scales rendering density while preserving the preview's logical dp dimensions.
+     * Override [options] with `super.options().copy(...)` so that the value configured in the
+     * Gradle extension is preserved.
+     */
+    val renderScale: Double = 1.0,
   ) {
+    init {
+      require(renderScale.isFinite() && renderScale > 0.0) {
+        "renderScale must be finite and greater than 0, but was $renderScale"
+      }
+    }
+
     interface TestLifecycleOptions
 
     @Suppress("UNCHECKED_CAST")
@@ -401,8 +582,47 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
       open val composeTestRuleFactory: () -> ComposeContentTestRule,
       open val preview: ComposablePreview<T>
     ) : TestParameter<T>() {
-      val composeTestRule: ComposeContentTestRule by lazy {
-        composeTestRuleFactory()
+      private var cachedComposeTestRule: ComposeContentTestRule? = null
+
+      val composeTestRule: ComposeContentTestRule
+        get() = synchronized(this) {
+          cachedComposeTestRule ?: composeTestRuleFactory().also { cachedComposeTestRule = it }
+        }
+
+      /**
+       * Releases the parameter's reference after all supplied rule teardown has finished.
+       * Each sequential execution must construct a new rule chain. Overlapping executions
+       * using the same parameter, or reevaluating the returned statement, are unsupported.
+       */
+      @InternalRoborazziApi
+      fun releaseComposeTestRuleAfter(ruleFactory: () -> TestRule): TestRule {
+        val rule = try {
+          ruleFactory()
+        } catch (failure: Throwable) {
+          releaseComposeTestRule()
+          throw failure
+        }
+        return TestRule { base, description ->
+          val statement = try {
+            rule.apply(base, description)
+          } catch (failure: Throwable) {
+            releaseComposeTestRule()
+            throw failure
+          }
+          object : org.junit.runners.model.Statement() {
+            override fun evaluate() {
+              try {
+                statement.evaluate()
+              } finally {
+                releaseComposeTestRule()
+              }
+            }
+          }
+        }
+      }
+
+      private fun releaseComposeTestRule() = synchronized(this) {
+        cachedComposeTestRule = null
       }
 
       data class AndroidPreviewJUnit4TestParameter(
@@ -410,6 +630,8 @@ interface ComposePreviewTester<TESTPARAMETER : TestParameter<*>> {
         override val preview: ComposablePreview<AndroidPreviewInfo>,
         val composeRoboComposePreviewOptionVariation: RoboComposePreviewOptionVariation = RoboComposePreviewOptionVariation(),
       ) : JUnit4TestParameter<AndroidPreviewInfo>(composeTestRuleFactory, preview) {
+        internal var renderScaleBaseConfiguration: android.content.res.Configuration? = null
+
         override fun toString(): String {
           return "JUnit4TestParameter(preview=$preview)"
         }
@@ -558,7 +780,10 @@ class AndroidComposePreviewTester(
 
     @Suppress("USELESS_CAST")
     val roborazziComposeOptions =
-      (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions().builder()
+      (preview as ComposablePreview<AndroidPreviewInfo>).toRoborazziComposeOptions(
+        preview.effectiveRenderScale(options().renderScale),
+        testParameter.renderScaleBaseConfiguration
+      ).builder()
         .apply {
           if (activityScenarioProvider != null) {
             composeTestRule(junit4TestParameter.composeTestRule) {

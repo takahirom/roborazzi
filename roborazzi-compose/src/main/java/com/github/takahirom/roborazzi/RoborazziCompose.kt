@@ -54,6 +54,7 @@ fun captureRoboImage(
 }
 
 @ExperimentalRoborazziApi
+@OptIn(InternalRoborazziApi::class)
 fun captureRoboImage(
   file: File,
   roborazziOptions: RoborazziOptions = provideRoborazziContext().options,
@@ -61,25 +62,30 @@ fun captureRoboImage(
   content: @Composable () -> Unit,
 ) {
   if (!roborazziOptions.taskType.isEnabled()) return
-  launchRoborazziActivity(roborazziComposeOptions) { activityScenario ->
-    // Save current qualifiers before any modifications
-    val savedQualifiers = RuntimeEnvironment.getQualifiers()
-    
-    val configuredContent = roborazziComposeOptions
-      .configured(activityScenario) {
-        content()
+  val savedQualifiers = RuntimeEnvironment.getQualifiers()
+  val savedFontScale = RuntimeEnvironment.getFontScale()
+  try {
+    // Apply the environment before launch; changing it afterwards recreates the Activity.
+    roborazziComposeOptions.applySetup()
+    launchRoborazziActivity(roborazziComposeOptions) { activityScenario ->
+      val configuredContent =
+        roborazziComposeOptions.configuredAfterSetup(activityScenario) { content() }
+      try {
+        activityScenario.captureRoboImage(
+          file = file,
+          roborazziOptions = roborazziOptions,
+          doBeforeCapture = { roborazziComposeOptions.beforeCapture() },
+          content = { configuredContent() }
+        )
+      } finally {
+        roborazziComposeOptions.afterCapture()
       }
-    try {
-      activityScenario.captureRoboImage(
-        file = file,
-        roborazziOptions = roborazziOptions,
-        doBeforeCapture = { roborazziComposeOptions.beforeCapture() },
-        content = { configuredContent() }
-      )
-    } finally {
-      roborazziComposeOptions.afterCapture()
-      // Restore original qualifiers
-      RuntimeEnvironment.setQualifiers(savedQualifiers)
+    }
+  } finally {
+    // Restore only after the scenario has closed, so cleanup does not recreate its activity.
+    RuntimeEnvironment.setQualifiers(savedQualifiers)
+    if (RuntimeEnvironment.getFontScale() != savedFontScale) {
+      RuntimeEnvironment.setFontScale(savedFontScale)
     }
   }
 }

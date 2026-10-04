@@ -6,6 +6,7 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.ROBORAZZI_ANNOTATED_FILE_PATH_KEY
 import com.github.takahirom.roborazzi.ROBORAZZI_UI_TREE_FILE_PATH_KEY
+import com.github.takahirom.roborazzi.RoborazziProblems
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
@@ -91,6 +92,15 @@ open class RoborazziExtension @Inject constructor(objects: ObjectFactory) {
   @ExperimentalRoborazziApi
   fun generateComposePreviewRobolectricTests(action: GenerateComposePreviewRobolectricTestsExtension.() -> Unit) {
     action(generateComposePreviewRobolectricTests)
+  }
+
+  @ExperimentalRoborazziApi
+  val generateComposePreviewDesktopTests: GenerateComposePreviewDesktopTestsExtension =
+    objects.newInstance(GenerateComposePreviewDesktopTestsExtension::class.java)
+
+  @ExperimentalRoborazziApi
+  fun generateComposePreviewDesktopTests(action: GenerateComposePreviewDesktopTestsExtension.() -> Unit) {
+    action(generateComposePreviewDesktopTests)
   }
 }
 
@@ -365,6 +375,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
       }
       val roborazziProperties: Map<String, Any?> =
         project.providers.gradlePropertiesPrefixedBy("roborazzi").get()
+      // The test JVM reads this too, but only when a problem occurs. Check it here so that a typo
+      // fails the build instead of waiting for a problem that may never happen.
+      RoborazziProblems.parseSeverities(
+        roborazziProperties[RoborazziProblems.SeverityProperty]?.toString()
+      )
 
       val doesRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
         isVerifyRun.flatMap { isVerifyRunValue ->
@@ -759,6 +774,28 @@ abstract class RoborazziPlugin : Plugin<Project> {
         variantName = "jvm",
         testTaskName = "test",
       )
+      generateComposePreviewDesktopTestsForJvmIfNeeded(
+        project = project,
+        roborazziExtension = extension,
+      )
+    }
+    // Fail fast with guidance when the desktop preview generator is enabled in a
+    // project without any Kotlin JVM target (e.g. a plain Android project): the
+    // KMP/JVM plugin hooks would otherwise silently never fire and the
+    // recordRoborazziDesktop task would simply not exist.
+    project.afterEvaluate {
+      if (extension.generateComposePreviewDesktopTests.enable.orNull == true &&
+        !project.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform") &&
+        !project.plugins.hasPlugin("org.jetbrains.kotlin.jvm")
+      ) {
+        error(
+          "Roborazzi: generateComposePreviewDesktopTests is enabled, but this project applies neither " +
+            "the Kotlin Multiplatform plugin (org.jetbrains.kotlin.multiplatform) nor the Kotlin JVM plugin " +
+            "(org.jetbrains.kotlin.jvm), so there is no JVM target to generate desktop preview tests for. " +
+            "Compose Desktop preview tests need a Kotlin Multiplatform project with a JVM target such as " +
+            "jvm(\"desktop\"). For an Android-only project, use generateComposePreviewRobolectricTests instead."
+        )
+      }
     }
     project.pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
       val kotlinMppExtension = checkNotNull(
@@ -791,6 +828,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
           }
         }
       }
+      generateComposePreviewDesktopTestsForKmpIfNeeded(
+        project = project,
+        roborazziExtension = extension,
+        kotlinMppExtension = kotlinMppExtension,
+      )
     }
   }
 
