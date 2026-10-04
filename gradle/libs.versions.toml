@@ -22,6 +22,8 @@ kotlinComposeCompiler = "2.2.21"
 kotlinStdlibPin = "2.0.21"
 mavenPublish = "0.34.0"
 binaryCompatibilityValidator = "0.18.1"
+# Poko is a compiler plugin: each release supports only a narrow Kotlin range, so bump it with kotlin.
+poko = "0.22.1"
 composeMultiplatform = "1.10.3"
 robolectric = "4.14.1"
 generativeaiGoogle = "0.9.0-1.0.1"
@@ -111,6 +113,7 @@ android-tools-build-gradle = { module = "com.android.tools.build:gradle", versio
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
 compose-gradle-plugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "composeMultiplatform" }
 kotlin-compose-compiler-gradle-plugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlinComposeCompiler" }
+poko-gradle-plugin = { module = "dev.drewhamilton.poko:poko-gradle-plugin", version.ref = "poko" }
 compose-ui-graphics-desktop = { module = "org.jetbrains.compose.ui:ui-graphics-desktop", version.ref = "composeMultiplatform" }
 compose-foundation-desktop = { module = "org.jetbrains.compose.foundation:foundation-desktop", version.ref = "composeMultiplatform" }
 compose-ui-test-junit4-desktop = { module = "org.jetbrains.compose.ui:ui-test-junit4-desktop", version.ref = "composeMultiplatform" }
