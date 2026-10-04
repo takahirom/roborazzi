@@ -327,6 +327,15 @@ roborazzi {
 `recordRoborazziDesktop` then writes to `build/outputs/roborazzi/desktop/`, and
 `recordRoborazziDesktopAndroidCompat` to `build/outputs/roborazzi/desktopAndroidCompat/`.
 
+#### Sharing a scene between previews
+
+`sceneReuse = true` captures previews that need the same scene without closing it in between.
+It only makes the run faster; the images do not change. Each preview is still reported as its own
+test.
+
+A custom `Capturer` cannot share a scene, so it keeps one scene per preview. A custom tester has
+to override `test(testParameters, listener)` to reuse scenes.
+
 ### Customizing the desktop tester
 
 `DefaultDesktopComposePreviewTester` accepts a `Capturer` whose receiver is the raw

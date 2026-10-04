@@ -5,6 +5,7 @@ public final class com/github/takahirom/roborazzi/DefaultDesktopComposePreviewTe
 	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;Lcom/github/takahirom/roborazzi/DefaultDesktopComposePreviewTester$Capturer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun options ()Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;
 	public fun test (Lcom/github/takahirom/roborazzi/DesktopPreviewTestParameter;)V
+	public fun test (Ljava/util/List;Lcom/github/takahirom/roborazzi/DesktopPreviewCaptureListener;)V
 	public fun testParameters ()Ljava/util/List;
 }
 
@@ -43,6 +44,7 @@ public abstract interface class com/github/takahirom/roborazzi/DesktopComposePre
 	public static final field Companion Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Companion;
 	public fun options ()Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;
 	public abstract fun test (Lcom/github/takahirom/roborazzi/DesktopPreviewTestParameter;)V
+	public fun test (Ljava/util/List;Lcom/github/takahirom/roborazzi/DesktopPreviewCaptureListener;)V
 	public abstract fun testParameters ()Ljava/util/List;
 }
 
@@ -53,20 +55,23 @@ public final class com/github/takahirom/roborazzi/DesktopComposePreviewTester$Co
 
 public final class com/github/takahirom/roborazzi/DesktopComposePreviewTester$DefaultImpls {
 	public static fun options (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester;)Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;
+	public static fun test (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester;Ljava/util/List;Lcom/github/takahirom/roborazzi/DesktopPreviewCaptureListener;)V
 }
 
 public final class com/github/takahirom/roborazzi/DesktopComposePreviewTester$Options {
 	public static final field $stable I
-	public fun <init> (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;)V
-	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;Z)V
+	public synthetic fun <init> (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;
 	public final fun component2 ()Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;
 	public final fun component3 ()Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;
-	public final fun copy (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;)Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;
-	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;
+	public final fun component4 ()Z
+	public final fun copy (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;Z)Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;ZILjava/lang/Object;)Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDeviceProfile ()Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;
 	public final fun getScanOptions ()Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$ScanOptions;
+	public final fun getSceneReuse ()Z
 	public final fun getTestLifecycleOptions ()Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -106,6 +111,15 @@ public final class com/github/takahirom/roborazzi/DesktopComposePreviewTester$Op
 public abstract interface class com/github/takahirom/roborazzi/DesktopComposePreviewTester$Options$TestLifecycleOptions {
 }
 
+public abstract interface class com/github/takahirom/roborazzi/DesktopPreviewCaptureListener {
+	public static final field Companion Lcom/github/takahirom/roborazzi/DesktopPreviewCaptureListener$Companion;
+	public abstract fun aroundCapture (Lcom/github/takahirom/roborazzi/DesktopPreviewTestParameter;Lkotlin/jvm/functions/Function0;)V
+}
+
+public final class com/github/takahirom/roborazzi/DesktopPreviewCaptureListener$Companion {
+	public final fun getNone ()Lcom/github/takahirom/roborazzi/DesktopPreviewCaptureListener;
+}
+
 public final class com/github/takahirom/roborazzi/DesktopPreviewRenderSpec {
 	public static final field $stable I
 	public static final field Companion Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec$Companion;
@@ -126,6 +140,21 @@ public final class com/github/takahirom/roborazzi/DesktopPreviewRenderSpec {
 public final class com/github/takahirom/roborazzi/DesktopPreviewRenderSpec$Companion {
 	public final fun flooredPx (IF)I
 	public final fun resolve (Lsergio/sastre/composable/preview/scanner/android/AndroidPreviewInfo;Lcom/github/takahirom/roborazzi/DesktopPreviewDeviceProfile;)Lcom/github/takahirom/roborazzi/DesktopPreviewRenderSpec;
+}
+
+public final class com/github/takahirom/roborazzi/DesktopPreviewSceneReuseRunner : org/junit/runner/Runner, org/junit/runner/manipulation/Filterable {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/Class;)V
+	public fun filter (Lorg/junit/runner/manipulation/Filter;)V
+	public fun getDescription ()Lorg/junit/runner/Description;
+	public fun run (Lorg/junit/runner/notification/RunNotifier;)V
+}
+
+public abstract interface class com/github/takahirom/roborazzi/DesktopPreviewSceneReuseTest {
+	public abstract fun createTestRule ()Lorg/junit/rules/TestRule;
+	public abstract fun createTester ()Lcom/github/takahirom/roborazzi/DesktopComposePreviewTester;
+	public abstract fun getShardIndex ()Ljava/lang/Integer;
+	public abstract fun getTotalShards ()I
 }
 
 public final class com/github/takahirom/roborazzi/DesktopPreviewTestParameter {
