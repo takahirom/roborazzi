@@ -83,7 +83,6 @@ roborazzi.problemSeverity=composePreview.renderScaleMismatch:warning
 - `disabled` only stops the report. It does not change how settings are applied or how screenshots are compared.
 - An unknown ID or level, or the same ID listed twice, fails the build, so typos are not silently ignored.
 - Invalid settings, such as a negative render scale, and screenshot comparison failures are not problems and cannot be changed by this option.
-- When Roborazzi does not pass `roborazzi.*` Gradle properties to the test, such as when you run tests from the IDE without Gradle or turn on recording with `test.systemProperty("roborazzi.test.record", "true")`, set it on the test JVM yourself: add `-Droborazzi.problemSeverity=...` to the VM options of the IDE run configuration, or use `test.systemProperty("roborazzi.problemSeverity", "...")` in Gradle. `./gradlew test -Droborazzi.problemSeverity=...` does not work, because it sets the property only on the Gradle JVM.
 
 | Problem ID | Default | Reported when |
 |---|---|---|
