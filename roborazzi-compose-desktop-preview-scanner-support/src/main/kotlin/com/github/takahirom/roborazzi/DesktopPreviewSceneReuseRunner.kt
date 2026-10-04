@@ -60,6 +60,7 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
     shardOfDesktopPreviews(
       testParameters = tester.testParameters(),
       profile = tester.options().deviceProfile,
+      renderScale = tester.options().renderScale,
       shardIndex = configuration.shardIndex,
       totalShards = configuration.totalShards,
     )
@@ -81,8 +82,10 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
     if (parameters.isEmpty()) throw NoTestsRemainException()
   }
 
+  @OptIn(InternalRoborazziApi::class)
   override fun run(notifier: RunNotifier) {
     if (parameters.isEmpty()) return
+    val verificationTester = configuration.createTester()
     // DesktopPreviewTestParameter has no equals, so this is identity based, which is what is
     // wanted: two variations of one preview are two entries.
     val reported = mutableSetOf<DesktopPreviewTestParameter>()
@@ -92,6 +95,7 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
       reported.add(testParameter)
       notifier.fireTestStarted(description)
       try {
+        DesktopRenderScaleVerification.verify(verificationTester)
         val statement = object : Statement() {
           override fun evaluate() = capture()
         }
@@ -160,12 +164,13 @@ class DesktopPreviewSceneReuseRunner(private val testClass: Class<*>) : Runner()
 internal fun shardOfDesktopPreviews(
   testParameters: List<DesktopPreviewTestParameter>,
   profile: DesktopPreviewDeviceProfile,
+  renderScale: Double = 1.0,
   shardIndex: Int?,
   totalShards: Int,
 ): List<DesktopPreviewTestParameter> {
   // Resolving a device spec is not free, and a comparator is called O(n log n) times, so the keys
   // are computed once each.
-  val keys = testParameters.associateWith { desktopPreviewSceneKey(it, profile) }
+  val keys = testParameters.associateWith { desktopPreviewSceneKey(it, profile, renderScale) }
   val sorted = testParameters.sortedWith(
     compareBy(
       { keys.getValue(it).surfaceWidth },

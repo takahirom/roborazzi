@@ -59,7 +59,9 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * `@RoboComposePreviewOptions(renderScale = ...)`, which is the usual way to scale down only
    * the few previews that are large enough to be worth it.
    *
-   * Android previews only: this is not supported for Compose Desktop previews.
+   * The Compose Desktop preview generator has its own `renderScale` with the same meaning; see
+   * `generateComposePreviewDesktopTests.renderScale`. The per-preview opt-out above is Android
+   * only: that runtime reads the annotation, the desktop one scales every preview it captures.
    *
    * A custom [com.github.takahirom.roborazzi.ComposePreviewTester] that overrides `test()` has to
    * pass `preview.effectiveRenderScale(options().renderScale)` to

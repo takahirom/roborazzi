@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 import androidx.compose.runtime.Composable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.Description
@@ -122,6 +123,14 @@ class SceneFailsBeforeAnyCapture : ScriptedSceneReuseTest({ _, _ ->
 
 @OptIn(ExperimentalRoborazziApi::class)
 class DesktopPreviewSceneReuseRunnerTest {
+
+  @Before
+  fun setUp() {
+    // The runner's render scale check reads the options the generated test installs, and they have
+    // no default to fall back on, so the test installs them the way that test would.
+    DesktopComposePreviewTester.defaultOptionsFromPlugin =
+      DesktopComposePreviewTester.Options(deviceProfile = DesktopPreviewDeviceProfile.Desktop)
+  }
 
   @Test
   fun `a scene failure after the last capture is still reported`() {

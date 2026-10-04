@@ -134,6 +134,33 @@ class DesktopPreviewSceneReuseGenerateTest {
   }
 
   @Test
+  fun whenSceneReuseIsOnAtAScaledDensityTheImagesAreStillIdentical() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      // Scene reuse groups previews by the surface they need, and renderScale changes every
+      // surface, so the grouping has to be computed at the same scale the captures use. Grouping
+      // at the unscaled size would put previews of different sizes in one scene.
+      buildGradle.renderScale = 0.5
+      record(additionalParameters = NO_BUILD_CACHE)
+      val perScene = recordedImageBytes()
+      assert(perScene.isNotEmpty()) { "The per-scene run recorded nothing to compare against" }
+
+      buildGradle.sceneReuse = true
+      clearRecordedImages()
+      record(additionalParameters = NO_BUILD_CACHE)
+      val reused = recordedImageBytes()
+
+      assert(reused.keys == perScene.keys) {
+        "Scene reuse changed which previews were captured at renderScale = 0.5. Only per-scene: " +
+          "${perScene.keys - reused.keys}; only reusing: ${reused.keys - perScene.keys}"
+      }
+      val different = perScene.keys.filter { !perScene.getValue(it).contentEquals(reused.getValue(it)) }
+      assert(different.isEmpty()) {
+        "Scene reuse changed what these previews render at renderScale = 0.5: $different"
+      }
+    }
+  }
+
+  @Test
   fun whenOnePreviewInASharedSceneFailsTheOthersStillRun() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.sceneReuse = true
