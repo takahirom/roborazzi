@@ -152,6 +152,32 @@ class GeneratePreviewTestTest {
         assert(output.contains("renderScale = 0.5 is configured in generateComposePreviewRobolectricTests"))
         assert(output.contains("com.github.takahirom.sample.CustomPreviewTester"))
         assert(output.contains("toRoborazziComposeOptions(renderScale)"))
+        assert(output.contains("roborazzi.problemSeverity=composePreview.renderScaleMismatch:warning"))
+      }
+    }
+  }
+
+  @Test
+  fun whenACustomTesterDropsRenderScaleAndTheProblemIsAWarningImagesShouldBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.useCustomTester = true
+      buildGradle.renderScale = 0.5
+      addGradleProperty("roborazzi.problemSeverity", "composePreview.renderScaleMismatch:warning")
+
+      record {
+        assert(output.contains("Roborazzi: Warning: renderScale = 0.5 is configured in generateComposePreviewRobolectricTests"))
+      }
+      checkHasImages()
+    }
+  }
+
+  @Test
+  fun whenProblemSeverityHasAnUnknownIdTheBuildShouldFail() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      addGradleProperty("roborazzi.problemSeverity", "composePreview.renderScaleMisMatch:warning")
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("Unknown problem id 'composePreview.renderScaleMisMatch'"))
       }
     }
   }
@@ -176,6 +202,17 @@ class GeneratePreviewTestTest {
       buildGradle.useCustomTester = true
       buildGradle.isIncludePrivatePreviews = true
       buildGradle.useScanOptionParametersInTester = true
+
+      record()
+
+      checkHasImages()
+    }
+  }
+
+  @Test
+  fun whenExplicitApiStrictInTestsAndRecordRunImagesShouldBeRecorded() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      buildGradle.explicitApiStrictInTests = true
 
       record()
 
@@ -245,6 +282,18 @@ class PreviewModule(
     var useKsp = false
     var generatedTestClassCount: Int? = null
     var maxParallelForks: Int? = null
+    var explicitApiStrictInTests = false
+
+    // kotlin { explicitApi() } is skipped for test compilations by KGP, but the
+    // -Xexplicit-api compiler flag reaches them and so the generated tests.
+    // Scoped to test compilations so the fixture's main sources stay as they are.
+    private fun explicitApiStrictInTestsScript() = if (explicitApiStrictInTests) """
+      tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+        if (name.contains("Test")) {
+          compilerOptions.freeCompilerArgs.add("-Xexplicit-api=strict")
+        }
+      }
+    """.trimIndent() else ""
     
     private fun kspDependencies() = if (useKsp) """
                           ksp("com.google.dagger:hilt-android-compiler:2.57.1")
@@ -450,7 +499,7 @@ class PreviewModule(
 """
       }
       file.writeText(
-        buildGradleText.trimIndent()
+        buildGradleText.trimIndent() + "\n" + explicitApiStrictInTestsScript()
       )
     }
 
@@ -501,6 +550,11 @@ class PreviewModule(
           """.trimIndent()
       return roborazziExtension
     }
+  }
+
+  fun addGradleProperty(key: String, value: String) {
+    val file = testProjectDir.root.resolve("gradle.properties")
+    file.appendText("\n$key=$value")
   }
 
   fun addNamingStrategyGradleProperty(namingStrategy: String) {

@@ -435,34 +435,34 @@ abstract class GenerateComposePreviewDesktopTestsTask : DefaultTask() {
 
             @RunWith(Parameterized::class)
             @OptIn(InternalRoborazziApi::class, ExperimentalRoborazziApi::class)
-            class $className(
+            public class $className(
                 private val testParameter: DesktopPreviewTestParameter,
             ) {
                 private val tester = getDesktopComposePreviewTester("$testerQualifiedClassNameString")
                 private val testLifecycleOptions = tester.options().testLifecycleOptions as DesktopComposePreviewTester.Options.JUnit4TestLifecycleOptions
 
                 @get:Rule
-                val rule: TestRule = testLifecycleOptions.testRuleFactory()
+                public val rule: TestRule = testLifecycleOptions.testRuleFactory()
 
                 @Test
-                fun test() {
+                public fun test() {
                   DesktopRenderScaleVerification.beforeTest()
                   tester.test(testParameter)
                   DesktopRenderScaleVerification.afterTest(tester)
                 }
 
-                companion object {
+                public companion object {
                     // lazy for performance
-                    val testParameters: List<DesktopPreviewTestParameter> by lazy {
+                    public val testParameters: List<DesktopPreviewTestParameter> by lazy {
                         setupDefaultOptions()
                         val tester = getDesktopComposePreviewTester("$testerQualifiedClassNameString")
                         tester.testParameters()
                     }
                     @JvmStatic
                     @Parameterized.Parameters(name = "{0}")
-                    fun values(): List<DesktopPreviewTestParameter> = $valuesFunction
+                    public fun values(): List<DesktopPreviewTestParameter> = $valuesFunction
 
-                    fun setupDefaultOptions() {
+                    public fun setupDefaultOptions() {
                         DesktopComposePreviewTester.defaultOptionsFromPlugin = DesktopComposePreviewTester.Options(
                             deviceProfile = requireNotNull(roborazziSystemPropertyDesktopDeviceProfile()) {
                               "Roborazzi: no desktop device profile reached the test JVM. The " +

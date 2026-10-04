@@ -13,7 +13,7 @@ import com.github.takahirom.roborazzi.*
 import androidx.compose.ui.test.onRoot
 
 @OptIn(ExperimentalTestApi::class)
-class CustomPreviewTester : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> by AndroidComposePreviewTester() {
+public class CustomPreviewTester : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> by AndroidComposePreviewTester() {
   override fun options(): ComposePreviewTester.Options = super.options().copy(
     testLifecycleOptions = ComposePreviewTester.Options.JUnit4TestLifecycleOptions(
       composeRuleFactory = { createAndroidComposeRule<RoborazziActivity>() },
