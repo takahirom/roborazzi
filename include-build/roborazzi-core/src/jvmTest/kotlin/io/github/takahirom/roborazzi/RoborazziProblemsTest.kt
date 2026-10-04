@@ -7,6 +7,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 @OptIn(InternalRoborazziApi::class)
 class RoborazziProblemsTest {
@@ -53,8 +55,31 @@ class RoborazziProblemsTest {
   }
 
   @Test
-  fun warningAndDisabledDoNotThrow() {
-    RoborazziProblems.report(problem, "Something is off.", RoborazziProblemSeverity.Warning)
-    RoborazziProblems.report(problem, "Something is off.", RoborazziProblemSeverity.Disabled)
+  fun warningLogsWithHowToChangeIt() {
+    val log = captureStderr {
+      RoborazziProblems.report(problem, "Something is off.", RoborazziProblemSeverity.Warning)
+    }
+    assertTrue(log, log.contains("Warning: Something is off."))
+    assertTrue(log, log.contains("roborazzi.problemSeverity=composePreview.renderScaleMismatch:disabled"))
+  }
+
+  @Test
+  fun disabledReportsNothing() {
+    val log = captureStderr {
+      RoborazziProblems.report(problem, "Something is off.", RoborazziProblemSeverity.Disabled)
+    }
+    assertEquals("", log)
+  }
+
+  private fun captureStderr(block: () -> Unit): String {
+    val original = System.err
+    val buffer = ByteArrayOutputStream()
+    System.setErr(PrintStream(buffer, true))
+    try {
+      block()
+    } finally {
+      System.setErr(original)
+    }
+    return buffer.toString()
   }
 }
