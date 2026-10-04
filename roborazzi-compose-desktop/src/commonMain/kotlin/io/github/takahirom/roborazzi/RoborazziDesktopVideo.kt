@@ -107,7 +107,7 @@ private class ComposeUiTestRoboVideoClock(private val test: ComposeUiTest) : Rob
   }
 
   override fun advanceBy(stepMillis: Long) {
-    test.mainClock.advanceTimeBy(stepMillis)
+    test.mainClock.advanceTimeBy(stepMillis, ignoreFrameDuration = true)
     test.waitForIdle()
   }
 }

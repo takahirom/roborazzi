@@ -29,7 +29,6 @@ import javax.imageio.ImageIO
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @Composable
@@ -71,9 +70,9 @@ class RecordVideoDesktopTest {
       // Only the preview node is recorded, not the whole root.
       assertEquals(120, first.width)
       assertEquals(150, first.height)
-      assertNotEquals(
-        Color.White.toArgb(), first.getRGB(5, 5),
-        "first frame should already show the content",
+      assertEquals(
+        Color.Blue.toArgb(), first.getRGB(5, 5),
+        "first frame should already show the blue box",
       )
     }
   }
