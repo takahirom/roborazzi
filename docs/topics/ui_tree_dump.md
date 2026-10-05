@@ -41,7 +41,7 @@ onView(ViewMatchers.isRoot())
 ## Format
 
 ```json
-{ "schemaVersion": 1, "capture": { "imageWidth": 220, "imageHeight": 100, "scale": 1.0 }, "root":
+{ "schemaVersion": 1, "capture": { "imageWidth": 220, "imageHeight": 100, "scale": 1.0, "density": 1.0 }, "root":
  { "type": "view", "className": "androidx.compose.ui.platform.ComposeView", "bounds": [0, 0, 220, 100], "children": [
   { "n": 1, "type": "compose", "testTag": "login_button", "bounds": [16, 24, 204, 72], "properties": { "Role": "Button", "Text": "Login" }, "actions": ["OnClick"], "flags": ["MergeDescendants"] },
   { "n": 2, "type": "compose", "bounds": [16, 80, 204, 96], "properties": { "Text": "Forgot password?" } } ] }
@@ -56,6 +56,10 @@ attributes, so a single `grep` finds a node and its coordinates.
   `imageHeight` and `scale`. Map to image pixels with
   `image = (raw − root.bounds origin) × capture.scale` — the root origin is
   `0, 0` for full-screen captures.
+* `capture.density` is the px-per-dp of the captured UI (`DisplayMetrics.density`
+  on Android, e.g. `1.3312501` for `tvdpi`; the Compose `Density` on Desktop/iOS).
+  Convert bounds to dp with `dp = px / capture.density`. Layout rounds dp to whole
+  pixels, so the result can differ fractionally from the dp written in code.
 * Empty/default fields are omitted (no empty maps/lists, no `visibility` when the
   node is visible).
 * `n` is a sequential (1-based, pre-order) number on *annotatable* nodes only —

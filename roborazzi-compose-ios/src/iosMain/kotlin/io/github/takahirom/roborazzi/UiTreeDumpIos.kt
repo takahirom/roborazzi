@@ -83,6 +83,7 @@ internal class IosUiTreeDumpWriteResult(
  */
 internal fun writeUiTreeDumpIfEnabledIos(
   serializationTree: () -> RoboComponentTree,
+  density: Float,
   resolvedGoldenFilePath: String,
   roborazziOptions: RoborazziOptions,
 ): IosUiTreeDumpWriteResult {
@@ -95,6 +96,7 @@ internal fun writeUiTreeDumpIfEnabledIos(
       imageWidth = (tree.width * scale).toInt(),
       imageHeight = (tree.height * scale).toInt(),
       scale = scale,
+      density = density,
     )
     val numbers = assignUiTreeNumbers(tree, dumpOptions.isAnnotatable)
     val json = tree.toUiTreeJson(captureInfo = captureInfo, numbers = numbers)
