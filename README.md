@@ -1216,6 +1216,8 @@ roborazzi {
     )
     // If true, the private previews will be included in the test.
     includePrivatePreviews = true
+    // Sub-packages to exclude from scanning.
+    excludePackages = listOf("com.example.subpackage")
     // The fully qualified class name of the custom test class that implements [com.github.takahirom.roborazzi.ComposePreviewTester].
     testerQualifiedClassName = "com.example.MyCustomComposePreviewTester"
     // The number of test classes to generate. Set this to match maxParallelForks for parallel test execution.
@@ -1263,9 +1265,9 @@ If you need to customize more than the capture behavior, such as the scan option
 
 `Options` is how the Gradle extension reaches your tester: the generated test assigns the configured values to `ComposePreviewTester.defaultOptionsFromPlugin`, and the default `options()` returns them. So when you override `options()`, derive the result with `super.options().copy(...)` instead of constructing a new `Options`, otherwise every setting the plugin configured is silently replaced by defaults. The same applies if you implement `test()` or the capture yourself: read the values from `options()` rather than assuming defaults.
 
-Two settings need extra care with a custom tester:
+Settings that need extra care with a custom tester:
 
-- `includePrivatePreviews` and `annotationFilter` are consumed by `testParameters()`. Because a custom tester usually overrides it, the plugin rejects the combination unless you set `useScanOptionParametersInTester = true` and read `options().scanOptions` yourself.
+- `includePrivatePreviews`, `annotationFilter`, and `excludePackages` are consumed by `testParameters()`. Because a custom tester usually overrides it, the plugin rejects the combination unless you set `useScanOptionParametersInTester = true` and read `options().scanOptions` yourself.
 - `renderScale` (see [Making the tests faster with `renderScale`](#making-the-tests-faster-with-renderscale)) is consumed at capture time, so the class-delegation pattern above keeps working. If you override `test()` yourself, see the `renderScale` property documentation for what to pass to `preview.toRoborazziComposeOptions(renderScale)`. A tester that drops the value fails the generated test with an explanation, so a silently unscaled screenshot is not possible.
 
 Then reference your custom tester in the Gradle configuration:
@@ -1378,6 +1380,8 @@ roborazzi {
   generateComposePreviewDesktopTests {
     enable = true
     packages = listOf("com.example")
+    // Sub-packages to exclude from scanning.
+    excludePackages = listOf("com.example.subpackage")
     // Required only when the project has multiple Kotlin JVM targets:
     // targetName = "desktop"
   }
@@ -1485,7 +1489,7 @@ harness is function-scoped (`runDesktopComposeUiTest`), not rule-based.
 | Feature | Android (Robolectric) | Compose Desktop |
 |---|---|---|
 | Generated preview tests | ✅ | ✅ |
-| `packages`, `includePrivatePreviews`, `testerQualifiedClassName`, `generatedTestClassCount` | ✅ | ✅ |
+| `packages`, `excludePackages`, `includePrivatePreviews`, `testerQualifiedClassName`, `generatedTestClassCount` | ✅ | ✅ |
 | `annotationFilter` (`@RoboPreviewInclude` / `@RoboPreviewExclude`) | ✅ | ✅ |
 | `@PreviewParameter` (`PreviewParameterProvider`, one capture per value) | ✅ | ✅ |
 | `@RoboComposePreviewOptions` (`manualClockOptions`, one test per variation) | ✅ | ✅ |
