@@ -85,7 +85,10 @@ fun processOutputImageAndReport(
   }
   validateGoldenFileNameOrThrow(goldenFilePath)
   val recordOptions = roborazziOptions.recordOptions
-  val resizeScale = recordOptions.resizeScale
+  val resizeScale = recordOptions.resizeScaleFor(
+    width = newRoboCanvas.croppedWidth,
+    height = newRoboCanvas.croppedHeight,
+  )
   if (taskType.isVerifying() || taskType.isComparing()) {
     val width = (newRoboCanvas.croppedWidth * resizeScale).toInt()
     val height = (newRoboCanvas.croppedHeight * resizeScale).toInt()
