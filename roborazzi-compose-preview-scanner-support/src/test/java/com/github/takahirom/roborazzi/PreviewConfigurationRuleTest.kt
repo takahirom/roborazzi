@@ -20,6 +20,7 @@ import org.robolectric.annotation.Config
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter.AndroidPreviewJUnit4TestParameter
+import com.github.takahirom.roborazzi.ComposePreviewTester.TestParameter.JUnit4TestParameter
 
 @OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -104,6 +105,25 @@ class PreviewConfigurationRuleTest {
         assertEquals(1f, RuntimeEnvironment.getFontScale(), 0f)
       }, description).evaluate()
     assertRestored(original, 1f)
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  @Test fun scalesTheConfigDensityForTestersOfNonAndroidPreviews() {
+    configurePlugin(renderScale = 0.5)
+    // Like a tester built on the scanner's common module, whose previews are not Android ones.
+    val tester = object : ComposePreviewTester<JUnit4TestParameter<Unit>> {
+      override fun testParameters() = emptyList<JUnit4TestParameter<Unit>>()
+      override fun test(testParameter: JUnit4TestParameter<Unit>) = Unit
+    }
+    val parameter = JUnit4TestParameter(
+      composeTestRuleFactory = { error("Configuration must not create a Compose rule") },
+      preview = parameter().preview as ComposablePreview<*> as ComposablePreview<Unit>,
+    )
+
+    createRoborazziPreviewConfigurationRule(tester, parameter)
+      .apply(statement {
+        assertEquals(80, RuntimeEnvironment.getApplication().resources.configuration.densityDpi)
+      }, description).evaluate()
   }
 
   @Test fun appliesThePreviewOverrideForCustomTesters() {

@@ -40,13 +40,16 @@ fun createRoborazziPreviewConfigurationRule(
   tester: ComposePreviewTester<*>,
   testParameter: TestParameter<*>,
 ): TestRule {
-  if (testParameter !is AndroidPreviewJUnit4TestParameter) {
+  if (testParameter !is TestParameter.JUnit4TestParameter<*>) {
     return TestRule { base, _ -> base }
   }
   val renderScale = tester.options().renderScale
   val setup = if (tester is AndroidComposePreviewTester) {
+    if (testParameter !is AndroidPreviewJUnit4TestParameter) return TestRule { base, _ -> base }
     testParameter.preview.toRoborazziComposeOptions(renderScale)
   } else {
+    // Only the density is scaled, which needs nothing from the preview but its declared scale, so
+    // testers of non-Android previews, such as ones built on the scanner's common module, get it too.
     val effectiveScale = testParameter.preview.effectiveRenderScale(renderScale)
     if (effectiveScale == 1.0) return TestRule { base, _ -> base }
     RoborazziComposeOptions { addOption(PreviewRenderScaleOption(effectiveScale)) }
