@@ -6,8 +6,8 @@ package com.github.takahirom.roborazzi
  *
  * Set it with [RoborazziOptions.RecordOptions.resizeScaleCalculator]. It replaces
  * [RoborazziOptions.RecordOptions.resizeScale] for every image. An image of the same size gets the
- * same scale when the golden is recorded and when it is compared; if the size changes, the image
- * is reported as changed anyway.
+ * same scale when the golden is recorded and when it is compared. A different capture size can map
+ * to the same scaled size; the scaled images are then compared pixel by pixel as usual.
  *
  * Keep it a pure function of the size: Roborazzi may call it more than once per capture. A GIF or
  * video gets one scale for all frames, calculated from the widest and the tallest frame. The UI
