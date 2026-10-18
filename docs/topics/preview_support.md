@@ -89,7 +89,11 @@ If you need to customize more than the capture behavior, such as the scan option
 Two settings need extra care with a custom tester:
 
 - `includePrivatePreviews` and `annotationFilter` are consumed by `testParameters()`. Because a custom tester usually overrides it, the plugin rejects the combination unless you set `useScanOptionParametersInTester = true` and read `options().scanOptions` yourself.
-- `renderScale` (see [Making the tests faster with `renderScale`](#making-the-tests-faster-with-renderscale)): for a custom tester, the generated test scales the `@Config` density before the activity is launched, so even a capture that ignores the preview's settings, such as `onRoot().captureRoboImage(...)`, is scaled. If you pass the preview's settings to the capture, use `preview.toRoborazziComposeOptions(options().renderScale)`; the no-argument `toRoborazziComposeOptions()` applies a preview's `device` at its unscaled density. The generated test fails with an explanation when `options().renderScale` is not the configured value, typically because `options()` builds a new `Options`.
+- `renderScale` (see [Making the tests faster with `renderScale`](#making-the-tests-faster-with-renderscale)):
+  - For a custom tester, the generated test scales the `@Config` density before the activity is launched, so even a capture that ignores the preview's settings, such as `onRoot().captureRoboImage(...)`, is scaled.
+  - If your `test()` passes the preview's settings to the capture, build them with `preview.toRoborazziComposeOptions(options().renderScale)`. The no-argument `toRoborazziComposeOptions()`, which `preview.captureRoboImage(filePath)` also uses by default, applies a preview's `device` at its unscaled density.
+  - If your `Capturer` changes the compose options, extend them with `parameter.roborazziComposeOptions.builder().addOption(...).build()` instead of replacing them. Options without the scale can reset the density, for example by applying a preview's `device`.
+  - The generated test fails with an explanation when `options().renderScale` is not the configured value, typically because `options()` builds a new `Options`.
 
 Then reference your custom tester in the Gradle configuration:
 
