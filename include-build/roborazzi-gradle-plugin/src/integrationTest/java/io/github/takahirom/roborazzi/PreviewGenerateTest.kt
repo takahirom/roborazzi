@@ -146,6 +146,21 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenACustomTesterCapturesWithoutThePreviewOptionsRenderScaleShouldBeApplied() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      // Captures onRoot() without passing the scale to toRoborazziComposeOptions().
+      buildGradle.useCustomTester = true
+      buildGradle.renderScale = 0.5
+
+      record()
+
+      // Recorded at 275x89 without renderScale. Only the density changes, so the font scale and
+      // locale the preview declares must not change the size either.
+      checkPreviewWithProperties1ImageSize(width = 138, height = 45)
+    }
+  }
+
+  @Test
   fun whenRenderScaleIsSetImagesShouldBeRecorded() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.renderScale = 0.5

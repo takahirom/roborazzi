@@ -81,15 +81,39 @@ class PreviewConfigurationRuleTest {
     assertRestored(original, 1f)
   }
 
-  @Test fun leavesCustomTestersInControlOfConfiguration() {
+  @Test fun leavesCustomTestersInControlOfConfigurationWithoutAScale() {
     val original = RuntimeEnvironment.getQualifiers()
-    val custom = object : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
-      override fun testParameters() = emptyList<AndroidPreviewJUnit4TestParameter>()
-      override fun test(testParameter: AndroidPreviewJUnit4TestParameter) = Unit
-    }
-    val rule = createRoborazziPreviewConfigurationRule(custom, parameter())
+    val rule = createRoborazziPreviewConfigurationRule(CustomTester(), parameter())
     rule.apply(statement { assertRestored(original, 1f) }, description).evaluate()
     assertRestored(original, 1f)
+  }
+
+  @Test fun scalesOnlyTheConfigDensityForCustomTesters() {
+    configurePlugin(renderScale = 0.5)
+    val original = RuntimeEnvironment.getQualifiers()
+
+    // A custom tester may capture without the preview's options, so the preview's device, font
+    // scale and night mode must not leak into its capture; only the scale should.
+    createRoborazziPreviewConfigurationRule(CustomTester(), parameter())
+      .apply(statement {
+        val config = RuntimeEnvironment.getApplication().resources.configuration
+        assertEquals(80, config.densityDpi)
+        assertEquals(200, config.screenWidthDp)
+        assertEquals(400, config.screenHeightDp)
+        assertEquals(Configuration.UI_MODE_NIGHT_NO, config.uiMode and Configuration.UI_MODE_NIGHT_MASK)
+        assertEquals(1f, RuntimeEnvironment.getFontScale(), 0f)
+      }, description).evaluate()
+    assertRestored(original, 1f)
+  }
+
+  @Test fun appliesThePreviewOverrideForCustomTesters() {
+    val parameter = parameter(methodName = "previewWithOverride")
+
+    // Nothing is configured in Gradle, but the preview asks for 0.25 of the @Config's 160dpi.
+    createRoborazziPreviewConfigurationRule(CustomTester(), parameter)
+      .apply(statement {
+        assertEquals(40, RuntimeEnvironment.getApplication().resources.configuration.densityDpi)
+      }, description).evaluate()
   }
 
   @Test fun consecutiveExecutionsStartWithOriginalConfiguration() {
@@ -130,6 +154,12 @@ class PreviewConfigurationRuleTest {
 
   @RoboComposePreviewOptions(renderScale = 0.25)
   @Composable fun previewWithOverride() = Unit
+
+  /** Reports the configured scale through the default options(), like a delegating tester. */
+  private class CustomTester : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
+    override fun testParameters() = emptyList<AndroidPreviewJUnit4TestParameter>()
+    override fun test(testParameter: AndroidPreviewJUnit4TestParameter) = Unit
+  }
 
   private fun configurePlugin(renderScale: Double) {
     ComposePreviewTester.defaultOptionsFromPlugin =
