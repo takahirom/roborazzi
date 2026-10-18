@@ -132,6 +132,20 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenADelegatingCustomTesterIsUsedRenderScaleShouldBeApplied() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      // Delegates test() to AndroidComposePreviewTester, as the docs recommend.
+      buildGradle.testerQualifiedClassName = "com.github.takahirom.sample.ThresholdPreviewTester"
+      buildGradle.renderScale = 0.5
+
+      record()
+
+      // PreviewWithProperties1 is 320x640dp and is recorded at 880x1760 without renderScale.
+      checkPreviewWithProperties1ImageSize(width = 440, height = 880)
+    }
+  }
+
+  @Test
   fun whenRenderScaleIsSetImagesShouldBeRecorded() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.renderScale = 0.5
@@ -145,12 +159,12 @@ class GeneratePreviewTestTest {
   @Test
   fun whenACustomTesterDropsRenderScaleTheTestShouldFail() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
-      buildGradle.useCustomTester = true
+      buildGradle.testerQualifiedClassName = "com.github.takahirom.sample.RenderScaleDroppingPreviewTester"
       buildGradle.renderScale = 0.5
 
       record(BuildType.BuildAndFail) {
         assert(output.contains("renderScale = 0.5 is configured in generateComposePreviewRobolectricTests"))
-        assert(output.contains("com.github.takahirom.sample.CustomPreviewTester"))
+        assert(output.contains("com.github.takahirom.sample.RenderScaleDroppingPreviewTester"))
         assert(output.contains("toRoborazziComposeOptions(renderScale)"))
         assert(output.contains("roborazzi.problemSeverity=composePreview.renderScaleMismatch:warning"))
       }
@@ -160,7 +174,7 @@ class GeneratePreviewTestTest {
   @Test
   fun whenACustomTesterDropsRenderScaleAndTheProblemIsAWarningImagesShouldBeRecorded() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
-      buildGradle.useCustomTester = true
+      buildGradle.testerQualifiedClassName = "com.github.takahirom.sample.RenderScaleDroppingPreviewTester"
       buildGradle.renderScale = 0.5
       addGradleProperty("roborazzi.problemSeverity", "composePreview.renderScaleMismatch:warning")
 
@@ -505,7 +519,12 @@ class PreviewModule(
 
     var enable = true
     var isIncludePrivatePreviews = false
-    var useCustomTester = false
+    var testerQualifiedClassName: String? = null
+    var useCustomTester: Boolean
+      get() = testerQualifiedClassName != null
+      set(value) {
+        testerQualifiedClassName = if (value) "com.github.takahirom.sample.CustomPreviewTester" else null
+      }
     var useScanOptionParametersInTester = false
     var renderScale: Double? = null
 
@@ -515,8 +534,8 @@ class PreviewModule(
       } else {
         ""
       }
-      val customTesterExpr = if (useCustomTester) {
-        """testerQualifiedClassName = "com.github.takahirom.sample.CustomPreviewTester""""
+      val customTesterExpr = if (testerQualifiedClassName != null) {
+        """testerQualifiedClassName = "$testerQualifiedClassName""""
       } else {
         ""
       }
@@ -589,6 +608,16 @@ class PreviewModule(
   fun checkHasImages() {
     val images = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
     assert(images?.isNotEmpty() == true)
+  }
+
+  fun checkPreviewWithProperties1ImageSize(width: Int, height: Int) {
+    val image = testProjectDir.root.resolve("$moduleName/build/outputs/roborazzi/").listFiles()
+      .orEmpty()
+      .single { it.name.contains("PreviewWithProperties1") }
+    val bufferedImage = javax.imageio.ImageIO.read(image)
+    assert(bufferedImage.width == width && bufferedImage.height == height) {
+      "Expected ${width}x$height for ${image.name}, but was ${bufferedImage.width}x${bufferedImage.height}"
+    }
   }
 
   fun checkNoImages() {
