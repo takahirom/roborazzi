@@ -27,11 +27,12 @@ import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
 interface RoborazziComposePreviewTestCategory
 
 /**
- * Applies the standard Android preview configuration before the generated test's rule chain
- * launches its activity.
+ * Applies the preview configuration before the generated test's rule chain launches its activity.
  *
- * Custom tester implementations retain their own configuration lifecycle, so nothing is applied
- * for them: they resolve and apply the scale themselves.
+ * For [AndroidComposePreviewTester], this is the whole `@Preview` configuration that its capture
+ * applies anyway. A custom tester decides the rest of the configuration itself, often by capturing
+ * without the preview's options, so it only gets the `@Config` density scaled by the effective
+ * `renderScale`. That way the scale reaches the capture without changing anything else about it.
  */
 @InternalRoborazziApi
 @OptIn(ExperimentalRoborazziApi::class)
@@ -39,8 +40,19 @@ fun createRoborazziPreviewConfigurationRule(
   tester: ComposePreviewTester<*>,
   testParameter: TestParameter<*>,
 ): TestRule {
-  if (testParameter !is AndroidPreviewJUnit4TestParameter || tester !is AndroidComposePreviewTester) {
+  if (testParameter !is TestParameter.JUnit4TestParameter<*>) {
     return TestRule { base, _ -> base }
+  }
+  val renderScale = tester.options().renderScale
+  val setup = if (tester is AndroidComposePreviewTester) {
+    if (testParameter !is AndroidPreviewJUnit4TestParameter) return TestRule { base, _ -> base }
+    testParameter.preview.toRoborazziComposeOptions(renderScale)
+  } else {
+    // Only the density is scaled, which needs nothing from the preview but its declared scale, so
+    // testers of non-Android previews, such as ones built on the scanner's common module, get it too.
+    val effectiveScale = testParameter.preview.effectiveRenderScale(renderScale)
+    if (effectiveScale == 1.0) return TestRule { base, _ -> base }
+    RoborazziComposeOptions { addOption(PreviewRenderScaleOption(effectiveScale)) }
   }
   return TestRule { base, _ ->
     object : org.junit.runners.model.Statement() {
@@ -48,8 +60,7 @@ fun createRoborazziPreviewConfigurationRule(
         val qualifiers = RuntimeEnvironment.getQualifiers()
         val fontScale = RuntimeEnvironment.getFontScale()
         try {
-          testParameter.preview.toRoborazziComposeOptions(tester.options().renderScale)
-            .applySetup()
+          setup.applySetup()
           base.evaluate()
         } finally {
           RuntimeEnvironment.setQualifiers(qualifiers)

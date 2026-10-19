@@ -51,9 +51,10 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * Must be finite and positive. The resulting dpi is rounded to the nearest integer and
    * clamped to a minimum of 1 dpi.
    *
-   * Generated tests using the default Android tester apply the scaled configuration before the
-   * Activity is launched. For previews without a device, setup and capture use the original
-   * Robolectric configuration as the scale baseline.
+   * Generated tests apply the scaled configuration before the Activity is launched. With the
+   * default Android tester this is the whole preview configuration; with a custom tester it is
+   * only the `@Config` density, so a capture that ignores the preview's settings is still scaled.
+   * For previews without a device, the `@Config` density is the scale baseline.
    *
    * A single preview can opt out of this value with
    * `@RoboComposePreviewOptions(renderScale = ...)`, which is the usual way to scale down only
@@ -61,10 +62,11 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    *
    * Android previews only: this is not supported for Compose Desktop previews.
    *
-   * A custom [com.github.takahirom.roborazzi.ComposePreviewTester] that overrides `test()` has to
-   * pass `options().renderScale` to `preview.toRoborazziComposeOptions(renderScale)`, which also
-   * applies a per-preview override. A tester whose `options()` drops the value fails the generated
-   * test, so no opt-in flag is needed here.
+   * A custom [com.github.takahirom.roborazzi.ComposePreviewTester] that overrides `test()` and
+   * passes the preview's settings to the capture should use
+   * `preview.toRoborazziComposeOptions(options().renderScale)`, which also applies a per-preview
+   * override. A tester whose `options()` drops the value fails the generated test, so no opt-in
+   * flag is needed here.
    */
   @ExperimentalRoborazziApi
   val renderScale: Property<Double> = objects.property(Double::class.java).convention(1.0)
