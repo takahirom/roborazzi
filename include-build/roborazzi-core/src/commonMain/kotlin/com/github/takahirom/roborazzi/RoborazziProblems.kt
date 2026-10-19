@@ -39,7 +39,10 @@ class RoborazziProblem internal constructor(
 object RoborazziProblems {
   const val SeverityProperty: String = "roborazzi.problemSeverity"
 
-  /** A custom preview tester did not carry the configured `renderScale` through to the capture. */
+  /**
+   * A custom preview tester's `options()` does not report the `renderScale` configured in the
+   * Gradle extension, so its capture is probably not scaled.
+   */
   val ComposePreviewRenderScaleMismatch: RoborazziProblem =
     RoborazziProblem("composePreview.renderScaleMismatch", RoborazziProblemSeverity.Error)
 

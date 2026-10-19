@@ -7,9 +7,7 @@ import java.lang.reflect.Proxy
 import com.github.takahirom.roborazzi.annotations.RoboComposePreviewOptions
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -80,7 +78,6 @@ class PreviewConfigurationRuleTest {
       rule.apply(statement { fail("The body must not run") }, description).evaluate()
       fail("Expected invalid qualifier failure")
     } catch (_: IllegalArgumentException) { }
-    assertNull(parameter.renderScaleBaseConfiguration)
     assertRestored(original, 1f)
   }
 
@@ -105,42 +102,29 @@ class PreviewConfigurationRuleTest {
     }
   }
 
-  @Test fun recordsTheExpectationForCustomTesters() {
+  @Test fun appliesThePreviewOverrideRatherThanTheConfiguredScale() {
     configurePlugin(renderScale = 0.5)
-    val custom = object : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
-      override fun testParameters() = emptyList<AndroidPreviewJUnit4TestParameter>()
-      override fun test(testParameter: AndroidPreviewJUnit4TestParameter) = Unit
-    }
     val parameter = parameter(methodName = "previewWithOverride")
 
-    // A custom tester resolves and applies the per-preview scale itself, so the verification has
-    // to expect that scale rather than the one configured in Gradle.
-    createRoborazziPreviewConfigurationRule(custom, parameter).apply(statement {
-      RenderScaleVerification.beforeTest()
-      parameter.preview.toRoborazziComposeOptions(renderScale = 0.25).applySetup()
-      RenderScaleVerification.afterTest(custom)
-    }, description).evaluate()
+    createRoborazziPreviewConfigurationRule(AndroidComposePreviewTester(), parameter)
+      .apply(statement {
+        // 320dpi from the preview's device, scaled by its own 0.25 rather than the plugin's 0.5.
+        assertEquals(80, RuntimeEnvironment.getApplication().resources.configuration.densityDpi)
+      }, description).evaluate()
   }
 
-  @Test fun expectsTheScaleConfiguredInGradleRatherThanTheOneTheTesterReports() {
-    configurePlugin(renderScale = 0.5)
-    val dropping = object : ComposePreviewTester<AndroidPreviewJUnit4TestParameter> {
-      override fun options() = super.options().copy(renderScale = 1.0)
-      override fun testParameters() = emptyList<AndroidPreviewJUnit4TestParameter>()
-      override fun test(testParameter: AndroidPreviewJUnit4TestParameter) = Unit
-    }
-    val parameter = parameter()
+  @Test fun scalesABlankDeviceFromTheConfigEvenAfterItsQualifiersChanged() {
+    val preview = parameter(info.copy(device = "", widthDp = -1, heightDp = -1)).preview
+    RuntimeEnvironment.setQualifiers("w300dp-h500dp-480dpi")
 
-    // A tester that drops the scale in options() must not lower the bar it is held to.
-    try {
-      createRoborazziPreviewConfigurationRule(dropping, parameter).apply(statement {
-        RenderScaleVerification.beforeTest()
-        parameter.preview.toRoborazziComposeOptions(renderScale = 1.0).applySetup()
-        RenderScaleVerification.afterTest(dropping)
-      }, description).evaluate()
-      fail("Expected the dropped renderScale to be reported")
-    } catch (e: IllegalStateException) {
-      assertTrue(e.message, requireNotNull(e.message).contains("renderScale = 0.5"))
+    // Applying the scale twice, as the rule and the capture do, must not scale it twice.
+    repeat(2) {
+      preview.toRoborazziComposeOptions(renderScale = 0.5).applySetup()
+      val config = RuntimeEnvironment.getApplication().resources.configuration
+      // The @Config describes 200x400dp at 160dpi; the qualifiers set above do not count.
+      assertEquals(80, config.densityDpi)
+      assertEquals(200, config.screenWidthDp)
+      assertEquals(400, config.screenHeightDp)
     }
   }
 
@@ -158,7 +142,6 @@ class PreviewConfigurationRuleTest {
   @After fun resetPluginOptions() {
     ComposePreviewTester.defaultOptionsFromPlugin = ComposePreviewTester.Options()
     provideRoborazziContext().clearRuleOverrideRoborazziOptions()
-    RenderScaleVerification.clearExpectation()
   }
 
   private fun assertPreviewConfiguration() {

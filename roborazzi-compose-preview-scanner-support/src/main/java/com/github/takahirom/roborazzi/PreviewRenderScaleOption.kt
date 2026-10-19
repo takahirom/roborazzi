@@ -1,6 +1,5 @@
 package com.github.takahirom.roborazzi
 
-import android.content.res.Resources
 import sergio.sastre.composable.preview.scanner.android.device.DevicePreviewInfoParser
 import sergio.sastre.composable.preview.scanner.android.device.domain.RobolectricDeviceQualifierBuilder
 import kotlin.math.roundToInt
@@ -10,7 +9,6 @@ import kotlin.math.roundToInt
 internal class PreviewRenderScaleOption(
   private val scale: Double,
   private val previewDevice: String = "",
-  private val baseConfiguration: android.content.res.Configuration? = null,
 ) : RoborazziComposeSetupOption {
   init {
     require(scale.isFinite() && scale > 0.0) {
@@ -25,9 +23,11 @@ internal class PreviewRenderScaleOption(
     // parser otherwise returns its own default device for an empty string.
     val device = previewDevice.takeIf { it.isNotBlank() }
       ?.let { DevicePreviewInfoParser.parse(it) }?.inDp()
-    val resources = Resources.getSystem()
-    val configuration = baseConfiguration ?: resources.configuration
-    val density = device?.densityDpi ?: baseConfiguration?.densityDpi ?: resources.displayMetrics.densityDpi
+    // A blank device scales the density the test's @Config describes, not the current one:
+    // the generated test's rule applies this option before launching its activity, and capture
+    // applies it again, so it must give the same result however often it runs.
+    val configuration = testConfiguration()
+    val density = device?.densityDpi ?: configuration.densityDpi
     val scaledDensity = (density.toDouble() * scale).roundToInt().coerceAtLeast(1)
     // ShadowDisplayManager reconstructs dp from its already truncated pixel dimensions
     // for additive qualifiers. Supply the resolved dp explicitly to avoid losing another
@@ -41,8 +41,19 @@ internal class PreviewRenderScaleOption(
       "w${configuration.screenWidthDp}dp-h${configuration.screenHeightDp}dp-${scaledDensity}dpi"
     }
     configBuilder.addRobolectricQualifier(qualifiers)
-    RenderScaleVerification.markApplied(scale)
   }
+}
+
+/** The configuration the test's @Config describes, before anything changed its qualifiers. */
+private fun testConfiguration(): android.content.res.Configuration {
+  val configuration = android.content.res.Configuration()
+  org.robolectric.android.Bootstrap.applyQualifiers(
+    org.robolectric.config.ConfigurationRegistry.get(org.robolectric.annotation.Config::class.java).qualifiers,
+    org.robolectric.RuntimeEnvironment.getApiLevel(),
+    configuration,
+    android.util.DisplayMetrics(),
+  )
+  return configuration
 }
 
 private val densityQualifierRegex = Regex("""(^|-)\d+dpi(?=-|$)""")

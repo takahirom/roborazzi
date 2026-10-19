@@ -89,7 +89,7 @@ roborazzi.problemSeverity=composePreview.renderScaleMismatch:warning
 
 | Problem ID | Default | Reported when |
 |---|---|---|
-| `composePreview.renderScaleMismatch` | `error` | A custom `ComposePreviewTester` does not apply the `renderScale` configured for the generated preview tests, or declared with `@RoboComposePreviewOptions(renderScale = ...)` on a preview. |
+| `composePreview.renderScaleMismatch` | `error` | The `options().renderScale` of a custom `ComposePreviewTester` is not the `renderScale` configured for the generated preview tests, typically because `options()` builds a new `Options` instead of using `super.options().copy(...)`. |
 
 ## Robolectric Options
 

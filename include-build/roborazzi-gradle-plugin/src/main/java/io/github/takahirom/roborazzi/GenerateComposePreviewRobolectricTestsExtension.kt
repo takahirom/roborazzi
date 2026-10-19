@@ -62,10 +62,9 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
    * Android previews only: this is not supported for Compose Desktop previews.
    *
    * A custom [com.github.takahirom.roborazzi.ComposePreviewTester] that overrides `test()` has to
-   * pass `preview.effectiveRenderScale(options().renderScale)` to
-   * `preview.toRoborazziComposeOptions(renderScale)`; `options().renderScale` on its own ignores a
-   * per-preview override. A tester that drops the value fails the generated test, so no opt-in
-   * flag is needed here.
+   * pass `options().renderScale` to `preview.toRoborazziComposeOptions(renderScale)`, which also
+   * applies a per-preview override. A tester whose `options()` drops the value fails the generated
+   * test, so no opt-in flag is needed here.
    */
   @ExperimentalRoborazziApi
   val renderScale: Property<Double> = objects.property(Double::class.java).convention(1.0)
@@ -296,11 +295,10 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                 $robolectricConfigString
                 @Test
                 public fun test() {
-                  RenderScaleVerification.beforeTest()
+                  RenderScaleVerification.verify(tester)
                   tester.test(
                     testParameter = testParameter
                   )
-                  RenderScaleVerification.afterTest(tester)
                 }
                 
                 public companion object {

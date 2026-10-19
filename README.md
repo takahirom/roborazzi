@@ -1266,7 +1266,7 @@ If you need to customize more than the capture behavior, such as the scan option
 Two settings need extra care with a custom tester:
 
 - `includePrivatePreviews` and `annotationFilter` are consumed by `testParameters()`. Because a custom tester usually overrides it, the plugin rejects the combination unless you set `useScanOptionParametersInTester = true` and read `options().scanOptions` yourself.
-- `renderScale` (see [Making the tests faster with `renderScale`](#making-the-tests-faster-with-renderscale)) is consumed at capture time, so the class-delegation pattern above keeps working. If you override `test()` yourself, see the `renderScale` property documentation for what to pass to `preview.toRoborazziComposeOptions(renderScale)`. A tester that drops the value fails the generated test with an explanation, so a silently unscaled screenshot is not possible.
+- `renderScale` (see [Making the tests faster with `renderScale`](#making-the-tests-faster-with-renderscale)) is consumed at capture time, so the class-delegation pattern above keeps working. If you override `test()` yourself, pass `options().renderScale` to `preview.toRoborazziComposeOptions(renderScale)`; the no-argument `toRoborazziComposeOptions()` always captures at the unscaled density. The generated test fails with an explanation when `options().renderScale` is not the configured value, but it cannot see which options your `test()` captures with, so check the recorded image size after changing `test()`.
 
 Then reference your custom tester in the Gradle configuration:
 
@@ -2038,7 +2038,7 @@ roborazzi.problemSeverity=composePreview.renderScaleMismatch:warning
 
 | Problem ID | Default | Reported when |
 |---|---|---|
-| `composePreview.renderScaleMismatch` | `error` | A custom `ComposePreviewTester` does not apply the `renderScale` configured for the generated preview tests, or declared with `@RoboComposePreviewOptions(renderScale = ...)` on a preview. |
+| `composePreview.renderScaleMismatch` | `error` | The `options().renderScale` of a custom `ComposePreviewTester` is not the `renderScale` configured for the generated preview tests, typically because `options()` builds a new `Options` instead of using `super.options().copy(...)`. |
 
 ## Robolectric Options
 

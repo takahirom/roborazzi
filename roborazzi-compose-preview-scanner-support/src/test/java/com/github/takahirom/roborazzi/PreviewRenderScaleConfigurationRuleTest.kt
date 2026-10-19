@@ -46,6 +46,9 @@ class PreviewRenderScaleConfigurationRuleTest {
   @Test fun namedDeviceIsConfiguredBeforeLaunch() = capture(
     1.0 / 3, device = "id:pixel_5", widthDp = 392, heightDp = 850, dpi = 440
   )
+  @Test fun blankDeviceRebuiltByTheCapturerIsScaledOnlyOnce() = capture(
+    0.5, rebuildOptionsInCapturer = true
+  )
   @Test fun pixelDeviceIsConfiguredBeforeLaunch() = capture(
     0.5, device = "spec:width=1080px,height=2340px,dpi=440", widthDp = 392, heightDp = 850, dpi = 440
   )
@@ -58,6 +61,7 @@ class PreviewRenderScaleConfigurationRuleTest {
     heightDp: Int = 800,
     dpi: Int = 320,
     explicitSize: Boolean = false,
+    rebuildOptionsInCapturer: Boolean = false,
   ) {
     val composeRule = createAndroidComposeRule<RoborazziActivity>()
     val oldOptions = ComposePreviewTester.defaultOptionsFromPlugin
@@ -88,7 +92,14 @@ class PreviewRenderScaleConfigurationRuleTest {
       }
     }
     val tester = AndroidComposePreviewTester { parameter ->
-      val options = parameter.roborazziComposeOptions.builder().addOption(
+      // Options rebuilt without the compose rule make the capture launch its own activity and
+      // apply the scale again on top of what the configuration rule applied.
+      val composeOptions = if (rebuildOptionsInCapturer) {
+        parameter.preview.toRoborazziComposeOptions(scale)
+      } else {
+        parameter.roborazziComposeOptions
+      }
+      val options = composeOptions.builder().addOption(
         object : RoborazziComposeCaptureOption {
           override fun beforeCapture() {
             // ShadowPixelCopy renders the decorView into an ImageReader of this size.
@@ -138,11 +149,13 @@ class PreviewRenderScaleConfigurationRuleTest {
       rules.apply(object : org.junit.runners.model.Statement() {
         override fun evaluate() { tester.test(parameter) }
       }, Description.createTestDescription(javaClass, "scaledPreview")).evaluate()
-      assertEquals("No recreation should be needed", 1, created)
-      assertEquals(1, destroyed)
-      org.junit.Assert.assertNull(parameter.renderScaleBaseConfiguration)
+      if (!rebuildOptionsInCapturer) {
+        assertEquals("No recreation should be needed", 1, created)
+        assertEquals(1, destroyed)
+      }
       val expectedDpi = kotlin.math.round(dpi * scale).toInt().coerceAtLeast(1)
       assertEquals(expectedDpi, requireNotNull(startupConfiguration).densityDpi)
+      assertEquals(expectedDpi, requireNotNull(config).densityDpi)
       assertEquals(widthDp, requireNotNull(startupConfiguration).screenWidthDp)
       assertEquals(heightDp, requireNotNull(startupConfiguration).screenHeightDp)
       assertEquals(expectedDpi / 160f, density)
