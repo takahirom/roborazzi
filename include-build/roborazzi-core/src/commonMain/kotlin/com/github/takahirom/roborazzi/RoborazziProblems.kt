@@ -20,7 +20,8 @@ enum class RoborazziProblemSeverity(val value: String) {
  * Choosing a new problem:
  * - [id] is `area.problem` in lowerCamelCase. The area is the feature as users see it in the
  *   Gradle DSL and docs (for example `composePreview` for `generateComposePreview*Tests`), not
- *   where the check runs. Released IDs are never renamed or reused.
+ *   where the check runs. Avoid renaming or reusing a released ID: users list IDs in their
+ *   Gradle properties, and an unknown ID fails the build.
  * - [defaultSeverity] is [RoborazziProblemSeverity.Error] when a feature the user turned on
  *   cannot work as configured. A new check on existing usage starts as
  *   [RoborazziProblemSeverity.Warning], so upgrading does not break builds. Don't lower the

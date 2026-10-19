@@ -75,6 +75,8 @@ Some Roborazzi messages report something that is probably a mistake but may be i
 
 This option sets the severity of each problem by ID. The levels are `error`, `warning`, and `disabled`.
 
+This option is experimental: the property name, the problem IDs, and the levels may change.
+
 ```properties
 roborazzi.problemSeverity=composePreview.renderScaleMismatch:warning
 ```
