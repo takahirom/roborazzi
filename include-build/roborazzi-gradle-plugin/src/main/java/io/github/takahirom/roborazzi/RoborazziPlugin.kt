@@ -452,18 +452,16 @@ abstract class RoborazziPlugin : Plugin<Project> {
                 // However, during record runs the output dir might not exist yet, so we use
                 // files() to express that it is optional.
                 // See also: https://github.com/gradle/gradle/issues/2016
+                // Don't check or create the directory here. This provider is resolved while
+                // the configuration cache entry is stored, so the check would become a
+                // configuration input that changes once the directory is created.
+                // See https://github.com/takahirom/roborazzi/issues/968
                 restoreTaskProviderForVariant.map {
-                  if (!it.outputDir.get().asFile.exists()) {
-                    it.outputDir.get().asFile.mkdirs()
-                  }
                   test.infoln("Roborazzi: Set input dir ${it.outputDir.get()} to test task")
                   it.outputDir.files(".")
                 }
               } else {
                 variantOutputDir.map {
-                  if (!it.asFile.exists()) {
-                    it.asFile.mkdirs()
-                  }
                   test.infoln("Roborazzi: Set input dir $it to test task")
                   it.files(".")
                 }
@@ -495,18 +493,13 @@ abstract class RoborazziPlugin : Plugin<Project> {
                       // If it is not compare or verify, we don't need to output anything for comparison
                       compareOutputDir.files(/* empty files */)
                     } else if (imageInput.files.any {
-                        // Check if the compare output directory is the same as the input directory
-                        if (it.isDirectory) {
-                          it.absolutePath == compareOutputDir.asFile.absolutePath
-                        } else {
-                          it.parentFile.absolutePath == compareOutputDir.asFile.absolutePath
-                        }
+                        // Check if the compare output directory is the same as the input directory.
+                        // Compare paths only: the directories might not exist yet, and checking
+                        // the file system here would become a configuration cache input (#968).
+                        it.absoluteFile.normalize() == compareOutputDir.asFile.absoluteFile.normalize()
                       }) {
                       compareOutputDir.files(/* empty files */)
                     } else {
-                      if (!compareOutputDir.asFile.exists()) {
-                        compareOutputDir.asFile.mkdirs()
-                      }
                       compareOutputDir
                     }
                   }

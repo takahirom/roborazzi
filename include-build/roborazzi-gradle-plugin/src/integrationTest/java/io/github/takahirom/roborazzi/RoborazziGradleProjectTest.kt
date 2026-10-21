@@ -891,6 +891,33 @@ class RoborazziGradleProjectTest {
     }
   }
 
+  // https://github.com/takahirom/roborazzi/issues/968
+  @Test
+  fun verifyReusesConfigurationCacheAfterClean() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      buildGradle.customOutputDirPath = "src/screenshots/roborazzi_customdir_from_gradle"
+      record()
+      clean()
+
+      verifyWithConfigurationCache()
+      val output = verifyWithConfigurationCache().output
+
+      assertConfigurationCacheReused(output)
+    }
+  }
+
+  @Test
+  fun compareReusesConfigurationCacheWhenOutputDirDoesNotExist() {
+    RoborazziGradleRootProject(testProjectDir).appModule.apply {
+      removeRoborazziOutputDir()
+
+      compareWithConfigurationCache()
+      val output = compareWithConfigurationCache().output
+
+      assertConfigurationCacheReused(output)
+    }
+  }
+
   @Test
   fun separateOutputDirsWithCustomOutputDir() {
     RoborazziGradleRootProject(testProjectDir).appModule.apply {
