@@ -130,6 +130,7 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
 
   fun textCalc(texts: List<String>): Pair<Int, Int> {
     return bufferedImage.graphics { graphics2D ->
+      graphics2D.font = getFont(Font.BOLD, 12)
       val frc: FontRenderContext = graphics2D.getFontRenderContext()
       val longestLineWidth = texts.map {
         calcTextLayout(
@@ -147,8 +148,8 @@ class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType:
   }
 
   fun drawText(textPointX: Float, textPointY: Float, texts: List<String>, paint: Paint) {
-    bufferedImage.graphics {
-      val graphics2D = bufferedImage.createGraphics()
+    bufferedImage.graphics { graphics2D ->
+      graphics2D.font = getFont(Font.BOLD, 12)
       graphics2D.color = Color(paint.getColor(), true)
 
       val frc: FontRenderContext = graphics2D.getFontRenderContext()
@@ -592,8 +593,9 @@ internal val hasPreferredFont: Boolean by lazy {
 
 private fun <T> BufferedImage.graphics(block: (Graphics2D) -> T): T {
   val graphics = createGraphics()
-  graphics.font = getFont(Font.BOLD, 12)
-  val result = block(graphics)
-  graphics.dispose()
-  return result
+  try {
+    return block(graphics)
+  } finally {
+    graphics.dispose()
+  }
 }
