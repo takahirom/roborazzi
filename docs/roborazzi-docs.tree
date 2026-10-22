@@ -12,6 +12,7 @@
     <toc-element topic="how_to_use.md"/>
     <toc-element topic="ui_tree_dump.md"/>
     <toc-element topic="github_actions.md"/>
+    <toc-element topic="junit_platform_reporting.md"/>
     <toc-element topic="gif_and_video.md"/>
     <toc-element topic="preview_support.md"/>
     <toc-element topic="ai_powered_image_assertion.md"/>
