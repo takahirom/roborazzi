@@ -3,6 +3,7 @@ public class io/github/takahirom/roborazzi/GenerateComposePreviewDesktopTestsExt
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
 	public final fun getAnnotationFilter ()Lorg/gradle/api/provider/Property;
 	public final fun getEnable ()Lorg/gradle/api/provider/Property;
+	public final fun getExcludePackages ()Lorg/gradle/api/provider/ListProperty;
 	public final fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
 	public final fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
 	public final fun getPackages ()Lorg/gradle/api/provider/ListProperty;
@@ -18,6 +19,7 @@ public abstract class io/github/takahirom/roborazzi/GenerateComposePreviewDeskto
 	public fun <init> ()V
 	public final fun generateTests ()V
 	public abstract fun getAnnotationFilter ()Lorg/gradle/api/provider/Property;
+	public abstract fun getExcludePackageTrees ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
 	public abstract fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
 	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
@@ -30,6 +32,7 @@ public class io/github/takahirom/roborazzi/GenerateComposePreviewRobolectricTest
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
 	public final fun getAnnotationFilter ()Lorg/gradle/api/provider/Property;
 	public final fun getEnable ()Lorg/gradle/api/provider/Property;
+	public final fun getExcludePackages ()Lorg/gradle/api/provider/ListProperty;
 	public final fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
 	public final fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
 	public final fun getPackages ()Lorg/gradle/api/provider/ListProperty;
@@ -46,6 +49,7 @@ public abstract class io/github/takahirom/roborazzi/GenerateComposePreviewRobole
 	public fun <init> ()V
 	public final fun generateTests ()V
 	public abstract fun getAnnotationFilter ()Lorg/gradle/api/provider/Property;
+	public final fun getExcludePackageTrees ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
 	public abstract fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
 	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
@@ -53,6 +57,7 @@ public abstract class io/github/takahirom/roborazzi/GenerateComposePreviewRobole
 	public abstract fun getRobolectricConfig ()Lorg/gradle/api/provider/MapProperty;
 	public final fun getScanPackageTrees ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getTesterQualifiedClassName ()Lorg/gradle/api/provider/Property;
+	public final fun setExcludePackageTrees (Lorg/gradle/api/provider/ListProperty;)V
 	public final fun setScanPackageTrees (Lorg/gradle/api/provider/ListProperty;)V
 }
 

@@ -120,6 +120,7 @@ private fun setupGenerateComposePreviewDesktopTestsTask(
   ) {
     it.outputDir.set(project.layout.buildDirectory.dir("generated/roborazzi/preview-screenshot/$variantName"))
     it.scanPackageTrees.set(extension.packages)
+    it.excludePackageTrees.set(extension.excludePackages)
     it.includePrivatePreviews.set(extension.includePrivatePreviews)
     it.testerQualifiedClassName.set(extension.testerQualifiedClassName)
     it.generatedTestClassCount.set(generatedTestClassCountProvider)
@@ -144,18 +145,19 @@ private fun validateCustomTesterConfiguration(extension: GenerateComposePreviewD
     extension.testerQualifiedClassName.get() != GenerateComposePreviewDesktopTestsExtension.DEFAULT_TESTER_CLASS
   val useScanOptions = extension.useScanOptionParametersInTester.get()
   val includePrivatePreviews = extension.includePrivatePreviews.get()
+  val hasExcludedPackages = extension.excludePackages.getOrElse(emptyList()).isNotEmpty()
 
-  if (!useScanOptions && isUsingCustomTester && (includePrivatePreviews || extension.annotationFilter.isPresent)) {
+  if (!useScanOptions && isUsingCustomTester && (includePrivatePreviews || extension.annotationFilter.isPresent || hasExcludedPackages)) {
     throw IllegalArgumentException(
       """
-      includePrivatePreviews / annotationFilter cannot be set automatically when using a custom tester.
+      includePrivatePreviews / annotationFilter / excludePackages cannot be set automatically when using a custom tester.
 
       When using a custom tester, if you override previews(), you must manually handle
-      the includePrivatePreviews option in your scanner configuration.
+      the includePrivatePreviews / annotationFilter / excludePackages options in your scanner configuration.
 
       You have two options:
-      1. Remove 'includePrivatePreviews = true' / annotationFilter option from generateComposePreviewDesktopTests configuration
-         and call '.includePrivatePreviews()' / '.excludeIfAnnotatedWithAnyOf()' / '.includeIfAnnotatedWithAnyOf()' directly in your custom tester's previews() method.
+      1. Remove 'includePrivatePreviews = true' / annotationFilter / excludePackages option from generateComposePreviewDesktopTests configuration
+         and call '.includePrivatePreviews()' / '.excludeIfAnnotatedWithAnyOf()' / '.includeIfAnnotatedWithAnyOf()' / 'scanPackageTrees(include = ..., exclude = ...)' directly in your custom tester's previews() method.
 
       2. Set 'useScanOptionParametersInTester = true' in generateComposePreviewDesktopTests configuration
          and check 'options().scanOptions.includePrivatePreviews' / 'options().scanOptions.annotationFilter' in your previews() implementation.

@@ -76,6 +76,11 @@ open class GenerateComposePreviewRobolectricTestsExtension @Inject constructor(o
   val packages: ListProperty<String> = objects.listProperty(String::class.java)
 
   /**
+   * The package names to exclude from the Composable Previews scan.
+   */
+  val excludePackages: ListProperty<String> = objects.listProperty(String::class.java)
+
+  /**
    * If true, the private previews will be included in the test.
    */
   val includePrivatePreviews: Property<Boolean> = objects.property(Boolean::class.java)
@@ -146,6 +151,9 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
   var scanPackageTrees: ListProperty<String> = project.objects.listProperty(String::class.java)
 
   @get:Input
+  var excludePackageTrees: ListProperty<String> = project.objects.listProperty(String::class.java)
+
+  @get:Input
   abstract val includePrivatePreviews: Property<Boolean>
 
   @get:Input
@@ -172,11 +180,12 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     val testDir = outputDir.get().asFile
     testDir.mkdirs()
 
-    val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"$it\"" }
+    val packagesExpr = scanPackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
+    val excludePackagesExpr = excludePackageTrees.get().joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }
     val includePrivatePreviewsExpr = includePrivatePreviews.get()
     val annotationFilterExpr = when (val filter = annotationFilter.orNull) {
-      is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
-      is AnnotationFilter.Include -> "AnnotationFilter.Include(${filter.annotations.joinToString(", ") { "\"$it\"" }})"
+      is AnnotationFilter.Exclude -> "AnnotationFilter.Exclude(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
+      is AnnotationFilter.Include -> "AnnotationFilter.Include(${filter.annotations.joinToString(", ") { "\"${it.escapeForKotlinStringLiteral()}\"" }})"
       null -> "null"
     }
     val testClassCount = generatedTestClassCount.get()
@@ -197,7 +206,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
       "@Config(" + robolectricConfig.get().entries.joinToString(", ") { (key, value) ->
         "$key = $value"
       } + ")"
-    val testerQualifiedClassNameString = testerQualifiedClassName.get()
+    val testerQualifiedClassNameString = testerQualifiedClassName.get().escapeForKotlinStringLiteral()
 
     if (testClassCount == 1) {
       generateTestClass(
@@ -205,6 +214,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
         packageName = packageName,
         className = baseClassName,
         packagesExpr = packagesExpr,
+        excludePackagesExpr = excludePackagesExpr,
         includePrivatePreviewsExpr = includePrivatePreviewsExpr,
         annotationFilterExpr = annotationFilterExpr,
         robolectricConfigString = robolectricConfigString,
@@ -220,6 +230,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
           packageName = packageName,
           className = "$baseClassName$shardIndex",
           packagesExpr = packagesExpr,
+          excludePackagesExpr = excludePackagesExpr,
           includePrivatePreviewsExpr = includePrivatePreviewsExpr,
           annotationFilterExpr = annotationFilterExpr,
           robolectricConfigString = robolectricConfigString,
@@ -237,6 +248,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
     packageName: String,
     className: String,
     packagesExpr: String,
+    excludePackagesExpr: String,
     includePrivatePreviewsExpr: Boolean,
     annotationFilterExpr: String,
     robolectricConfigString: String,
@@ -320,6 +332,7 @@ abstract class GenerateComposePreviewRobolectricTestsTask : DefaultTask() {
                               packages = listOf($packagesExpr),
                               includePrivatePreviews = $includePrivatePreviewsExpr,
                               annotationFilter = $annotationFilterExpr,
+                              excludePackages = listOf($excludePackagesExpr),
                             ),$renderScaleArgument
                         )
                     }
