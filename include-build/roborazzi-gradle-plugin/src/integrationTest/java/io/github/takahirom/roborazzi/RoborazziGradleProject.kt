@@ -171,6 +171,24 @@ class AppModule(val rootProject: RoborazziGradleRootProject, val testProjectDir:
     return runTask(task, BuildType.BuildAndFail)
   }
 
+  fun verifyWithConfigurationCache(): BuildResult {
+    val task = "verifyRoborazziDebug"
+    return runTask(task, additionalParameters = arrayOf("--configuration-cache"))
+  }
+
+  fun compareWithConfigurationCache(): BuildResult {
+    val task = "compareRoborazziDebug"
+    return runTask(task, additionalParameters = arrayOf("--configuration-cache"))
+  }
+
+  fun assertConfigurationCacheReused(output: String) {
+    assert(output.contains("Reusing configuration cache.")) {
+      "Configuration cache was not reused:\n" +
+        output.lines().filter { it.contains("configuration cache", ignoreCase = true) }
+          .joinToString("\n")
+    }
+  }
+
   fun BuildResult.shouldDetectChangedPngCapture() {
     assert(output.contains("png is changed"))
   }
