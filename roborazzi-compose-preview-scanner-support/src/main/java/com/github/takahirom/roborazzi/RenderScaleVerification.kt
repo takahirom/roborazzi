@@ -44,7 +44,8 @@ object RenderScaleVerification {
   }
 
   /**
-   * Fails when the configured scale did not reach every capture the test ran.
+   * Reports [RoborazziProblems.ComposePreviewRenderScaleMismatch], which fails by default, when
+   * the configured scale did not reach every capture the test ran.
    *
    * A test may capture more than once, so each capture has to use the configured value: one
    * correct capture must not hide another that used a different scale or none at all.
@@ -77,7 +78,8 @@ object RenderScaleVerification {
       null -> "is configured in generateComposePreviewRobolectricTests"
       else -> "is declared by @RoboComposePreviewOptions on this preview"
     }
-    throw IllegalStateException(
+    RoborazziProblems.report(
+      RoborazziProblems.ComposePreviewRenderScaleMismatch,
       "renderScale = $configuredScale $source, " +
         "but ${tester::class.java.name} $appliedDescription.\n" +
         "\n" +

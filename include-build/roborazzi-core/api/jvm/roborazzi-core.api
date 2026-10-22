@@ -865,6 +865,34 @@ public final class com/github/takahirom/roborazzi/RoborazziOptionsKt {
 	public static final fun roborazziRecordFilePathStrategy ()Lcom/github/takahirom/roborazzi/RoborazziRecordFilePathStrategy;
 }
 
+public final class com/github/takahirom/roborazzi/RoborazziProblem {
+	public final fun getDefaultSeverity ()Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;
+	public final fun getId ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziProblemSeverity : java/lang/Enum {
+	public static final field Disabled Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;
+	public static final field Error Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;
+	public static final field Warning Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;
+	public static fun values ()[Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;
+}
+
+public final class com/github/takahirom/roborazzi/RoborazziProblems {
+	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziProblems;
+	public static final field SeverityProperty Ljava/lang/String;
+	public final fun getAll ()Ljava/util/List;
+	public final fun getComposePreviewRenderScaleMismatch ()Lcom/github/takahirom/roborazzi/RoborazziProblem;
+	public final fun parseSeverities (Ljava/lang/String;)Ljava/util/Map;
+	public final fun report (Lcom/github/takahirom/roborazzi/RoborazziProblem;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;)V
+	public static synthetic fun report$default (Lcom/github/takahirom/roborazzi/RoborazziProblems;Lcom/github/takahirom/roborazzi/RoborazziProblem;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;ILjava/lang/Object;)V
+	public final fun severityOf (Lcom/github/takahirom/roborazzi/RoborazziProblem;Ljava/util/Map;)Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;
+	public static synthetic fun severityOf$default (Lcom/github/takahirom/roborazzi/RoborazziProblems;Lcom/github/takahirom/roborazzi/RoborazziProblem;Ljava/util/Map;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;
+}
+
 public final class com/github/takahirom/roborazzi/RoborazziPropertiesKt {
 	public static final field DEFAULT_ROBORAZZI_OUTPUT_DIR_PATH Ljava/lang/String;
 	public static final fun applyContextDataPolicy (Lcom/github/takahirom/roborazzi/RoborazziOptions;)Ljava/util/Map;

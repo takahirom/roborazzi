@@ -6,6 +6,7 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.ROBORAZZI_ANNOTATED_FILE_PATH_KEY
 import com.github.takahirom.roborazzi.ROBORAZZI_UI_TREE_FILE_PATH_KEY
+import com.github.takahirom.roborazzi.RoborazziProblems
 import com.github.takahirom.roborazzi.RoborazziReportConst
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
@@ -356,6 +357,11 @@ abstract class RoborazziPlugin : Plugin<Project> {
       val testTaskProvider = findTestTaskProvider(testTaskClass, testTaskName)
       val roborazziProperties: Map<String, Any?> =
         project.providers.gradlePropertiesPrefixedBy("roborazzi").get()
+      // The test JVM reads this too, but only when a problem occurs. Check it here so that a typo
+      // fails the build instead of waiting for a problem that may never happen.
+      RoborazziProblems.parseSeverities(
+        roborazziProperties[RoborazziProblems.SeverityProperty]?.toString()
+      )
 
       val doesRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
         isVerifyRun.flatMap { isVerifyRunValue ->
