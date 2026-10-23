@@ -132,22 +132,35 @@ sealed interface RoboComponent : RoboComponentTree {
     override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
       val bitmap = Bitmap.createBitmap(width, height, roborazziOptions.recordOptions.pixelBitConfig.toBitmapConfig())
       val canvas = Canvas(bitmap)
-      windowRects.forEach { (root, outRect) ->
-        val layoutParams = root.windowLayoutParams.get()
-        val decorView = root.decorView
-        if ((layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND) != 0) {
-          val alpha = (layoutParams.dimAmount * 255).toInt()
-          val color = Color.argb(alpha, 0, 0, 0)
-          val paint = Paint().apply { this.color = color }
-          canvas.drawRect(Rect(0, 0, width, height), paint)
+      try {
+        windowRects.forEach { (root, outRect) ->
+          val layoutParams = root.windowLayoutParams.get()
+          val decorView = root.decorView
+          if ((layoutParams.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND) != 0) {
+            val alpha = (layoutParams.dimAmount * 255).toInt()
+            val color = Color.argb(alpha, 0, 0, 0)
+            val paint = Paint().apply { this.color = color }
+            canvas.drawRect(Rect(0, 0, width, height), paint)
+          }
+          decorView.fetchImage(
+            recordOptions = roborazziOptions.recordOptions,
+          )?.let { windowBitmap ->
+            try {
+              canvas.drawBitmap(windowBitmap, outRect.left.toFloat(), outRect.top.toFloat(), null)
+            } finally {
+              // This private capture has been copied into the software canvas synchronously.
+              windowBitmap.recycle()
+            }
+          }
         }
-        decorView.fetchImage(
-          recordOptions = roborazziOptions.recordOptions,
-        )?.let {
-          canvas.drawBitmap(it, outRect.left.toFloat(), outRect.top.toFloat(), null)
-        }
+        bitmap
+      } catch (failure: Throwable) {
+        bitmap.recycle()
+        throw failure
+      } finally {
+        // Release the native canvas's reference to its target before transferring ownership.
+        canvas.setBitmap(null)
       }
-      bitmap
     } else {
       null
     }
