@@ -9,6 +9,7 @@ import com.github.takahirom.roborazzi.UiTreeAnnotation
 import com.github.takahirom.roborazzi.UiTreeCaptureInfo
 import com.github.takahirom.roborazzi.assignUiTreeNumbers
 import com.github.takahirom.roborazzi.computeUiTreeAnnotations
+import com.github.takahirom.roborazzi.resizeScaleFor
 import com.github.takahirom.roborazzi.roborazziAnnotatedImageSuffix
 import com.github.takahirom.roborazzi.roborazziDebugLog
 import com.github.takahirom.roborazzi.roborazziErrorLog
@@ -65,7 +66,7 @@ internal fun writeUiTreeDumpIfEnabledDesktop(
     ?: return DesktopUiTreeDumpWriteResult(roborazziOptions, annotatedImageWriter = null)
   return try {
     val tree = serializationTree()
-    val scale = roborazziOptions.recordOptions.resizeScale
+    val scale = roborazziOptions.recordOptions.resizeScaleFor(width = tree.width, height = tree.height)
     val captureInfo = UiTreeCaptureInfo(
       imageWidth = (tree.width * scale).toInt(),
       imageHeight = (tree.height * scale).toInt(),

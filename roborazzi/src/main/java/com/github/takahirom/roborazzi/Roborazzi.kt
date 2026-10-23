@@ -664,12 +664,15 @@ private fun saveGif(
   e.start(file.outputStream())
   e.setDelay(1000)   // 1 frame per sec
   if (canvases.isNotEmpty()) {
+    val width = canvases.maxOf { it.croppedWidth }
+    val height = canvases.maxOf { it.croppedHeight }
+    val resizeScale = roborazziOptions.recordOptions.resizeScaleFor(width = width, height = height)
     e.setSize(
-      canvases.maxOf { it.croppedWidth },
-      canvases.maxOf { it.croppedHeight }
+      scaledDimension(width, resizeScale),
+      scaledDimension(height, resizeScale)
     )
     canvases.forEach { canvas ->
-      e.addFrame(canvas, roborazziOptions.recordOptions.resizeScale)
+      e.addFrame(canvas, resizeScale)
     }
   }
   e.finish()

@@ -24,6 +24,8 @@ This option lets you set the resize scale for the image being recorded. The defa
 roborazzi.record.resizeScale=0.5
 ```
 
+To choose the scale from the size of each image, set `RoborazziOptions.RecordOptions.resizeScaleCalculator` in code. When it is set, this property is ignored.
+
 ### roborazzi.record.filePathStrategy
 
 This setting allows you to specify the file path strategy for the recorded image. The default strategy is `relativePathFromCurrentDirectory`. If you choose `relativePathFromRoborazziContextOutputDirectory`, the file will be saved in the output directory specified by `roborazzi.outputDir`.
