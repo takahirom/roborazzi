@@ -53,7 +53,7 @@ class UiTreeAnnotationTest {
       children = listOf(child),
     )
     // scale 1.0 -> image = raw - root.origin.
-    val annotations = annotate(root, UiTreeCaptureInfo(94, 168, 1.0))
+    val annotations = annotate(root, UiTreeCaptureInfo(94, 168, 1.0, density = 1f))
     assertEquals(1, annotations.size)
     val ann = annotations.single()
     assertEquals(1, ann.number)
@@ -65,7 +65,7 @@ class UiTreeAnnotationTest {
   fun appliesScale() {
     val child = AnnNode(bounds = RoboRect(10, 20, 30, 40), testTag = "x")
     val root = AnnNode(bounds = RoboRect(0, 0, 100, 100), children = listOf(child))
-    val annotations = annotate(root, UiTreeCaptureInfo(200, 200, 2.0))
+    val annotations = annotate(root, UiTreeCaptureInfo(200, 200, 2.0, density = 1f))
     assertEquals(RoboRect(20, 40, 60, 80), annotations.single().bounds)
   }
 
@@ -73,7 +73,7 @@ class UiTreeAnnotationTest {
   fun clampsBoxesToImageDimensions() {
     val child = AnnNode(bounds = RoboRect(-10, -10, 120, 130), testTag = "big")
     val root = AnnNode(bounds = RoboRect(0, 0, 100, 100), children = listOf(child))
-    val annotations = annotate(root, UiTreeCaptureInfo(100, 100, 1.0))
+    val annotations = annotate(root, UiTreeCaptureInfo(100, 100, 1.0, density = 1f))
     // Left/top clamp to 0, right/bottom clamp to image size.
     assertEquals(RoboRect(0, 0, 100, 100), annotations.single().bounds)
   }
@@ -83,7 +83,7 @@ class UiTreeAnnotationTest {
     val below = AnnNode(bounds = RoboRect(0, 200, 50, 250), testTag = "below")
     val right = AnnNode(bounds = RoboRect(200, 0, 250, 50), testTag = "right")
     val root = AnnNode(bounds = RoboRect(0, 0, 100, 100), children = listOf(below, right))
-    val annotations = annotate(root, UiTreeCaptureInfo(100, 100, 1.0))
+    val annotations = annotate(root, UiTreeCaptureInfo(100, 100, 1.0, density = 1f))
     assertTrue("expected no annotations, got $annotations", annotations.isEmpty())
   }
 
@@ -97,7 +97,7 @@ class UiTreeAnnotationTest {
       bounds = RoboRect(0, 0, 100, 100),
       children = listOf(zeroWidth, atLeftEdge),
     )
-    val annotations = annotate(root, UiTreeCaptureInfo(100, 100, 1.0))
+    val annotations = annotate(root, UiTreeCaptureInfo(100, 100, 1.0, density = 1f))
     assertTrue("expected no annotations, got $annotations", annotations.isEmpty())
   }
 
@@ -106,7 +106,7 @@ class UiTreeAnnotationTest {
     val first = AnnNode(bounds = RoboRect(0, 0, 10, 10), testTag = "first")
     val second = AnnNode(bounds = RoboRect(0, 20, 10, 30), testTag = "second")
     val root = AnnNode(bounds = RoboRect(0, 0, 100, 100), children = listOf(first, second))
-    val annotations = annotate(root, UiTreeCaptureInfo(100, 100, 1.0))
+    val annotations = annotate(root, UiTreeCaptureInfo(100, 100, 1.0, density = 1f))
     assertEquals(listOf(1, 2), annotations.map { it.number })
   }
 }

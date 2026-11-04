@@ -103,6 +103,11 @@ data class UiTreeCaptureInfo(
   val imageWidth: Int,
   val imageHeight: Int,
   val scale: Double,
+  /**
+   * px per dp of the captured UI (e.g. 1.33125 for tvdpi), so consumers can convert
+   * the px [RoboComponentTree.bounds] with `dp = px / density`.
+   */
+  val density: Float,
 )
 
 private const val MergeDescendantsFlag = "MergeDescendants"
@@ -234,6 +239,7 @@ fun RoboComponentTree.toUiTreeJson(
   builder.append("\"imageWidth\": ").append(captureInfo.imageWidth)
   builder.append(", \"imageHeight\": ").append(captureInfo.imageHeight)
   builder.append(", \"scale\": ").append(formatScale(captureInfo.scale))
+  builder.append(", \"density\": ").append(formatDecimal(captureInfo.density.toString()))
   builder.append(" }, \"root\":\n")
   builder.append(serializeNode(this, depth = 1, numbers = numbers))
   builder.append("\n}")
@@ -295,12 +301,13 @@ private fun buildScalars(
   return parts.joinToString(", ")
 }
 
+private fun formatScale(scale: Double): String = formatDecimal(scale.toString())
+
 /**
- * Formats the resize scale deterministically. Whole numbers keep one decimal
+ * Formats a decimal deterministically. Whole numbers keep one decimal
  * (e.g. 1.0) to stay valid, un-ambiguous JSON.
  */
-private fun formatScale(scale: Double): String {
-  val asString = scale.toString()
+private fun formatDecimal(asString: String): String {
   return if (asString.contains('.') || asString.contains('e') || asString.contains('E')) {
     asString
   } else {

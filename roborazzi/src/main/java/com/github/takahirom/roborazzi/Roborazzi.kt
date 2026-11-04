@@ -176,6 +176,7 @@ fun captureRootsInternal(
         roborazziOptions = roborazziOptions.copy(captureType = UiTreeTraversalCaptureType())
       )
     },
+    density = { roots.first().decorView.resources.displayMetrics.density },
     goldenFile = file,
     roborazziOptions = roborazziOptions,
   )
@@ -379,6 +380,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
             roborazziOptions = roborazziOptions.copy(captureType = UiTreeTraversalCaptureType())
           )
         },
+        density = { node.layoutInfo.density.density },
         goldenFile = file,
         roborazziOptions = roborazziOptions,
       )
@@ -714,6 +716,7 @@ private class ImageCaptureViewAction(
             roborazziOptions.copy(captureType = UiTreeTraversalCaptureType()),
           )
         },
+        density = { view.resources.displayMetrics.density },
         goldenFile = goldenFile,
         roborazziOptions = roborazziOptions,
       )

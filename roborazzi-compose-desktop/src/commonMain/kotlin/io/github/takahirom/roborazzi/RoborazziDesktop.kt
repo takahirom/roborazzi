@@ -42,6 +42,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   val density = node.layoutInfo.density
   val uiTreeDump = writeUiTreeDumpIfEnabledDesktop(
     serializationTree = { node.toRoboComponentTree() },
+    density = density.density,
     goldenFile = file,
     roborazziOptions = roborazziOptions,
   )

@@ -90,6 +90,7 @@ fun SemanticsNodeInteraction.captureRoboImage(
   // (drawn after the screenshot is written, via writeAnnotatedImage()).
   val uiTreeDump = writeUiTreeDumpIfEnabledIos(
     serializationTree = { node.toRoboComponentTree() },
+    density = node.layoutInfo.density.density,
     resolvedGoldenFilePath = resolvedGoldenFilePath,
     roborazziOptions = roborazziOptions,
   )
