@@ -1,16 +1,23 @@
 package io.github.takahirom.roborazzi
 
 import com.github.takahirom.roborazzi.AnnotationFilter
+import com.github.takahirom.roborazzi.DesktopPreviewDeviceProfile
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import com.github.takahirom.roborazzi.InternalRoborazziApi
+import com.github.takahirom.roborazzi.ROBORAZZI_DESKTOP_DEVICE_PROFILE_PROPERTY
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.testing.Test
+import org.gradle.process.CommandLineArgumentProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.plugin.CompilationExecutionSource
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTestRun
 import java.net.URLEncoder
 import java.util.Locale
 
@@ -19,6 +26,7 @@ import java.util.Locale
  * Unlike the Robolectric generator this hooks Kotlin JVM targets, so it must not
  * reference any AGP classes.
  */
+@OptIn(ExperimentalRoborazziApi::class)
 internal fun generateComposePreviewDesktopTestsForKmpIfNeeded(
   project: Project,
   roborazziExtension: RoborazziExtension,
@@ -61,9 +69,148 @@ internal fun generateComposePreviewDesktopTestsForKmpIfNeeded(
       testTaskName = "${target.name}Test",
       testSourceSet = testCompilation.defaultSourceSet,
     )
+    setupDeviceProfiles(
+      project = project,
+      roborazziExtension = roborazziExtension,
+      target = target,
+      testCompilation = testCompilation,
+    )
   }
 }
 
+/**
+ * Gives every test run of the target the device profile configured for it.
+ *
+ * A test run is the unit a profile applies to: the Roborazzi plugin already turns each one into its
+ * own set of tasks and its own output directory, so capturing the same previews under two profiles
+ * only needs the test JVM to be told which one it is running.
+ */
+@OptIn(ExperimentalRoborazziApi::class)
+private fun setupDeviceProfiles(
+  project: Project,
+  roborazziExtension: RoborazziExtension,
+  target: KotlinJvmTarget,
+  testCompilation: KotlinJvmCompilation,
+) {
+  val extension = roborazziExtension.generateComposePreviewDesktopTests
+  val profileByTestRun = extension.deviceProfileByTestRun.getOrElse(emptyMap())
+  val unknownTestRuns = profileByTestRun.keys - target.testRuns.names
+  check(unknownTestRuns.isEmpty()) {
+    "Roborazzi: generateComposePreviewDesktopTests.deviceProfileByTestRun names the test " +
+      "run(s) $unknownTestRuns, but the JVM target '${target.name}' has ${target.testRuns.names}. " +
+      "Create the test run first, e.g. kotlin { jvm(\"${target.name}\") { " +
+      "testRuns.create(\"${unknownTestRuns.firstOrNull()}\") } }."
+  }
+  // Two runs render the same previews under different profiles, so without separate output
+  // directories the second recording would overwrite the first baseline instead of adding to it.
+  check(profileByTestRun.isEmpty() || roborazziExtension.separateOutputDirs.get()) {
+    "Roborazzi: generateComposePreviewDesktopTests.deviceProfileByTestRun needs " +
+      "roborazzi.separateOutputDirs = true, otherwise every test run of the JVM target " +
+      "'${target.name}' records into the same directory and the profiles overwrite each other."
+  }
+
+  target.testRuns.all { testRun ->
+    val profile = if (testRun.name == DEFAULT_TEST_RUN_NAME) {
+      profileByTestRun[testRun.name] ?: extension.deviceProfile.orNull
+    } else {
+      profileByTestRun[testRun.name]
+    }
+    // A run pointed somewhere else never executes a generated preview test, so it has nothing to
+    // render and no reason to be asked for a profile.
+    if (profile == null && !testRun.runs(testCompilation)) {
+      return@all
+    }
+    // No default. The profile decides the size and density of every golden the run records, and no
+    // value is right for every project, so an unconfigured run is a question for the build rather
+    // than something to guess at.
+    checkNotNull(profile) { missingDeviceProfileMessage(target.name, testRun.name) }
+    testRun.executionTask.configure { test ->
+      applyDeviceProfile(test, profile)
+    }
+  }
+}
+
+/**
+ * Whether this test run executes [compilation], which is where the generated preview tests live.
+ *
+ * A project can point a test run at another compilation with `setExecutionSourceFrom`, and the
+ * generated tests are then not part of that run at all. Anything this cannot read as a single
+ * compilation counts as running it - an execution source is set lazily and may not be there yet,
+ * and a run can be given several compilations - so the runs the missing-profile check exists for
+ * keep failing the build as before.
+ */
+private fun KotlinJvmTestRun.runs(compilation: KotlinJvmCompilation): Boolean {
+  val source = runCatching { executionSource }.getOrNull() ?: return true
+  if (source !is CompilationExecutionSource<*>) return true
+  return source.compilation == compilation
+}
+
+/**
+ * Tells a build that configured desktop preview tests but no profile how to pick one.
+ *
+ * The presets it offers come from [DesktopPreviewDeviceProfile.PRESET_CHOICES] so that adding a
+ * preset and forgetting to mention it here is not possible.
+ */
+@OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
+private fun missingDeviceProfileMessage(targetName: String, testRunName: String?): String {
+  val setter = if (testRunName == null || testRunName == DEFAULT_TEST_RUN_NAME) {
+    "deviceProfile = <preset>"
+  } else {
+    "deviceProfileByTestRun.put(\"$testRunName\", <preset>)"
+  }
+  val where =
+    if (testRunName == null) "this project"
+    else "the JVM target '$targetName' test run '$testRunName'"
+  return """
+    |Roborazzi: generateComposePreviewDesktopTests has no device profile for $where.
+    |
+    |The profile decides the surface size and the density, which is to say what every golden this
+    |module records looks like. There is no default, because no value is right for every project.
+    |Pick one:
+    |
+    |${DesktopPreviewDeviceProfile.PRESET_CHOICES}
+    |
+    |and set it with:
+    |
+    |  roborazzi {
+    |    generateComposePreviewDesktopTests {
+    |      $setter
+    |    }
+    |  }
+  """.trimMargin()
+}
+
+
+@OptIn(ExperimentalRoborazziApi::class)
+private fun applyDeviceProfile(test: Test, profile: DesktopPreviewDeviceProfile?) {
+  val encoded = profile?.encode()
+  // Declared as a task input so switching a run's profile re-renders instead of reporting
+  // UP-TO-DATE with the previous profile's images still in place.
+  test.inputs.property("roborazziDesktopDeviceProfile", encoded).optional(true)
+  if (encoded == null) return
+  // A jvmArgumentProvider rather than test.systemProperty: the plugin's own doFirst copies every
+  // -Proborazzi.* gradle property into systemProperties, and whichever doFirst ran last would win.
+  test.jvmArgumentProviders.add(DeviceProfileArgumentProvider(encoded))
+}
+
+/**
+ * Named class rather than a lambda so the configuration cache can serialize it.
+ *
+ * The encoded profile is declared as a task input by [applyDeviceProfile], not here, to keep the
+ * input name stable if this provider ever carries more than one argument.
+ */
+@OptIn(ExperimentalRoborazziApi::class)
+internal class DeviceProfileArgumentProvider(
+  private val encodedProfile: String,
+) : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> =
+    listOf("-D$ROBORAZZI_DESKTOP_DEVICE_PROFILE_PROPERTY=$encodedProfile")
+}
+
+/** The name Kotlin gives a JVM target's test run when the build does not create extra ones. */
+private const val DEFAULT_TEST_RUN_NAME = "test"
+
+@OptIn(ExperimentalRoborazziApi::class)
 internal fun generateComposePreviewDesktopTestsForJvmIfNeeded(
   project: Project,
   roborazziExtension: RoborazziExtension,
@@ -81,6 +228,18 @@ internal fun generateComposePreviewDesktopTestsForJvmIfNeeded(
       testTaskName = "test",
       testSourceSet = kotlinExtension.sourceSets.getByName("test"),
     )
+    // A kotlin-jvm project has exactly one test task, so there is no run to key a profile by.
+    check(extension.deviceProfileByTestRun.getOrElse(emptyMap()).isEmpty()) {
+      "Roborazzi: generateComposePreviewDesktopTests.deviceProfileByTestRun only applies to " +
+        "Kotlin Multiplatform projects, where a JVM target can have several test runs. This " +
+        "project applies the Kotlin JVM plugin and has a single 'test' task, so use " +
+        "generateComposePreviewDesktopTests.deviceProfile instead."
+    }
+    val profile = extension.deviceProfile.orNull
+    checkNotNull(profile) { missingDeviceProfileMessage(targetName = "jvm", testRunName = null) }
+    project.tasks.named("test", Test::class.java).configure { test ->
+      applyDeviceProfile(test, profile)
+    }
   }
 }
 

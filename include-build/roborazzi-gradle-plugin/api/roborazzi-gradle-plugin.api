@@ -2,6 +2,8 @@ public class io/github/takahirom/roborazzi/GenerateComposePreviewDesktopTestsExt
 	public static final field Companion Lio/github/takahirom/roborazzi/GenerateComposePreviewDesktopTestsExtension$Companion;
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
 	public final fun getAnnotationFilter ()Lorg/gradle/api/provider/Property;
+	public final fun getDeviceProfile ()Lorg/gradle/api/provider/Property;
+	public final fun getDeviceProfileByTestRun ()Lorg/gradle/api/provider/MapProperty;
 	public final fun getEnable ()Lorg/gradle/api/provider/Property;
 	public final fun getGeneratedTestClassCount ()Lorg/gradle/api/provider/Property;
 	public final fun getIncludePrivatePreviews ()Lorg/gradle/api/provider/Property;
