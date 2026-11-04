@@ -147,3 +147,12 @@ public final class com/github/takahirom/roborazzi/BitmapToBufferedImageConverter
 	public final fun convert (Landroid/graphics/Bitmap;)Ljava/awt/image/BufferedImage;
 }
 
+public abstract interface class com/github/takahirom/roborazzi/RoboVideoClock {
+	public abstract fun advanceBy (J)V
+	public abstract fun withManualClock (Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+}
+
+public final class com/github/takahirom/roborazzi/RoboVideoRecorderKt {
+	public static final fun recordRoboVideoToFile (Ljava/io/File;Lcom/github/takahirom/roborazzi/RoboVideoOptions;Lcom/github/takahirom/roborazzi/RoborazziOptions;Lcom/github/takahirom/roborazzi/RoboVideoClock;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+}
+
