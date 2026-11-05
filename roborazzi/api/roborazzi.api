@@ -1,3 +1,7 @@
+public final class com/github/takahirom/roborazzi/AccessibilityLegendEntriesKt {
+	public static final fun accessibilityLegendText (Lcom/github/takahirom/roborazzi/RoboComponent;)Ljava/lang/String;
+}
+
 public final class com/github/takahirom/roborazzi/CaptureDumpKt {
 	public static final fun findTextPoint (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;IIII)Lkotlin/Pair;
 	public static final fun formattedTextList (Ljava/lang/String;)Ljava/util/List;
