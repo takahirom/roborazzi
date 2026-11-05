@@ -37,13 +37,18 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.AccessibilityLegend
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.github.takahirom.roborazzi.accessibilityLegendText
+import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.fetchRobolectricWindowRoots
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -59,6 +64,17 @@ class AccessibilityLegendTest {
 
   @get:Rule
   val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+  private val legendOptions = RoborazziOptions(
+    captureType = RoborazziOptions.CaptureType.AccessibilityLegend(),
+  )
+
+  @Test
+  fun compose() {
+    composeTestRule.setContent { ComposeScreen() }
+
+    composeTestRule.onRoot().captureRoboImage(roborazziOptions = legendOptions)
+  }
 
   @Test
   fun composeLegendText() {
@@ -89,6 +105,13 @@ class AccessibilityLegendTest {
   }
 
   @Test
+  fun view() {
+    composeTestRule.runOnUiThread { composeTestRule.activity.setContentView(viewScreen()) }
+
+    onView(isRoot()).captureRoboImage(roborazziOptions = legendOptions)
+  }
+
+  @Test
   fun viewLegendText() {
     composeTestRule.runOnUiThread { composeTestRule.activity.setContentView(viewScreen()) }
     composeTestRule.waitForIdle()
@@ -107,6 +130,13 @@ class AccessibilityLegendTest {
       """.trimIndent(),
       accessibilityLegendText(root),
     )
+  }
+
+  @Test
+  fun dialog() {
+    composeTestRule.setContent { DialogScreen() }
+
+    captureScreenRoboImage(roborazziOptions = legendOptions)
   }
 
   @Test

@@ -2,6 +2,10 @@ public final class com/github/takahirom/roborazzi/AccessibilityLegendEntriesKt {
 	public static final fun accessibilityLegendText (Lcom/github/takahirom/roborazzi/RoboComponent;)Ljava/lang/String;
 }
 
+public final class com/github/takahirom/roborazzi/AccessibilityLegendKt {
+	public static final fun AccessibilityLegend (Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType$Companion;)Lcom/github/takahirom/roborazzi/RoborazziOptions$CaptureType;
+}
+
 public final class com/github/takahirom/roborazzi/CaptureDumpKt {
 	public static final fun findTextPoint (Lcom/github/takahirom/roborazzi/AwtRoboCanvas;IIII)Lkotlin/Pair;
 	public static final fun formattedTextList (Ljava/lang/String;)Ljava/util/List;
