@@ -160,7 +160,7 @@ private fun collectLabelsFor(view: View, walk: LegendWalk) {
 
 private fun visitView(view: View, walk: LegendWalk, insideFocusable: Boolean) {
   if (view.visibility != View.VISIBLE) return
-  if (view is ViewRootForTest) {
+  if (hasCompose && view is ViewRootForTest) {
     visitCompose(root = view, startNode = view.semanticsOwner.rootSemanticsNode, walk = walk)
     return
   }
