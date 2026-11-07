@@ -1,8 +1,12 @@
 package com.github.takahirom.roborazzi
 
 import java.awt.image.BufferedImage
+import java.awt.image.DataBufferInt
+import java.awt.image.DirectColorModel
 import java.awt.image.RenderedImage
+import java.awt.image.SinglePixelPackedSampleModel
 import java.io.File
+import javax.imageio.IIOException
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageTypeSpecifier
@@ -45,11 +49,17 @@ data class JvmImageIoFormat(
   val awtImageWriter: AwtImageWriter = AwtImageWriter { file, contextData, bufferedImage ->
     val imageExtension = file.extension.ifBlank { "png" }
     if (contextData.isEmpty()) {
-      ImageIO.write(
-        bufferedImage,
-        imageExtension,
-        file
-      )
+      if (imageExtension.equals("png", ignoreCase = true) &&
+        bufferedImage.type == BufferedImage.TYPE_INT_ARGB
+      ) {
+        writePngWithoutMetadata(file, bufferedImage, imageExtension)
+      } else {
+        ImageIO.write(
+          bufferedImage,
+          imageExtension,
+          file
+        )
+      }
       return@AwtImageWriter
     }
     val writer = getWriter(bufferedImage, imageExtension)
@@ -61,7 +71,12 @@ data class JvmImageIoFormat(
       file.delete()
       ImageIO.createImageOutputStream(file).use { stream ->
         writer.output = stream
-        writer.write(IIOImage(bufferedImage, null, meta))
+        val rgbImage = if (imageExtension.equals("png", ignoreCase = true)) {
+          writer.opaqueRgbPngImage(bufferedImage)
+        } else {
+          null
+        }
+        writer.write(IIOImage(rgbImage ?: bufferedImage, null, meta))
       }
     } finally {
       writer.dispose()
@@ -69,6 +84,81 @@ data class JvmImageIoFormat(
   },
   val awtImageLoader: AwtImageLoader = AwtImageLoader { ImageIO.read(it) }
 ) : ImageIoFormat
+
+
+/**
+ * Retains ImageIO.write's provider selection, no-provider behavior, and stream handling.
+ * The selected writer also handles ineligible images, preserving provider construction side effects.
+ */
+private fun writePngWithoutMetadata(file: File, image: BufferedImage, extension: String) {
+  val writers = ImageIO.getImageWriters(ImageTypeSpecifier.createFromRenderedImage(image), extension)
+  if (!writers.hasNext()) {
+    return
+  }
+  val writer = writers.next()
+  val stream = try {
+    // ImageIO leaves the previous file untouched until it finds a compatible writer.
+    file.delete()
+    ImageIO.createImageOutputStream(file) ?: throw IIOException("Can't create an ImageOutputStream!")
+  } catch (failure: Throwable) {
+    AutoCloseable(writer::dispose).use { throw failure }
+  }
+  stream.use {
+    try {
+      writer.output = stream
+      writer.write(writer.opaqueRgbPngImage(image) ?: image)
+    } finally {
+      try {
+        writer.dispose()
+      } finally {
+        stream.flush()
+      }
+    }
+  }
+}
+
+/**
+ * The JDK PNG writer can encode an opaque ARGB raster as RGB. The view shares the source pixels
+ * and remains valid while the writer has exclusive read access.
+ */
+internal fun ImageWriter.opaqueRgbPngImage(image: BufferedImage): BufferedImage? {
+  if (javaClass.name != "com.sun.imageio.plugins.png.PNGImageWriter" ||
+    javaClass.classLoader != null ||
+    image.type != BufferedImage.TYPE_INT_ARGB ||
+    !image.hasOnlyOpaqueArgbPixels()
+  ) {
+    return null
+  }
+  val rgbRaster = image.raster.createWritableChild(
+    0, 0, image.width, image.height, 0, 0, intArrayOf(0, 1, 2)
+  )
+  // Select the three color bands once. Source-band parameters create another raster for every row.
+  val rgbColorModel = DirectColorModel(24, 0x00FF0000, 0x0000FF00, 0x000000FF)
+  return BufferedImage(rgbColorModel, rgbRaster, false, null)
+}
+
+/** Checks only the visible raster, including the offset and row stride of a subimage. */
+private fun BufferedImage.hasOnlyOpaqueArgbPixels(): Boolean {
+  val data = raster.dataBuffer as? DataBufferInt ?: return false
+  val samples = raster.sampleModel as? SinglePixelPackedSampleModel ?: return false
+  if (data.numBanks != 1) {
+    return false
+  }
+  val pixels = data.data
+  val firstPixel = data.offset + samples.getOffset(
+    raster.minX - raster.sampleModelTranslateX,
+    raster.minY - raster.sampleModelTranslateY
+  )
+  for (y in 0 until height) {
+    val rowStart = firstPixel + y * samples.scanlineStride
+    for (x in 0 until width) {
+      if (pixels[rowStart + x] ushr 24 != 255) {
+        return false
+      }
+    }
+  }
+  return true
+}
 
 
 @ExperimentalRoborazziApi
