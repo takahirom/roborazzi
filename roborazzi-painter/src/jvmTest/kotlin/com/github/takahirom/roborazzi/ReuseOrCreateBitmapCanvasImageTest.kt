@@ -9,7 +9,7 @@ import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 
 /** Protects ownership and the existing Java2D alpha conversion of captured images. */
-class CreateBitmapCanvasImageTest {
+class ReuseOrCreateBitmapCanvasImageTest {
   @Test
   fun reusesOpaqueArgbStorageWithIdenticalPixels() {
     val image = image { x, y ->
@@ -17,7 +17,7 @@ class CreateBitmapCanvasImageTest {
     }
     val expected = legacyCanvas(image, BufferedImage.TYPE_INT_ARGB)
 
-    val actual = createBitmapCanvasImage(image, BufferedImage.TYPE_INT_ARGB)
+    val actual = reuseOrCreateBitmapCanvasImage(image, BufferedImage.TYPE_INT_ARGB)
 
     assertSame(image, actual)
     assertContentEquals(pixels(expected), pixels(actual))
@@ -31,7 +31,7 @@ class CreateBitmapCanvasImageTest {
     val before = pixels(image)
     val expected = legacyCanvas(image, BufferedImage.TYPE_INT_ARGB)
 
-    val actual = createBitmapCanvasImage(image, BufferedImage.TYPE_INT_ARGB)
+    val actual = reuseOrCreateBitmapCanvasImage(image, BufferedImage.TYPE_INT_ARGB)
 
     assertNotSame(image, actual)
     assertContentEquals(pixels(expected), pixels(actual))
@@ -44,10 +44,21 @@ class CreateBitmapCanvasImageTest {
     image.setRGB(image.width - 1, image.height - 1, 0x016EAAD2)
     val expected = legacyCanvas(image, BufferedImage.TYPE_INT_ARGB)
 
-    val actual = createBitmapCanvasImage(image, BufferedImage.TYPE_INT_ARGB)
+    val actual = reuseOrCreateBitmapCanvasImage(image, BufferedImage.TYPE_INT_ARGB)
 
     assertNotSame(image, actual)
     assertContentEquals(pixels(expected), pixels(actual))
+  }
+
+  @Test
+  fun copiesSubimageInsteadOfSharingParentStorage() {
+    val parent = image { _, _ -> 0xFF468ABE.toInt() }
+    val subimage = parent.getSubimage(64, 64, 128, 128)
+
+    val actual = reuseOrCreateBitmapCanvasImage(subimage, BufferedImage.TYPE_INT_ARGB)
+
+    assertNotSame(subimage, actual)
+    assertContentEquals(pixels(subimage), pixels(actual))
   }
 
   @Test
@@ -62,7 +73,7 @@ class CreateBitmapCanvasImageTest {
       }
       val expected = legacyCanvas(image, type)
 
-      val actual = createBitmapCanvasImage(image, type)
+      val actual = reuseOrCreateBitmapCanvasImage(image, type)
 
       assertNotSame(image, actual)
       assertEquals(type, actual.type)

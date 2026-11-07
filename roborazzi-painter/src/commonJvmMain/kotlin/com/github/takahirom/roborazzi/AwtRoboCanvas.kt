@@ -45,7 +45,7 @@ class AwtRoboCanvas private constructor(
    */
   @InternalRoborazziApi
   constructor(bitmap: Bitmap, bufferedImageType: Int) : this(
-    createBitmapCanvasImage(BitmapToBufferedImageConverter.convert(bitmap), bufferedImageType),
+    reuseOrCreateBitmapCanvasImage(BitmapToBufferedImageConverter.convert(bitmap), bufferedImageType),
     filled = true,
   )
 
