@@ -254,6 +254,12 @@ data class RoborazziOptions(
     val applyDeviceCrop: Boolean = false,
     val pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
     val imageIoFormat: ImageIoFormat = ImageIoFormat(),
+    /**
+     * Calculates the scale of each image from its size. When set, it is used instead of
+     * [resizeScale]. See [ResizeScaleCalculator].
+     */
+    @property:ExperimentalRoborazziApi
+    val resizeScaleCalculator: ResizeScaleCalculator? = null,
   ) {
     // Stable parameters
     constructor(
@@ -265,6 +271,38 @@ data class RoborazziOptions(
       applyDeviceCrop = applyDeviceCrop,
       pixelBitConfig = pixelBitConfig,
       imageIoFormat = ImageIoFormat(),
+    )
+
+    // Binary-compatibility bridge for callers compiled before the resizeScaleCalculator field
+    // was added. Restores the previous 4-arg constructor.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(
+      resizeScale: Double = roborazziDefaultResizeScale(),
+      applyDeviceCrop: Boolean = false,
+      pixelBitConfig: PixelBitConfig = PixelBitConfig.Argb8888,
+      imageIoFormat: ImageIoFormat = ImageIoFormat(),
+    ) : this(
+      resizeScale = resizeScale,
+      applyDeviceCrop = applyDeviceCrop,
+      pixelBitConfig = pixelBitConfig,
+      imageIoFormat = imageIoFormat,
+      resizeScaleCalculator = null,
+    )
+
+    // Binary-compatibility bridge for callers compiled before the resizeScaleCalculator field
+    // was added. Restores the previous 4-arg copy().
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    fun copy(
+      resizeScale: Double = this.resizeScale,
+      applyDeviceCrop: Boolean = this.applyDeviceCrop,
+      pixelBitConfig: PixelBitConfig = this.pixelBitConfig,
+      imageIoFormat: ImageIoFormat = this.imageIoFormat,
+    ): RecordOptions = copy(
+      resizeScale = resizeScale,
+      applyDeviceCrop = applyDeviceCrop,
+      pixelBitConfig = pixelBitConfig,
+      imageIoFormat = imageIoFormat,
+      resizeScaleCalculator = resizeScaleCalculator,
     )
   }
 

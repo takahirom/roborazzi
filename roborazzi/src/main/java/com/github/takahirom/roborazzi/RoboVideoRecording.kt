@@ -389,10 +389,12 @@ private fun saveAnimatedImage(
     // and playback share a single timeline (see RoboVideoOptions.frameStepMillis).
     encoder.setFrameDelayMillis(videoOptions.frameStepMillis)
     if (canvases.isNotEmpty()) {
-      val resizeScale = roborazziOptions.recordOptions.resizeScale
+      val width = canvases.maxOf { it.croppedWidth }
+      val height = canvases.maxOf { it.croppedHeight }
+      val resizeScale = roborazziOptions.recordOptions.resizeScaleFor(width = width, height = height)
       encoder.setSize(
-        canvases.maxOf { scaledDimension(it.croppedWidth, resizeScale) },
-        canvases.maxOf { scaledDimension(it.croppedHeight, resizeScale) }
+        scaledDimension(width, resizeScale),
+        scaledDimension(height, resizeScale)
       )
       encoder.setBackground(videoOptions.backgroundColor)
       canvases.forEach { canvas ->
@@ -414,5 +416,5 @@ private fun saveAnimatedImage(
  * the truncation in [AwtRoboCanvas]'s scaling) so a tiny frame with a small [resizeScale] never
  * yields a zero-sized, invalid viewport.
  */
-private fun scaledDimension(value: Int, resizeScale: Double): Int =
+internal fun scaledDimension(value: Int, resizeScale: Double): Int =
   (if (resizeScale == 1.0) value else (value * resizeScale).toInt()).coerceAtLeast(1)

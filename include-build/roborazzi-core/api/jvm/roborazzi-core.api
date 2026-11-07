@@ -548,6 +548,23 @@ public final class com/github/takahirom/roborazzi/ReportLog_commonJvmKt {
 	public static final fun roborazziErrorLog (Ljava/lang/String;)V
 }
 
+public abstract interface class com/github/takahirom/roborazzi/ResizeScaleCalculator {
+	public abstract fun calculate (Lcom/github/takahirom/roborazzi/ResizeScaleCalculator$Size;)D
+}
+
+public final class com/github/takahirom/roborazzi/ResizeScaleCalculator$Size {
+	public fun <init> (II)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeight ()I
+	public final fun getWidth ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/github/takahirom/roborazzi/ResizeScaleCalculatorKt {
+	public static final fun resizeScaleFor (Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;II)D
+}
+
 public final class com/github/takahirom/roborazzi/ResultSummary {
 	public static final field Companion Lcom/github/takahirom/roborazzi/ResultSummary$Companion;
 	public fun <init> (IIIII)V
@@ -830,19 +847,25 @@ public final class com/github/takahirom/roborazzi/RoborazziOptions$RecordOptions
 	public fun <init> ()V
 	public fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;)V
 	public synthetic fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;)V
+	public synthetic fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;)V
 	public synthetic fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;Lcom/github/takahirom/roborazzi/ResizeScaleCalculator;)V
+	public synthetic fun <init> (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;Lcom/github/takahirom/roborazzi/ResizeScaleCalculator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()Z
 	public final fun component3 ()Lcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;
 	public final fun component4 ()Lcom/github/takahirom/roborazzi/ImageIoFormat;
-	public final fun copy (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;)Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
+	public final fun component5 ()Lcom/github/takahirom/roborazzi/ResizeScaleCalculator;
+	public final synthetic fun copy (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;)Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
+	public final fun copy (DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;Lcom/github/takahirom/roborazzi/ResizeScaleCalculator;)Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
 	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
+	public static synthetic fun copy$default (Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;DZLcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;Lcom/github/takahirom/roborazzi/ImageIoFormat;Lcom/github/takahirom/roborazzi/ResizeScaleCalculator;ILjava/lang/Object;)Lcom/github/takahirom/roborazzi/RoborazziOptions$RecordOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getApplyDeviceCrop ()Z
 	public final fun getImageIoFormat ()Lcom/github/takahirom/roborazzi/ImageIoFormat;
 	public final fun getPixelBitConfig ()Lcom/github/takahirom/roborazzi/RoborazziOptions$PixelBitConfig;
 	public final fun getResizeScale ()D
+	public final fun getResizeScaleCalculator ()Lcom/github/takahirom/roborazzi/ResizeScaleCalculator;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

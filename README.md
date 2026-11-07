@@ -653,6 +653,24 @@ val roborazziRule = RoborazziRule(
 )
 ```
 
+#### Resize scale by image size
+`resizeScale` shrinks every image by the same factor, which is too much for small components or too little for full screens. Set `resizeScaleCalculator` to pick the scale from the size of each captured image instead. The size is in pixels, after cropping. Keep the calculator a pure function of the size: an image of the same size gets the same scale when the golden is recorded and when it is compared, and a GIF or video gets one scale for all frames.
+```kotlin
+@get:Rule
+val roborazziRule = RoborazziRule(
+    options = RoborazziRule.Options(
+        roborazziOptions = RoborazziOptions(
+            recordOptions = RoborazziOptions.RecordOptions(
+                resizeScaleCalculator = { size ->
+                    if (size.width * size.height > 1_000_000) 0.5 else 1.0
+                }
+            )
+        )
+    )
+)
+```
+When `resizeScaleCalculator` is set, `resizeScale` and `roborazzi.record.resizeScale` are ignored. The returned scale must be a finite number greater than 0.
+
 ## Experimental WebP support and other image formats
 
 You can set `roborazzi.record.image.extension` to `webp` in your `gradle.properties` file to generate WebP images.
@@ -1973,6 +1991,8 @@ This option lets you set the resize scale for the image being recorded. The defa
 ```properties
 roborazzi.record.resizeScale=0.5
 ```
+
+To choose the scale from the size of each image, set `RoborazziOptions.RecordOptions.resizeScaleCalculator` in code. When it is set, this property is ignored.
 
 ### roborazzi.record.filePathStrategy
 
