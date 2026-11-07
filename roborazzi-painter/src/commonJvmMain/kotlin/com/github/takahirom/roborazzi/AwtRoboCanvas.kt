@@ -23,20 +23,42 @@ import java.awt.image.DataBufferInt
 import java.awt.image.SinglePixelPackedSampleModel
 import java.io.File
 
-class AwtRoboCanvas(width: Int, height: Int, filled: Boolean, bufferedImageType: Int) : RoboCanvas {
-  private val bufferedImage = BufferedImage(width, height, bufferedImageType)
+class AwtRoboCanvas private constructor(
+  private val bufferedImage: BufferedImage,
+  filled: Boolean,
+) : RoboCanvas {
+  constructor(width: Int, height: Int, filled: Boolean, bufferedImageType: Int) : this(
+    BufferedImage(width, height, bufferedImageType),
+    filled,
+  ) {
+    // Dump canvases use these points to place labels around the content they draw.
+    for (x in 0..width step 50) {
+      for (y in 0..height step 50) {
+        emptyPoints.add(x to y)
+      }
+    }
+  }
+
+  /**
+   * Copies [bitmap] into a filled canvas. A converted opaque ARGB image needs no further draw.
+   * Translucent images keep Java2D's SrcOver rounding.
+   */
+  @InternalRoborazziApi
+  constructor(bitmap: Bitmap, bufferedImageType: Int) : this(
+    createBitmapCanvasImage(BitmapToBufferedImageConverter.convert(bitmap), bufferedImageType),
+    filled = true,
+  )
+
   override val width: Int get() = bufferedImage.width
   override val height: Int get() = bufferedImage.height
   override val croppedWidth: Int get() = croppedImage.width
   override val croppedHeight: Int get() = croppedImage.height
-  private var rightBottomPoint = if (filled) width to height else 0 to 0
+  private var rightBottomPoint = if (filled) { width to height } else { 0 to 0 }
   private fun updateRightBottom(x: Int, y: Int) {
     rightBottomPoint = maxOf(x, rightBottomPoint.first) to maxOf(y, rightBottomPoint.second)
   }
 
-  var emptyPoints: MutableSet<Pair<Int, Int>> = (0..width step 50)
-    .flatMap { x -> (0..height step 50).map { y -> x to y } }
-    .toMutableSet()
+  var emptyPoints: MutableSet<Pair<Int, Int>> = mutableSetOf()
     private set
 
   fun drawImage(r: Rect, bitmap: Bitmap) {

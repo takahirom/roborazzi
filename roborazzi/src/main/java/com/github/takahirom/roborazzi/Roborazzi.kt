@@ -279,13 +279,9 @@ fun Bitmap.captureRoboImage(
   }
   val image = this
   val canvas = AwtRoboCanvas(
-    width = image.width,
-    height = image.height,
-    filled = true,
+    bitmap = image,
     bufferedImageType = roborazziOptions.recordOptions.pixelBitConfig.toBufferedImageType()
-  ).apply {
-    drawImage(Rect(0, 0, image.width, image.height), image)
-  }
+  )
   processOutputImageAndReportWithDefaults(
     canvas = canvas,
     goldenFile = file,
@@ -750,13 +746,9 @@ internal fun capture(
         ?: throw IllegalStateException("Unable to find the image of the target root component. Does the rendering element exist?")
       onCanvas(
         AwtRoboCanvas(
-          width = image.width,
-          height = image.height,
-          filled = true,
+          bitmap = image,
           bufferedImageType = roborazziOptions.recordOptions.pixelBitConfig.toBufferedImageType()
-        ).apply {
-          drawImage(Rect(0, 0, image.width, image.height), image)
-        }
+        )
       )
     }
   }
