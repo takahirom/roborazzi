@@ -129,6 +129,10 @@ sealed interface RoboComponent : RoboComponentTree {
      */
     private val windowRects: List<Pair<Root, Rect>> = resolveWindowRects(rootsOrderByDepth)
 
+    /** The decor view of each window with the screen rect it occupies, bottom window first. */
+    @InternalRoborazziApi
+    val windows: List<Pair<android.view.View, Rect>> = windowRects.map { (root, rect) -> root.decorView to rect }
+
     override val image: Bitmap? = if (roborazziOptions.shouldTakeBitmap) {
       val bitmap = Bitmap.createBitmap(width, height, roborazziOptions.recordOptions.pixelBitConfig.toBitmapConfig())
       val canvas = Canvas(bitmap)
@@ -197,6 +201,9 @@ sealed interface RoboComponent : RoboComponentTree {
     override val children: List<RoboComponent> = roborazziOptions
       .captureType
       .roboComponentChildVisitor(view, roborazziOptions, windowOffset)
+
+    @InternalRoborazziApi
+    val androidView: android.view.View = view
 
     val id: Int = view.id
 
@@ -296,6 +303,10 @@ sealed interface RoboComponent : RoboComponentTree {
     override val children: List<RoboComponent> = roborazziOptions
       .captureType
       .roboComponentChildVisitor(node, roborazziOptions, windowOffset)
+
+    @InternalRoborazziApi
+    val semanticsNode: SemanticsNode = node
+
     // Lazy: printToString() walks the semantics config and is only needed by the
     // UI tree dump feature (off by default), so it must not run on every capture.
     override val text: String by lazy { node.printToString() }

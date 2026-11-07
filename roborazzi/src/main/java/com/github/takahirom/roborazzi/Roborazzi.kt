@@ -277,6 +277,9 @@ fun Bitmap.captureRoboImage(
   if (roborazziOptions.captureType is Dump) {
     throw IllegalStateException("Dump is not supported for Bitmap captureRoboImage()")
   }
+  if (roborazziOptions.captureType is AccessibilityLegendCaptureType) {
+    throw IllegalStateException("AccessibilityLegend is not supported for Bitmap captureRoboImage()")
+  }
   val image = this
   val canvas = AwtRoboCanvas(
     bitmap = image,
@@ -739,6 +742,12 @@ internal fun capture(
       dumpOptions = roborazziOptions.captureType as Dump,
       recordOptions = roborazziOptions.recordOptions,
       onCanvas = onCanvas
+    )
+
+    is AccessibilityLegendCaptureType -> captureAccessibilityLegend(
+      rootComponent = rootComponent,
+      recordOptions = roborazziOptions.recordOptions,
+      onCanvas = onCanvas,
     )
 
     is RoborazziOptions.CaptureType.Screenshot -> {
