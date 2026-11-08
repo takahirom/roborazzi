@@ -2,7 +2,9 @@
 
 package com.github.takahirom.roborazzi.sample
 
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityManager
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -33,6 +35,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
@@ -51,6 +54,9 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.github.takahirom.roborazzi.fetchRobolectricWindowRoots
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -110,6 +116,58 @@ class AccessibilityLegendTest {
       """.trimIndent(),
       accessibilityLegendText(root),
     )
+  }
+
+  @Test
+  fun composeLegendTextFollowsTraversalIndex() {
+    composeTestRule.setContent {
+      Column {
+        Text(text = "Read second", modifier = Modifier.semantics { traversalIndex = 1f })
+        Text(text = "Read first")
+      }
+    }
+
+    val node = composeTestRule.onRoot().fetchSemanticsNode()
+    val root = RoboComponent.Compose(node, RoborazziOptions())
+
+    assertEquals(
+      """
+      1. "Read first"
+      2. "Read second"
+      """.trimIndent(),
+      accessibilityLegendText(root),
+    )
+  }
+
+  @Test
+  fun captureRestoresAccessibilityState() {
+    composeTestRule.setContent { ComposeScreen() }
+    val manager = composeTestRule.activity.getSystemService(AccessibilityManager::class.java)
+    assertFalse(manager.isEnabled)
+
+    composeTestRule.onRoot().captureRoboImage(
+      filePath = "build/outputs/roborazzi/accessibility-legend-restore.png",
+      roborazziOptions = legendOptions,
+    )
+
+    assertFalse(manager.isEnabled)
+    assertFalse(manager.isTouchExplorationEnabled)
+    assertEquals(
+      emptyList<Any>(),
+      manager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK),
+    )
+  }
+
+  @Test
+  @Config(sdk = [25])
+  fun composeLegendFailsBelowApi26() {
+    composeTestRule.setContent { ComposeScreen() }
+
+    val node = composeTestRule.onRoot().fetchSemanticsNode()
+    val error = assertThrows(IllegalStateException::class.java) {
+      accessibilityLegendText(RoboComponent.Compose(node, RoborazziOptions()))
+    }
+    assertTrue(error.message!!.contains("API 26"))
   }
 
   @Test
