@@ -792,6 +792,11 @@ The annotated image is a **display artifact of the current run only** — never
 compared, never failing a capture, never treated as a golden. Opt out with
 `UiTreeDumpOptions(annotateImage = false)`.
 
+The annotated image is only written for the default screenshot capture type. Other
+capture types, such as `CaptureType.Dump()`, place the screenshot among other
+content, so the boxes would be drawn in the wrong place; for them only the sidecar
+is written.
+
 ## Primary use case: letting an AI agent prove its UI fixes
 
 AI agents are bad at judging small layout changes from screenshots — ask one to

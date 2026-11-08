@@ -75,7 +75,16 @@ fun writeUiTreeDumpIfEnabled(
     var contextData = roborazziOptions.contextData +
       (ROBORAZZI_UI_TREE_FILE_PATH_KEY to sidecarFile.absolutePath)
 
-    val annotatedImageWriter: ((Boolean) -> Unit)? = if (dumpOptions.annotateImage) {
+    // Other capture types, such as Dump, lay the screenshot out with other content, so
+    // boxes drawn at the UI coordinates would land in the wrong place.
+    val annotatable = roborazziOptions.captureType is RoborazziOptions.CaptureType.Screenshot
+    if (dumpOptions.annotateImage && !annotatable) {
+      roborazziDebugLog {
+        "Annotated image skipped: it is only drawn for CaptureType.Screenshot, " +
+          "not ${roborazziOptions.captureType::class.simpleName}"
+      }
+    }
+    val annotatedImageWriter: ((Boolean) -> Unit)? = if (dumpOptions.annotateImage && annotatable) {
       val annotatedFile = annotatedImageFile(goldenFile, roborazziOptions)
       contextData = contextData + (ROBORAZZI_ANNOTATED_FILE_PATH_KEY to annotatedFile.absolutePath)
       val annotations = computeUiTreeAnnotations(tree, numbers, captureInfo)
