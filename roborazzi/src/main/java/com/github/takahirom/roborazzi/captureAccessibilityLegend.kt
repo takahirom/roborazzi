@@ -10,7 +10,6 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.compose.ui.platform.ViewRootForTest
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 
 internal fun captureAccessibilityLegend(
@@ -145,7 +144,7 @@ private fun renderAccessibilityLegend(
   }
   val legendHeight = pad + elements.indices.sumOf { entryHeight(it) + pad } +
     (if (paneLayouts.isEmpty()) 0 else pad + paneLayouts.sumOf { max(it.height, swatch) + pad })
-  val height = max(min(screenshot.height, contentBottom(screenshot) + 2 * pad), legendHeight)
+  val height = max(screenshot.height, legendHeight)
 
   val result = Bitmap.createBitmap(legendLeft + legendWidth, height, Bitmap.Config.ARGB_8888)
   val canvas = Canvas(result)
@@ -161,7 +160,7 @@ private fun renderAccessibilityLegend(
   val visible = elements.indices.filter { !elements[it].offscreen }
   val frames = visible.associateWith { Rect(elements[it].bounds).apply { offset(gutter, 0) } }
   canvas.save()
-  canvas.clipRect(gutter, 0, gutter + screenshot.width, min(screenshot.height, height))
+  canvas.clipRect(gutter, 0, gutter + screenshot.width, screenshot.height)
   containers.filter { !it.offscreen }.forEach {
     canvas.drawRect(Rect(it.bounds).apply { offset(gutter, 0) }, dashed)
   }
@@ -261,21 +260,6 @@ private fun elementColors(elements: List<AccessibilityLegendEntry>): List<Int> {
       }
     }
   }
-}
-
-/** The bottom of the drawn content: rows below it repeat the background of the last row. */
-private fun contentBottom(bitmap: Bitmap): Int {
-  val width = bitmap.width
-  val background = IntArray(width)
-  bitmap.getPixels(background, 0, width, 0, bitmap.height - 1, width, 1)
-  val row = IntArray(width)
-  var bottom = bitmap.height
-  while (bottom > 1) {
-    bitmap.getPixels(row, 0, width, 0, bottom - 1, width, 1)
-    if (!row.contentEquals(background)) break
-    bottom--
-  }
-  return bottom
 }
 
 private fun staticLayout(text: String, paint: TextPaint, width: Int): StaticLayout =
