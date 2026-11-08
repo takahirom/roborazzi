@@ -116,7 +116,15 @@ private fun View.locationInWindow(): Rect {
  */
 private fun <T> withScreenReader(context: Context, block: () -> T): T {
   val manager = context.getSystemService(AccessibilityManager::class.java) ?: return block()
-  val shadow = Shadows.shadowOf(manager)
+  val shadow = try {
+    Shadows.shadowOf(manager)
+  } catch (e: NoClassDefFoundError) {
+    throw IllegalStateException(
+      "AccessibilityLegend needs Robolectric: it turns on a screen reader in Robolectric " +
+        "while it reads the accessibility tree.",
+      e,
+    )
+  }
   val wasEnabled = manager.isEnabled
   val wasTouchExploration = manager.isTouchExplorationEnabled
   val previousServices =
@@ -330,7 +338,11 @@ private fun traversalOrder(
   provider: AccessibilityNodeProvider?,
   root: SemanticsNode,
 ): Map<Int, Int> {
-  if (provider == null || Build.VERSION.SDK_INT < 26) return emptyMap()
+  check(Build.VERSION.SDK_INT >= 26) {
+    "AccessibilityLegend needs API 26 or higher to read the Compose traversal order, " +
+      "but the test runs on API ${Build.VERSION.SDK_INT}. Use @Config(sdk = [26]) or higher."
+  }
+  if (provider == null) return emptyMap()
   val next = mutableMapOf<Int, Int>()
   fun visit(node: SemanticsNode) {
     val virtualId = if (node.id == root.id) AccessibilityNodeProvider.HOST_VIEW_ID else node.id
