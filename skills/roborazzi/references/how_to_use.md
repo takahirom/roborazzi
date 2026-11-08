@@ -338,7 +338,7 @@ For each element the legend shows:
 - `⚠ NO LABEL` for a clickable element without a label.
 
 The numbers sit in a column next to the screenshot, so they don't cover the UI. Colors come from a hash of the element's
-text, so inserting an element doesn't recolor the others.
+text, so inserting an element rarely recolors the others.
 
 Compose content is read from the merged semantics tree in the order Compose reports to screen readers. Views are read
 from `AccessibilityNodeInfo`, so `AccessibilityDelegate`s are taken into account. Compose computes the order only while
