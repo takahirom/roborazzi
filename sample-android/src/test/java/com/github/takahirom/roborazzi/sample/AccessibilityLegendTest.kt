@@ -49,6 +49,7 @@ import com.github.takahirom.roborazzi.InternalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoboComponent
 import com.github.takahirom.roborazzi.RoborazziOptions
+import com.github.takahirom.roborazzi.UiTreeDumpOptions
 import com.github.takahirom.roborazzi.accessibilityLegendText
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
@@ -88,6 +89,15 @@ class AccessibilityLegendTest {
     composeTestRule.setContent { ComposeScreen() }
 
     composeTestRule.onRoot().captureRoboImage(roborazziOptions = legendOptions)
+  }
+
+  @Test
+  fun composeWithUiTreeDump() {
+    composeTestRule.setContent { ComposeScreen() }
+
+    composeTestRule.onRoot().captureRoboImage(
+      roborazziOptions = legendOptions.copy(uiTreeDumpOptions = UiTreeDumpOptions()),
+    )
   }
 
   @Test
