@@ -77,6 +77,14 @@ class AccessibilityLegendTest {
   }
 
   @Test
+  @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
+  fun composeOnLandscapeTablet() {
+    composeTestRule.setContent { ComposeScreen() }
+
+    composeTestRule.onRoot().captureRoboImage(roborazziOptions = legendOptions)
+  }
+
+  @Test
   fun composeLegendText() {
     composeTestRule.setContent { ComposeScreen() }
 
