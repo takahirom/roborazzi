@@ -50,6 +50,10 @@ private fun RoboComponent.density(): Float {
 private const val PROBLEM_COLOR = 0xFFE00000.toInt()
 private const val CONTAINER_COLOR = 0xFF5F6368.toInt()
 private const val DETAILS_COLOR = 0xFF5F6368.toInt()
+
+/** The legend column is as wide as a phone screen, whatever the width of the screenshot. */
+private const val LEGEND_WIDTH_DP = 360
+
 private val PALETTE = intArrayOf(
   0xFF1E88E5.toInt(),
   0xFF43A047.toInt(),
@@ -91,7 +95,7 @@ private fun renderAccessibilityLegend(
   val badgeWidth = badgePaint.measureText("${max(elements.size, 1)}").roundToInt() + pad / 2
   val gutter = badgeWidth + pad
   val legendLeft = gutter + screenshot.width
-  val legendWidth = screenshot.width
+  val legendWidth = (LEGEND_WIDTH_DP * density).roundToInt()
   val numberPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
     textSize = 14 * density
     color = Color.DKGRAY
