@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  OLLAMA_MODEL_TO_TEST: 'gemma3:4b-it-q4_K_M'
+  OLLAMA_MODEL_TO_TEST: 'gemma3:27b-it-qat'
   OLLAMA_VOLUME_PATH: ollama_data
 
 jobs:
@@ -25,25 +25,57 @@ jobs:
         with:
           gradle-version: wrapper
 
-      # Cache for Docker volume data
       - name: Restore Ollama Docker volume cache
         id: cache-ollama-volume
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
-          # Cache the Docker named volume content path
-          # Docker typically stores volumes under /var/lib/docker/volumes on Linux
-          # Cache this specific named volume's data directory
           path: /var/lib/docker/volumes/${{ env.OLLAMA_VOLUME_PATH }}/_data
           key: ollama-docker-volume-${{ runner.os }}-${{ env.OLLAMA_MODEL_TO_TEST }}
           restore-keys: |
             ollama-docker-volume-${{ runner.os }}-
 
+      - name: Create Swap Memory
+        run: |
+          echo "Setting up swap memory..."
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          echo "/swapfile swap swap defaults 0 0" | sudo tee -a /etc/fstab
+          free -h
+
+      - name: Create custom Modelfile
+        run: |
+          echo "Creating custom Modelfile for Gemma with reduced context window..."
+          cat > Modelfile << EOF
+          FROM gemma3:27b-it-qat
+
+          PARAMETER num_ctx 4096
+          PARAMETER temperature 0.1
+          PARAMETER stop "<end_of_turn>"
+
+          TEMPLATE """
+          {{- range \$i, \$_ := .Messages }}
+          {{- \$last := eq (len (slice \$.Messages \$i)) 1 }}
+          {{- if or (eq .Role "user") (eq .Role "system") }}<start_of_turn>user
+          {{ .Content }}<end_of_turn>
+          {{ if \$last }}<start_of_turn>model
+          {{ end }}
+          {{- else if eq .Role "assistant" }}<start_of_turn>model
+          {{ .Content }}{{ if not \$last }}<end_of_turn>
+          {{ end }}
+          {{- end }}
+          {{- end }}
+          """
+          EOF
+          cat Modelfile
+
       - name: Start Ollama using Docker
         run: |
           echo "Starting Ollama container using Docker..."
-          # Use a named volume for persistence within the job & caching
           docker run -d -p 11434:11434 \
             -v ${{ env.OLLAMA_VOLUME_PATH }}:/root/.ollama \
+            -v $(pwd)/Modelfile:/Modelfile \
             -e OLLAMA_FLASH_ATTENTION=1 \
             --name ollama ollama/ollama
 
@@ -68,20 +100,26 @@ jobs:
 
           echo "Checking running Docker containers..."
           docker ps
-          # Optional: Check API endpoint
           curl --fail http://localhost:11434/ || (echo "Ollama server failed to start"; exit 1)
-          
-          echo "Sending warm-up request..."
-          docker exec ollama ollama run ${{ env.OLLAMA_MODEL_TO_TEST }} "Respond with just OK."
-          echo "Warm-up complete."
 
-      - name: Pull Ollama Model
+      - name: Pull Ollama Model and Create Custom Model
         run: |
-          echo "Attempting to pull model: ${{ env.OLLAMA_MODEL_TO_TEST }}"
+          echo "Pulling base model: ${{ env.OLLAMA_MODEL_TO_TEST }}"
           docker exec ollama ollama pull ${{ env.OLLAMA_MODEL_TO_TEST }}
-
+          
+          echo "Creating custom model with reduced context window"
+          docker exec ollama ollama create gemma3-reduced-ctx -f /Modelfile
+          
+          # Update the model to test
+          echo "OLLAMA_MODEL_TO_TEST=gemma3-reduced-ctx" >> $GITHUB_ENV
+          
           echo "Listing available models in Ollama..."
           docker exec ollama ollama list
+          docker exec ollama ollama rm ${{ env.OLLAMA_MODEL_TO_TEST }}
+          
+          echo "Sending warm-up request..."
+          docker exec ollama ollama run gemma3-reduced-ctx "Respond with just OK."
+          echo "Warm-up complete."
 
       - name: Run Ollama Tests
         id: ollama_test
@@ -92,7 +130,7 @@ jobs:
       - name: Show warning on test failure
         if: steps.ollama_test.outcome != 'success'
         run: |
-          echo "::warning::Ollama ${{ env.OLLAMA_MODEL_TO_TEST}} tests failed or encountered issues. This might be acceptable as the local LLM is not yet reliable. Please check the reports artifact for details."
+          echo "::warning::Ollama gemma3-reduced-ctx tests failed or encountered issues. This might be acceptable as the local LLM is not yet reliable. Please check the reports artifact for details."
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
