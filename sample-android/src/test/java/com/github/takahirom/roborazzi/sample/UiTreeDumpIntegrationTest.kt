@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.Dump
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.RoborazziOptions
@@ -357,6 +358,41 @@ class UiTreeDumpIntegrationTest {
 
     assertTrue("sidecar should still be written", sidecarFile.exists())
     assertFalse("no annotated image when annotateImage = false", annotatedFile.exists())
+
+    listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
+  }
+
+  @Test
+  fun dumpCaptureTypeWritesSidecarButNoAnnotatedImage() {
+    composeTestRule.setContent {
+      Text(
+        text = "Login",
+        modifier = Modifier
+          .testTag("login_button")
+          .size(120.dp)
+      )
+    }
+
+    val prefix =
+      "${roborazziSystemPropertyOutputDirectory()}/${this::class.qualifiedName}.dumpCaptureType"
+    val imageFile = File("$prefix.png")
+    val sidecarFile = File("$prefix.uitree.json")
+    val annotatedFile = File("$prefix.annotated.png")
+    listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
+
+    onView(isRoot()).captureRoboImage(
+      file = imageFile,
+      roborazziOptions = RoborazziOptions(
+        taskType = RoborazziTaskType.Record,
+        captureType = RoborazziOptions.CaptureType.Dump(),
+        uiTreeDumpOptions = UiTreeDumpOptions(),
+      ),
+    )
+
+    assertTrue("sidecar should still be written", sidecarFile.exists())
+    // The Dump image lays the screenshot out with other content, so boxes drawn at the
+    // UI coordinates would land in the wrong place.
+    assertFalse("no annotated image for a Dump capture", annotatedFile.exists())
 
     listOf(imageFile, sidecarFile, annotatedFile).forEach { it.delete() }
   }
