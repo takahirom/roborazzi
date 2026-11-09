@@ -282,13 +282,9 @@ fun Bitmap.captureRoboImage(
   }
   val image = this
   val canvas = AwtRoboCanvas(
-    width = image.width,
-    height = image.height,
-    filled = true,
+    bitmap = image,
     bufferedImageType = roborazziOptions.recordOptions.pixelBitConfig.toBufferedImageType()
-  ).apply {
-    drawImage(Rect(0, 0, image.width, image.height), image)
-  }
+  )
   processOutputImageAndReportWithDefaults(
     canvas = canvas,
     goldenFile = file,
@@ -735,6 +731,10 @@ private class ImageCaptureViewAction(
   }
 }
 
+/**
+ * Copies a privately captured root image into an AWT canvas and releases the source Bitmap.
+ * Dump captures keep their component images alive for the canvas's deferred drawing.
+ */
 internal fun capture(
   rootComponent: RoboComponent,
   roborazziOptions: RoborazziOptions,
@@ -757,16 +757,17 @@ internal fun capture(
     is RoborazziOptions.CaptureType.Screenshot -> {
       val image = rootComponent.image
         ?: throw IllegalStateException("Unable to find the image of the target root component. Does the rendering element exist?")
-      onCanvas(
+      val canvas = try {
         AwtRoboCanvas(
-          width = image.width,
-          height = image.height,
-          filled = true,
+          bitmap = image,
           bufferedImageType = roborazziOptions.recordOptions.pixelBitConfig.toBufferedImageType()
-        ).apply {
-          drawImage(Rect(0, 0, image.width, image.height), image)
-        }
-      )
+        )
+      } finally {
+        // Every screenshot call site creates its root component for this capture. The AWT
+        // canvas owns copied pixels, and callbacks can retain it without retaining the Bitmap.
+        image.recycle()
+      }
+      onCanvas(canvas)
     }
   }
 }

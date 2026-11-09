@@ -17,6 +17,8 @@ dependencies {
   api "io.github.takahirom.roborazzi:roborazzi-core:$VERSION_NAME"
 
   testImplementation libs.androidx.compose.runtime
+  testImplementation libs.junit
+  testImplementation libs.robolectric
   compileOnly libs.androidx.compose.ui.test
   compileOnly libs.androidx.compose.ui.test.junit4
 

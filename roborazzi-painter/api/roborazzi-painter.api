@@ -35,6 +35,7 @@ public final class com/github/takahirom/roborazzi/AwtRoboCanvas : com/github/tak
 	public static final field TRANSPARENT_NONE I
 	public static final field TRANSPARENT_STRONG I
 	public fun <init> (IIZI)V
+	public fun <init> (Landroid/graphics/Bitmap;I)V
 	public final fun addBaseDraw (Lkotlin/jvm/functions/Function0;)V
 	public final fun addPendingDraw (Lkotlin/jvm/functions/Function0;)V
 	public fun differ (Lcom/github/takahirom/roborazzi/RoboCanvas;DLcom/dropbox/differ/ImageComparator;)Lcom/dropbox/differ/ImageComparator$ComparisonResult;
