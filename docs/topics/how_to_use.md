@@ -345,6 +345,8 @@ a screen reader is on, so the capture turns one on in Robolectric while it reads
 state afterwards. The screenshot itself is taken before that.
 
 The legend approximates what TalkBack reads; it doesn't run TalkBack. It works on Android with Robolectric only.
+Views that expose virtual children through their own `AccessibilityNodeProvider` (for example charts or custom widgets)
+are not expanded: their virtual children don't appear in the legend.
 
 ## Roborazzi options
 
