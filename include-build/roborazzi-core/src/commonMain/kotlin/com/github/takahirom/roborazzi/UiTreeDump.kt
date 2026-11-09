@@ -75,6 +75,11 @@ class UiTreeDumpOptions(
    * copy of the output screenshot with each numbered node's `n` drawn as a
    * bounding box + label, so the image and the JSON always agree.
    *
+   * It is only written when [RoborazziOptions.captureType] is
+   * [RoborazziOptions.CaptureType.Screenshot]. Other capture types, such as `Dump()`,
+   * place the screenshot among other content, so for them only the JSON sidecar is
+   * written.
+   *
    * The annotated image is a display artifact of the current run only: it never
    * participates in image comparison and never fails a capture. Set to false to
    * write only the JSON sidecar.
