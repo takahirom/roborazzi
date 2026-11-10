@@ -327,6 +327,8 @@ composeTestRule.onRoot().captureRoboImage(
 )
 ```
 
+<img src="https://github.com/user-attachments/assets/0a05ee3d-befb-46ca-8554-187df0dacd53" alt="Accessibility legend example" width="600" />
+
 For each element the legend shows:
 
 - the label: content description or text; for a clickable container, the texts of its descendants;
