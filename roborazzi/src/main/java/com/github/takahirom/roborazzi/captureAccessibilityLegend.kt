@@ -20,22 +20,31 @@ internal fun captureAccessibilityLegend(
   val image = rootComponent.image ?: throw IllegalStateException(
     "Unable to find the image of the target root component. Does the rendering element exist?"
   )
-  val entries = collectAccessibilityLegendEntries(rootComponent)
-  val legend = renderAccessibilityLegend(
-    screenshot = image,
-    entries = entries,
-    density = rootComponent.density(),
-  )
-  onCanvas(
-    AwtRoboCanvas(
-      width = legend.width,
-      height = legend.height,
-      filled = true,
-      bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType(),
-    ).apply {
-      drawImage(Rect(0, 0, legend.width, legend.height), legend)
+  val canvas = try {
+    val entries = collectAccessibilityLegendEntries(rootComponent)
+    val legend = renderAccessibilityLegend(
+      screenshot = image,
+      entries = entries,
+      density = rootComponent.density(),
+    )
+    try {
+      AwtRoboCanvas(
+        width = legend.width,
+        height = legend.height,
+        filled = true,
+        bufferedImageType = recordOptions.pixelBitConfig.toBufferedImageType(),
+      ).apply {
+        drawImage(Rect(0, 0, legend.width, legend.height), legend)
+      }
+    } finally {
+      legend.recycle()
     }
-  )
+  } finally {
+    // Like the Screenshot capture type, the root component is created for this capture and the
+    // AWT canvas holds copied pixels, so the Bitmaps aren't needed after this.
+    image.recycle()
+  }
+  onCanvas(canvas)
 }
 
 private fun RoboComponent.density(): Float {

@@ -244,6 +244,11 @@ private fun describeView(
       val hint = (if (Build.VERSION.SDK_INT >= 26) info.hintText else null).toLabel()
       if (hint != null && hint != label) add("hint: \"$hint\"")
       walk.labelsFor[view.id]?.let { add("labeled by: \"$it\"") }
+      // A content description becomes the label and hides the typed text, so show it separately.
+      // AccessibilityNodeInfo.text falls back to the hint, so read the text from the view.
+      if (!info.isPassword) {
+        (view as? TextView)?.text.toLabel()?.takeIf { it != label }?.let { add("value: \"$it\"") }
+      }
       info.error?.toString()?.oneLine()?.let { add("⚠ error: \"$it\"") }
       if (info.isPassword) add("password (characters hidden)")
     }

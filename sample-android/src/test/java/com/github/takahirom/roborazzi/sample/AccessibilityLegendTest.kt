@@ -203,6 +203,8 @@ class AccessibilityLegendTest {
       4. "Remember me" · Checkbox · not checked
       5. "Email" · EditText
          ⚠ error: "Required"
+      6. "Name" · EditText
+         value: "Taro"
       """.trimIndent(),
       accessibilityLegendText(root),
     )
@@ -250,6 +252,10 @@ class AccessibilityLegendTest {
       addView(EditText(activity).apply {
         hint = "Email"
         error = "Required"
+      })
+      addView(EditText(activity).apply {
+        contentDescription = "Name"
+        setText("Taro")
       })
     }
   }
