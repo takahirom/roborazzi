@@ -169,11 +169,24 @@ private const val COMPOSER_CLASS_NAME = "androidx.compose.runtime.Composer"
 private val PACKAGE_PREFIX = Regex("""\b[a-zA-Z_][a-zA-Z0-9_]*\.""")
 private val WHITESPACE = Regex("""\s+""")
 
+/**
+ * Loads a class declaring a preview without running its static initializers.
+ *
+ * Only the class's methods and annotations are read here, and previews are scanned outside the
+ * Robolectric sandbox, where initializers that touch the Android framework (for example a
+ * top-level `val` built with `android.net.Uri.parse`) would throw.
+ */
+private fun loadClassWithoutInitializing(className: String): Class<*> =
+  Class.forName(className, false, ClassLoadingAnchor::class.java.classLoader)
+
+// Resolves classes with the same loader as this file, which the one-argument Class.forName used.
+private object ClassLoadingAnchor
+
 private fun loadDeclaringClass(className: String): Class<*>? {
   var candidate = className
   while (true) {
     try {
-      return Class.forName(candidate)
+      return loadClassWithoutInitializing(candidate)
     } catch (e: ClassNotFoundException) {
       val lastDot = candidate.lastIndexOf('.')
       if (lastDot < 0) return null
@@ -726,7 +739,7 @@ class AndroidComposePreviewTester(
         // Please refer to https://github.com/takahirom/roborazzi/pull/633#discussion_r1946472486
 //    val options: RoboComposePreviewOptions =
 //      (preview.getAnnotation<RoboComposePreviewOptions>() ?: RoboComposePreviewOptions())
-        val annotationOptions = Class.forName(preview.declaringClass).declaredMethods
+        val annotationOptions = loadClassWithoutInitializing(preview.declaringClass).declaredMethods
           .firstOrNull { it.name == preview.methodName }
           ?.getAnnotation(RoboComposePreviewOptions::class.java)
           ?: RoboComposePreviewOptions()
