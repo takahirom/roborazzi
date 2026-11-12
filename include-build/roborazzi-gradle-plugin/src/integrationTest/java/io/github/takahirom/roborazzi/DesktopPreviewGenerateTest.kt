@@ -100,6 +100,17 @@ class DesktopPreviewGenerateTest {
   }
 
   @Test
+  fun whenExcludePackagesIsConfiguredImagesShouldNotBeRecorded() {
+    DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
+      buildGradle.excludePackages = listOf("com.github.takahirom.preview.tests")
+
+      record()
+
+      checkNoImages()
+    }
+  }
+
+  @Test
   fun whenCustomTesterAndRecordRunImagesShouldBeRecorded() {
     DesktopPreviewModule(RoborazziGradleRootProject(testProjectDir), testProjectDir).apply {
       buildGradle.useCustomTester = true
@@ -282,6 +293,7 @@ class DesktopPreviewModule(
     var annotationFilterExcludeBinaryName: String? = null
     var useAndroidOnlyProject = false
     var explicitApiStrictInTests = false
+    var excludePackages: List<String>? = null
 
     // kotlin { explicitApi() } is skipped for test compilations by KGP, but the
     // -Xexplicit-api compiler flag reaches them and so the generated tests.
@@ -471,6 +483,11 @@ class DesktopPreviewModule(
       } else {
         ""
       }
+      val excludePackagesExpr = if (excludePackages != null) {
+        """excludePackages = listOf(${excludePackages!!.joinToString(", ") { "\"$it\"" }})"""
+      } else {
+        ""
+      }
       return """
               roborazzi {
                 $separateOutputDirsExpr
@@ -478,6 +495,7 @@ class DesktopPreviewModule(
                 generateComposePreviewDesktopTests {
                   enable = $enable
                   packages = listOf("com.github.takahirom.preview.tests")
+                  $excludePackagesExpr
                   $targetNameExpr
                   $includePrivatePreviewsExpr
                   $customTesterExpr

@@ -75,7 +75,41 @@ interface DesktopComposePreviewTester {
        * Filter for composable previews by annotation.
        */
       val annotationFilter: AnnotationFilter? = null,
-    )
+      /**
+       * The packages to exclude from the scan.
+       */
+      val excludePackages: List<String> = emptyList(),
+    ) {
+      @Deprecated(
+        message = "Kept for binary compatibility.",
+        level = DeprecationLevel.HIDDEN
+      )
+      constructor(
+        packages: List<String>,
+        includePrivatePreviews: Boolean = false,
+        annotationFilter: AnnotationFilter? = null,
+      ) : this(
+        packages = packages,
+        includePrivatePreviews = includePrivatePreviews,
+        annotationFilter = annotationFilter,
+        excludePackages = emptyList(),
+      )
+
+      @Deprecated(
+        message = "Kept for binary compatibility.",
+        level = DeprecationLevel.HIDDEN
+      )
+      fun copy(
+        packages: List<String> = this.packages,
+        includePrivatePreviews: Boolean = this.includePrivatePreviews,
+        annotationFilter: AnnotationFilter? = this.annotationFilter,
+      ): ScanOptions = copy(
+        packages = packages,
+        includePrivatePreviews = includePrivatePreviews,
+        annotationFilter = annotationFilter,
+        excludePackages = this.excludePackages,
+      )
+    }
   }
 
   /**
@@ -200,7 +234,16 @@ class DefaultDesktopComposePreviewTester(
   override fun testParameters(): List<DesktopPreviewTestParameter> {
     val scanOptions = options().scanOptions
     val scanner = AndroidComposablePreviewScanner()
-      .scanPackageTrees(*scanOptions.packages.toTypedArray())
+      .let {
+        if (scanOptions.excludePackages.isNotEmpty()) {
+          it.scanPackageTrees(
+            include = scanOptions.packages,
+            exclude = scanOptions.excludePackages,
+          )
+        } else {
+          it.scanPackageTrees(*scanOptions.packages.toTypedArray())
+        }
+      }
       .let {
         if (scanOptions.includePrivatePreviews) {
           it.includePrivatePreviews()
