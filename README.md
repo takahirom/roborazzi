@@ -698,6 +698,43 @@ For a machine-readable version of the UI tree for tools and AI agents, see
 Roborazzi Accessibility Checks is a library that integrates accessibility checks into Roborazzi.
 Please refer to [Accessibility Check](https://github.com/takahirom/roborazzi/blob/main/roborazzi-accessibility-check/README.md)
 
+## Accessibility legend
+
+The `AccessibilityLegend` capture type (experimental) renders the screenshot next to a legend of the elements a screen
+reader focuses, numbered in traversal order. It is recorded and verified like any other screenshot, so a changed label,
+role, state or order shows up as a golden diff.
+
+```kotlin
+composeTestRule.onRoot().captureRoboImage(
+  roborazziOptions = RoborazziOptions(
+    captureType = RoborazziOptions.CaptureType.AccessibilityLegend(),
+  ),
+)
+```
+
+<img src="https://github.com/user-attachments/assets/0a05ee3d-befb-46ca-8554-187df0dacd53" alt="Accessibility legend example" width="600" />
+
+For each element the legend shows:
+
+- the label: content description or text; for a clickable container, the texts of its descendants;
+- the role (Button, Checkbox, Switch, Tab, Slider, Heading, EditText, …), the state (checked, selected, disabled or a
+  state description) and the value of sliders and progress bars;
+- for text fields, the value, hint, error and whether it is a password;
+- live regions and pane titles;
+- `⚠ NO LABEL` for a clickable element without a label.
+
+The numbers sit in a column next to the screenshot, so they don't cover the UI. Colors come from a hash of the element's
+text, so inserting an element rarely recolors the others.
+
+Compose content is read from the merged semantics tree in the order Compose reports to screen readers. Views are read
+from `AccessibilityNodeInfo`, so `AccessibilityDelegate`s are taken into account. Compose computes the order only while
+a screen reader is on, so the capture turns one on in Robolectric while it reads the tree and restores the previous
+state afterwards. The screenshot itself is taken before that.
+
+The legend approximates what TalkBack reads; it doesn't run TalkBack. It works on Android with Robolectric only.
+Views that expose virtual children through their own `AccessibilityNodeProvider` (for example charts or custom widgets)
+are not expanded: their virtual children don't appear in the legend.
+
 ## Roborazzi options
 
 Please check out [RoborazziOptions](https://github.com/takahirom/roborazzi/blob/main/include-build/roborazzi-core/src/commonJvmMain/kotlin/com/github/takahirom/roborazzi/RoborazziOptions.kt) for available Roborazzi options.
