@@ -58,7 +58,7 @@ fun writeUiTreeDumpIfEnabled(
     ?: return UiTreeDumpWriteResult(roborazziOptions, annotatedImageWriter = null)
   return try {
     val tree = serializationTree()
-    val scale = roborazziOptions.recordOptions.resizeScale
+    val scale = roborazziOptions.recordOptions.resizeScaleFor(width = tree.width, height = tree.height)
     val captureInfo = UiTreeCaptureInfo(
       imageWidth = (tree.width * scale).toInt(),
       imageHeight = (tree.height * scale).toInt(),
