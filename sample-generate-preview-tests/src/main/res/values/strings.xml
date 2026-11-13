@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="testing_inline_content">Testing inline content</string>
+  <string name="for_preview_tests">for preview tests</string>
+</resources>
