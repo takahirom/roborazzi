@@ -58,6 +58,7 @@ internal class DesktopUiTreeDumpWriteResult(
 @OptIn(ExperimentalRoborazziApi::class)
 internal fun writeUiTreeDumpIfEnabledDesktop(
   serializationTree: () -> RoboComponentTree,
+  density: Float,
   goldenFile: File,
   roborazziOptions: RoborazziOptions,
 ): DesktopUiTreeDumpWriteResult {
@@ -70,6 +71,7 @@ internal fun writeUiTreeDumpIfEnabledDesktop(
       imageWidth = (tree.width * scale).toInt(),
       imageHeight = (tree.height * scale).toInt(),
       scale = scale,
+      density = density,
     )
     val numbers = assignUiTreeNumbers(tree, dumpOptions.isAnnotatable)
     val json = tree.toUiTreeJson(captureInfo = captureInfo, numbers = numbers)
