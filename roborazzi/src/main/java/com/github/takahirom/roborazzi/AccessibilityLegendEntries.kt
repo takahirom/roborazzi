@@ -482,7 +482,14 @@ private fun describeCompose(node: SemanticsNode, info: AccessibilityNodeInfo?): 
       add(stateDescription)
     }
     if (config.contains(SemanticsProperties.Disabled)) add("disabled")
-    config.getOrNull(SemanticsActions.OnClick)?.label?.let { add("click: $it") }
+    // Read the labels from the node info Compose gives screen readers: it leaves out the click
+    // actions of disabled nodes and of already selected tabs and radio buttons.
+    info?.actionList?.forEach { action ->
+      when (action.id) {
+        AccessibilityNodeInfo.ACTION_CLICK -> action.label?.let { add("click: $it") }
+        AccessibilityNodeInfo.ACTION_LONG_CLICK -> action.label?.let { add("long click: $it") }
+      }
+    }
   }
   val details = buildList {
     if (range != null) {

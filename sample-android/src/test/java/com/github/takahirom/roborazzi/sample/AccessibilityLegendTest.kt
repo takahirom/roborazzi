@@ -12,6 +12,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,7 +34,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -123,6 +127,50 @@ class AccessibilityLegendTest {
       8. "Inbox" · Tab · selected
       9. "Sent" · Tab
       [pane "Filters": announced when shown]
+      """.trimIndent(),
+      accessibilityLegendText(root),
+    )
+  }
+
+  @Test
+  fun composeLegendTextShowsOnlyActionLabelsScreenReadersGet() {
+    composeTestRule.setContent {
+      Column {
+        listOf(true, false).forEach { enabled ->
+          Text(
+            text = if (enabled) "Enabled" else "Disabled",
+            modifier = Modifier.combinedClickable(
+              enabled = enabled,
+              role = Role.Button,
+              onClickLabel = "Open",
+              onLongClickLabel = "Copy",
+              onLongClick = {},
+              onClick = {},
+            ),
+          )
+        }
+        listOf(true, false).forEach { selected ->
+          Text(
+            text = if (selected) "Selected tab" else "Other tab",
+            modifier = Modifier.semantics {
+              role = Role.Tab
+              this.selected = selected
+              onClick(label = "Switch") { true }
+            },
+          )
+        }
+      }
+    }
+
+    val node = composeTestRule.onRoot().fetchSemanticsNode()
+    val root = RoboComponent.Compose(node, RoborazziOptions())
+
+    assertEquals(
+      """
+      1. "Enabled" · Button · click: Open, long click: Copy
+      2. "Disabled" · Button · disabled
+      3. "Selected tab" · Tab · selected
+      4. "Other tab" · Tab · click: Switch
       """.trimIndent(),
       accessibilityLegendText(root),
     )
