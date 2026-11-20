@@ -162,6 +162,7 @@ class AccessibilityLegendTest {
       }
     }
 
+    composeTestRule.onRoot().captureRoboImage(roborazziOptions = legendOptions)
     val node = composeTestRule.onRoot().fetchSemanticsNode()
     val root = RoboComponent.Compose(node, RoborazziOptions())
 
