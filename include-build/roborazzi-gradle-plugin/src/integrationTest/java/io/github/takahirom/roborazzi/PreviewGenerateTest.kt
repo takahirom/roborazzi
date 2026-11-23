@@ -152,7 +152,7 @@ class GeneratePreviewTestTest {
         assert(output.contains("renderScale = 0.5 is configured in generateComposePreviewRobolectricTests"))
         assert(output.contains("com.github.takahirom.sample.CustomPreviewTester"))
         assert(output.contains("toRoborazziComposeOptions(renderScale)"))
-        assert(output.contains("roborazzi.problemSeverity=composePreview.renderScaleMismatch:warning"))
+        assert(output.contains("roborazzi.problemSeverity.composePreview.renderScaleMismatch=warning"))
       }
     }
   }
@@ -162,7 +162,7 @@ class GeneratePreviewTestTest {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.useCustomTester = true
       buildGradle.renderScale = 0.5
-      addGradleProperty("roborazzi.problemSeverity", "composePreview.renderScaleMismatch:warning")
+      addGradleProperty("roborazzi.problemSeverity.composePreview.renderScaleMismatch", "warning")
 
       record {
         assert(output.contains("Roborazzi: Warning: renderScale = 0.5 is configured in generateComposePreviewRobolectricTests"))
@@ -174,7 +174,7 @@ class GeneratePreviewTestTest {
   @Test
   fun whenProblemSeverityHasAnUnknownIdTheBuildShouldFail() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
-      addGradleProperty("roborazzi.problemSeverity", "composePreview.renderScaleMisMatch:warning")
+      addGradleProperty("roborazzi.problemSeverity.composePreview.renderScaleMisMatch", "warning")
 
       record(BuildType.BuildAndFail) {
         assert(output.contains("Unknown problem id 'composePreview.renderScaleMisMatch'"))

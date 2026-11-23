@@ -15,7 +15,8 @@ enum class RoborazziProblemSeverity(val value: String) {
  * Something that is probably a mistake, but that a user may have done on purpose.
  *
  * Invalid input that Roborazzi cannot work with is not a problem: fail with `require` instead.
- * Users change the severity of a problem by [id] with [RoborazziProblems.SeverityProperty].
+ * Users change the severity of a problem with one Gradle property per problem,
+ * `roborazzi.problemSeverity.<id>` (see [RoborazziProblems.severityPropertyName]).
  *
  * Choosing a new problem:
  * - [id] is `area.problem` in lowerCamelCase. The area is the feature as users see it in the
@@ -26,6 +27,9 @@ enum class RoborazziProblemSeverity(val value: String) {
  *   cannot work as configured. A new check on existing usage starts as
  *   [RoborazziProblemSeverity.Warning], so upgrading does not break builds. Don't lower the
  *   severity of a released error as a side effect of other work.
+ * - Report a problem that defaults to [RoborazziProblemSeverity.Warning] from the Gradle plugin
+ *   when you can. A warning reported in the test JVM goes to its standard error, which Gradle
+ *   shows only with `--info` or `testLogging`, so users may never see it.
  */
 @InternalRoborazziApi
 class RoborazziProblem internal constructor(
@@ -48,64 +52,108 @@ object RoborazziProblems {
     ComposePreviewRenderScaleMismatch,
   )
 
+  /** The Gradle property that sets the severity of [problem], such as `roborazzi.problemSeverity.<id>`. */
+  fun severityPropertyName(problem: RoborazziProblem): String = "$SeverityProperty.${problem.id}"
+
   /**
-   * Parses a [SeverityProperty] value such as `composePreview.renderScaleMismatch:warning`.
+   * Reads the severities set by `roborazzi.problemSeverity.<id>` properties in [properties], keyed
+   * by problem ID. Properties that do not start with [SeverityProperty] are ignored.
    *
-   * Fails on an unknown ID or severity, or an ID listed twice, so a typo cannot silently leave a
-   * problem at its default.
+   * Fails on an unknown ID or severity, so a typo cannot silently leave a problem at its default.
+   * The Gradle plugin calls this with every `roborazzi.*` property, so the build fails before any
+   * test runs.
    */
-  fun parseSeverities(value: String?): Map<RoborazziProblem, RoborazziProblemSeverity> {
-    if (value.isNullOrBlank()) return emptyMap()
-    val result = mutableMapOf<RoborazziProblem, RoborazziProblemSeverity>()
-    value.split(",").map { it.trim() }.forEach { entry ->
-      val parts = entry.split(":").map { it.trim() }
-      require(parts.size == 2 && parts.none { it.isEmpty() }) {
-        "Invalid $SeverityProperty entry '$entry' in '$value'. Use <problem id>:<severity>, " +
-          "for example ${ComposePreviewRenderScaleMismatch.id}:warning."
-      }
-      val (id, severityValue) = parts
-      val problem = requireNotNull(all.firstOrNull { it.id == id }) {
-        "Unknown problem id '$id' in $SeverityProperty. Known ids: ${all.joinToString()}."
-      }
-      val severity = requireNotNull(RoborazziProblemSeverity.entries.firstOrNull { it.value == severityValue }) {
-        "Unknown severity '$severityValue' for '$id' in $SeverityProperty. " +
-          "Use one of: ${RoborazziProblemSeverity.entries.joinToString { it.value }}."
-      }
-      require(problem !in result) {
-        "Problem id '$id' is listed more than once in $SeverityProperty."
-      }
-      result[problem] = severity
+  fun parseSeverities(properties: Map<String, Any?>): Map<String, RoborazziProblemSeverity> {
+    properties[SeverityProperty]?.let { value ->
+      throw IllegalArgumentException(
+        "$SeverityProperty=$value is not supported. Set one property per problem instead, " +
+          "for example:\n" + suggestKeyPerProblem(value.toString())
+      )
     }
-    return result
+    val prefix = "$SeverityProperty."
+    return properties
+      .filterKeys { it.startsWith(prefix) }
+      .map { (name, value) ->
+        val id = name.removePrefix(prefix)
+        val problem = requireNotNull(all.firstOrNull { it.id == id }) {
+          "Unknown problem id '$id' in $name. Known ids: ${all.joinToString()}."
+        }
+        problem.id to parseSeverity(name, value)
+      }
+      .toMap()
   }
 
+  /**
+   * The severity of [problem]. By default, it is read from the `roborazzi.problemSeverity.<id>`
+   * system property of [problem] only, which the Gradle plugin forwards to the test JVM. Settings
+   * for other problems are not read, so an ID that only a newer plugin knows cannot fail a test.
+   */
   fun severityOf(
     problem: RoborazziProblem,
-    configured: Map<RoborazziProblem, RoborazziProblemSeverity> =
-      parseSeverities(getSystemProperty(SeverityProperty)),
-  ): RoborazziProblemSeverity = configured[problem] ?: problem.defaultSeverity
+    severities: Map<String, RoborazziProblemSeverity> = systemPropertySeverity(problem),
+  ): RoborazziProblemSeverity = severities[problem.id] ?: problem.defaultSeverity
+
+  /** [message] followed by the ID of [problem] and how to change its [severity]. */
+  fun message(
+    problem: RoborazziProblem,
+    message: String,
+    severity: RoborazziProblemSeverity,
+  ): String {
+    val otherSeverity = when (severity) {
+      RoborazziProblemSeverity.Error -> RoborazziProblemSeverity.Warning
+      RoborazziProblemSeverity.Warning, RoborazziProblemSeverity.Disabled -> RoborazziProblemSeverity.Disabled
+    }
+    return "$message\n" +
+      "\n" +
+      "Problem: ${problem.id} (${severity.value}). To change its severity, set " +
+      "${severityPropertyName(problem)}=${otherSeverity.value} in gradle.properties."
+  }
 
   /**
    * Reports [problem] with the severity the user configured: throws [IllegalStateException] for
-   * an error, logs a warning, or does nothing when it is disabled.
+   * an error, logs a warning to standard error, or does nothing when it is disabled.
    */
   fun report(
     problem: RoborazziProblem,
     message: String,
     severity: RoborazziProblemSeverity = severityOf(problem),
   ) {
-    val otherSeverity = when (severity) {
-      RoborazziProblemSeverity.Error -> RoborazziProblemSeverity.Warning
-      RoborazziProblemSeverity.Warning, RoborazziProblemSeverity.Disabled -> RoborazziProblemSeverity.Disabled
-    }
-    val fullMessage = "$message\n" +
-      "\n" +
-      "Problem: ${problem.id} (${severity.value}). To change its severity, set " +
-      "$SeverityProperty=${problem.id}:${otherSeverity.value} in gradle.properties."
     when (severity) {
-      RoborazziProblemSeverity.Error -> throw IllegalStateException(fullMessage)
-      RoborazziProblemSeverity.Warning -> roborazziErrorLog("Warning: $fullMessage")
+      RoborazziProblemSeverity.Error ->
+        throw IllegalStateException(message(problem, message, severity))
+      RoborazziProblemSeverity.Warning ->
+        roborazziErrorLog("Warning: ${message(problem, message, severity)}")
       RoborazziProblemSeverity.Disabled -> Unit
     }
+  }
+
+  private fun systemPropertySeverity(
+    problem: RoborazziProblem,
+  ): Map<String, RoborazziProblemSeverity> {
+    val name = severityPropertyName(problem)
+    val value = getSystemProperty(name) ?: return emptyMap()
+    return mapOf(problem.id to parseSeverity(name, value))
+  }
+
+  private fun parseSeverity(name: String, value: Any?): RoborazziProblemSeverity {
+    val trimmed = value?.toString()?.trim()
+    return requireNotNull(RoborazziProblemSeverity.entries.firstOrNull { it.value == trimmed }) {
+      "Unknown severity '$value' in $name. " +
+        "Use one of: ${RoborazziProblemSeverity.entries.joinToString { it.value }}."
+    }
+  }
+
+  private fun suggestKeyPerProblem(value: String): String {
+    val lines = value.split(",").mapNotNull { entry ->
+      val parts = entry.split(":").map { it.trim() }
+      if (parts.size == 2 && parts.none { it.isEmpty() }) {
+        "$SeverityProperty.${parts[0]}=${parts[1]}"
+      } else {
+        null
+      }
+    }
+    return lines.ifEmpty {
+      listOf("${severityPropertyName(ComposePreviewRenderScaleMismatch)}=warning")
+    }.joinToString("\n")
   }
 }

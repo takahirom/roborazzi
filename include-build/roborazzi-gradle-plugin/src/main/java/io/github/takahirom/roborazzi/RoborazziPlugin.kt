@@ -359,9 +359,7 @@ abstract class RoborazziPlugin : Plugin<Project> {
         project.providers.gradlePropertiesPrefixedBy("roborazzi").get()
       // The test JVM reads this too, but only when a problem occurs. Check it here so that a typo
       // fails the build instead of waiting for a problem that may never happen.
-      RoborazziProblems.parseSeverities(
-        roborazziProperties[RoborazziProblems.SeverityProperty]?.toString()
-      )
+      RoborazziProblems.parseSeverities(roborazziProperties)
 
       val doesRoborazziRunProvider = isRecordRun.flatMap { isRecordRunValue ->
         isVerifyRun.flatMap { isVerifyRunValue ->
