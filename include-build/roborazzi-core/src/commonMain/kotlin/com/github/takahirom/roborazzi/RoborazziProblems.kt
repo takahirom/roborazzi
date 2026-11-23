@@ -100,8 +100,8 @@ object RoborazziProblems {
     severity: RoborazziProblemSeverity,
   ): String {
     val otherSeverity = when (severity) {
-      RoborazziProblemSeverity.Error -> RoborazziProblemSeverity.Warning
-      RoborazziProblemSeverity.Warning, RoborazziProblemSeverity.Disabled -> RoborazziProblemSeverity.Disabled
+      RoborazziProblemSeverity.Error, RoborazziProblemSeverity.Disabled -> RoborazziProblemSeverity.Warning
+      RoborazziProblemSeverity.Warning -> RoborazziProblemSeverity.Disabled
     }
     return "$message\n" +
       "\n" +

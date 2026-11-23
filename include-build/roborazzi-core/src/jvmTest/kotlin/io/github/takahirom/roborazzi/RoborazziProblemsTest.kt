@@ -109,6 +109,10 @@ class RoborazziProblemsTest {
     val warningMessage =
       RoborazziProblems.message(problem, "Something is off.", RoborazziProblemSeverity.Warning)
     assertTrue(warningMessage, warningMessage.contains("$key=disabled"))
+
+    val disabledMessage =
+      RoborazziProblems.message(problem, "Something is off.", RoborazziProblemSeverity.Disabled)
+    assertTrue(disabledMessage, disabledMessage.contains("$key=warning"))
   }
 
   @Test
