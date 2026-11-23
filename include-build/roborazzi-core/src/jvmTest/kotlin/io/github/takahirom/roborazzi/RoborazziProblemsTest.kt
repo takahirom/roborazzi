@@ -53,16 +53,6 @@ class RoborazziProblemsTest {
   }
 
   @Test
-  fun theSingleListFormatFailsWithTheKeyPerProblemForm() {
-    val error = assertThrows(IllegalArgumentException::class.java) {
-      RoborazziProblems.parseSeverities(
-        mapOf("roborazzi.problemSeverity" to "composePreview.renderScaleMismatch:warning")
-      )
-    }
-    assertTrue(error.message, error.message!!.contains("$key=warning"))
-  }
-
-  @Test
   fun theTestJvmReadsOnlyTheKeyOfTheReportedProblem() {
     // A newer plugin may forward an ID that this library does not know yet. That must not fail
     // a test that reports a different problem.
@@ -100,18 +90,18 @@ class RoborazziProblemsTest {
   }
 
   @Test
-  fun messageTellsHowToChangeTheSeverity() {
+  fun formattedMessageTellsHowToChangeTheSeverity() {
     val errorMessage =
-      RoborazziProblems.message(problem, "Something is off.", RoborazziProblemSeverity.Error)
+      RoborazziProblems.formatMessage(problem, "Something is off.", RoborazziProblemSeverity.Error)
     assertTrue(errorMessage.startsWith("Something is off."))
     assertTrue(errorMessage, errorMessage.contains("$key=warning"))
 
     val warningMessage =
-      RoborazziProblems.message(problem, "Something is off.", RoborazziProblemSeverity.Warning)
+      RoborazziProblems.formatMessage(problem, "Something is off.", RoborazziProblemSeverity.Warning)
     assertTrue(warningMessage, warningMessage.contains("$key=disabled"))
 
     val disabledMessage =
-      RoborazziProblems.message(problem, "Something is off.", RoborazziProblemSeverity.Disabled)
+      RoborazziProblems.formatMessage(problem, "Something is off.", RoborazziProblemSeverity.Disabled)
     assertTrue(disabledMessage, disabledMessage.contains("$key=warning"))
   }
 

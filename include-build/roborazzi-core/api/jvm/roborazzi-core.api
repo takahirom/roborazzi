@@ -883,10 +883,10 @@ public final class com/github/takahirom/roborazzi/RoborazziProblemSeverity : jav
 
 public final class com/github/takahirom/roborazzi/RoborazziProblems {
 	public static final field INSTANCE Lcom/github/takahirom/roborazzi/RoborazziProblems;
-	public static final field SeverityProperty Ljava/lang/String;
+	public static final field SeverityPropertyPrefix Ljava/lang/String;
+	public final fun formatMessage (Lcom/github/takahirom/roborazzi/RoborazziProblem;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;)Ljava/lang/String;
 	public final fun getAll ()Ljava/util/List;
 	public final fun getComposePreviewRenderScaleMismatch ()Lcom/github/takahirom/roborazzi/RoborazziProblem;
-	public final fun message (Lcom/github/takahirom/roborazzi/RoborazziProblem;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;)Ljava/lang/String;
 	public final fun parseSeverities (Ljava/util/Map;)Ljava/util/Map;
 	public final fun report (Lcom/github/takahirom/roborazzi/RoborazziProblem;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;)V
 	public static synthetic fun report$default (Lcom/github/takahirom/roborazzi/RoborazziProblems;Lcom/github/takahirom/roborazzi/RoborazziProblem;Ljava/lang/String;Lcom/github/takahirom/roborazzi/RoborazziProblemSeverity;ILjava/lang/Object;)V

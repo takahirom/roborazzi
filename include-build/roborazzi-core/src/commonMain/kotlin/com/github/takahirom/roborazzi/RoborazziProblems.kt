@@ -41,7 +41,7 @@ class RoborazziProblem internal constructor(
 
 @InternalRoborazziApi
 object RoborazziProblems {
-  const val SeverityProperty: String = "roborazzi.problemSeverity"
+  const val SeverityPropertyPrefix: String = "roborazzi.problemSeverity."
 
   /** A custom preview tester did not carry the configured `renderScale` through to the capture. */
   val ComposePreviewRenderScaleMismatch: RoborazziProblem =
@@ -53,28 +53,21 @@ object RoborazziProblems {
   )
 
   /** The Gradle property that sets the severity of [problem], such as `roborazzi.problemSeverity.<id>`. */
-  fun severityPropertyName(problem: RoborazziProblem): String = "$SeverityProperty.${problem.id}"
+  fun severityPropertyName(problem: RoborazziProblem): String = "$SeverityPropertyPrefix${problem.id}"
 
   /**
    * Reads the severities set by `roborazzi.problemSeverity.<id>` properties in [properties], keyed
-   * by problem ID. Properties that do not start with [SeverityProperty] are ignored.
+   * by problem ID. Properties that do not start with [SeverityPropertyPrefix] are ignored.
    *
    * Fails on an unknown ID or severity, so a typo cannot silently leave a problem at its default.
    * The Gradle plugin calls this with every `roborazzi.*` property, so the build fails before any
    * test runs.
    */
   fun parseSeverities(properties: Map<String, Any?>): Map<String, RoborazziProblemSeverity> {
-    properties[SeverityProperty]?.let { value ->
-      throw IllegalArgumentException(
-        "$SeverityProperty=$value is not supported. Set one property per problem instead, " +
-          "for example:\n" + suggestKeyPerProblem(value.toString())
-      )
-    }
-    val prefix = "$SeverityProperty."
     return properties
-      .filterKeys { it.startsWith(prefix) }
+      .filterKeys { it.startsWith(SeverityPropertyPrefix) }
       .map { (name, value) ->
-        val id = name.removePrefix(prefix)
+        val id = name.removePrefix(SeverityPropertyPrefix)
         val problem = requireNotNull(all.firstOrNull { it.id == id }) {
           "Unknown problem id '$id' in $name. Known ids: ${all.joinToString()}."
         }
@@ -94,7 +87,7 @@ object RoborazziProblems {
   ): RoborazziProblemSeverity = severities[problem.id] ?: problem.defaultSeverity
 
   /** [message] followed by the ID of [problem] and how to change its [severity]. */
-  fun message(
+  fun formatMessage(
     problem: RoborazziProblem,
     message: String,
     severity: RoborazziProblemSeverity,
@@ -120,9 +113,9 @@ object RoborazziProblems {
   ) {
     when (severity) {
       RoborazziProblemSeverity.Error ->
-        throw IllegalStateException(message(problem, message, severity))
+        throw IllegalStateException(formatMessage(problem, message, severity))
       RoborazziProblemSeverity.Warning ->
-        roborazziErrorLog("Warning: ${message(problem, message, severity)}")
+        roborazziErrorLog("Warning: ${formatMessage(problem, message, severity)}")
       RoborazziProblemSeverity.Disabled -> Unit
     }
   }
@@ -143,17 +136,4 @@ object RoborazziProblems {
     }
   }
 
-  private fun suggestKeyPerProblem(value: String): String {
-    val lines = value.split(",").mapNotNull { entry ->
-      val parts = entry.split(":").map { it.trim() }
-      if (parts.size == 2 && parts.none { it.isEmpty() }) {
-        "$SeverityProperty.${parts[0]}=${parts[1]}"
-      } else {
-        null
-      }
-    }
-    return lines.ifEmpty {
-      listOf("${severityPropertyName(ComposePreviewRenderScaleMismatch)}=warning")
-    }.joinToString("\n")
-  }
 }
