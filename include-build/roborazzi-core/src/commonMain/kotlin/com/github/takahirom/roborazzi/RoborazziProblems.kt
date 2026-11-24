@@ -77,14 +77,25 @@ object RoborazziProblems {
   }
 
   /**
-   * The severity of [problem]. By default, it is read from the `roborazzi.problemSeverity.<id>`
-   * system property of [problem] only, which the Gradle plugin forwards to the test JVM. Settings
-   * for other problems are not read, so an ID that only a newer plugin knows cannot fail a test.
+   * The severity of [problem] in [severities], the result of [parseSeverities]. Checks that run in
+   * the Gradle plugin use this: `roborazzi.problemSeverity.<id>` Gradle properties are not system
+   * properties there, so [severityFromSystemProperty] would silently return the default.
    */
   fun severityOf(
     problem: RoborazziProblem,
-    severities: Map<String, RoborazziProblemSeverity> = systemPropertySeverity(problem),
+    severities: Map<String, RoborazziProblemSeverity>,
   ): RoborazziProblemSeverity = severities[problem.id] ?: problem.defaultSeverity
+
+  /**
+   * The severity of [problem] in the test JVM, read from its `roborazzi.problemSeverity.<id>`
+   * system property, which the Gradle plugin forwards. Settings for other problems are not read,
+   * so an ID that only a newer plugin knows cannot fail a test.
+   */
+  fun severityFromSystemProperty(problem: RoborazziProblem): RoborazziProblemSeverity {
+    val name = severityPropertyName(problem)
+    val value = getSystemProperty(name) ?: return problem.defaultSeverity
+    return parseSeverity(name, value)
+  }
 
   /** [message] followed by the ID of [problem] and how to change its [severity]. */
   fun formatMessage(
@@ -103,13 +114,15 @@ object RoborazziProblems {
   }
 
   /**
-   * Reports [problem] with the severity the user configured: throws [IllegalStateException] for
-   * an error, logs a warning to standard error, or does nothing when it is disabled.
+   * Reports [problem] from the test JVM with the severity the user configured: throws
+   * [IllegalStateException] for an error, logs a warning to standard error, or does nothing when
+   * it is disabled. Checks in the Gradle plugin use [severityOf] and [formatMessage] and report
+   * through Gradle instead.
    */
   fun report(
     problem: RoborazziProblem,
     message: String,
-    severity: RoborazziProblemSeverity = severityOf(problem),
+    severity: RoborazziProblemSeverity = severityFromSystemProperty(problem),
   ) {
     when (severity) {
       RoborazziProblemSeverity.Error ->
@@ -118,14 +131,6 @@ object RoborazziProblems {
         roborazziErrorLog("Warning: ${formatMessage(problem, message, severity)}")
       RoborazziProblemSeverity.Disabled -> Unit
     }
-  }
-
-  private fun systemPropertySeverity(
-    problem: RoborazziProblem,
-  ): Map<String, RoborazziProblemSeverity> {
-    val name = severityPropertyName(problem)
-    val value = getSystemProperty(name) ?: return emptyMap()
-    return mapOf(problem.id to parseSeverity(name, value))
   }
 
   private fun parseSeverity(name: String, value: Any?): RoborazziProblemSeverity {

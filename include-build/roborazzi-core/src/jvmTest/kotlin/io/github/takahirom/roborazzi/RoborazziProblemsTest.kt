@@ -60,12 +60,12 @@ class RoborazziProblemsTest {
       "roborazzi.problemSeverity.someArea.problemFromANewerVersion" to "warning",
       key to "warning",
     ) {
-      assertEquals(RoborazziProblemSeverity.Warning, RoborazziProblems.severityOf(problem))
+      assertEquals(RoborazziProblemSeverity.Warning, RoborazziProblems.severityFromSystemProperty(problem))
     }
     withSystemProperties(
       "roborazzi.problemSeverity.someArea.problemFromANewerVersion" to "warning",
     ) {
-      assertEquals(RoborazziProblemSeverity.Error, RoborazziProblems.severityOf(problem))
+      assertEquals(RoborazziProblemSeverity.Error, RoborazziProblems.severityFromSystemProperty(problem))
     }
   }
 
