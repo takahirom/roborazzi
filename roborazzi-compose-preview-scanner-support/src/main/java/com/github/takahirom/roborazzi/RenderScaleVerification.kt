@@ -70,6 +70,10 @@ object RenderScaleVerification {
     if (applied.isEmpty() && configuredScale == 1.0) return
     if (applied.isNotEmpty() && applied.all { it == configuredScale }) return
     if (!provideRoborazziContext().options.taskType.isEnabled()) return
+    val problem = RoborazziProblems.ComposePreviewRenderScaleMismatch
+    val severity = RoborazziProblems.severityFromSystemProperty(problem)
+    // Building the message calls the tester's options(), which a disabled problem must not need.
+    if (severity == RoborazziProblemSeverity.Disabled) return
     val appliedDescription = when {
       applied.isEmpty() -> "did not apply it, so this screenshot was captured at the unscaled density"
       else -> "applied ${applied.joinToString()} instead"
@@ -79,7 +83,7 @@ object RenderScaleVerification {
       else -> "is declared by @RoboComposePreviewOptions on this preview"
     }
     RoborazziProblems.report(
-      RoborazziProblems.ComposePreviewRenderScaleMismatch,
+      problem,
       "renderScale = $configuredScale $source, " +
         "but ${tester::class.java.name} $appliedDescription.\n" +
         "\n" +
@@ -91,7 +95,8 @@ object RenderScaleVerification {
         "a per-preview @RoboComposePreviewOptions(renderScale = ...).\n" +
         "\n" +
         "Alternatively, remove renderScale from the Gradle configuration.\n" +
-        "options().renderScale returned ${tester.options().renderScale}."
+        "options().renderScale returned ${tester.options().renderScale}.",
+      severity,
     )
   }
 }

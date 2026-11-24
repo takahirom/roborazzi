@@ -183,6 +183,17 @@ class GeneratePreviewTestTest {
   }
 
   @Test
+  fun whenProblemSeverityHasAnUnknownLevelTheBuildShouldFail() {
+    RoborazziGradleRootProject(testProjectDir).previewModule.apply {
+      addGradleProperty("roborazzi.problemSeverity.composePreview.renderScaleMismatch", "warn")
+
+      record(BuildType.BuildAndFail) {
+        assert(output.contains("Unknown severity 'warn'"))
+      }
+    }
+  }
+
+  @Test
   fun whenCustomTesterAndIncludePrivatePreviewsWithoutUseScanOptionsShouldFail() {
     RoborazziGradleRootProject(testProjectDir).previewModule.apply {
       buildGradle.useCustomTester = true

@@ -57,7 +57,7 @@ object RoborazziProblems {
 
   /**
    * Reads the severities set by `roborazzi.problemSeverity.<id>` properties in [properties], keyed
-   * by problem ID. Properties that do not start with [SeverityPropertyPrefix] are ignored.
+   * by problem ID. Other properties are ignored.
    *
    * Fails on an unknown ID or severity, so a typo cannot silently leave a problem at its default.
    * The Gradle plugin calls this with every `roborazzi.*` property, so the build fails before any
@@ -65,11 +65,17 @@ object RoborazziProblems {
    */
   fun parseSeverities(properties: Map<String, Any?>): Map<String, RoborazziProblemSeverity> {
     return properties
-      .filterKeys { it.startsWith(SeverityPropertyPrefix) }
+      .filterKeys { it.startsWith(SeverityPropertyPrefix.removeSuffix(".")) }
       .map { (name, value) ->
+        require(name.startsWith(SeverityPropertyPrefix)) {
+          "$name needs a problem ID: set $SeverityPropertyPrefix<id>=<severity>. " +
+            "Known ids: ${all.joinToString()}."
+        }
         val id = name.removePrefix(SeverityPropertyPrefix)
         val problem = requireNotNull(all.firstOrNull { it.id == id }) {
-          "Unknown problem id '$id' in $name. Known ids: ${all.joinToString()}."
+          "Unknown problem id '$id' in $name. Known ids: ${all.joinToString()}. " +
+            "If a Roborazzi message suggested this ID, update the Roborazzi Gradle plugin to " +
+            "the same version as the Roborazzi library."
         }
         problem.id to parseSeverity(name, value)
       }
@@ -110,7 +116,7 @@ object RoborazziProblems {
     return "$message\n" +
       "\n" +
       "Problem: ${problem.id} (${severity.value}). To change its severity, set " +
-      "${severityPropertyName(problem)}=${otherSeverity.value} in gradle.properties."
+      "${severityPropertyName(problem)}=${otherSeverity.value} in the root gradle.properties."
   }
 
   /**

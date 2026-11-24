@@ -42,6 +42,8 @@ class RoborazziProblemsTest {
     listOf(
       mapOf("roborazzi.problemSeverity.composePreview.renderScaleMisMatch" to "warning"),
       mapOf("roborazzi.problemSeverity." to "warning"),
+      // The removed list format used this key without an ID.
+      mapOf("roborazzi.problemSeverity" to "composePreview.renderScaleMismatch"),
       mapOf(key to "WARNING"),
       mapOf(key to ""),
       mapOf(key to null),
@@ -49,6 +51,37 @@ class RoborazziProblemsTest {
       assertThrows(properties.toString(), IllegalArgumentException::class.java) {
         RoborazziProblems.parseSeverities(properties)
       }
+    }
+  }
+
+  @Test
+  fun anUnknownIdSuggestsUpdatingThePlugin() {
+    // A newer library may suggest an ID that an older plugin does not know yet.
+    val error = assertThrows(IllegalArgumentException::class.java) {
+      RoborazziProblems.parseSeverities(mapOf("roborazzi.problemSeverity.someArea.newProblem" to "warning"))
+    }
+    assertTrue(error.message, error.message!!.contains("update the Roborazzi Gradle plugin"))
+  }
+
+  @Test
+  fun anInvalidSeverityFailsInTheTestJvm() {
+    withSystemProperties(key to "warn") {
+      val error = assertThrows(IllegalArgumentException::class.java) {
+        RoborazziProblems.severityFromSystemProperty(problem)
+      }
+      assertTrue(error.message, error.message!!.contains("'warn'"))
+    }
+  }
+
+  @Test
+  fun reportUsesTheSystemPropertyByDefault() {
+    withSystemProperties(key to "warning") {
+      val log = captureStderr { RoborazziProblems.report(problem, "Something is off.") }
+      assertTrue(log, log.contains("Warning: Something is off."))
+    }
+    withSystemProperties(key to "disabled") {
+      val log = captureStderr { RoborazziProblems.report(problem, "Something is off.") }
+      assertEquals("", log)
     }
   }
 
@@ -95,6 +128,7 @@ class RoborazziProblemsTest {
       RoborazziProblems.formatMessage(problem, "Something is off.", RoborazziProblemSeverity.Error)
     assertTrue(errorMessage.startsWith("Something is off."))
     assertTrue(errorMessage, errorMessage.contains("$key=warning"))
+    assertTrue(errorMessage, errorMessage.contains("root gradle.properties"))
 
     val warningMessage =
       RoborazziProblems.formatMessage(problem, "Something is off.", RoborazziProblemSeverity.Warning)

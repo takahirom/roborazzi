@@ -2032,7 +2032,8 @@ roborazzi.problemSeverity.composePreview.renderScaleMismatch=warning
 
 - You can raise a problem to `error` or lower it to `warning` or `disabled`.
 - `disabled` only stops the report. It does not change how settings are applied or how screenshots are compared.
-- An unknown ID after `roborazzi.problemSeverity.` or an unknown level fails the build. A typo in the `roborazzi.problemSeverity` part itself is not detected.
+- Set them in the root project's `gradle.properties` or with `-P`. Like other `roborazzi.*` properties, they are not read from a subproject's `gradle.properties`.
+- An unknown ID or level fails the build, and so does `roborazzi.problemSeverity` without an ID. A typo in the `roborazzi.problemSeverity` part itself is not detected.
 - A warning reported while tests run is printed to the test's standard error, which Gradle shows only with `--info` or when [`testLogging`](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.logging.TestLoggingContainer.html) shows standard streams.
 - Invalid settings, such as a negative render scale, and screenshot comparison failures are not problems and cannot be changed by these options.
 

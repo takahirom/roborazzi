@@ -3,6 +3,7 @@ package com.github.takahirom.roborazzi
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -11,6 +12,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import sergio.sastre.composable.preview.scanner.android.AndroidPreviewInfo
 import sergio.sastre.composable.preview.scanner.core.preview.ComposablePreview
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 @OptIn(ExperimentalRoborazziApi::class, InternalRoborazziApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -160,6 +163,47 @@ class RenderScaleVerificationTest {
     assertTrue(message, message.contains("renderScale = 0.5"))
   }
 
+  @Test fun logsAndContinuesWhenTheProblemIsAWarning() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+    RenderScaleVerification.beforeTest()
+
+    val log = withSeverity("warning") { captureStderr { RenderScaleVerification.afterTest(tester) } }
+
+    assertTrue(log, log.contains("Warning: renderScale = 0.5"))
+  }
+
+  @Test fun reportsNothingAndDoesNotAskTheTesterWhenTheProblemIsDisabled() {
+    configurePlugin(renderScale = 0.5, taskType = RoborazziTaskType.Record)
+    RenderScaleVerification.beforeTest()
+    val tester = DroppingTester(failOnOptions = true)
+
+    val log = withSeverity("disabled") { captureStderr { RenderScaleVerification.afterTest(tester) } }
+
+    assertEquals("", log)
+  }
+
+  private fun <T> withSeverity(severity: String, block: () -> T): T {
+    val name = RoborazziProblems.severityPropertyName(RoborazziProblems.ComposePreviewRenderScaleMismatch)
+    System.setProperty(name, severity)
+    try {
+      return block()
+    } finally {
+      System.clearProperty(name)
+    }
+  }
+
+  private fun captureStderr(block: () -> Unit): String {
+    val original = System.err
+    val buffer = ByteArrayOutputStream()
+    System.setErr(PrintStream(buffer, true))
+    try {
+      block()
+    } finally {
+      System.setErr(original)
+    }
+    return buffer.toString()
+  }
+
   private fun assertFails(): String {
     try {
       RenderScaleVerification.afterTest(tester)
@@ -179,7 +223,14 @@ class RenderScaleVerificationTest {
   }
 
   /** Stands in for a custom tester that never carries [renderScale] through to the capture. */
-  private class DroppingTester : ComposePreviewTester<ComposePreviewTester.TestParameter<*>> {
+  private class DroppingTester(
+    private val failOnOptions: Boolean = false,
+  ) : ComposePreviewTester<ComposePreviewTester.TestParameter<*>> {
+    override fun options(): ComposePreviewTester.Options {
+      check(!failOnOptions) { "options() should not be called" }
+      return super.options()
+    }
+
     override fun testParameters(): List<ComposePreviewTester.TestParameter<*>> = emptyList()
     override fun test(testParameter: ComposePreviewTester.TestParameter<*>) = Unit
   }
