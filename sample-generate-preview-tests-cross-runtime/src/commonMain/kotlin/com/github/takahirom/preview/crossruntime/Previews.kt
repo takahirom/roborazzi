@@ -66,6 +66,15 @@ private const val FRACTIONAL_SPEC = "spec:width=201dp,height=400dp,dpi=440"
 /** 800dp x 1280dp at 240dpi: density 1.5, an even pixel size to contrast with [PHONE_SPEC]. */
 private const val TABLET_SPEC = "spec:width=800dp,height=1280dp,dpi=240"
 
+/**
+ * The same tablet, turned around. `orientation=landscape` contradicts the declared portrait
+ * dimensions, which is the one case where a runtime has to choose between trusting the keyword and
+ * trusting the order of the dimensions. Pinning it here keeps the two runtimes from choosing
+ * differently.
+ */
+private const val LANDSCAPE_SPEC =
+  "spec:width=800dp,height=1280dp,dpi=240,orientation=landscape"
+
 /** `Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL`, spelled out because
  * `android.content.res.Configuration` is not on the desktop classpath. */
 private const val NIGHT_MODE = 0x21
@@ -149,6 +158,12 @@ fun TabletSpecButton() {
   }
 }
 
+@Preview(device = LANDSCAPE_SPEC)
+@Composable
+fun LandscapeSpecText() {
+  Labeled("The tablet spec turned landscape")
+}
+
 // --- Group: font scale -------------------------------------------------------------------------
 // Android bends font scale non-linearly from 1.03 upwards, and the bend differs per sp size, so
 // both previews carry several sizes.
@@ -195,6 +210,19 @@ fun NightCard() {
 @Composable
 fun FixedSizeText() {
   Labeled("200 x 120")
+}
+
+/**
+ * A `widthDp` whose pixel size is fractional: 201dp at the Medium Phone's 2.625 density is 527.625px.
+ *
+ * Android's window is an integer number of pixels and `Modifier.size` is coerced into it, while
+ * Compose Desktop's `requiredSize` rounds the dp itself. This preview is here to measure which
+ * way each runtime goes rather than to assume.
+ */
+@Preview(widthDp = 201, heightDp = 120)
+@Composable
+fun OddFixedSizeText() {
+  Labeled("201 x 120")
 }
 
 @Preview(widthDp = 200, heightDp = 120)

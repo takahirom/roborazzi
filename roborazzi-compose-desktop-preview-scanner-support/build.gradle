@@ -42,4 +42,9 @@ dependencies {
   // Consumers add ComposablePreviewScanner themselves (same contract as
   // roborazzi-compose-preview-scanner-support on Android).
   compileOnly libs.composable.preview.scanner
+
+  // DesktopPreviewRenderSpec resolves sizes from ComposablePreviewScanner's device parser, so the
+  // unit tests need the scanner on the test classpath even though it is compileOnly for consumers.
+  testImplementation libs.composable.preview.scanner
+  testImplementation libs.junit
 }
